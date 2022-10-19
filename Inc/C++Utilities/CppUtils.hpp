@@ -26,5 +26,7 @@
 #include <memory>
 #include <random>
 #include <typeinfo>
+#include <optional>
+#include <forward_list>
 
 using namespace std;
