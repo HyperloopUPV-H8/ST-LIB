@@ -1,0 +1,6 @@
+#Ignore compiler output
+Debug/
+Release/
+
+#Ignore test folder
+Pruebas/
