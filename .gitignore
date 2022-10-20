@@ -5,3 +5,7 @@ Release/
 #Ignore test folder
 Pruebas/
 PRUEBAS/
+
+
+#Languaje settings 
+.settings/language.settings.xml
