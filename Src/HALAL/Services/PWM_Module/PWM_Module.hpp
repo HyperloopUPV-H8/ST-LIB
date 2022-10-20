@@ -8,7 +8,9 @@
 #ifndef HALAL_PWM_MODULE_PWM_MODULE_HPP_
 #define HALAL_PWM_MODULE_PWM_MODULE_HPP_
 
-#include "../PinModule/Pin.hpp"
+#include "../../Models/PinModel/Pin.hpp"
+#include "../Inc/C++Utilities/CppUtils.hpp"
+
 
 struct TimerChannel {
 	TIM_HandleTypeDef* timer;
@@ -33,7 +35,7 @@ public:
 	         }
 	        };
 	static unordered_map<Pin, TimerChannel, KeyHash, KeyEqual> pinTimerMap;
-	static uint8_t ID_counter;
+	static forward_list<uint8_t> IDmanager;
 
 	static uint8_t register_pwm(Pin& pin);
 	static void unregister_pwm(uint8_t id);
