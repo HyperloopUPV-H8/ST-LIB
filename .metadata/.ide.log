@@ -1,0 +1,22 @@
+2022-10-20 09:29:56,456 [INFO] Activator:177 - 
+
+
+2022-10-20 09:29:56,457 [INFO] Activator:178 - !SESSION log4j initialized
+2022-10-20 09:29:59,117 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] oct. 20, 2022 9:29:59 A. M. org.glassfish.grizzly.http.server.NetworkListener start
+2022-10-20 09:29:59,120 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] INFORMACI?N: Started listener bound to [localhost:1596]
+2022-10-20 09:29:59,122 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] 
+2022-10-20 09:29:59,125 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] oct. 20, 2022 9:29:59 A. M. org.glassfish.grizzly.http.server.HttpServer start
+2022-10-20 09:29:59,137 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] INFORMACI?N: [HttpServer] Started.
+2022-10-20 09:29:59,138 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] 
+2022-10-20 09:32:00,498 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] 
+2022-10-20 09:32:06,206 [INFO] Activator:177 - 
+
+
+2022-10-20 09:32:06,207 [INFO] Activator:178 - !SESSION log4j initialized
+2022-10-20 09:32:09,703 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] oct. 20, 2022 9:32:09 A. M. org.glassfish.grizzly.http.server.NetworkListener start
+2022-10-20 09:32:09,706 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] INFORMACI?N: Started listener bound to [localhost:1597]
+2022-10-20 09:32:09,707 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] 
+2022-10-20 09:32:09,709 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] oct. 20, 2022 9:32:09 A. M. org.glassfish.grizzly.http.server.HttpServer start
+2022-10-20 09:32:09,710 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] INFORMACI?N: [HttpServer] Started.
+2022-10-20 09:32:09,711 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] 
+2022-10-20 09:33:29,824 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] 
