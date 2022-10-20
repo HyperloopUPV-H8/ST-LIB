@@ -33,6 +33,7 @@ void DigitalOutput::set_pin_state(uint8_t id, PinState state){
 }
 
 void DigitalOutput::unregister_digital_output(uint8_t id){
+ if (DigitalOutput::serviceIDs.find(id) == DigitalOutput:serviceIDs.end() { return; } // Warning: Delete request to non-existent service
 	Pin::Unregister(DigitalOutput::serviceIDs[id]);
 	DigitalOutput::serviceIDs.erase(id);
 	DigitalOutput::IDmanager.push_front(id);

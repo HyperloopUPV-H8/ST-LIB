@@ -23,6 +23,7 @@ DigitalInput::PinState DigitalInput::read_pin_state(uint8_t id){
 }
 
 void DigitalInput::unregister_digital_input(uint8_t id){
+       if (DigitalInput::serviceIDs.find(id) == DigitalInput:serviceIDs.end() { return; } // Warning: Delete request to non-existent service
 	Pin::Unregister(DigitalInput::serviceIDs[id]);
 	DigitalInput::serviceIDs.erase(id);
 	DigitalInput::IDmanager.push_front(id);
