@@ -17,14 +17,14 @@ PE4,PE5,PE6,PE7,PE8,PE9,PF0,PF1,PF10,PF11,PF12,PF13,PF14,PF15,PF2,PF3,PF4,PF5,PF
 PF8,PF9,PG0,PG1,PG10,PG11,PG12,PG13,PG14,PG15,PG2,PG3,PG4,PG5,PG6,PG7,PG8,PG9,PH0,PH1,
 PA2,PA3,PA4,PA5,PA6,PA7,PA8,};
 
-void Pin::Register(Pin& pin, Operation_Mode mode){
+void Pin::register_pin(Pin& pin, Operation_Mode mode){
 	if(pin.mode != Operation_Mode::NOT_USED){
 		return;
 	}
 	pin.mode = mode;
 }
 
-void Pin::Unregister(Pin& pin){
+void Pin::unregister_pin(Pin& pin){
 	pin.mode = Operation_Mode::NOT_USED;
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Mode =  GPIO_MODE_OUTPUT_PP;
@@ -33,7 +33,7 @@ void Pin::Unregister(Pin& pin){
 	HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
 }
 
-void Pin::Start(){
+void Pin::start(){
 	GPIO_InitTypeDef GPIO_InitStruct;
 	for(Pin& pin : Pin::pinVector){
 		GPIO_InitStruct = {0};

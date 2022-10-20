@@ -9,7 +9,7 @@
 #define HALAL_MODELS_PIN_HPP_
 
 #include "stm32h7xx_hal.h"
-#include "../Inc/C++Utilities/CppUtils.hpp"
+#include "../../../../Inc/C++Utilities/CppUtils.hpp"
 
 enum GPIO_Pin{
 	PIN_0 = ((uint16_t)0x0001),
@@ -48,9 +48,9 @@ public:
 
 	Pin();
 	Pin(GPIO_TypeDef* Port, GPIO_Pin Pin);
-	static void Register(Pin& pin, Operation_Mode mode);
-	static void Unregister(Pin& pin);
-	static void Start();
+	static void register_pin(Pin& pin, Operation_Mode mode);
+	static void unregister_pin(Pin& pin);
+	static void start();
 };
 
 Pin PE2(GPIOE,GPIO_Pin::PIN_2);
