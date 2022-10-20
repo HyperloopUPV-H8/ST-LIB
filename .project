@@ -3,7 +3,6 @@
 	<name>ST-LIB</name>
 	<comment></comment>
 	<projects>
-		<project>HyperLib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
