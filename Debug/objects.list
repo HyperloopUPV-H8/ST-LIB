@@ -1,7 +1,0 @@
-"./Drivers/CMSIS/Device/ST/STM32H7xx/Source/Templates/system_stm32h7xx.o"
-"./Src/HALAL/Models/PinModel/Pin.o"
-"./Src/HALAL/Services/DigitalInput/DigitalInput.o"
-"./Src/HALAL/Services/DigitalOutput/DigitalOutput.o"
-"./Src/ST-LIB.o"
-"./Src/syscalls.o"
-"./Src/sysmem.o"
