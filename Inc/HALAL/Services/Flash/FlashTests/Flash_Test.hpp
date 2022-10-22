@@ -5,11 +5,10 @@
  *      Author: Pablo
  */
 
-#include "../Flash.cpp"
-
+#include "../Flash.hpp"
 namespace FlashTest{
 
-	bool Test1_Wrinting_1_float();
+	bool Test1_Writing_1_float();
 
 //	bool Test2_Reading_1_float();
 //
