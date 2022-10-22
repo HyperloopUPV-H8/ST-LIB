@@ -21,20 +21,15 @@ public:
 	static map<uint8_t, Pin> serviceIDs;
 
 	struct KeyHash {
-		size_t operator()(const Pin& k) const {
+		size_t operator()(const Pin k) const {
 			return hash<uint8_t>()(k.pin) ^
 			(hash<uint8_t>()(*reinterpret_cast<uint64_t*>(k.port)) << 1);
 		}
 	};
-	struct KeyEqual {
-		bool operator()(const Pin lhs, const Pin rhs) const {
-			return lhs.pin == rhs.pin && lhs.port == rhs.port;
-	    }
-	};
-	static unordered_map<Pin, TimerChannel, KeyHash, KeyEqual> pinTimerMap;
+	static unordered_map<Pin, TimerChannel, KeyHash> pinTimerMap;
 	static forward_list<uint8_t> IDmanager;
 
-	static optional<uint8_t> register_pwm(Pin pin);
+	static optional<uint8_t> register_pwm(Pin& pin);
 	static void unregister_pwm(uint8_t id);
 	static void turn_on_pwm(uint8_t id);
 	static void turn_off_pwm(uint8_t id);

@@ -53,6 +53,10 @@ public:
 	static void register_pin(Pin& pin, Operation_Mode mode);
 	static void unregister_pin(Pin& pin);
 	static void start();
+
+	bool operator== (const Pin &other) const {
+		return (pin == other.pin && port == other.port);
+	}
 };
 
 extern Pin PA0;
