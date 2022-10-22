@@ -9,7 +9,13 @@
 #define HALAL_SERVICES_FLASH_FLASH_HPP_
 
 #include "stm32h7xx_hal.h"
-#include "../../../../Inc/C++Utilities/CppUtils.hpp"
+#include "../../../C++Utilities/CppUtils.hpp"
+
+#define FLASHWORD 8
+#define FLASH_START_ADDRESS 0x08000000
+#define FLASH_SECTOR4_START_ADDRESS 0x08080000
+#define FLASH_END_ADDRESS 0x080FFFFF
+#define SECTOR_SIZE_IN_WORDS 32767
 
 /*
  * Example of usage if we want to read a float from flash:

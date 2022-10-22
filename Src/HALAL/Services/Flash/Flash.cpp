@@ -5,32 +5,38 @@
  *      Author: Pablo
  */
 
-#include "Flash.hpp"
+#include "../Inc/HALAL/Services/Flash/Flash.hpp"
 
-#define FLASHWORD 8
-#define FLASH_START_ADDRESS 0x08000000
-#define FLASH_END_ADDRESS 0x080FFFFF
-#define SECTOR_SIZE_IN_WORDS 32000
+
 
 void Flash::read(uint32_t sourceAddr, uint32_t* result, uint32_t numberOfWords){
 	if (sourceAddr < FLASH_START_ADDRESS || sourceAddr > FLASH_END_ADDRESS) {
 			//TODO: Handle exception (memory out of limits)
 			return;
 	}
-
-	while(numberOfWords != 0){
+	uint32_t auxAddrs = 0x0809F000;
+	__NOP();
+	while(1){
 		*result = *(__IO uint32_t *)sourceAddr;
 		sourceAddr += 4;
 		result++;
-		numberOfWords--;
+
+		if (sourceAddr >= auxAddrs) {
+			__NOP();
+		}
+		if (!(numberOfWords--)) {
+			break;
+		}
 	}
 }
 
-void Flash::write(uint32_t* source, uint32_t destAddr, uint32_t numberOfWords){
-	if (destAddr < FLASH_START_ADDRESS || destAddr > FLASH_END_ADDRESS) {
+void Flash::write(uint32_t * source, uint32_t destAddr, uint32_t numberOfWords){
+	if (destAddr < FLASH_SECTOR4_START_ADDRESS || destAddr > FLASH_END_ADDRESS) {
 		//TODO: Handle exception (memory out of limits)
 		return;
 	}
+
+
 
 	uint32_t startRelativePositionInWords;
 	uint32_t endRelativePositionInWords;
@@ -40,12 +46,14 @@ void Flash::write(uint32_t* source, uint32_t destAddr, uint32_t numberOfWords){
 
 	uint32_t startSector = getSector(destAddr);
 	uint32_t sectorStartingAddress = getSectorStartingAddress(startSector);
-	read(sectorStartingAddress, buffer, SECTOR_SIZE_IN_WORDS);
 
 	HAL_FLASH_Unlock();
+	Flash::read(sectorStartingAddress, buffer, SECTOR_SIZE_IN_WORDS);
+
+
 
 	//WARNING: Hay que testear muy bien esto
-	startRelativePositionInWords = (destAddr - FLASH_START_ADDRESS) / 4;
+	startRelativePositionInWords = (destAddr - sectorStartingAddress) / 4;//TODO: Seguramente sea necesario restar 1
 	endRelativePositionInWords = startRelativePositionInWords + numberOfWords;
 	uint32_t buffPos, sourcePos;
 	sourcePos = 0;
@@ -54,8 +62,11 @@ void Flash::write(uint32_t* source, uint32_t destAddr, uint32_t numberOfWords){
 		sourcePos++;
 	}
 
+	//TODO: Ahora me ha leido bien con el debugger (pa flipar xD)
+	//TODO: Revisar si el erase devuelve HAL_OK
 	Flash::erase(destAddr, (destAddr + numberOfWords * 4));
 
+	//TODO: Ver porque el program no devuelve HAL_OK
 	while(index < numberOfWords){
 		//Escribir parcialmente con lo nuevo mas lo viejo
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, destAddr, buffer[index]) == HAL_OK) {
