@@ -23,6 +23,7 @@ optional<uint8_t> PWM::register_pwm(Pin& pin){
 		uint8_t id = PWM::IDmanager.front();
 		PWM::serviceIDs[id] = pin;
 		PWM::IDmanager.pop_front();
+		PWM::pinTimerMap[pin].timer = &htim1;
 		return id;
 		}
 	}
@@ -47,6 +48,7 @@ void PWM::turn_off_pwm(uint8_t id){
 void PWM::turn_on_pwm(uint8_t id){
 	Pin pin = PWM::serviceIDs[id];
 	TimerChannel timerChannel = PWM::pinTimerMap[pin];
+	PWM::pinTimerMap[pin].timer = &htim1;
 
 	HAL_TIM_PWM_Start(timerChannel.timer, timerChannel.channel);
 }
