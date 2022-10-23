@@ -57,6 +57,10 @@ public:
 	bool operator== (const Pin &other) const {
 		return (pin == other.pin && port == other.port);
 	}
+
+	bool operator< (const Pin &other) const {
+		return pin < other.pin;
+	}
 };
 
 extern Pin PA0;

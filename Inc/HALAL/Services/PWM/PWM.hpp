@@ -13,20 +13,18 @@
 
 struct TimerChannel {
 	TIM_HandleTypeDef* timer;
-	uint32_t channel;
+	unsigned int channel;
+
+	//TimerChannel() = default;
+	//TimerChannel(uint32_t t, unsigned int c) :timer(t),channel(c) {}
 };
 
 class PWM {
 public:
 	static map<uint8_t, Pin> serviceIDs;
+	static map<Pin, TimerChannel> pinTimerMap;
 
-	struct KeyHash {
-		size_t operator()(const Pin k) const {
-			return hash<uint8_t>()(k.pin) ^
-			(hash<uint8_t>()(*reinterpret_cast<uint64_t*>(k.port)) << 1);
-		}
-	};
-	static unordered_map<Pin, TimerChannel, KeyHash> pinTimerMap;
+	//static unordered_map<Pin, TimerChannel, KeyHash> pinTimerMap;
 	static forward_list<uint8_t> IDmanager;
 
 	static optional<uint8_t> register_pwm(Pin& pin);
