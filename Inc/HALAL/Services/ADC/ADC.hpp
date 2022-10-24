@@ -36,7 +36,7 @@ public:
 		}
 	};
 
-	static unordered_map<Pin, ADCchannel, KeyHash, KeyEqual> pinTimerMap;
+	static map<Pin, ADCchannel> pinTimerMap;
 	static forward_list<uint8_t> IDmanager;
 
 	static optional<uint8_t> register_adc(Pin pin);
