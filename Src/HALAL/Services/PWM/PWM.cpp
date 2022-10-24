@@ -48,19 +48,12 @@ void PWM::turn_on_pwm(uint8_t id){
 
 
 void PWM::change_duty_cycle(uint8_t id, uint8_t duty_cycle) {
-//	if (duty_cycle >= 0 && duty_cycle <= 100) {
-//		Pin pin = PWM::serviceIDs[id];
-//		TimerChannel timerChannel = PWM::pinTimerMap[pin];
-//		switch (timerChannel.timer) {
-//			case 1:
-//				__HAL_TIM_SET_COMPARE(&htim1, timerChannel.channel, duty_cycle);
-//				break;
-//			default:
-//				break;
-//		}
-//		//__HAL_TIM_SET_COMPARE(timerChannel.timer, timerChannel.channel, duty_cycle);
-//		//timerChannel.timer->Instance->CCR1 = (uint32_t) duty_cycle;
-//	}
+	if (duty_cycle >= 0 && duty_cycle <= 100) {
+		Pin pin = PWM::serviceIDs[id];
+		TimerChannel timerChannel = PWM::pinTimerMap[pin];
+		__HAL_TIM_SET_COMPARE(timerChannel.timer, timerChannel.channel, duty_cycle);
+		//timerChannel.timer->Instance->CCR1 = (uint32_t) duty_cycle;
+	}
 }
 
 
