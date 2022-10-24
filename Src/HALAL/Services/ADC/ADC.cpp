@@ -5,7 +5,7 @@
  *      Author: alejandro
  */
 
-#include "ADC.hpp"
+#include "../Inc/HALAL/Services/ADC/ADC.hpp"
 
 #define ADC_BUF1_LEN 1
 #define ADC_BUF2_LEN 1
@@ -25,15 +25,15 @@ forward_list<uint8_t> ADC::IDmanager = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
 unordered_map<Pin, ADCchannel, ADC::KeyHash, ADC::KeyEqual> pinADCMap = {
 		{PE2, {&adc1, adc_buf1, ADC_BUF1_LEN, 1}},
-		{PE2, {&adc2, adc_buf2, ADC_BUF2_LEN, 1}},
-		{PE2, {&adc3, adc_buf3, ADC_BUF3_LEN, 1}},
+		{PE3, {&adc2, adc_buf2, ADC_BUF2_LEN, 1}},
+		{PE4, {&adc3, adc_buf3, ADC_BUF3_LEN, 1}},
 };
 
 
 
 optional<uint8_t> ADC::register_adc(Pin pin) {
 	if (pinADCMap.contains(pin)) {
-		Pin::Register(pin, ALTERNATIVE);
+		Pin::register_pin(pin, ALTERNATIVE);
 		uint8_t id = IDmanager.front();
 		ADC::serviceIDs[id] = pin;
 		ADC::IDmanager.pop_front();
@@ -57,11 +57,11 @@ void ADC::turn_off_adc(uint8_t id) {
 	HAL_ADC_Stop_DMA(adcChannel.adc);
 }
 
-uint16_t ADC::get_pin_value(Pin pin) {
+optional<uint16_t> ADC::get_pin_value(Pin pin) {
 	if (pinADCMap.contains(pin)) {
 		ADCchannel adcChannel = pinADCMap[pin];
-		return (uint16_t)adcChannel.buffer[adcChannel.pos];
+		return (uint16_t)adcChannel.buffer[adcChannel.bufpos];
 	}
-	return nullopt; // WARNING TODO
+	return {};
 }
 
