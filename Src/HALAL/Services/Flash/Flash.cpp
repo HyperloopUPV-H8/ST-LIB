@@ -42,11 +42,13 @@ bool Flash::write(uint32_t * source, uint32_t destAddr, uint32_t numberOfWords){
 	uint32_t buffer[SECTOR_SIZE_IN_WORDS];
 
 	uint32_t startSector = Flash::getSector(destAddr);
-	uint32_t sectorStartingAddress = Flash::getSectorStartingAddress(startSector);
+	uint32_t start_sector_addr = Flash::getSectorStartingAddress(startSector);
+	uint32_t endSectorAddress = destAddr + ((numberOfWords * 4) - 4);
+	uint32_t endSector = Flash::getSector(endSectorAddress);
 
-	Flash::read(sectorStartingAddress, buffer, SECTOR_SIZE_IN_WORDS);
+	Flash::read(start_sector_addr, buffer, SECTOR_SIZE_IN_WORDS);
 
-	startRelativePositionInWords = (destAddr - sectorStartingAddress) / 4 ;
+	startRelativePositionInWords = (destAddr - start_sector_addr) / 4 ;
 	endRelativePositionInWords = startRelativePositionInWords + numberOfWords - 1;
 	sourcePos = 0;
 	for (buffPos = startRelativePositionInWords; buffPos <= endRelativePositionInWords && sourcePos < numberOfWords; ++buffPos ) {
@@ -55,7 +57,7 @@ bool Flash::write(uint32_t * source, uint32_t destAddr, uint32_t numberOfWords){
 	}
 
 	//TODO: Revisar si el erase devuelve HAL_OK
-	if (!Flash::erase(destAddr, ((destAddr + numberOfWords * 4) - 4))) {
+	if (!Flash::erase(startSector, endSector)) {
 		return false;
 	}
 
@@ -63,8 +65,8 @@ bool Flash::write(uint32_t * source, uint32_t destAddr, uint32_t numberOfWords){
 	//TODO: Ver porque el program no devuelve HAL_OK
 	while(index < numberOfWords){
 		//Escribir parcialmente con lo nuevo mas lo viejo
-		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, sectorStartingAddress, (uint32_t)&buffer[index]) == HAL_OK) {
-			sectorStartingAddress += 4 * FLASHWORD;
+		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, start_sector_addr, (uint32_t)&buffer[index]) == HAL_OK) {
+			start_sector_addr += 4 * FLASHWORD;
 			index += FLASHWORD;
 		}else{
 			//TODO: Exception handle
@@ -80,13 +82,9 @@ bool Flash::write(uint32_t * source, uint32_t destAddr, uint32_t numberOfWords){
 	return true;
 }
 
-bool Flash::erase(uint32_t initAddr, uint32_t finalAddr){
+bool Flash::erase(uint32_t startSector, uint32_t endSector){
 	static FLASH_EraseInitTypeDef EraseInitStruct;
 	uint32_t sectorError;
-
-	uint32_t startSector = Flash::getSector(initAddr);
-	uint32_t endSectorAddress = finalAddr;
-	uint32_t endSector = Flash::getSector(endSectorAddress);
 
 	EraseInitStruct.TypeErase     = FLASH_TYPEERASE_SECTORS;
 	EraseInitStruct.VoltageRange  = FLASH_VOLTAGE_RANGE_3;
@@ -95,6 +93,7 @@ bool Flash::erase(uint32_t initAddr, uint32_t finalAddr){
 	EraseInitStruct.NbSectors     = (endSector - startSector) + 1;
 
 	HAL_FLASH_Unlock();
+
 	if (HAL_FLASHEx_Erase(&EraseInitStruct, &sectorError) != HAL_OK)
 	{
 		//TODO: Handle the exception
