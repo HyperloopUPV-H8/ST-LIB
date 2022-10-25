@@ -23,19 +23,6 @@ class ADC {
 public:
 	static map<uint8_t, Pin> serviceIDs;
 
-	struct KeyHash {
-		size_t operator()(const Pin& k) const {
-			return std::hash<std::uint8_t>()(k.pin) ^
-			(std::hash<std::uint8_t>()(*reinterpret_cast<uint64_t*>(k.port)) << 1);
-		}
-	};
-
-    struct KeyEqual {
-		bool operator()(const Pin& lhs, const Pin& rhs) const {
-			return lhs.pin == rhs.pin && lhs.port == rhs.port;
-		}
-	};
-
 	static map<Pin, ADCchannel> pinTimerMap;
 	static forward_list<uint8_t> IDmanager;
 
