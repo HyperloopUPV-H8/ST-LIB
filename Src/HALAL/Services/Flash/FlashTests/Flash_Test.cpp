@@ -12,7 +12,7 @@
 
 namespace FlashTest{
 
-	void float2Bytes(uint8_t * ftoa_bytes_temp, float float_variable){
+	void float_2_bytes(uint8_t * ftoa_bytes_temp, float float_variable){
 		union {
 		  float a;
 		  uint8_t bytes[4];
@@ -25,7 +25,7 @@ namespace FlashTest{
 		}
 	}
 
-	float Bytes2float(uint8_t * ftoa_bytes_temp){
+	float bytes_2_float(uint8_t * ftoa_bytes_temp){
 		union {
 		  float a;
 		  uint8_t bytes[4];
@@ -42,7 +42,7 @@ namespace FlashTest{
 	bool test1_writing_1_float(){
 		uint8_t float_byte_array[4];
 
-		float2Bytes(float_byte_array, PI);
+		float_2_bytes(float_byte_array, PI);
 		uint32_t addr = FLASH_SECTOR4_START_ADDRESS;
 
 		return Flash::write((uint32_t *)float_byte_array, addr,(uint32_t) 1);
@@ -53,7 +53,7 @@ namespace FlashTest{
 
 		Flash::read(FLASH_SECTOR4_START_ADDRESS, (uint32_t *)float_byte_array, 1);
 
-		float result = Bytes2float(float_byte_array);
+		float result = bytes_2_float(float_byte_array);
 
 		return result * 10000 == PI * 10000;
 	}
@@ -65,36 +65,37 @@ namespace FlashTest{
 	   uint32_t offset1 = 0x04;
 	   uint32_t offset2 = 0x20;
 
-	   float2Bytes(float_byte_array, PI);
+	   float_2_bytes(float_byte_array, PI);
 	   Flash::write((uint32_t *)float_byte_array, addr,(uint32_t) 1);
-	   float2Bytes(float_byte_array, E);
+	   float_2_bytes(float_byte_array, E);
 	   Flash::write((uint32_t *)float_byte_array, addr + offset1,(uint32_t) 1);
-	   float2Bytes(float_byte_array, SQUARE_ROOT_OF_TWO);
+	   float_2_bytes(float_byte_array, SQUARE_ROOT_OF_TWO);
 	   Flash::write((uint32_t *)float_byte_array, addr + offset2,(uint32_t) 1);
 
 	   Flash::read(addr, (uint32_t *)float_byte_array, 1);
-	   float first_result = Bytes2float(float_byte_array);
+	   float first_result = bytes_2_float(float_byte_array);
 	   bool first_write = first_result * 10000 == PI * 10000;
 	   Flash::read(addr + offset1, (uint32_t *)float_byte_array, 1);
-	   float second_result = Bytes2float(float_byte_array);
+	   float second_result = bytes_2_float(float_byte_array);
 	   bool second_write = second_result * 100000 == E * 100000;
 	   Flash::read(addr + offset2, (uint32_t *)float_byte_array, 1);
-	   float third_result = Bytes2float(float_byte_array);
+	   float third_result = bytes_2_float(float_byte_array);
 	   bool third_write = third_result * 100000 == SQUARE_ROOT_OF_TWO * 100000;
 
 	   return first_write && second_write && third_write;
 	}
 
    bool test4_writing_in_sector_border(){
-	   uint32_t data[] = {1024, 2048, 4096, 8192};
+	   __IO uint32_t aux = 123;
+	   uint32_t init_data[] = {1024, 2048, 4096, 8192};
 	   uint32_t data_result[4];
 	   uint32_t addr = FLASH_SECTOR5_START_ADDRESS - 0x08;
 
-	   Flash::write(&data[0], addr,(uint32_t) 4);
+	   Flash::write(&init_data[0], addr,(uint32_t) 4);
 	   Flash::read(addr, &data_result[0], 4);
 
 	   for(int i = 0; i < 4; i++){
-		  if (data[i] != data_result[i]) {
+		  if (init_data[i] != data_result[i]) {
 			return false;
 		}
 	   }

@@ -17,14 +17,11 @@ void Flash::read(uint32_t sourceAddr, uint32_t* result, uint32_t numberOfWords){
 	}
 
 	HAL_FLASH_Unlock();
-	while(1){
+	while(numberOfWords > 0){
 		*result = *(__IO uint32_t *)sourceAddr;
 		sourceAddr += 4;
 		result++;
-
-		if (!(numberOfWords--)) {
-			break;
-		}
+		numberOfWords--;
 	}
 	HAL_FLASH_Lock();
 }
@@ -39,14 +36,16 @@ bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_word
 	uint32_t end_relative_position_in_words;
 	uint32_t buff_pos, source_pos;
 	uint32_t index = 0;
-	uint32_t buffer[SECTOR_SIZE_IN_WORDS];
 
 	uint32_t start_sector = Flash::getSector(dest_addr);
 	uint32_t start_sector_addr = Flash::getSectorStartingAddress(start_sector);
-	uint32_t end_sector_address = dest_addr + ((number_of_words * 4) - 4);
-	uint32_t end_sector = Flash::getSector(end_sector_address);
+	uint32_t end_address = dest_addr + ((number_of_words * 4) - 4);
+	uint32_t end_sector = Flash::getSector(end_address);
+	uint8_t number_of_sectors = end_sector - start_sector + 1;
+	uint32_t buffer[SECTOR_SIZE_IN_WORDS * number_of_sectors];
 
-	Flash::read(start_sector_addr, buffer, SECTOR_SIZE_IN_WORDS);
+	//TODO: Hay que adaptar el código para poder escribir en más de un sector
+	Flash::read(start_sector_addr, buffer, SECTOR_SIZE_IN_WORDS * number_of_sectors);
 
 	start_relative_position_in_words = (dest_addr - start_sector_addr) / 4 ;
 	end_relative_position_in_words = start_relative_position_in_words + number_of_words - 1;
@@ -61,7 +60,7 @@ bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_word
 	}
 
 	HAL_FLASH_Unlock();
-	while(index < SECTOR_SIZE_IN_WORDS){
+	while(index < SECTOR_SIZE_IN_WORDS * number_of_sectors){
 		//Escribir parcialmente con lo nuevo mas lo viejo
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, start_sector_addr, (uint32_t)&buffer[index]) == HAL_OK) {
 			start_sector_addr += 4 * FLASHWORD;
