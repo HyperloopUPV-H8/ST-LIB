@@ -72,8 +72,7 @@
  *
  *	read(sourceAddr, (uint32_t *)buffer, 1);
  *	value = Bytes2float(buffer);
- *	return value;
- *
+ *	
  */
 
 class Flash{

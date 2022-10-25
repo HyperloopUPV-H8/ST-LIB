@@ -6,6 +6,8 @@
  */
 #include "../../../../../Inc/HALAL/Services/Flash/FlashTests/Flash_Test.hpp"
 
+#define PI 3.1415
+
 namespace FlashTest{
 
 	void float2Bytes(uint8_t * ftoa_bytes_temp, float float_variable){
@@ -36,20 +38,22 @@ namespace FlashTest{
 	}
 
 	bool Test1_Writing_1_float(){
-		float pi = 3.141592;
-
-		//uint32_t addresses[] = {0x00000000, 0x00000010, 0x00000020, 0x00000028};
 		uint8_t float_byte_array[4];
 
-		float2Bytes(float_byte_array, pi);
-		uint32_t addr = FLASH_SECTOR5_START_ADDRESS; // + addresses[rand()% 4];
+		float2Bytes(float_byte_array, PI);
+		uint32_t addr = FLASH_SECTOR4_START_ADDRESS;
 
-
-		return Flash::write((uint32_t *)float_byte_array, addr,(uint32_t) 1)&
-		 Flash::write((uint32_t *)float_byte_array, addr + 0x20,(uint32_t) 1)&
-		 Flash::write((uint32_t *)float_byte_array, addr + 0x40,(uint32_t) 1);
+		return Flash::write((uint32_t *)float_byte_array, addr,(uint32_t) 1);
 	}
 
+	bool Test2_Reading_1_float(){
+		uint8_t float_byte_array[4];
 
+		Flash::read(FLASH_SECTOR4_START_ADDRESS, (uint32_t *)float_byte_array, 1);
+
+		float result = Bytes2float(float_byte_array);
+
+		return result * 1000 == PI * 1000;
+	}
 
 }
