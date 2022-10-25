@@ -3,4 +3,4 @@
 #include "HALAL/Models/PinModel/Pin.hpp"
 #include "HALAL/Services/DigitalOutput/DigitalOutput.hpp"
 #include "HALAL/Services/DigitalInput/DigitalInput.hpp"
-#include "HALAL/Services/PWM/PWM.hpp"
+#include "HALAL/Services/ADC/ADC.hpp"

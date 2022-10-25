@@ -8,8 +8,8 @@
 #ifndef HALAL_SERVICES_ADC_HPP_
 #define HALAL_SERVICES_ADC_HPP_
 
-#include "../Inc/HALAL/Models/PinModel/Pin.hpp"
-#include "../Inc/C++Utilities/CppUtils.hpp"
+#include "../../Models/PinModel/Pin.hpp"
+#include "../../../C++Utilities/CppUtils.hpp"
 
 
 struct ADCchannel {
