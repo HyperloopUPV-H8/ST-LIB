@@ -61,7 +61,7 @@ bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_word
 	}
 
 	HAL_FLASH_Unlock();
-	while(index < number_of_words){
+	while(index < SECTOR_SIZE_IN_WORDS){
 		//Escribir parcialmente con lo nuevo mas lo viejo
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, start_sector_addr, (uint32_t)&buffer[index]) == HAL_OK) {
 			start_sector_addr += 4 * FLASHWORD;

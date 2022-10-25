@@ -8,25 +8,23 @@
 #include "../Flash.hpp"
 namespace FlashTest{
 
-	bool Test1_Writing_1_float();
+	bool test1_writing_1_float();
 
-	bool Test2_Reading_1_float();
+	bool test2_reading_1_float();
 
-	bool Test3_Writing_2_float();
+	bool test3_writing_multiple_float();
 
-	bool Test4_Writing_3_float();
+	bool test4_writing_in_sector_border();
 
-	bool Test5_Writing_in_sector_border();
+	bool test5_readng_in_sector_border();
 
-	bool Test6_Readng_in_sector_border();
+	bool test6_writeTime_1_word();
 
-	bool Test7_WriteTime_1_word();
+	bool test7_readTime_1_word();
 
-	bool Test8_ReadTime_1_word();
+	bool test8_writeTime_1000_word();
 
-	bool Test9_WriteTime_1000_word();
-
-	bool Test10_ReadTime_1000_word();
+	bool test9_readTime_1000_word();
 
 }
 
