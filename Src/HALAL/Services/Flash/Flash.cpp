@@ -29,41 +29,39 @@ void Flash::read(uint32_t sourceAddr, uint32_t* result, uint32_t numberOfWords){
 	HAL_FLASH_Lock();
 }
 
-bool Flash::write(uint32_t * source, uint32_t destAddr, uint32_t numberOfWords){
-	if (destAddr < FLASH_SECTOR4_START_ADDRESS || destAddr > FLASH_END_ADDRESS) {
+bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_words){
+	if (dest_addr < FLASH_SECTOR4_START_ADDRESS || dest_addr > FLASH_END_ADDRESS) {
 		//TODO: Handle exception (memory out of limits)
 		return false;
 	}
 
-	uint32_t startRelativePositionInWords;
-	uint32_t endRelativePositionInWords;
-	uint32_t buffPos, sourcePos;
+	uint32_t start_relative_position_in_words;
+	uint32_t end_relative_position_in_words;
+	uint32_t buff_pos, source_pos;
 	uint32_t index = 0;
 	uint32_t buffer[SECTOR_SIZE_IN_WORDS];
 
-	uint32_t startSector = Flash::getSector(destAddr);
-	uint32_t start_sector_addr = Flash::getSectorStartingAddress(startSector);
-	uint32_t endSectorAddress = destAddr + ((numberOfWords * 4) - 4);
-	uint32_t endSector = Flash::getSector(endSectorAddress);
+	uint32_t start_sector = Flash::getSector(dest_addr);
+	uint32_t start_sector_addr = Flash::getSectorStartingAddress(start_sector);
+	uint32_t end_sector_address = dest_addr + ((number_of_words * 4) - 4);
+	uint32_t end_sector = Flash::getSector(end_sector_address);
 
 	Flash::read(start_sector_addr, buffer, SECTOR_SIZE_IN_WORDS);
 
-	startRelativePositionInWords = (destAddr - start_sector_addr) / 4 ;
-	endRelativePositionInWords = startRelativePositionInWords + numberOfWords - 1;
-	sourcePos = 0;
-	for (buffPos = startRelativePositionInWords; buffPos <= endRelativePositionInWords && sourcePos < numberOfWords; ++buffPos ) {
-		buffer[buffPos] = source[sourcePos];
-		sourcePos++;
+	start_relative_position_in_words = (dest_addr - start_sector_addr) / 4 ;
+	end_relative_position_in_words = start_relative_position_in_words + number_of_words - 1;
+	source_pos = 0;
+	for (buff_pos = start_relative_position_in_words; buff_pos <= end_relative_position_in_words && source_pos < number_of_words; ++buff_pos ) {
+		buffer[buff_pos] = source[source_pos];
+		source_pos++;
 	}
 
-	//TODO: Revisar si el erase devuelve HAL_OK
-	if (!Flash::erase(startSector, endSector)) {
+	if (!Flash::erase(start_sector, end_sector)) {
 		return false;
 	}
 
 	HAL_FLASH_Unlock();
-	//TODO: Ver porque el program no devuelve HAL_OK
-	while(index < numberOfWords){
+	while(index < number_of_words){
 		//Escribir parcialmente con lo nuevo mas lo viejo
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, start_sector_addr, (uint32_t)&buffer[index]) == HAL_OK) {
 			start_sector_addr += 4 * FLASHWORD;
@@ -76,7 +74,6 @@ bool Flash::write(uint32_t * source, uint32_t destAddr, uint32_t numberOfWords){
 			return false;
 		}
 	}
-
 	//TODO: Notificar del exito
 	HAL_FLASH_Lock();
 	return true;
