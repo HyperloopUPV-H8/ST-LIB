@@ -14,9 +14,7 @@
 
 struct ADCchannel {
 	ADC_HandleTypeDef* adc;
-	uint32_t* buffer;
-	uint8_t buflen;
-	uint8_t bufpos;
+	uint8_t channel;
 };
 
 class ADC {
@@ -30,6 +28,9 @@ public:
 	static void turn_on_adc(uint8_t id);
 	static void turn_off_adc(uint8_t id);
 	static optional<uint16_t> get_pin_value(Pin pin);
+
+private:
+	static optional<uint16_t[]> get_adc_value(ADC_HandleTypeDef* hadc);
 
 };
 
