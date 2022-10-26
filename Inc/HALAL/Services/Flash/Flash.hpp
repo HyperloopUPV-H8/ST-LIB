@@ -24,7 +24,6 @@
 #define FLASH_END_ADDRESS 0x080FFFFF
 #define SECTOR_SIZE_IN_WORDS 32767
 
-
 /*
 	**IMPORTANTE**
 	Hay que reservar la memoria en el linker script para
@@ -63,37 +62,20 @@
 	tenerlas en cuenta.
 */
 
-
-/*
- * Example of usage if we want to read a float from flash:
- *
- * 	uint8_t buffer[4];
- *	float value;
- *
- *	read(sourceAddr, (uint32_t *)buffer, 1);
- *	value = Bytes2float(buffer);
- *	
- */
-
 class Flash{
 
 public:
-	static void read(uint32_t sourceAddr, uint32_t* result, uint32_t numberOfWords);
+	static void read(uint32_t source_addr, uint32_t* result, uint32_t number_of_words);
 
-	static bool write(uint32_t* source, uint32_t destAddr, uint32_t sizeInWords);
+	static bool write(uint32_t* source, uint32_t dest_addr, uint32_t size_in_words);
 
-	static bool erase(uint32_t startSector, uint32_t endSector); //TODO: Este metodo tiene que ser privado antes de un pull request
+	static bool erase(uint32_t start_sector, uint32_t end_sector);
 
 private:
 
-	static uint32_t getSector(uint32_t Address);
+	static uint32_t get_sector(uint32_t address);
 
-	static uint32_t getSectorStartingAddress(uint32_t sector);
-
-
-
+	static uint32_t get_sector_starting_address(uint32_t sector);
 };
-
-
 
 #endif /* HALAL_SERVICES_FLASH_FLASH_HPP_ */

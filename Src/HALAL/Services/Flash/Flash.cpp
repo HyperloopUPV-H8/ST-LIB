@@ -7,28 +7,26 @@
 
 #include "../Inc/HALAL/Services/Flash/Flash.hpp"
 
-
-
-void Flash::read(uint32_t sourceAddr, uint32_t* result, uint32_t numberOfWords){
-	if (sourceAddr < FLASH_START_ADDRESS || sourceAddr > FLASH_END_ADDRESS) {
-			//TODO: Handle exception (memory out of limits)
+void Flash::read(uint32_t source_addr, uint32_t* result, uint32_t number_of_words){
+	if (source_addr < FLASH_START_ADDRESS || source_addr > FLASH_END_ADDRESS) {
+			//TODO: Handle exception (address out of memory limits)
 			return;
-
 	}
 
 	HAL_FLASH_Unlock();
-	while(numberOfWords > 0){
+	while(number_of_words > 0){
 		*result = *(__IO uint32_t *)sourceAddr;
-		sourceAddr += 4;
+		source_addr += 4;
 		result++;
-		numberOfWords--;
+		number_of_words--;
 	}
 	HAL_FLASH_Lock();
 }
 
+//TODO: Estaria muy bien optimizar el uso de ram en la escritura de múltiples sectores
 bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_words){
 	if (dest_addr < FLASH_SECTOR4_START_ADDRESS || dest_addr > FLASH_END_ADDRESS) {
-		//TODO: Handle exception (memory out of limits)
+		//TODO: Handle exception (address out of memory limits)
 		return false;
 	}
 
@@ -37,19 +35,17 @@ bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_word
 	uint32_t buff_pos, source_pos;
 	uint32_t index = 0;
 
-	uint32_t start_sector = Flash::getSector(dest_addr);
-	uint32_t start_sector_addr = Flash::getSectorStartingAddress(start_sector);
+	uint32_t start_sector = Flash::get_sector(dest_addr);
+	uint32_t start_sector_addr = Flash::get_sector_starting_address(start_sector);
 	uint32_t end_address = dest_addr + ((number_of_words * 4) - 4);
-	uint32_t end_sector = Flash::getSector(end_address);
+	uint32_t end_sector = Flash::get_sector(end_address);
 	uint8_t number_of_sectors = end_sector - start_sector + 1;
 	uint32_t buffer[SECTOR_SIZE_IN_WORDS * number_of_sectors];
-
-	//TODO: Hay que adaptar el código para poder escribir en más de un sector
-	Flash::read(start_sector_addr, buffer, SECTOR_SIZE_IN_WORDS * number_of_sectors);
-
 	start_relative_position_in_words = (dest_addr - start_sector_addr) / 4 ;
 	end_relative_position_in_words = start_relative_position_in_words + number_of_words - 1;
 	source_pos = 0;
+
+	Flash::read(start_sector_addr, buffer, SECTOR_SIZE_IN_WORDS * number_of_sectors);
 	for (buff_pos = start_relative_position_in_words; buff_pos <= end_relative_position_in_words && source_pos < number_of_words; ++buff_pos ) {
 		buffer[buff_pos] = source[source_pos];
 		source_pos++;
@@ -61,15 +57,12 @@ bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_word
 
 	HAL_FLASH_Unlock();
 	while(index < SECTOR_SIZE_IN_WORDS * number_of_sectors){
-		//Escribir parcialmente con lo nuevo mas lo viejo
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, start_sector_addr, (uint32_t)&buffer[index]) == HAL_OK) {
 			start_sector_addr += 4 * FLASHWORD;
 			index += FLASHWORD;
 		}else{
-			//TODO: Exception handle
-			//TODO: Borrar la siguiente linea antes del pr
-			auto aux = HAL_FLASH_GetError();
 			HAL_FLASH_Lock();
+			//TODO: Exception handle (Error while writing, aborting...)
 			return false;
 		}
 	}
@@ -92,9 +85,7 @@ bool Flash::erase(uint32_t startSector, uint32_t endSector){
 
 	if (HAL_FLASHEx_Erase(&EraseInitStruct, &sectorError) != HAL_OK)
 	{
-		//TODO: Handle the exception
-		//TODO: Borrar esta linea antes del pr
-		auto aux = HAL_FLASH_GetError();
+		//TODO: Handle the exception(Error while erasing, aborting...)
 		HAL_FLASH_Lock();
 		return false;
 	}
@@ -103,9 +94,9 @@ bool Flash::erase(uint32_t startSector, uint32_t endSector){
 	return true;
 }
 
-uint32_t Flash::getSector(uint32_t Address)
+uint32_t Flash::get_sector(uint32_t Address)
 {
-  uint32_t sector = 0;
+  uint32_t sector = FLASH_SECTOR_0;
 
   /* BANK 1 */
   if((Address >= 0x08000000) && (Address < 0x08020000))
@@ -144,35 +135,35 @@ uint32_t Flash::getSector(uint32_t Address)
   return sector;
 }
 
-uint32_t Flash::getSectorStartingAddress(uint32_t sector){
+uint32_t Flash::get_sector_starting_address(uint32_t sector){
 	uint32_t address;
 	switch (sector) {
 		case FLASH_SECTOR_0:
-			address = 0x08000000;
+			address = FLASH_SECTOR0_START_ADDRESS;
 		break;
 		case FLASH_SECTOR_1:
-			address = 0x08020000;
+			address = FLASH_SECTOR1_START_ADDRESS;
 		break;
 		case FLASH_SECTOR_2:
-			address = 0x08040000;
+			address = FLASH_SECTOR2_START_ADDRESS;
 		break;
 		case FLASH_SECTOR_3:
-			address = 0x08060000;
+			address = FLASH_SECTOR3_START_ADDRESS;
 		break;
 		case FLASH_SECTOR_4:
-			address = 0x08080000;
+			address = FLASH_SECTOR4_START_ADDRESS;
 		break;
 		case FLASH_SECTOR_5:
-			address = 0x080A0000;
+			address = FLASH_SECTOR5_START_ADDRESS;
 		break;
 		case FLASH_SECTOR_6:
-			address = 0x080C0000;
+			address = FLASH_SECTOR6_START_ADDRESS;
 		break;
 		case FLASH_SECTOR_7:
-			address = 0x080E0000;
+			address = FLASH_SECTOR7_START_ADDRESS;
 		break;
 		default:
-			address = 0x08000000;
+			address = FLASH_SECTOR8_START_ADDRESS;
 			break;
 	}
 
