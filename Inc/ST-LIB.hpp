@@ -5,3 +5,4 @@
 #include "HALAL/Services/DigitalInput/DigitalInput.hpp"
 #include "HALAL/Services/Flash/Flash.hpp"
 #include "HALAL/Services/Flash/FlashTests/Flash_Test.hpp"
+#include "HALAL/Services/PWM/PWM.hpp"

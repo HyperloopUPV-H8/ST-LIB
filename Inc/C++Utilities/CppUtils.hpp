@@ -28,5 +28,6 @@
 #include <typeinfo>
 #include <optional>
 #include <forward_list>
+#include <ostream>
 
 using namespace std;
