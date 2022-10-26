@@ -106,7 +106,7 @@ namespace FlashTest{
 
    bool test5_write_time_1_word(){
 	   uint32_t data = 0xAABBCCDD;
-	   uint32_t addr_data = FLASH_SECTOR5_START_ADDRESS;
+	   uint32_t addr_data = FLASH_SECTOR6_START_ADDRESS - 0x04;
 	   uint32_t addr_result = FLASH_SECTOR4_START_ADDRESS;
 	   uint16_t offset = 0x10;
 	   bool result;
@@ -122,7 +122,7 @@ namespace FlashTest{
 
    bool test6_write_time_1000_word(){
 	   uint32_t data[1000];
-	   uint32_t addr_data = FLASH_SECTOR5_START_ADDRESS;
+	   uint32_t addr_data = FLASH_SECTOR6_START_ADDRESS;
 	   uint32_t addr_result = FLASH_SECTOR4_START_ADDRESS;
 	   uint16_t offset = 0x14;
 	   bool result;
