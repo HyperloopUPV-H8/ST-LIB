@@ -16,13 +16,13 @@ namespace FlashTest{
 
 	bool test4_wr_in_sector_border();
 
-	uint64_t test5_writeTime_1_word();
+	bool test5_write_time_1_word();
 
-	uint64_t test6_readTime_1_word();
+	bool test6_write_time_1000_word();
 
-	uint64_t test7_writeTime_1000_word();
+	bool test7_read_time_1000_word(uint32_t* result);
 
-	uint64_t test8_readTime_1000_word();
+	bool test8_erase_time_1_sector();
 
 }
 

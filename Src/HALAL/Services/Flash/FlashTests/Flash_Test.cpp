@@ -102,14 +102,61 @@ namespace FlashTest{
 	   return true;
    }
 
-   uint64_t test5_writeTime_1_word(){
+   bool test5_write_time_1_word(){
 	   uint32_t data = 0xAABBCCDD;
-	   uint32_t addr = FLASH_SECTOR5_START_ADDRESS;
+	   uint32_t addr_data = FLASH_SECTOR5_START_ADDRESS;
+	   uint32_t addr_result = FLASH_SECTOR4_START_ADDRESS;
+	   uint16_t offset = 0x10;
+	   bool result;
 
 	   uint32_t init = HAL_GetTick();
-	   Flash::write(&data, addr,(uint32_t) 1);
-	   uint32_t end = HAL_GetTick();
+	   result = Flash::write(&data, addr_data,(uint32_t) 1);
+	   uint32_t end = HAL_GetTick() - init;
 
-	   return end - init;
+
+	   return result && Flash::write(&end, addr_result + offset, 1);
+
+   }
+
+   bool test6_write_time_1000_word(){
+	   uint32_t data[1000];
+	   uint32_t addr_data = FLASH_SECTOR5_START_ADDRESS;
+	   uint32_t addr_result = FLASH_SECTOR4_START_ADDRESS;
+	   uint16_t offset = 0x14;
+	   bool result;
+
+	   for(int i = 0; i < 1000; i++){
+		   data[i] = i + 1;
+	   }
+
+	   uint32_t init = HAL_GetTick();
+	   result = Flash::write(&data[0], addr_data,(uint32_t) 1000);
+	   uint32_t end = HAL_GetTick() - init;
+
+	   return result && Flash::write(&end, addr_result + offset, 1);
+   }
+
+   bool test7_read_time_1000_word(uint32_t* result){
+	   uint32_t addr_result = FLASH_SECTOR4_START_ADDRESS;
+	   uint16_t offset = 0x18;
+
+	   uint32_t init = HAL_GetTick();
+	   Flash::read(addr_result, result, 1000);
+	   uint32_t end = HAL_GetTick() - init;
+
+	   return Flash::write(&end, addr_result + offset, 1);
+   }
+
+   bool test8_erase_time_1_sector(){
+	   uint32_t addr_result = FLASH_SECTOR4_START_ADDRESS;
+	   uint32_t sector = FLASH_SECTOR_7;
+	   uint16_t offset = 0x1C;
+	   bool result;
+
+	   uint32_t init = HAL_GetTick();
+	   result =  Flash::erase(sector, sector);
+	   uint32_t end = HAL_GetTick() - init;
+
+	   return result && Flash::write(&end, addr_result + offset, 1);
    }
 }
