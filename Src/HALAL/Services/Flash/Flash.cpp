@@ -15,7 +15,7 @@ void Flash::read(uint32_t source_addr, uint32_t* result, uint32_t number_of_word
 
 	HAL_FLASH_Unlock();
 	while(number_of_words > 0){
-		*result = *(__IO uint32_t *)sourceAddr;
+		*result = *(__IO uint32_t *)source_addr;
 		source_addr += 4;
 		result++;
 		number_of_words--;
@@ -163,7 +163,7 @@ uint32_t Flash::get_sector_starting_address(uint32_t sector){
 			address = FLASH_SECTOR7_START_ADDRESS;
 		break;
 		default:
-			address = FLASH_SECTOR8_START_ADDRESS;
+			address = FLASH_SECTOR0_START_ADDRESS;
 			break;
 	}
 
