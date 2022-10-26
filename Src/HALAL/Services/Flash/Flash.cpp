@@ -52,11 +52,12 @@ bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_word
 	}
 
 	if (!Flash::erase(start_sector, end_sector)) {
+		//TODO: Exception handle (Error while erasing for writing, aborting...)
 		return false;
 	}
 
 	HAL_FLASH_Unlock();
-	while(index < SECTOR_SIZE_IN_WORDS * number_of_sectors){
+	while(index < (uint32_t)(SECTOR_SIZE_IN_WORDS * number_of_sectors) ){
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, start_sector_addr, (uint32_t)&buffer[index]) == HAL_OK) {
 			start_sector_addr += 4 * FLASHWORD;
 			index += FLASHWORD;
