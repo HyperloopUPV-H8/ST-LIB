@@ -85,8 +85,7 @@ namespace FlashTest{
 	   return first_write && second_write && third_write;
 	}
 
-   bool test4_writing_in_sector_border(){
-	   __IO uint32_t aux = 123;
+   bool test4_wr_in_sector_border(){
 	   uint32_t init_data[] = {1024, 2048, 4096, 8192};
 	   uint32_t data_result[4];
 	   uint32_t addr = FLASH_SECTOR5_START_ADDRESS - 0x08;
@@ -101,5 +100,16 @@ namespace FlashTest{
 	   }
 
 	   return true;
+   }
+
+   uint64_t test5_writeTime_1_word(){
+	   uint32_t data = 0xAABBCCDD;
+	   uint32_t addr = FLASH_SECTOR5_START_ADDRESS;
+
+	   uint32_t init = HAL_GetTick();
+	   Flash::write(&data, addr,(uint32_t) 1);
+	   uint32_t end = HAL_GetTick();
+
+	   return end - init;
    }
 }

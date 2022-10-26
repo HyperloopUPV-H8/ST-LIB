@@ -14,17 +14,15 @@ namespace FlashTest{
 
 	bool test3_writing_multiple_float();
 
-	bool test4_writing_in_sector_border();
+	bool test4_wr_in_sector_border();
 
-	bool test5_readng_in_sector_border();
+	uint64_t test5_writeTime_1_word();
 
-	bool test6_writeTime_1_word();
+	uint64_t test6_readTime_1_word();
 
-	bool test7_readTime_1_word();
+	uint64_t test7_writeTime_1000_word();
 
-	bool test8_writeTime_1000_word();
-
-	bool test9_readTime_1000_word();
+	uint64_t test8_readTime_1000_word();
 
 }
 
