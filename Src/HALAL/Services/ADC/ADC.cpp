@@ -69,27 +69,30 @@ optional<uint8_t> ADC::register_adc(Pin pin) {
 		return id;
 	}
 
-	return nullopt;
+	return {};
 }
 
 void ADC::turn_on_adc(uint8_t id){
+	if (!serviceIDs.contains(id)) { return; }
 	Pin pin = serviceIDs[id];
 	ADCchannel adcChannel = pinADCMap[pin];
 
+	HAL_StatusTypeDef status;
 	if (adcChannel.adc == &hadc1){
-		HAL_StatusTypeDef status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf1, sizeof(adc_buf1) / sizeof(uint16_t));
+		status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf1, sizeof(adc_buf1) / sizeof(uint16_t));
 	}
 	else if (adcChannel.adc == &hadc2){
-		HAL_StatusTypeDef status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf2, sizeof(adc_buf2) / sizeof(uint16_t));
+		status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf2, sizeof(adc_buf2) / sizeof(uint16_t));
 	}
 	else if (adcChannel.adc == &hadc3){
-		HAL_StatusTypeDef status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf3, sizeof(adc_buf3) / sizeof(uint16_t));
+		status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf3, sizeof(adc_buf3) / sizeof(uint16_t));
 	}
 
 	if (status != HAL_OK) { Error_Handler(); }
 }
 
 void ADC::turn_off_adc(uint8_t id) {
+	if (!serviceIDs.contains(id)) { return; }
 	Pin pin = serviceIDs[id];
 	ADCchannel adcChannel = pinTimerMap[pin];
 
@@ -98,21 +101,20 @@ void ADC::turn_off_adc(uint8_t id) {
 }
 
 optional<uint16_t> ADC::get_pin_value(uint8_t id) {
+	if (!serviceIDs.contains(id)) { return {}; }
 	Pin pin = serviceIDs[id];
-	if (pinADCMap.contains(pin)) { // check if pin is linked with id
-		ADCchannel adcChannel = pinADCMap[pin];
-		uint8_t bufpos = 0; // implement logic to find bufpos
+	if (!pinADCMap.contains(pin)) { return {}; }
 
-		if (adcChannel.adc == &hadc1){
-			return adc_read1[bufpos];
-		}
-		else if (adcChannel.adc == &hadc2){
-			return adc_read2[bufpos];
-		}
-		else if (adcChannel.adc == &hadc3){
-			return adc_read3[bufpos];
-		}
+	ADCchannel adcChannel = pinADCMap[pin];
+	uint8_t bufpos = 0; // implement logic to find bufpos
+	if (adcChannel.adc == &hadc1){
+		return adc_read1[bufpos];
 	}
-	return {};
+	else if (adcChannel.adc == &hadc2){
+		return adc_read2[bufpos];
+	}
+	else if (adcChannel.adc == &hadc3){
+		return adc_read3[bufpos];
+	}
 }
 
