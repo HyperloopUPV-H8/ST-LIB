@@ -5,8 +5,7 @@
  *      Author: Pablo
  */
 
-#ifndef HALAL_SERVICES_FLASH_FLASH_HPP_
-#define HALAL_SERVICES_FLASH_FLASH_HPP_
+#pragma once
 
 #include "stm32h7xx_hal.h"
 #include "../../../C++Utilities/CppUtils.hpp"
@@ -77,5 +76,3 @@ private:
 
 	static uint32_t get_sector_starting_address(uint32_t sector);
 };
-
-#endif /* HALAL_SERVICES_FLASH_FLASH_HPP_ */
