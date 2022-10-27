@@ -5,8 +5,7 @@
  *      Author: alejandro
  */
 
-#ifndef HALAL_SERVICES_ADC_HPP_
-#define HALAL_SERVICES_ADC_HPP_
+#pragma once
 
 #include "../../Models/PinModel/Pin.hpp"
 #include "../../../C++Utilities/CppUtils.hpp"
@@ -27,13 +26,5 @@ public:
 	static optional<uint8_t> register_adc(Pin pin);
 	static void turn_on_adc(uint8_t id);
 	static void turn_off_adc(uint8_t id);
-	static optional<uint16_t> get_pin_value(Pin pin);
-
-private:
-	static optional<uint16_t[]> get_adc_value(ADC_HandleTypeDef* hadc);
-
+	static optional<uint16_t> get_pin_value(uint8_t id);
 };
-
-
-
-#endif /* HALAL_SERVICES_ADC_HPP_ */
