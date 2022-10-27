@@ -99,7 +99,6 @@ void ADC::turn_off_adc(uint8_t id) {
 optional<uint16_t> ADC::get_pin_value(uint8_t id) {
 	if (!service_IDs.contains(id)) { return {}; }
 	Pin pin = service_IDs[id];
-	if (!pin_adc_map.contains(pin)) { return {}; }
 
 	adc_channel adc_channel = pin_adc_map[pin];
 	if (adc_channel.adc == &hadc1){
