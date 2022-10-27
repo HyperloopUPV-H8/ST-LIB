@@ -11,8 +11,6 @@ extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 extern ADC_HandleTypeDef hadc3;
 
-extern void Error_Handler();
-
 uint16_t adc_buf1[ADC_BUF1_LEN];
 uint16_t adc_buf2[ADC_BUF2_LEN];
 uint16_t adc_buf3[ADC_BUF3_LEN];
@@ -86,7 +84,7 @@ void ADC::turn_on_adc(uint8_t id){
 		status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf3, sizeof(adc_buf3) / sizeof(uint16_t));
 	}
 
-	if (status != HAL_OK) { }//Error_Handler(); }
+	if (status != HAL_OK) { }// TODO Error handling
 }
 
 void ADC::turn_off_adc(uint8_t id) {
@@ -95,7 +93,7 @@ void ADC::turn_off_adc(uint8_t id) {
 	ADCchannel adcChannel = pin_adc_map[pin];
 
 	HAL_StatusTypeDef status = HAL_ADC_Stop_DMA(adcChannel.adc);
-	if (status != HAL_OK) { } //Error_Handler(); }
+	if (status != HAL_OK) { } // TODO Error handling
 }
 
 optional<uint16_t> ADC::get_pin_value(uint8_t id) {
@@ -103,15 +101,14 @@ optional<uint16_t> ADC::get_pin_value(uint8_t id) {
 	Pin pin = service_IDs[id];
 	if (!pin_adc_map.contains(pin)) { return {}; }
 
-	ADCchannel adcChannel = pin_adc_map[pin];
-	if (adcChannel.adc == &hadc1){
-		return adc_read1[adcChannel.rank];
+	ADCchannel adc_channel = pin_adc_map[pin];
+	if (adc_channel.adc == &hadc1){
+		return adc_read1[adc_channel.rank];
 	}
-	else if (adcChannel.adc == &hadc2){
-		return adc_read2[adcChannel.rank];
+	else if (adc_channel.adc == &hadc2){
+		return adc_read2[adc_channel.rank];
 	}
-	else if (adcChannel.adc == &hadc3){
-		return adc_read3[adcChannel.rank];
+	else if (adc_channel.adc == &hadc3){
+		return adc_read3[adc_channel.rank];
 	}
 }
-
