@@ -40,7 +40,7 @@ map<uint8_t, pair<Pin, Pin>> Encoder::service_IDs = {};
 
 optional<uint8_t> register_encoder(Pin& pin1, Pin& pin2){
 	if (Encoder::pin_timer_map.find(pair<Pin, Pin>(pin1, pin2)) == Encoder::pin_timer_map.end())
-    return {};
+		return {};
 
 	Pin::register_pin(pin1, ALTERNATIVE);
 	Pin::register_pin(pin2, ALTERNATIVE);
@@ -53,6 +53,9 @@ optional<uint8_t> register_encoder(Pin& pin1, Pin& pin2){
 }
 
 void turn_on_encoder(uint8_t id){
+	if (!Encoder::service_IDs.contains(id))
+		return;
+
 	Pin pin1 = Encoder::service_IDs[id].first;
 	Pin pin2 = Encoder::service_IDs[id].second;
 
@@ -70,6 +73,9 @@ void turn_on_encoder(uint8_t id){
 }
 
 void turn_off_encoder(uint8_t id){
+	if (!Encoder::service_IDs.contains(id))
+		return;
+
 	Pin pin1 = Encoder::service_IDs[id].first;
 	Pin pin2 = Encoder::service_IDs[id].second;
 
@@ -82,6 +88,9 @@ void turn_off_encoder(uint8_t id){
 }
 
 void reset_encoder(uint8_t id){
+	if (!Encoder::service_IDs.contains(id))
+		return;
+
 	Pin pin1 = Encoder::service_IDs[id].first;
 	Pin pin2 = Encoder::service_IDs[id].second;
 	DoubleTimerChannel timer = Encoder::pin_timer_map[pair<Pin, Pin>(pin1, pin2)];
@@ -89,7 +98,10 @@ void reset_encoder(uint8_t id){
 	timer.timer->Instance->CNT = 0;
 }
 
-uint32_t get_encoder_counter(uint8_t id){
+optional<uint32_t> get_encoder_counter(uint8_t id){
+	if (!Encoder::service_IDs.contains(id))
+		return{};
+
 	Pin pin1 = Encoder::service_IDs[id].first;
 	Pin pin2 = Encoder::service_IDs[id].second;
 	DoubleTimerChannel timer = Encoder::pin_timer_map[pair<Pin, Pin>(pin1, pin2)];
@@ -97,7 +109,10 @@ uint32_t get_encoder_counter(uint8_t id){
 	return timer.timer->Instance->CNT;
 }
 
-bool get_encoder_direction(uint8_t id){
+optional<bool> get_encoder_direction(uint8_t id){
+	if (!Encoder::service_IDs.contains(id))
+		return{};
+
 	Pin pin1 = Encoder::service_IDs[id].first;
 	Pin pin2 = Encoder::service_IDs[id].second;
 	DoubleTimerChannel timer = Encoder::pin_timer_map[pair<Pin, Pin>(pin1, pin2)];

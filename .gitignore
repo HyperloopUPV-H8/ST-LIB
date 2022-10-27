@@ -8,3 +8,6 @@ PRUEBAS/
 
 #Ignore language settings
 .settings/language.settings.xml
+
+#Ignore .cproject
+.cproject

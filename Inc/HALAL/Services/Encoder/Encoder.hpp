@@ -30,7 +30,7 @@ public:
 
 	static void rest_encoder(uint8_t id);
 
-	static uint32_t get_encoder_counter(uint8_t id);
+	static optional<uint32_t> get_encoder_counter(uint8_t id);
 
-	static bool get_encoder_direction(uint8_t id);
+	static optional<bool> get_encoder_direction(uint8_t id);
 };
