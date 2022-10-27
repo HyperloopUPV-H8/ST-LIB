@@ -59,6 +59,9 @@
 	Las variables en la flash hay que investigar si funcionan y como funionan
 	lo dejo escrito porque la posibilidad existe y puede ser interesante
 	tenerlas en cuenta.
+
+	Más información sobre problemas y soluciones de usar la FLASH en la siguiente issue
+	en github: https://github.com/HyperloopUPV-H8/ST-LIB/issues/16
 */
 
 class Flash{
