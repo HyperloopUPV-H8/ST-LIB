@@ -10,11 +10,16 @@
 #include "../../Models/PinModel/Pin.hpp"
 #include "../../../C++Utilities/CppUtils.hpp"
 
+struct DoubleTimerChannel {
+	TIM_HandleTypeDef* timer;
+	unsigned int channel1;
+	unsigned int channel2;
+};
 
 class Encoder {
 public:
 	static forward_list<uint8_t> ID_manager;
-	static map<Pin, TIM_HandleTypeDef*> pin_timer_map;
+	static map<pair<Pin, Pin>, DoubleTimerChannel> pin_timer_map;
 	static map<uint8_t, pair<Pin, Pin>> service_IDs;
 
 	static optional<uint8_t> register_encoder(Pin pin);
@@ -23,5 +28,9 @@ public:
 
 	static void turn_off_encoder(uint8_t id);
 
-	static void get_encoder_value(uint8_t id);
+	static void rest_encoder(uint8_t id);
+
+	static uint32_t get_encoder_counter(uint8_t id);
+
+	static bool get_encoder_direction(uint8_t id);
 };
