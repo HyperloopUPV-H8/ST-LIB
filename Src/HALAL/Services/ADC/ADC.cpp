@@ -15,6 +15,8 @@ extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 extern ADC_HandleTypeDef hadc3;
 
+extern void Error_Handler(void);
+
 uint16_t adc_buf1[ADC_BUF1_LEN];
 uint16_t adc_buf2[ADC_BUF2_LEN];
 uint16_t adc_buf3[ADC_BUF3_LEN];
@@ -75,20 +77,24 @@ void ADC::turn_on_adc(uint8_t id){
 	ADCchannel adcChannel = pinADCMap[pin];
 
 	if (adcChannel.adc == &hadc1){
-		HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf1, sizeof(adc_buf1) / sizeof(uint16_t));
+		HAL_StatusTypeDef status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf1, sizeof(adc_buf1) / sizeof(uint16_t));
 	}
 	else if (adcChannel.adc == &hadc2){
-		HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf2, sizeof(adc_buf2) / sizeof(uint16_t));
+		HAL_StatusTypeDef status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf2, sizeof(adc_buf2) / sizeof(uint16_t));
 	}
 	else if (adcChannel.adc == &hadc3){
-		HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf3, sizeof(adc_buf3) / sizeof(uint16_t));
+		HAL_StatusTypeDef status = HAL_ADC_Start_DMA(adcChannel.adc, (uint32_t*)adc_buf3, sizeof(adc_buf3) / sizeof(uint16_t));
 	}
+
+	if (status != HAL_OK) { Error_Handler(); }
 }
 
 void ADC::turn_off_adc(uint8_t id) {
 	Pin pin = serviceIDs[id];
 	ADCchannel adcChannel = pinTimerMap[pin];
-	HAL_ADC_Stop_DMA(adcChannel.adc);
+
+	HAL_StatusTypeDef status = HAL_ADC_Stop_DMA(adcChannel.adc);
+	if (status != HAL_OK) { Error_Handler(); }
 }
 
 optional<uint16_t> ADC::get_pin_value(uint8_t id) {
