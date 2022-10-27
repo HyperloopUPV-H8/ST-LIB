@@ -13,6 +13,10 @@
 
 class Encoder {
 public:
+	static forward_list<uint8_t> ID_manager;
+	static map<Pin, TIM_HandleTypeDef*> pin_timer_map;
+	static map<uint8_t, pair<Pin, Pin>> service_IDs;
+
 	static optional<uint8_t> register_encoder(Pin pin);
 
 	static void turn_on_encoder(uint8_t id);
