@@ -13,7 +13,7 @@
 
 struct ADCchannel {
 	ADC_HandleTypeDef* adc;
-	uint8_t channel;
+	uint8_t rank;
 };
 
 class ADC {
