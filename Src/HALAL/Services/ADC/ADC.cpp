@@ -38,25 +38,25 @@ map<Pin, ADCchannel> ADC::pin_adc_map = {
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 	if (hadc == &hadc1){
-		copy(adc_buf1, adc_buf1 + ADC_BUF1_LEN, adc_read1);
+		copy(adc_buf1 + ADC_BUF1_LEN/2, adc_buf1 + ADC_BUF1_LEN, adc_read1);
 	}
 	else if (hadc == &hadc2){
-		copy(adc_buf2, adc_buf2 + ADC_BUF2_LEN, adc_read2);
+		copy(adc_buf2 + ADC_BUF2_LEN/2, adc_buf2 + ADC_BUF2_LEN, adc_read2);
 	}
 	else if (hadc == &hadc3){
-		copy(adc_buf3, adc_buf3 + ADC_BUF3_LEN, adc_read3);
+		copy(adc_buf3 + ADC_BUF3_LEN/2, adc_buf3 + ADC_BUF3_LEN, adc_read3);
 	}
 }
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc) {
 	if (hadc == &hadc1){
-		copy(adc_buf1, adc_buf1 + ADC_BUF1_LEN, adc_read1);
+		copy(adc_buf1, adc_buf1 + ADC_BUF1_LEN/2, adc_read1);
 	}
 	else if (hadc == &hadc2){
-		copy(adc_buf2, adc_buf2 + ADC_BUF2_LEN, adc_read2);
+		copy(adc_buf2, adc_buf2 + ADC_BUF2_LEN/2, adc_read2);
 	}
 	else if (hadc == &hadc3){
-		copy(adc_buf3, adc_buf3 + ADC_BUF3_LEN, adc_read3);
+		copy(adc_buf3, adc_buf3 + ADC_BUF3_LEN/2, adc_read3);
 	}
 }
 
