@@ -38,7 +38,7 @@ map<pair<Pin, Pin>, DoubleTimerChannel> Encoder::pin_timer_map = {
 
 map<uint8_t, pair<Pin, Pin>> Encoder::service_IDs = {};
 
-optional<uint8_t> register_encoder(Pin& pin1, Pin& pin2){
+optional<uint8_t> Encoder::register_encoder(Pin& pin1, Pin& pin2){
 	if (Encoder::pin_timer_map.find(pair<Pin, Pin>(pin1, pin2)) == Encoder::pin_timer_map.end())
 		return {};
 
@@ -52,7 +52,7 @@ optional<uint8_t> register_encoder(Pin& pin1, Pin& pin2){
 	return id;
 }
 
-void turn_on_encoder(uint8_t id){
+void Encoder::turn_on_encoder(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return;
 
@@ -72,7 +72,7 @@ void turn_on_encoder(uint8_t id){
 	}
 }
 
-void turn_off_encoder(uint8_t id){
+void Encoder::turn_off_encoder(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return;
 
@@ -83,11 +83,11 @@ void turn_off_encoder(uint8_t id){
 
 	if (HAL_TIM_Encoder_Stop(timer.timer, timer.channel1) != HAL_OK ||
 		HAL_TIM_Encoder_Stop(timer.timer, timer.channel2) != HAL_OK	) {
-		//TODO: Exception handle, Warning (Error stoping encoder)
+		//TODO: Exception handle, Warning (Error stopping encoder)
 	}
 }
 
-void reset_encoder(uint8_t id){
+void Encoder::reset_encoder(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return;
 
@@ -98,7 +98,7 @@ void reset_encoder(uint8_t id){
 	timer.timer->Instance->CNT = 0;
 }
 
-optional<uint32_t> get_encoder_counter(uint8_t id){
+optional<uint32_t> Encoder::get_encoder_counter(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return{};
 
@@ -109,7 +109,7 @@ optional<uint32_t> get_encoder_counter(uint8_t id){
 	return timer.timer->Instance->CNT;
 }
 
-optional<bool> get_encoder_direction(uint8_t id){
+optional<bool> Encoder::get_encoder_direction(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return{};
 
