@@ -22,7 +22,7 @@ public:
 	static map<pair<Pin, Pin>, DoubleTimerChannel> pin_timer_map;
 	static map<uint8_t, pair<Pin, Pin>> service_IDs;
 
-	static optional<uint8_t> register_encoder(Pin pin);
+	static optional<uint8_t> register_encoder(Pin& pin1, Pin& pin2);
 
 	static void turn_on_encoder(uint8_t id);
 
