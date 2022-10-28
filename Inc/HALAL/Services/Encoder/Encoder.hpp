@@ -28,7 +28,7 @@ public:
 
 	static void turn_off_encoder(uint8_t id);
 
-	static void rest_encoder(uint8_t id);
+	static void reset_encoder(uint8_t id);
 
 	static optional<uint32_t> get_encoder_counter(uint8_t id);
 
