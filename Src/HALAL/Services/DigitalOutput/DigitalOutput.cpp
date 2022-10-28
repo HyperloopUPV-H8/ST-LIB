@@ -46,7 +46,6 @@ void DigitalOutput::unregister_digital_output(uint8_t id){
 	if (!DigitalOutput::service_IDs.contains(id))
 		return;
 
-	if (DigitalOutput::service_IDs.find(id) == DigitalOutput::service_IDs.end()){ return; }
 	Pin::unregister_pin(DigitalOutput::service_IDs[id]);
 	DigitalOutput::service_IDs.erase(id);
 	DigitalOutput::ID_manager.push_front(id);
