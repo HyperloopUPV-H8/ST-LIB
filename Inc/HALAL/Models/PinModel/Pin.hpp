@@ -41,7 +41,7 @@ enum PinState{
 	ON
 };
 
-class Pin{
+class Pin {
 public:
 	GPIO_TypeDef * port;
 	GPIO_Pin pin;
@@ -59,7 +59,9 @@ public:
 	}
 
 	bool operator< (const Pin &other) const {
-		return pin < other.pin;
+		if (port == other.port)
+			return pin < other.pin;
+		return port < other.port;
 	}
 };
 
