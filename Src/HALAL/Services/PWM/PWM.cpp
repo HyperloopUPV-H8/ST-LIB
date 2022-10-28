@@ -5,7 +5,7 @@
  *      Author: aleja
  */
 
-#include "../Inc/HALAL/Services/PWM/PWM.hpp"
+#include "PWM/PWM.hpp"
 
 extern TIM_HandleTypeDef htim1;
 

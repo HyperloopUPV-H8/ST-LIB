@@ -6,9 +6,8 @@
  */
 
 #pragma once
+#include "ST-LIB.hpp"
 
-#include "stm32h7xx_hal.h"
-#include "../../../C++Utilities/CppUtils.hpp"
 
 #define FLASHWORD 8
 #define FLASH_START_ADDRESS 0x08000000

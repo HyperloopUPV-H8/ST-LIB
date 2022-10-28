@@ -6,8 +6,8 @@
  */
 
 #pragma once
+#include "ST-LIB.hpp"
 
-#include "../../Models/PinModel/Pin.hpp"
 
 class DigitalInput{
 public:

@@ -6,9 +6,7 @@
  */
 
 #pragma once
-
-#include "../../Models/PinModel/Pin.hpp"
-#include "../../../C++Utilities/CppUtils.hpp"
+#include "ST-LIB.hpp"
 
 #define ADC_BUF1_LEN 4
 #define ADC_BUF2_LEN 2
