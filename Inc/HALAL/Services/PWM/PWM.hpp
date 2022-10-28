@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "../../Models/PinModel/Pin.hpp"
+#include "ST-LIB.hpp"
 #include "../../../C++Utilities/CppUtils.hpp"
 
 

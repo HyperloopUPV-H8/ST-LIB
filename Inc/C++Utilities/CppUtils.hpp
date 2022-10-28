@@ -29,5 +29,6 @@
 #include <optional>
 #include <forward_list>
 #include <ostream>
+#include <cstring>
 
 using namespace std;
