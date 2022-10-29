@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "../../Models/PinModel/Pin.hpp"
-#include "../../../C++Utilities/CppUtils.hpp"
+#include "HALAL/Models/PinModel/Pin.hpp"
+#include "C++Utilities/CppUtils.hpp"
 
 struct DoubleTimerChannel {
 	TIM_HandleTypeDef* timer;
@@ -22,7 +22,7 @@ public:
 	static map<pair<Pin, Pin>, DoubleTimerChannel> pin_timer_map;
 	static map<uint8_t, pair<Pin, Pin>> service_IDs;
 
-	static optional<uint8_t> register_encoder(Pin& pin1, Pin& pin2);
+	static optional<uint8_t> register_encoder(Pin pin1, Pin pin2);
 
 	static void turn_on_encoder(uint8_t id);
 
