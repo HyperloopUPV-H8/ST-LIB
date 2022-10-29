@@ -6,8 +6,7 @@
  */
 #pragma once
 #include "stm32h7xx_hal.h"
-#include "../../../../Inc/C++Utilities/CppUtils.hpp"
-
+#include "C++Utilities/CppUtils.hpp"
 enum GPIO_Pin{
 	PIN_0 = ((uint16_t)0x0001),
 	PIN_1 = ((uint16_t)0x0002),
@@ -41,7 +40,7 @@ enum PinState{
 	ON
 };
 
-class Pin{
+class Pin {
 public:
 	GPIO_TypeDef * port;
 	GPIO_Pin pin;
@@ -59,7 +58,9 @@ public:
 	}
 
 	bool operator< (const Pin &other) const {
-		return pin < other.pin;
+		if (port == other.port)
+			return pin < other.pin;
+		return port < other.port;
 	}
 };
 

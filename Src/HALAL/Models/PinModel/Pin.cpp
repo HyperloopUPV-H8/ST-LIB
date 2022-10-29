@@ -5,7 +5,7 @@
  *      Author: stefa
  */
 
-#include "../Inc/HALAL/Models/PinModel/Pin.hpp"
+#include "PinModel/Pin.hpp"
 
 Pin::Pin(){}
 
