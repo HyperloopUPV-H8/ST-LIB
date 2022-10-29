@@ -14,3 +14,6 @@ PRUEBAS/
 
 #Ignore metadata
 .metadata/
+
+#Ignore personal .settings folder
+.settings/
