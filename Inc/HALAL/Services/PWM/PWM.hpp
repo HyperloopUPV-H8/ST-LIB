@@ -24,6 +24,8 @@ public:
 	static optional<uint8_t> register_pwm(Pin& pin);
 	static void unregister_pwm(uint8_t id);
 	static void turn_on_pwm(uint8_t id);
+	static void turn_on_pwm_negated(uint8_t id);
 	static void turn_off_pwm(uint8_t id);
+	static void turn_off_pwm_negated(uint8_t id);
 	static void change_duty_cycle(uint8_t id, uint8_t duty_cicle);
 };

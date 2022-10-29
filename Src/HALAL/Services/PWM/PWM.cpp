@@ -16,7 +16,6 @@ map<Pin, TimerChannel> PWM::pinTimerMap = {
 };
 map<uint8_t,Pin> PWM::serviceIDs = {};
 
-
 optional<uint8_t> PWM::register_pwm(Pin& pin){
 	if (PWM::pinTimerMap.find(pin) == PWM::pinTimerMap.end()) { return {}; }
 	Pin::register_pin(pin, ALTERNATIVE);
@@ -32,26 +31,36 @@ void PWM::unregister_pwm(uint8_t id){
 	PWM::IDmanager.push_front(id);
 }
 
-void PWM::turn_off_pwm(uint8_t id){
-	Pin pin = PWM::serviceIDs[id];
-	TimerChannel timerChannel = PWM::pinTimerMap[pin];
-	HAL_TIM_PWM_Stop(timerChannel.timer, timerChannel.channel);
-}
-
 void PWM::turn_on_pwm(uint8_t id){
 	Pin pin = PWM::serviceIDs[id];
-	TimerChannel timerChannel = PWM::pinTimerMap[pin];
-	HAL_TIM_PWM_Start(timerChannel.timer, timerChannel.channel);
+	TimerChannel timer_channel = PWM::pinTimerMap[pin];
+	HAL_TIM_PWM_Start(timer_channel.timer, timer_channel.channel);
 }
 
+void PWM::turn_off_pwm(uint8_t id){
+	Pin pin = PWM::serviceIDs[id];
+	TimerChannel timer_channel = PWM::pinTimerMap[pin];
+	HAL_TIM_PWM_Stop(timer_channel.timer, timer_channel.channel);
+}
 
+void PWM::turn_on_pwm_negated(uint8_t id) {
+	Pin pin = PWM::serviceIDs[id];
+	TimerChannel timer_channel = PWM::pinTimerMap[pin];
+	HAL_TIMEx_PWMN_Start(timer_channel.timer, timer_channel.channel);
+}
+
+void PWM::turn_on_pwm_negated(uint8_t id) {
+	Pin pin = PWM::serviceIDs[id];
+	TimerChannel timer_channel = PWM::pinTimerMap[pin];
+	HAL_TIMEx_PWMN_Stop(timer_channel.timer, timer_channel.channel);
+}
 
 void PWM::change_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	if (duty_cycle >= 0 && duty_cycle <= 100) {
 		Pin pin = PWM::serviceIDs[id];
-		TimerChannel timerChannel = PWM::pinTimerMap[pin];
-		uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(timerChannel.timer) / 100 * duty_cycle;
-		__HAL_TIM_SET_COMPARE(timerChannel.timer, timerChannel.channel, raw_duty);
+		TimerChannel timer_channel = PWM::pinTimerMap[pin];
+		uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(timer_channel.timer) / 100 * duty_cycle;
+		__HAL_TIM_SET_COMPARE(timer_channel.timer, timer_channel.channel, raw_duty);
 	}
 }
 
