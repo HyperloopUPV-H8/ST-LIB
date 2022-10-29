@@ -56,7 +56,6 @@
 									<listOptionValue builtIn="false" value="../Inc"/>
 									<listOptionValue builtIn="false" value="../Drivers/STM32H7xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services/*}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1475030527" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
@@ -188,9 +187,7 @@
 									<listOptionValue builtIn="false" value="../Inc"/>
 									<listOptionValue builtIn="false" value="../Drivers/STM32H7xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services/*}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/For the future Hyperloop is necessary to have vehicles with highly complex internal and external mechanisms for data acquisition, processing and handling .This requires a very precise firmware system that allows the management of all possible variables and conditions, including localization. Also, this system has to work in a Faraday's tube and cannot be too expensive on the infrastructure side. This award is for the pod with the best designed and executed Firmware integration and pod location.}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.640356923" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
