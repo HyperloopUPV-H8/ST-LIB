@@ -6,9 +6,7 @@
  */
 
 #pragma once
-
-#include "../../Models/PinModel/Pin.hpp"
-#include "../../../C++Utilities/CppUtils.hpp"
+#include "ST-LIB.hpp"
 
 
 struct TimerChannel {
