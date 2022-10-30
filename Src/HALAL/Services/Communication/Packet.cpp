@@ -71,12 +71,35 @@ void Packet<Type, Types...>::fill_buffer() {
 		fill_buffer<I + 1>();
 	}
 }
-#if __cpp_deduction_guides >= 201606
-template<typename Type, typename... Types>
-Packet(int id, PacketValue<Type> a, PacketValue<Types>... args)->Packet<Type, Types...>;
-template<typename Type>
-Packet(int id, PacketValue<Type> a)->Packet<Type>;
-Packet(int id)->Packet<>;
+template<class Type, class ... Types>
+bool Packet<Type, Types...>::check_id(uint8_t* new_data) {
+    if (id != *(uint16_t*)new_data) {
+        return false;
+    }
+    return true;
+}
 
-#endif
+template<class Type, class ... Types> template <size_t I = 0>
+void Packet<Type, Types...>::load_data(uint8_t* new_data) {
+    if constexpr (I == nbr_of_values) {
+        return;
+    }
+    else if constexpr (I < nbr_of_values) {
+        auto elem = get<I>();
+        using cast_type = remove_reference<decltype(elem)>::type::value_type;
+        cast_type* new_value = (cast_type*)(new_data+ptr_loc);
+        elem.load(*new_value);
+        ptr_loc += (uint16_t)elem.size();
+        load_data<I + 1>(new_data);
+    }
+}
+
+template<class Type, class ... Types>
+void Packet<Type, Types...>::save_data(uint8_t* new_data) {
+    if (!check_id(new_data)) {
+        return;
+    }
+    load_data(new_data);
+    ptr_loc = sizeof(id);
+}
 

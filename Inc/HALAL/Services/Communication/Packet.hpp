@@ -55,6 +55,13 @@ public:
 	template <size_t I = 0>
 	void fill_buffer();
 
+    bool check_id(uint8_t* new_data);
+
+    template <size_t I = 0>
+    void load_data(uint8_t* new_data);
+
+    void save_data(uint8_t* new_data);
+
 
 public:
 	uint16_t bffr_size = sizeof(id);
