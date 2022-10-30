@@ -5,9 +5,3 @@ Release/
 #Ignore test folder
 Pruebas/
 PRUEBAS/
-
-#Ignore language settings
-.settings/language.settings.xml
-
-#Ignore .cproject
-.cproject
