@@ -5,7 +5,7 @@
  *      Author: Pablo
  */
 
-#include "../Flash.hpp"
+#include "Flash/Flash.hpp"
 namespace FlashTest{
 
 	bool test1_writing_1_float();
