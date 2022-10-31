@@ -110,4 +110,5 @@ optional<uint16_t> ADC::get_pin_value(uint8_t id) {
 	else if (adc_channel.adc == &hadc3){
 		return adc_read3[adc_channel.rank];
 	}
+	return {};
 }
