@@ -71,10 +71,26 @@ void IC::read_frequency(uint8_t id) {
 		diff = (0xffffffff - tim_data.first) + tim_data.second;
 	}
 
-	float refClock = HAL_RCC_GetPCLK1Freq() / htim->Init.Prescaler;
+	float refClock = HAL_RCC_GetPCLK1Freq() / tim_ch.timer->Init.Prescaler;
 	return refClock / diff;
+}
 
+void IC:: read_duty_cycle(uint8_t id) {
+	Pin pin = IC::serviceIDs[id];
+	TimerChannel tim_ch = IC::pinTimerMap[pin];
+	pair <int, int> tim_data = IC::data[tim_ch];
 
+	int diff;
+	if (tim_data.second >= tim_data.first) {
+		diff = tim_data.second - tim_data.first;;
+	}
+
+	else if (IC_Val1 > IC_Val2) {
+		diff = (0xffffffff - tim_data.first) + tim_data.second;
+	}
+
+	float refClock = HAL_RCC_GetPCLK1Freq() / tim_ch.timer->Init.Prescaler;
+    return (uint32_t)(((uint64_t) diff * 1000000) / refClock);
 }
 
 
