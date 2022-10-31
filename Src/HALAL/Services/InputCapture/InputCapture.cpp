@@ -16,6 +16,32 @@ map<Pin, TimerChannel> IC::pinTimerMap = {
 };
 map<uint8_t,Pin> IC::serviceIDs = {};
 
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+	TimerChannel tim_ch = {htim, htim->Channel};
+	if (IC::data.find(tim_ch) == IC::data.end()) {
+		data[tim_ch] = {0, 0};
+	}
+			data[tim_ch].first = data[tim_ch].second;
+			data[tim_ch].second = HAL_TIM_ReadCapturedValue(tim_ch);
+
+			if (IC_Val2 > IC_Val1)
+			{
+				Difference = IC_Val2-IC_Val1;
+			}
+
+			else if (IC_Val1 > IC_Val2)
+			{
+				Difference = (0xffffffff - IC_Val1) + IC_Val2;
+			}
+
+			float refClock = TIMCLOCK/(PRESCALAR);
+
+			frequency = refClock/Difference;
+
+			__HAL_TIM_SET_COUNTER(htim, 0);  // reset the counter
+}
+
 optional<uint8_t> IC::register_ic(Pin& pin){
 	if (IC::pinTimerMap.find(pin) == IC::pinTimerMap.end()) { return {}; }
 	Pin::register_pin(pin, ALTERNATIVE);
@@ -33,7 +59,7 @@ void IC::unregister_ic(uint8_t id){
 
 void IC::turn_off_ic(uint8_t id){
 	Pin pin = IC::serviceIDs[id];
-	TimerChannel timerChannel = IC::pinTimerMap[pin];
+	TimerChannel timer_channel = IC::pinTimerMap[pin];
 	HAL_TIM_IC_Stop_IT(timerChannel.timer, timerChannel.channel);
 }
 
@@ -41,6 +67,10 @@ void IC::turn_on_ic(uint8_t id){
 	Pin pin = IC::serviceIDs[id];
 	TimerChannel timerChannel = IC::pinTimerMap[pin];
 	HAL_TIM_IC_Start_IT(timerChannel.timer, timerChannel.channel);
+}
+
+void IC::read_frequency(uint8_t id) {
+
 }
 
 
