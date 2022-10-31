@@ -9,6 +9,7 @@
 
 #include "ST-LIB.hpp"
 
+
 struct DoublePin {
 	Pin* pin1;
 	Pin* pin2;
@@ -16,7 +17,7 @@ struct DoublePin {
 	bool operator<(const DoublePin& other) const {
 		if (pin1 < other.pin1) {
 			return true;
-		}else if(pin1 == pin2){
+		}else if(pin1 == other.pin1){
 			if (pin2 < other.pin2) {
 				return true;
 			}
@@ -29,19 +30,21 @@ struct DoublePin {
 	}
 };
 
-struct DoubleTimerChannel {
-	TIM_HandleTypeDef* timer;
-	unsigned int channel1;
-	unsigned int channel2;
-};
-
 class Encoder {
 public:
 	static forward_list<uint8_t> ID_manager;
-	static map<DoublePin, DoubleTimerChannel> pin_timer_map;
+	static map<DoublePin, TIM_HandleTypeDef*> pin_timer_map;
 	static map<uint8_t, DoublePin> service_IDs;
 
-	static optional<uint8_t> register_encoder(Pin pin1, Pin pin2);
+	/**
+	 * @brief This method register a new encoder
+	 *
+	 * @param pin1	First pin of the encoder
+	 * @param pin2 	Second pin of the encoder
+	 *
+	 * @retval optional<uint8_t> Id of the service or empty if the pin pair is not valid
+	 */
+	static optional<uint8_t> register_encoder(Pin pin1, Pin pin2, TIM_HandleTypeDef* timer);
 
 	static void turn_on_encoder(uint8_t id);
 
