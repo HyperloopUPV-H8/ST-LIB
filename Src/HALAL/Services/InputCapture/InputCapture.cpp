@@ -15,6 +15,7 @@ map<Pin, TimerChannel> IC::pinTimerMap = {
 		{PE9, {&htim1, TIM_CHANNEL_1}}
 };
 map<uint8_t,Pin> IC::serviceIDs = {};
+map<
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {

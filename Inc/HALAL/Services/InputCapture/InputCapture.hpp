@@ -8,16 +8,11 @@
 #pragma once
 #include "ST-LIB.hpp"
 
-struct TimerChannel {
-	TIM_HandleTypeDef* timer;
-	unsigned int channel;
-};
-
 class IC {
 public:
 	static map<uint8_t, Pin> serviceIDs;
 	static map<Pin, TimerChannel> pinTimerMap;
-	static map< TimerChannel, pair<int, int> > data;
+	static map<TimerChannel, pair<int, int> > data;
 
 	static forward_list<uint8_t> IDmanager;
 	static optional<uint8_t> register_ic(Pin& pin);
