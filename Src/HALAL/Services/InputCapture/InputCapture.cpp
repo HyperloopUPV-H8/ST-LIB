@@ -25,19 +25,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			data[tim_ch].first = data[tim_ch].second;
 			data[tim_ch].second = HAL_TIM_ReadCapturedValue(tim_ch);
 
-			if (IC_Val2 > IC_Val1)
-			{
-				Difference = IC_Val2-IC_Val1;
-			}
 
-			else if (IC_Val1 > IC_Val2)
-			{
-				Difference = (0xffffffff - IC_Val1) + IC_Val2;
-			}
-
-			float refClock = TIMCLOCK/(PRESCALAR);
-
-			frequency = refClock/Difference;
 
 			__HAL_TIM_SET_COUNTER(htim, 0);  // reset the counter
 }
@@ -60,16 +48,32 @@ void IC::unregister_ic(uint8_t id){
 void IC::turn_off_ic(uint8_t id){
 	Pin pin = IC::serviceIDs[id];
 	TimerChannel timer_channel = IC::pinTimerMap[pin];
-	HAL_TIM_IC_Stop_IT(timerChannel.timer, timerChannel.channel);
+	HAL_TIM_IC_Stop_IT(tim_ch.timer, tim_ch.channel);
 }
 
 void IC::turn_on_ic(uint8_t id){
 	Pin pin = IC::serviceIDs[id];
-	TimerChannel timerChannel = IC::pinTimerMap[pin];
-	HAL_TIM_IC_Start_IT(timerChannel.timer, timerChannel.channel);
+	TimerChannel tim_ch = IC::pinTimerMap[pin];
+	HAL_TIM_IC_Start_IT(tim_ch.timer, tim_ch.channel);
 }
 
 void IC::read_frequency(uint8_t id) {
+	Pin pin = IC::serviceIDs[id];
+	TimerChannel tim_ch = IC::pinTimerMap[pin];
+	pair <int, int> tim_data = IC::data[tim_ch];
+
+	int diff;
+	if (tim_data.second >= tim_data.first) {
+		diff = tim_data.second - tim_data.first;;
+	}
+
+	else if (IC_Val1 > IC_Val2) {
+		diff = (0xffffffff - tim_data.first) + tim_data.second;
+	}
+
+	float refClock = HAL_RCC_GetPCLK1Freq() / htim->Init.Prescaler;
+	return refClock / diff;
+
 
 }
 
