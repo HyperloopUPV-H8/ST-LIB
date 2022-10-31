@@ -37,34 +37,34 @@ void PWM::unregister_pwm(uint8_t id){
 
 void PWM::turn_on_pwm(uint8_t id){
 	Pin pin = PWM::serviceIDs[id];
-	TimerChannel timer_channel = PWM::pinTimerMap[pin];
-	HAL_TIM_PWM_Start(timer_channel.timer, timer_channel.channel);
+	TimerChannel tim_ch = PWM::pinTimerMap[pin];
+	HAL_TIM_PWM_Start(tim_ch.timer, tim_ch.channel);
 }
 
 void PWM::turn_off_pwm(uint8_t id){
 	Pin pin = PWM::serviceIDs[id];
-	TimerChannel timer_channel = PWM::pinTimerMap[pin];
-	HAL_TIM_PWM_Stop(timer_channel.timer, timer_channel.channel);
+	TimerChannel tim_ch = PWM::pinTimerMap[pin];
+	HAL_TIM_PWM_Stop(tim_ch.timer, tim_ch.channel);
 }
 
 void PWM::turn_on_pwm_negated(uint8_t id) {
 	Pin pin = PWM::serviceIDs[id];
-	TimerChannel timer_channel = PWM::pinTimerMap[pin];
-	HAL_TIMEx_PWMN_Start(timer_channel.timer, timer_channel.channel);
+	TimerChannel tim_ch = PWM::pinTimerMap[pin];
+	HAL_TIMEx_PWMN_Start(tim_ch.timer, tim_ch.channel);
 }
 
 void PWM::turn_off_pwm_negated(uint8_t id) {
 	Pin pin = PWM::serviceIDs[id];
-	TimerChannel timer_channel = PWM::pinTimerMap[pin];
-	HAL_TIMEx_PWMN_Stop(timer_channel.timer, timer_channel.channel);
+	TimerChannel tim_ch = PWM::pinTimerMap[pin];
+	HAL_TIMEx_PWMN_Stop(tim_ch.timer, tim_ch.channel);
 }
 
 void PWM::change_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	if (duty_cycle >= 0 && duty_cycle <= 100) {
 		Pin pin = PWM::serviceIDs[id];
-		TimerChannel timer_channel = PWM::pinTimerMap[pin];
-		uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(timer_channel.timer) / 100 * duty_cycle;
-		__HAL_TIM_SET_COMPARE(timer_channel.timer, timer_channel.channel, raw_duty);
+		TimerChannel tim_ch = PWM::pinTimerMap[pin];
+		uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(tim_ch.timer) / 100 * duty_cycle;
+		__HAL_TIM_SET_COMPARE(tim_ch.timer, tim_ch.channel, raw_duty);
 	}
 }
 
