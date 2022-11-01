@@ -7,22 +7,7 @@
 
 #pragma once
 #include "ST-LIB.hpp"
-
-
-struct TimerChannel {
-	TIM_HandleTypeDef* timer;
-	unsigned int channel;
-
-	bool operator== (const TimerChannel &other) const {
-		return (timer == other.timer && channel == other.channel);
-	}
-
-	bool operator< (const TimerChannel &other) const {
-		if (timer == other.timer)
-			return channel < other.channel;
-		return timer < other.timer;
-	}
-};
+#include "TimerChannelModel/TimerChannel.hpp"
 
 class PWM {
 public:

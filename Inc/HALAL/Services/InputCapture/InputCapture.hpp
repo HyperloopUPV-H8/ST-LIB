@@ -7,6 +7,7 @@
 
 #pragma once
 #include "ST-LIB.hpp"
+#include "TimerChannelModel/TimerChannel.hpp"
 
 class IC {
 public:
