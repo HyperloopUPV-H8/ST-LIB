@@ -15,16 +15,16 @@ map<Pin, TimerChannel> IC::pinTimerMap = {
 		{PE9, {&htim1, TIM_CHANNEL_1}}
 };
 map<uint8_t,Pin> IC::serviceIDs = {};
-map<
+map<TimerChannel, pair<int, int>> IC::data = {};
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
 	TimerChannel tim_ch = {htim, htim->Channel};
 	if (IC::data.find(tim_ch) == IC::data.end()) {
-		data[tim_ch] = {0, 0};
+		IC::data[tim_ch] = {0, 0} ;
 	}
-			data[tim_ch].first = data[tim_ch].second;
-			data[tim_ch].second = HAL_TIM_ReadCapturedValue(tim_ch);
+			IC::data[tim_ch].first = IC::data[tim_ch].second;
+			IC::data[tim_ch].second = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
 
 
 
@@ -48,7 +48,7 @@ void IC::unregister_ic(uint8_t id){
 
 void IC::turn_off_ic(uint8_t id){
 	Pin pin = IC::serviceIDs[id];
-	TimerChannel timer_channel = IC::pinTimerMap[pin];
+	TimerChannel tim_ch = IC::pinTimerMap[pin];
 	HAL_TIM_IC_Stop_IT(tim_ch.timer, tim_ch.channel);
 }
 
@@ -58,7 +58,7 @@ void IC::turn_on_ic(uint8_t id){
 	HAL_TIM_IC_Start_IT(tim_ch.timer, tim_ch.channel);
 }
 
-void IC::read_frequency(uint8_t id) {
+float IC::read_frequency(uint8_t id) {
 	Pin pin = IC::serviceIDs[id];
 	TimerChannel tim_ch = IC::pinTimerMap[pin];
 	pair <int, int> tim_data = IC::data[tim_ch];
@@ -68,7 +68,7 @@ void IC::read_frequency(uint8_t id) {
 		diff = tim_data.second - tim_data.first;;
 	}
 
-	else if (IC_Val1 > IC_Val2) {
+	else if (tim_data.first > tim_data.second) {
 		diff = (0xffffffff - tim_data.first) + tim_data.second;
 	}
 
@@ -76,7 +76,7 @@ void IC::read_frequency(uint8_t id) {
 	return refClock / diff;
 }
 
-void IC:: read_duty_cycle(uint8_t id) {
+uint8_t IC::read_duty_cycle(uint8_t id) {
 	Pin pin = IC::serviceIDs[id];
 	TimerChannel tim_ch = IC::pinTimerMap[pin];
 	pair <int, int> tim_data = IC::data[tim_ch];
@@ -86,12 +86,12 @@ void IC:: read_duty_cycle(uint8_t id) {
 		diff = tim_data.second - tim_data.first;;
 	}
 
-	else if (IC_Val1 > IC_Val2) {
+	else if (tim_data.first > tim_data.second) {
 		diff = (0xffffffff - tim_data.first) + tim_data.second;
 	}
 
 	float refClock = HAL_RCC_GetPCLK1Freq() / tim_ch.timer->Init.Prescaler;
-    return (uint32_t)(((uint64_t) diff * 1000000) / refClock);
+    return (uint8_t)(((uint64_t) diff * 1000000) / refClock);
 }
 
 
