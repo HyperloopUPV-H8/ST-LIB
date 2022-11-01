@@ -11,7 +11,7 @@
 
 /**
  * @struct DoublePin
- * @brief Estruct that contains a pair of pins
+ * @brief Struct that contains a pair of pins
  *
  * @var DoublePin::pin1
  * The first pin of the structure
