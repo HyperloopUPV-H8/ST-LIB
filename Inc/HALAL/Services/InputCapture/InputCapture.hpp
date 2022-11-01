@@ -19,6 +19,6 @@ public:
 	static void unregister_ic(uint8_t id);
 	static void turn_on_ic(uint8_t);
 	static void turn_off_ic(uint8_t);
-	static void read_frequency(uint8_t id);
-	static void read_duty_cycle(uint8_t id);
+	static float read_frequency(uint8_t id);
+	static uint8_t read_duty_cycle(uint8_t id);
 };
