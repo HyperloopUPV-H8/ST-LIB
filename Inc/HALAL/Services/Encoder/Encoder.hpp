@@ -61,7 +61,7 @@ struct EncoderPinTimer{
 };
 
 /**
- * @brief Encoder service class for abstracting the use of the encoder with the HAL library.
+ * @brief Encoder service class. Abstracts the use of the encoder with the HAL library.
  *
  */
 class Encoder {
