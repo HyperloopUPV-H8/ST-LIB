@@ -71,7 +71,7 @@ public:
 	static map<uint8_t, DoublePin> service_IDs;
 
 	/**
-	 * @brief This method register a new encoder
+	 * @brief This method registers a new encoder
 	 *
 	 * @param pin1	First pin of the encoder
 	 * @param pin2 	Second pin of the encoder
