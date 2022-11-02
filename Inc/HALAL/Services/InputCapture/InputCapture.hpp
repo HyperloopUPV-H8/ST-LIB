@@ -11,8 +11,9 @@
 
 class IC {
 public:
-	static map<uint8_t, Pin> serviceIDs;
-	static map<Pin, TimerChannel> pinTimerMap;
+	static map<uint32_t, uint32_t> channel_dict;
+	static map<uint8_t, Pin> service_ids;
+	static map<Pin, TimerChannel> pin_timer_map;
 	static map<TimerChannel, pair<int, int> > data;
 
 	static forward_list<uint8_t> IDmanager;

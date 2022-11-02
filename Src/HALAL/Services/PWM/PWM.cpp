@@ -63,7 +63,7 @@ void PWM::change_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	if (duty_cycle >= 0 && duty_cycle <= 100) {
 		Pin pin = PWM::service_ids[id];
 		TimerChannel tim_ch = PWM::pinTimerMap[pin];
-		uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(tim_ch.timer) / 100 * duty_cycle;
+		uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(tim_ch.timer) / 100.0 * duty_cycle;
 		__HAL_TIM_SET_COMPARE(tim_ch.timer, tim_ch.channel, raw_duty);
 	}
 }
