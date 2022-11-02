@@ -9,7 +9,7 @@
 
 struct TimerChannel {
 	TIM_HandleTypeDef* timer;
-	unsigned int channel;
+	uint32_t channel;
 
 	bool operator== (const TimerChannel &other) const {
 		return (timer == other.timer && channel == other.channel);
