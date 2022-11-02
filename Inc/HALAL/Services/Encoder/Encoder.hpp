@@ -24,10 +24,10 @@ struct DoublePin {
 	Pin* pin2;
 
 	bool operator<(const DoublePin& other) const {
-		if (pin1 < other.pin1) {
+		if (*pin1 < *other.pin1) {
 			return true;
-		}else if(pin1 == other.pin1){
-			if (pin2 < other.pin2) {
+		}else if(*pin1 == *other.pin1){
+			if (*pin2 < *other.pin2) {
 				return true;
 			}
 		}
@@ -46,12 +46,12 @@ struct DoublePin {
 	}
 
 	bool operator==(const DoublePin& other) const {
-		return pin1 == other.pin1 && pin2 == other.pin2;
+		return *pin1 == *other.pin1 && *pin2 == *other.pin2;
 	}
 
 	bool operator==(const DoublePin* other) const {
-			return *pin1 == *other->pin1 && *pin2 == *other->pin2;
-		}
+		return *pin1 == *other->pin1 && *pin2 == *other->pin2;
+	}
 };
 
 /**
