@@ -4,9 +4,9 @@
  *  Created on: 19 oct. 2022
  *      Author: aleja
  */
-
-#pragma once
 #include "ST-LIB.hpp"
+#pragma once
+#ifdef HAL_ADC_MODULE_ENABLE
 
 
 struct TimerChannel {
@@ -27,3 +27,4 @@ public:
 	static void turn_off_pwm(uint8_t id);
 	static void change_duty_cycle(uint8_t id, uint8_t duty_cicle);
 };
+#endif

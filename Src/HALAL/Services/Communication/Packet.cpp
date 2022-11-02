@@ -1,9 +1,13 @@
 
-#include "../Inc/HALAL/Services/Communication/Packet.hpp"
+#include <Packets/Packet.hpp>
 
 Packet<>::Packet(int id) : id(static_cast<uint16_t>(id)) {}
 
 Packet<>::Packet() = default;
+
+decltype(Packet<>::id) Packet<>::get_id(uint8_t* new_data){
+	return *(decltype(id)*)new_data;
+}
 
 template<typename Type, typename... Types>
 Packet<Type, Types...>::Packet() = default;
@@ -12,7 +16,9 @@ template<typename Type, typename... Types>
 Packet<Type, Types...>::Packet(int id) : id(static_cast<uint16_t>(id)) {}
 
 template<typename Type, typename... Types>
-Packet<Type, Types...>::Packet(int id, PacketValue<Type> a, PacketValue<Types>... args) : Packet<Types...>(id, args...), value(a), id(id) {}
+Packet<Type, Types...>::Packet(int id, PacketValue<Type> a, PacketValue<Types>... args) : Packet<Types...>(id, args...), value(a), id(id) {
+	save_packet_by_id[this->id] = [this](uint8_t* new_data) {save_data(new_data); };
+}
 
 template<class Type, class ... Types> template<int I>
 const auto& Packet<Type, Types...>::get() const{
@@ -77,6 +83,11 @@ bool Packet<Type, Types...>::check_id(uint8_t* new_data) {
         return false;
     }
     return true;
+}
+
+template<class Type, class ... Types>
+decltype(Packet<Type,Types...>::id) Packet<Type, Types...>::get_id() {
+    return this->id;
 }
 
 template<class Type, class ... Types> template <size_t I = 0>

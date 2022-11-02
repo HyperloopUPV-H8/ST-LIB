@@ -19,7 +19,11 @@ public:
 	Packet(int id);
 
 	Packet();
+
+	static decltype(id) get_id(uint8_t* new_data);
 };
+
+map<decltype(Packet<>::id), function<void(uint8_t*)>> save_packet_by_id;
 
 template<typename Type, typename... Types>
 class Packet<Type, Types...> : public Packet<Types...>
@@ -57,6 +61,8 @@ public:
 
     bool check_id(uint8_t* new_data);
 
+    decltype(Packet<Type,Types...>::id) get_id();
+
     template <size_t I = 0>
     void load_data(uint8_t* new_data);
 
@@ -68,6 +74,14 @@ public:
 	uint16_t ptr_loc = sizeof(id);
 	bool has_been_built = false;
 };
+
+#if __cpp_deduction_guides >= 201606
+template<typename Type, typename... Types>
+Packet(int id, PacketValue<Type> a, PacketValue<Types>... args)->Packet<Type, Types...>;
+template<typename Type>
+Packet(int id, PacketValue<Type> a)->Packet<Type>;
+Packet(int id)->Packet<>;
+#endif
 
 
 

@@ -5,7 +5,7 @@
  *      Author: stefa
  */
 
-#include "../Inc/HALAL/Services/Communication/PacketValue.hpp"
+#include <Packets/PacketValue.hpp>
 
 template<class ConversionType>
 PacketValue<ConversionType>::PacketValue() = default;
