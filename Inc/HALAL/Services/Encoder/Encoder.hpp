@@ -11,7 +11,7 @@
 
 /**
  * @struct DoublePin
- * @brief Estruct that contains a pair of pins
+ * @brief Struct that contains a pair of pins
  *
  * @var DoublePin::pin1
  * The first pin of the structure
@@ -55,7 +55,7 @@ struct DoublePin {
 };
 
 /**
- * @brief Encoder service class for abstracting the use of the encoder with the HAL library.
+ * @brief Encoder service class. Abstracts the use of the encoder with the HAL library.
  *
  */
 class Encoder {
@@ -65,7 +65,7 @@ public:
 	static map<uint8_t, DoublePin> service_IDs;
 
 	/**
-	 * @brief This method register a new encoder
+	 * @brief This method registers a new encoder
 	 *
 	 * @param pin1	First pin of the encoder
 	 * @param pin2 	Second pin of the encoder
