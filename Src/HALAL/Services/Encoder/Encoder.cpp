@@ -4,7 +4,6 @@
  *  Created on: 27 oct. 2022
  *      Author: Pablo
  */
-#ifdef HAL_TIM_MODULE_ENABLED
 
 #include "Encoder/Encoder.hpp"
 
@@ -38,11 +37,7 @@ void Encoder::turn_on_encoder(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return;
 
-	Pin* pin1 = Encoder::service_IDs[id].pin1;
-	Pin* pin2 = Encoder::service_IDs[id].pin2;
-
-	DoublePin doublepin = {pin1, pin2};
-	TIM_HandleTypeDef* timer = Encoder::pin_timer_map[doublepin];
+	TIM_HandleTypeDef* timer = Encoder::pin_timer_map[service_IDs[id]];
 
 	if (HAL_TIM_Encoder_GetState(timer) == HAL_TIM_STATE_RESET) {
 		//TODO: Exception handle, Error (Encoder not initialized)
@@ -58,11 +53,7 @@ void Encoder::turn_off_encoder(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return;
 
-	Pin* pin1 = Encoder::service_IDs[id].pin1;
-	Pin* pin2 = Encoder::service_IDs[id].pin2;
-
-	DoublePin doublepin = {pin1, pin2};
-	TIM_HandleTypeDef* timer = Encoder::pin_timer_map[doublepin];
+	TIM_HandleTypeDef* timer =  Encoder::pin_timer_map[service_IDs[id]];
 
 	if (HAL_TIM_Encoder_Stop(timer, TIM_CHANNEL_ALL) != HAL_OK	) {
 		//TODO: Exception handle, Warning (Error stopping encoder)
@@ -73,11 +64,7 @@ void Encoder::reset_encoder(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return;
 
-	Pin* pin1 = Encoder::service_IDs[id].pin1;
-	Pin* pin2 = Encoder::service_IDs[id].pin2;
-
-	DoublePin doublepin = {pin1, pin2};
-	TIM_HandleTypeDef* timer = Encoder::pin_timer_map[doublepin];
+	TIM_HandleTypeDef* timer =  Encoder::pin_timer_map[service_IDs[id]];
 
 	timer->Instance->CNT = 0;
 }
@@ -86,11 +73,7 @@ optional<uint32_t> Encoder::get_encoder_counter(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return nullopt;
 
-	Pin* pin1 = Encoder::service_IDs[id].pin1;
-	Pin* pin2 = Encoder::service_IDs[id].pin2;
-
-	DoublePin doublepin = {pin1, pin2};
-	TIM_HandleTypeDef* timer = Encoder::pin_timer_map[doublepin];
+	TIM_HandleTypeDef* timer = Encoder::pin_timer_map[service_IDs[id]];
 
 	return timer->Instance->CNT;
 }
@@ -99,12 +82,7 @@ optional<bool> Encoder::get_encoder_direction(uint8_t id){
 	if (!Encoder::service_IDs.contains(id))
 		return nullopt;
 
-	Pin* pin1 = Encoder::service_IDs[id].pin1;
-	Pin* pin2 = Encoder::service_IDs[id].pin2;
-
-	DoublePin doublepin = {pin1, pin2};
-	TIM_HandleTypeDef* timer = Encoder::pin_timer_map[doublepin];
+	TIM_HandleTypeDef* timer =  Encoder::pin_timer_map[service_IDs[id]];
 
 	return ((timer->Instance->CR1 & 0b10000) >> 4);
 }
-#endif
