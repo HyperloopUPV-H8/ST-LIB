@@ -11,13 +11,13 @@
 
 struct TimerChannel {
 	TIM_HandleTypeDef* timer;
-	unsigned int channel;
+	uint32_t channel;
 };
 
 class PWM {
 public:
 	static map<uint8_t, Pin> service_ids;
-	static map<Pin, TimerChannel> pinTimerMap;
+	static map<Pin, TimerChannel> pin_timer_map;
 
 	static forward_list<uint8_t> id_manager;
 
