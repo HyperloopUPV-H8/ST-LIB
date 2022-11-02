@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#ifdef HAL_TIM_MODULE_ENABLED
+
 #include "ST-LIB.hpp"
 
 /**
@@ -52,12 +52,6 @@ struct DoublePin {
 	bool operator==(const DoublePin* other) const {
 			return *pin1 == *other->pin1 && *pin2 == *other->pin2;
 		}
-};
-
-struct EncoderPinTimer{
-	Pin pin1;
-	Pin pin2;
-	TIM_HandleTypeDef* timer;
 };
 
 /**
@@ -117,4 +111,4 @@ public:
 	 */
 	static optional<bool> get_encoder_direction(uint8_t id);
 };
-#endif
+
