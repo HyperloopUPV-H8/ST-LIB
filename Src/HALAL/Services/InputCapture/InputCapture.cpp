@@ -59,15 +59,16 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
 			ic_data->frequency = refClock/diff;
 
+			float duty_diff;
 			if (ic_data->counter_values[1] > ic_data->counter_values[0]) {
-				diff = ic_data->counter_values[1] - ic_data->counter_values[0];
+				duty_diff = ic_data->counter_values[1] - ic_data->counter_values[0];
 			}
 
 			else if (ic_data->counter_values[1] > ic_data->counter_values[2]) {
-				diff = (0xffffffff - ic_data->counter_values[0]) + ic_data->counter_values[1];
+				duty_diff = (0xffffffff - ic_data->counter_values[0]) + ic_data->counter_values[1];
 			}
 
-			ic_data->duty_cycle = diff/refClock; // Seconds
+			ic_data->duty_cycle = duty_diff / diff * 100;
 			ic_data->count = 0;
 			break;
 	}
