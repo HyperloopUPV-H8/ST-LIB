@@ -42,7 +42,7 @@ optional<uint8_t> PWM::register_pwm_negated(Pin& pin){
 	uint8_t id = PWM::id_manager.front();
 	PWM::service_ids_negated[id] = pin;
 	PWM::id_manager.pop_front();
-	return id;
+ 	return id;
 }
 
 optional<uint8_t> PWM::register_pwm_dual(Pin& pin, Pin& pin_negated){
@@ -88,7 +88,7 @@ void PWM::turn_on_pwm(uint8_t id){
 
 	else if(PWM::service_ids_negated.contains(id)) {
 		Pin pin = PWM::service_ids_negated[id];
-		TimerChannel tim_ch = PWM::pin_timer_map[pin];
+		TimerChannel tim_ch = PWM::pin_timer_map_negated[pin];
 		HAL_TIMEx_PWMN_Start(tim_ch.timer, tim_ch.channel);
 	}
 
@@ -142,13 +142,13 @@ void PWM::change_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	}
 
 	else if (PWM::service_ids_negated.contains(id)) {
-		Pin pin = PWM::service_ids[id];
-		tim_ch = PWM::pin_timer_map[pin];
+		Pin pin = PWM::service_ids_negated[id];
+		tim_ch = PWM::pin_timer_map_negated[pin];
 	}
 
 	else if (PWM::service_ids_dual.contains(id)) {
-		Pin pin = PWM::service_ids[id];
-		tim_ch = PWM::pin_timer_map[pin];
+		pair<Pin, Pin> pin_pair = PWM::service_ids_dual[id];
+		tim_ch = PWM::pin_timer_map_dual[pin_pair];
 	}
 	else {
 		// TODO error handling
