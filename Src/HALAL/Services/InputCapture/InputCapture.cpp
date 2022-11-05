@@ -33,20 +33,23 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 	switch (ic_data->count) {
 		case 0:
 			ic_data->counter_values[0] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
+			ic_data->count++;
 			break;
 
 		case 1:
 			ic_data->counter_values[1] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
+			ic_data->count++;
 			break;
 
 		case 2:
 			ic_data->counter_values[2] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
+			ic_data->count++;
 			break;
 
 		case 3:
 			ic_data->counter_values[3] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
 
-			float refClock = HAL_RCC_GetPCLK1Freq() / tim_ch.timer->Init.Prescaler;
+			uint32_t refClock = HAL_RCC_GetPCLK1Freq()*2 / (tim_ch.timer->Init.Prescaler+1);
 			uint32_t diff;
 
 			if (ic_data->counter_values[2] > ic_data->counter_values[0]) {
@@ -62,6 +65,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			float duty_diff;
 			if (ic_data->counter_values[1] > ic_data->counter_values[0]) {
 				duty_diff = ic_data->counter_values[1] - ic_data->counter_values[0];
+
 			}
 
 			else if (ic_data->counter_values[1] > ic_data->counter_values[2]) {
@@ -72,7 +76,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			ic_data->count = 0;
 			break;
 	}
-
 }
 
 optional<uint8_t> IC::register_ic(Pin& pin){
