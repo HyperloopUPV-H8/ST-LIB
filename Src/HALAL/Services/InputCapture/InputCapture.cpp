@@ -27,6 +27,13 @@ map<TimerChannel, IC::data> IC::data_map = {};
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
+	if(tim_ch.timer ->Instance->CCER == TIM_INPUTCHANNELPOLARITY_RISING) {
+		tim_ch.timer ->Instance->CCER = TIM_INPUTCHANNELPOLARITY_FALLING;
+	}
+	else {
+		tim_ch.timer ->Instance->CCER = TIM_INPUTCHANNELPOLARITY_RISING;
+	}
+
 	TimerChannel tim_ch = {htim, IC::channel_dict[htim->Channel]};
 	IC::data* ic_data = &IC::data_map[tim_ch];
 
@@ -34,6 +41,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 		case 0:
 			ic_data->counter_values[0] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
 			ic_data->count++;
+
 			break;
 
 		case 1:
