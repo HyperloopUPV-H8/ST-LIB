@@ -17,7 +17,6 @@ map<Pin, TimerChannel> PWM::pin_timer_map = {
 
 map<Pin, TimerChannel> PWM::pin_timer_map_negated = {
 		{PE10, {&htim1, TIM_CHANNEL_2}}
-
 };
 
 map< pair<Pin, Pin>, TimerChannel> PWM::pin_timer_map_dual = {
@@ -28,7 +27,7 @@ map<uint8_t,Pin> PWM::service_ids_negated = {};
 map<uint8_t,pair<Pin, Pin>> PWM::service_ids_dual = {};
 
 optional<uint8_t> PWM::register_pwm(Pin& pin){
-	if (!PWM::pin_timer_map.contains(pin)) { return {}; } 	// TODO error handling
+	if (!PWM::pin_timer_map.contains(pin)) { return nullopt; } 	// TODO error handling
 	Pin::register_pin(pin, ALTERNATIVE);
 	uint8_t id = PWM::id_manager.front();
 	PWM::service_ids[id] = pin;
@@ -37,7 +36,7 @@ optional<uint8_t> PWM::register_pwm(Pin& pin){
 }
 
 optional<uint8_t> PWM::register_pwm_negated(Pin& pin){
-	if (!PWM::pin_timer_map_negated.contains(pin)) { return {}; } 	// TODO error handling
+	if (!PWM::pin_timer_map_negated.contains(pin)) { return nullopt; } 	// TODO error handling
 	Pin::register_pin(pin, ALTERNATIVE);
 	uint8_t id = PWM::id_manager.front();
 	PWM::service_ids_negated[id] = pin;
@@ -46,7 +45,7 @@ optional<uint8_t> PWM::register_pwm_negated(Pin& pin){
 }
 
 optional<uint8_t> PWM::register_pwm_dual(Pin& pin, Pin& pin_negated){
-	if (!PWM::pin_timer_map_dual.contains({pin, pin_negated})) { return {}; } 	// TODO error handling
+	if (!PWM::pin_timer_map_dual.contains({pin, pin_negated})) { return nullopt; } 	// TODO error handling
 	Pin::register_pin(pin, ALTERNATIVE);
 	Pin::register_pin(pin_negated, ALTERNATIVE);
 	uint8_t id = PWM::id_manager.front();
