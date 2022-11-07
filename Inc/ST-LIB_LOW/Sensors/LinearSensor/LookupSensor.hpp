@@ -7,9 +7,10 @@
 
 #pragma once
 #include "ST-LIB.hpp"
+#include "ST-LIB_LOW/Sensors/LinearSensor/AnalogSensor.hpp"
 
 
-class LookupSensor : public AnalogSensor{
+class LookupSensor : public AnalogSensor::AnalogSensor{
 public:
 	LookupSensor(Pin pin, double *table);
 	void read(double &value);
@@ -17,6 +18,7 @@ public:
 
 private:
 	uint8_t id;
+	double *table;
 	Pin pin;
 
 };
