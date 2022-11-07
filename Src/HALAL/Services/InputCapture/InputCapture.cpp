@@ -19,16 +19,16 @@ map<uint32_t, uint32_t> IC::channel_dict = {
 		{HAL_TIM_ACTIVE_CHANNEL_6, TIM_CHANNEL_6}
 };
 
-map<Pin, TimerChannelRF> IC::pin_timer_map = {
+map<Pin, TimerChannelRisingFalling> IC::pin_timer_map = {
 		{PA0, {&htim2, TIM_CHANNEL_1, TIM_CHANNEL_2}}
 };
 map<uint8_t,Pin> IC::service_ids = {};
-map<TimerChannelRF, IC::data> IC::data_map = {};
+map<TimerChannelRisingFalling, IC::data> IC::data_map = {};
 
 optional<uint8_t> IC::register_ic(Pin& pin){
  	if (!IC::pin_timer_map.contains(pin)) { return {}; }
 
- 	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+ 	TimerChannelRisingFalling tim_ch = IC::pin_timer_map[pin];
  	IC::data ic_data = {{0, 0, 0, 0}, 0, 0};
  	IC::data_map[tim_ch] = ic_data;
 
@@ -41,7 +41,7 @@ optional<uint8_t> IC::register_ic(Pin& pin){
 
 void IC::unregister_ic(uint8_t id){
 	Pin pin = IC::service_ids[id];
-	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+	TimerChannelRisingFalling tim_ch = IC::pin_timer_map[pin];
  	IC::data_map.erase(tim_ch);
 
 	Pin::unregister_pin(IC::service_ids[id]);
@@ -51,21 +51,21 @@ void IC::unregister_ic(uint8_t id){
 
 void IC::turn_off_ic(uint8_t id){
 	Pin pin = IC::service_ids[id];
-	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+	TimerChannelRisingFalling tim_ch = IC::pin_timer_map[pin];
 	HAL_TIM_IC_Stop_IT(tim_ch.timer, tim_ch.channel_rising);
 	HAL_TIM_IC_Stop_IT(tim_ch.timer, tim_ch.channel_falling);
 }
 
 void IC::turn_on_ic(uint8_t id){
 	Pin pin = IC::service_ids[id];
-	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+	TimerChannelRisingFalling tim_ch = IC::pin_timer_map[pin];
 	HAL_TIM_IC_Start_IT(tim_ch.timer, tim_ch.channel_rising);
 	HAL_TIM_IC_Start_IT(tim_ch.timer, tim_ch.channel_falling);
 }
 
 float IC::read_frequency(uint8_t id) {
 	Pin pin = IC::service_ids[id];
-	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+	TimerChannelRisingFalling tim_ch = IC::pin_timer_map[pin];
 	IC::data ic_data = data_map[tim_ch];
 
 	return ic_data.frequency;
@@ -73,54 +73,56 @@ float IC::read_frequency(uint8_t id) {
 
 uint8_t IC::read_duty_cycle(uint8_t id) {
 	Pin pin = IC::service_ids[id];
-	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+	TimerChannelRisingFalling tim_ch = IC::pin_timer_map[pin];
 	IC::data ic_data = IC::data_map[tim_ch];
 	return ic_data.duty_cycle;
 }
 
-pair<uint32_t, uint32_t> IC::find_other_channel(uint32_t channel) {
+ChannelsRisingFalling IC::find_other_channel(uint32_t channel) {
 	for (auto pin_timer : IC::pin_timer_map) {
 		if(pin_timer.second.channel_rising == channel || pin_timer.second.channel_falling == channel) {
 			return {pin_timer.second.channel_rising, pin_timer.second.channel_falling};
 		}
 	}
-	return {0, 0};
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-	pair<uint32_t, uint32_t> channels = IC::find_other_channel(IC::channel_dict[htim->Channel]);
-	TimerChannelRF tim_ch = {htim, channels.first, channels.second};
+	ChannelsRisingFalling channels = IC::find_other_channel(IC::channel_dict[htim->Channel]);
+	TimerChannelRisingFalling tim_ch = {htim, channels.rising, channels.falling};
 	IC::data* ic_data = &IC::data_map[tim_ch];
 
-	if (IC::channel_dict[htim->Channel] == channels.first && ic_data->count % 2 == 1) {
+	// Rising edge skip error handle
+	if (IC::channel_dict[htim->Channel] == channels.rising && ic_data->count % 2 == 1) {
 		ic_data->count = 0;
 		return;
 	}
 
-	if (IC::channel_dict[htim->Channel] == channels.second && ic_data->count % 2 == 0) {
+	// Falling edge skip error handle
+	if (IC::channel_dict[htim->Channel] == channels.falling && ic_data->count % 2 == 0) {
 		ic_data->count = 0;
 		return;
 	}
+
 	switch (ic_data->count) {
-		case 0:
+		case 0: // First Rising edge
 			ic_data->counter_values[0] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_rising);
 			ic_data->count++;
 
 
 			break;
 
-		case 1:
+		case 1: // First Falling edge
 			ic_data->counter_values[1] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_falling);
 			ic_data->count++;
 			break;
 
-		case 2:
+		case 2: // Second rising edge
 			ic_data->counter_values[2] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_rising);
 			ic_data->count++;
 			break;
 
-		case 3:
+		case 3: // Second falling edge (Redundant)
 			ic_data->counter_values[3] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_falling);
 
 			uint32_t refClock = HAL_RCC_GetPCLK1Freq()*2 / (tim_ch.timer->Init.Prescaler+1);
@@ -130,8 +132,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 				diff = ic_data->counter_values[2] - ic_data->counter_values[0];
 			}
 
+			// Overflow handling
 			else if (ic_data->counter_values[0] > ic_data->counter_values[2]) {
-				diff = (0xffffffff - ic_data->counter_values[0]) + ic_data->counter_values[2];
+				diff = (IC_OVERFLOW - ic_data->counter_values[0]) + ic_data->counter_values[2];
 			}
 
 			ic_data->frequency = refClock/diff;
@@ -142,8 +145,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
 			}
 
+			// Overflow handling
 			else if (ic_data->counter_values[1] > ic_data->counter_values[2]) {
-				duty_diff = (0xffffffff - ic_data->counter_values[0]) + ic_data->counter_values[1];
+				duty_diff = (IC_OVERFLOW - ic_data->counter_values[0]) + ic_data->counter_values[1];
 			}
 
 			ic_data->duty_cycle = duty_diff / diff * 100;
