@@ -90,68 +90,68 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
 	ChannelsRisingFalling channels = IC::find_other_channel(IC::channel_dict[htim->Channel]);
 	TimerChannelRisingFalling tim_ch = {htim, channels.rising, channels.falling};
-	IC::data* ic_data = &IC::data_map[tim_ch];
+	IC::data& ic_data = IC::data_map[tim_ch];
 
 	// Rising edge skip error handle
-	if (IC::channel_dict[htim->Channel] == channels.rising && ic_data->count % 2 == 1) {
-		ic_data->count = 0;
+	if (IC::channel_dict[htim->Channel] == channels.rising && ic_data.count % 2 == 1) {
+		ic_data.count = 0;
 		return;
 	}
 
 	// Falling edge skip error handle
-	if (IC::channel_dict[htim->Channel] == channels.falling && ic_data->count % 2 == 0) {
-		ic_data->count = 0;
+	if (IC::channel_dict[htim->Channel] == channels.falling && ic_data.count % 2 == 0) {
+		ic_data.count = 0;
 		return;
 	}
 
-	switch (ic_data->count) {
+	switch (ic_data.count) {
 		case 0: // First Rising edge
-			ic_data->counter_values[0] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_rising);
-			ic_data->count++;
+			ic_data.counter_values[0] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_rising);
+			ic_data.count++;
 
 
 			break;
 
 		case 1: // First Falling edge
-			ic_data->counter_values[1] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_falling);
-			ic_data->count++;
+			ic_data.counter_values[1] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_falling);
+			ic_data.count++;
 			break;
 
 		case 2: // Second rising edge
-			ic_data->counter_values[2] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_rising);
-			ic_data->count++;
+			ic_data.counter_values[2] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_rising);
+			ic_data.count++;
 			break;
 
 		case 3: // Second falling edge (Redundant)
-			ic_data->counter_values[3] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_falling);
+			ic_data.counter_values[3] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_falling);
 
 			uint32_t refClock = HAL_RCC_GetPCLK1Freq()*2 / (tim_ch.timer->Init.Prescaler+1);
 			uint32_t diff;
 
-			if (ic_data->counter_values[2] > ic_data->counter_values[0]) {
-				diff = ic_data->counter_values[2] - ic_data->counter_values[0];
+			if (ic_data.counter_values[2] > ic_data.counter_values[0]) {
+				diff = ic_data.counter_values[2] - ic_data.counter_values[0];
 			}
 
 			// Overflow handling
-			else if (ic_data->counter_values[0] > ic_data->counter_values[2]) {
-				diff = (IC_OVERFLOW - ic_data->counter_values[0]) + ic_data->counter_values[2];
+			else if (ic_data.counter_values[0] > ic_data.counter_values[2]) {
+				diff = (IC_OVERFLOW - ic_data.counter_values[0]) + ic_data.counter_values[2];
 			}
 
-			ic_data->frequency = refClock/diff;
+			ic_data.frequency = refClock/diff;
 
 			float duty_diff;
-			if (ic_data->counter_values[1] > ic_data->counter_values[0]) {
-				duty_diff = ic_data->counter_values[1] - ic_data->counter_values[0];
+			if (ic_data.counter_values[1] > ic_data.counter_values[0]) {
+				duty_diff = ic_data.counter_values[1] - ic_data.counter_values[0];
 
 			}
 
 			// Overflow handling
-			else if (ic_data->counter_values[1] > ic_data->counter_values[2]) {
-				duty_diff = (IC_OVERFLOW - ic_data->counter_values[0]) + ic_data->counter_values[1];
+			else if (ic_data.counter_values[1] > ic_data.counter_values[2]) {
+				duty_diff = (IC_OVERFLOW - ic_data.counter_values[0]) + ic_data.counter_values[1];
 			}
 
-			ic_data->duty_cycle = duty_diff / diff * 100;
-			ic_data->count = 0;
+			ic_data.duty_cycle = duty_diff / diff * 100;
+			ic_data.count = 0;
 			break;
 	}
 }
