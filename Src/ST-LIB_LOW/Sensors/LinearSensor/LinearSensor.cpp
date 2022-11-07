@@ -7,5 +7,5 @@ LinearSensor::LinearSensor(Pin pin, double slope, double offset) : id(ADC::regis
 
 void LinearSensor::read(double &value){
 
-	value = slope*ADC::get_pin_value(id).value() + offset;
+	value = slope * (float) ADC::get_pin_value(id).value() + offset;
 }
