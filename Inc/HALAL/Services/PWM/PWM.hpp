@@ -7,23 +7,20 @@
 
 #pragma once
 #include "ST-LIB.hpp"
-
-
-struct TimerChannel {
-	TIM_HandleTypeDef* timer;
-	unsigned int channel;
-};
+#include "TimerChannelModel/TimerChannel.hpp"
 
 class PWM {
 public:
-	static map<uint8_t, Pin> serviceIDs;
+	static map<uint8_t, Pin> service_ids;
 	static map<Pin, TimerChannel> pinTimerMap;
 
-	static forward_list<uint8_t> IDmanager;
+	static forward_list<uint8_t> id_manager;
 
 	static optional<uint8_t> register_pwm(Pin& pin);
 	static void unregister_pwm(uint8_t id);
 	static void turn_on_pwm(uint8_t id);
+	static void turn_on_pwm_negated(uint8_t id);
 	static void turn_off_pwm(uint8_t id);
+	static void turn_off_pwm_negated(uint8_t id);
 	static void change_duty_cycle(uint8_t id, uint8_t duty_cicle);
 };
