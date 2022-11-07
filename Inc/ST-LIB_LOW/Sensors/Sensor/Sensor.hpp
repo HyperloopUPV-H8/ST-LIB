@@ -8,13 +8,10 @@
 #pragma once
 #include "ST-LIB.hpp"
 
+template <typename T>
 
 class Sensor{
 public:
-	Sensor(value_type type);
-	virtual void read(auto *value);
-
-private:
-	value_type type;
+	void read(T &value);
 
 };

@@ -8,13 +8,14 @@
 
 #pragma once
 #include "ST-LIB.hpp"
+#include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
 
 
-class DigitalSensor{
+class DigitalSensor : public Sensor<std::optional<PinState>>::Sensor{
 public:
 	DigitalSensor(Pin pin);
 	virtual void exti_interruption();
-	void read(auto *value);
+	void read(std::optional<PinState> &value);
 	uint8_t getID();
 
 private:
