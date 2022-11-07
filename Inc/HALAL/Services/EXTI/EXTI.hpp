@@ -14,7 +14,7 @@ typedef function<void()> Action;
 
 struct EXTIdata {
 	uint16_t gpio;
-	Action* action;
+	Action* action = nullptr;
 	bool is_on = true;
 };
 
