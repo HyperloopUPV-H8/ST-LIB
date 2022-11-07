@@ -8,16 +8,24 @@
 typedef function<void()> Action;
 typedef function<bool()> Transition;
 
-class State{};
+enum State{
+	off = 0,
+	on = 1
+};
 class StateMachine {
-	uint8_t current_state;
+	State current_state;
 
-	map<State*, vector<Action>> on_update;
-	map<State*, map<State*, Transition>> transitions;
-	map<State*, map<State*, Action>> on_enter;
+	map<State, vector<Action*>> on_update;
+	map<State, map<State, Transition*>> transitions;
+	map<State, map<State, vector<Action*>>> on_enter;
 
 	void add_update_action(Action* action);
-	void add_enter_action(State* old_state, State* new_state, Transition transition);
-	void add_transition(State* old_state, State* new_state, Transition transition);
+	void add_update_action(Action* action, State state);
+	void add_enter_action(State old_state, State new_state, Action* action);
+	void add_transition(State old_state, State new_state, Transition* transition);
+
+	void update();
+	void check_transitions();
+	void change_state(State new_state);
 
 };
