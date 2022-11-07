@@ -9,9 +9,9 @@
 #include "ST-LIB.hpp"
 
 
-class LookupSenso : public AnalogSensor{
+class LookupSensor : public AnalogSensor{
 public:
-	LookupSenso(Pin pin, double *table);
+	LookupSensor(Pin pin, double *table);
 	void read(double &value);
 	uint8_t getID();
 
