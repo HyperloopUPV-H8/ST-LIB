@@ -13,7 +13,7 @@
 
 class AnalogSensor : public Sensor<double>::Sensor{
 public:
-	void read(double &value);
+	virtual void read(double &value);
 	uint8_t getID();
 
 private:
