@@ -19,43 +19,109 @@ map<uint32_t, uint32_t> IC::channel_dict = {
 		{HAL_TIM_ACTIVE_CHANNEL_6, TIM_CHANNEL_6}
 };
 
-map<Pin, TimerChannel> IC::pin_timer_map = {
-		{PA0, {&htim2, TIM_CHANNEL_1}}
+map<Pin, TimerChannelRF> IC::pin_timer_map = {
+		{PA0, {&htim2, TIM_CHANNEL_1, TIM_CHANNEL_2}}
 };
 map<uint8_t,Pin> IC::service_ids = {};
-map<TimerChannel, IC::data> IC::data_map = {};
+map<TimerChannelRF, IC::data> IC::data_map = {};
+
+optional<uint8_t> IC::register_ic(Pin& pin){
+ 	if (!IC::pin_timer_map.contains(pin)) { return {}; }
+
+ 	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+ 	IC::data ic_data = {{0, 0, 0, 0}, 0, 0};
+ 	IC::data_map[tim_ch] = ic_data;
+
+	Pin::register_pin(pin, ALTERNATIVE);
+	uint8_t id = IC::id_manager.front();
+	IC::service_ids[id] = pin;
+	IC::id_manager.pop_front();
+	return id;
+}
+
+void IC::unregister_ic(uint8_t id){
+	Pin pin = IC::service_ids[id];
+	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+ 	IC::data_map.erase(tim_ch);
+
+	Pin::unregister_pin(IC::service_ids[id]);
+	IC::service_ids.erase(id);
+	IC::id_manager.push_front(id);
+}
+
+void IC::turn_off_ic(uint8_t id){
+	Pin pin = IC::service_ids[id];
+	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+	HAL_TIM_IC_Stop_IT(tim_ch.timer, tim_ch.channel_rising);
+	HAL_TIM_IC_Stop_IT(tim_ch.timer, tim_ch.channel_falling);
+}
+
+void IC::turn_on_ic(uint8_t id){
+	Pin pin = IC::service_ids[id];
+	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+	HAL_TIM_IC_Start_IT(tim_ch.timer, tim_ch.channel_rising);
+	HAL_TIM_IC_Start_IT(tim_ch.timer, tim_ch.channel_falling);
+}
+
+float IC::read_frequency(uint8_t id) {
+	Pin pin = IC::service_ids[id];
+	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+	IC::data ic_data = data_map[tim_ch];
+
+	return ic_data.frequency;
+}
+
+uint8_t IC::read_duty_cycle(uint8_t id) {
+	Pin pin = IC::service_ids[id];
+	TimerChannelRF tim_ch = IC::pin_timer_map[pin];
+	IC::data ic_data = IC::data_map[tim_ch];
+	return ic_data.duty_cycle;
+}
+
+pair<uint32_t, uint32_t> IC::find_other_channel(uint32_t channel) {
+	for (auto pin_timer : IC::pin_timer_map) {
+		if(pin_timer.second.channel_rising == channel || pin_timer.second.channel_falling == channel) {
+			return {pin_timer.second.channel_rising, pin_timer.second.channel_falling};
+		}
+	}
+	return {0, 0};
+}
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-	if(tim_ch.timer ->Instance->CCER == TIM_INPUTCHANNELPOLARITY_RISING) {
-		tim_ch.timer ->Instance->CCER = TIM_INPUTCHANNELPOLARITY_FALLING;
-	}
-	else {
-		tim_ch.timer ->Instance->CCER = TIM_INPUTCHANNELPOLARITY_RISING;
-	}
-
-	TimerChannel tim_ch = {htim, IC::channel_dict[htim->Channel]};
+	pair<uint32_t, uint32_t> channels = IC::find_other_channel(IC::channel_dict[htim->Channel]);
+	TimerChannelRF tim_ch = {htim, channels.first, channels.second};
 	IC::data* ic_data = &IC::data_map[tim_ch];
 
+	if (IC::channel_dict[htim->Channel] == channels.first && ic_data->count % 2 == 1) {
+		ic_data->count = 0;
+		return;
+	}
+
+	if (IC::channel_dict[htim->Channel] == channels.second && ic_data->count % 2 == 0) {
+		ic_data->count = 0;
+		return;
+	}
 	switch (ic_data->count) {
 		case 0:
-			ic_data->counter_values[0] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
+			ic_data->counter_values[0] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_rising);
 			ic_data->count++;
+
 
 			break;
 
 		case 1:
-			ic_data->counter_values[1] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
+			ic_data->counter_values[1] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_falling);
 			ic_data->count++;
 			break;
 
 		case 2:
-			ic_data->counter_values[2] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
+			ic_data->counter_values[2] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_rising);
 			ic_data->count++;
 			break;
 
 		case 3:
-			ic_data->counter_values[3] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel);
+			ic_data->counter_values[3] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_falling);
 
 			uint32_t refClock = HAL_RCC_GetPCLK1Freq()*2 / (tim_ch.timer->Init.Prescaler+1);
 			uint32_t diff;
@@ -85,57 +151,5 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			break;
 	}
 }
-
-optional<uint8_t> IC::register_ic(Pin& pin){
- 	if (!IC::pin_timer_map.contains(pin)) { return {}; }
-
- 	TimerChannel tim_ch = IC::pin_timer_map[pin];
- 	IC::data ic_data = {{0, 0, 0, 0}, 0, 0};
- 	IC::data_map[tim_ch] = ic_data;
-
-	Pin::register_pin(pin, ALTERNATIVE);
-	uint8_t id = IC::id_manager.front();
-	IC::service_ids[id] = pin;
-	IC::id_manager.pop_front();
-	return id;
-}
-
-void IC::unregister_ic(uint8_t id){
-	Pin pin = IC::service_ids[id];
-	TimerChannel tim_ch = IC::pin_timer_map[pin];
- 	IC::data_map.erase(tim_ch);
-
-	Pin::unregister_pin(IC::service_ids[id]);
-	IC::service_ids.erase(id);
-	IC::id_manager.push_front(id);
-}
-
-void IC::turn_off_ic(uint8_t id){
-	Pin pin = IC::service_ids[id];
-	TimerChannel tim_ch = IC::pin_timer_map[pin];
-	HAL_TIM_IC_Stop_IT(tim_ch.timer, tim_ch.channel);
-}
-
-void IC::turn_on_ic(uint8_t id){
-	Pin pin = IC::service_ids[id];
-	TimerChannel tim_ch = IC::pin_timer_map[pin];
-	HAL_TIM_IC_Start_IT(tim_ch.timer, tim_ch.channel);
-}
-
-float IC::read_frequency(uint8_t id) {
-	Pin pin = IC::service_ids[id];
-	TimerChannel tim_ch = IC::pin_timer_map[pin];
-	IC::data ic_data = data_map[tim_ch];
-
-	return ic_data.frequency;
-}
-
-uint8_t IC::read_duty_cycle(uint8_t id) {
-	Pin pin = IC::service_ids[id];
-	TimerChannel tim_ch = IC::pin_timer_map[pin];
-	IC::data ic_data = IC::data_map[tim_ch];
-	return ic_data.duty_cycle;
-}
-
 
 
