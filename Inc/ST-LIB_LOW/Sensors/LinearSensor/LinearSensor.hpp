@@ -7,16 +7,19 @@
 
 #pragma once
 #include "ST-LIB.hpp"
+#include "ST-LIB_LOW/Sensors/LinearSensor/AnalogSensor.hpp"
 
 
-class LinearSensor : public AnalogSensor{
+class LinearSensor : public AnalogSensor::AnalogSensor{
 public:
 	LinearSensor(Pin pin, double slope, double offset);
 	void read(double &value);
 	uint8_t getID();
 
 private:
-	uint8_t id;
 	Pin pin;
+	uint8_t id;
+	double slope;
+	double offset;
 
 };
