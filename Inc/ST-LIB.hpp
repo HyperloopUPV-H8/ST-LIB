@@ -8,3 +8,4 @@
 #include "ADC/ADC.hpp"
 #include "PWM/PWM.hpp"
 #include "Communication/Ethernet/Ethernet.hpp"
+#include "Communication/SPI/SPI.hpp"
