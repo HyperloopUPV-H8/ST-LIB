@@ -11,11 +11,11 @@
 #include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
 
 
-class DigitalSensor : public Sensor<std::optional<PinState>>::Sensor{
+class DigitalSensor : public Sensor<PinState>::Sensor{
 public:
 	DigitalSensor(Pin pin);
 	virtual void exti_interruption();
-	void read(std::optional<PinState> &value);
+	void read(PinState &value);
 	uint8_t getID();
 
 private:

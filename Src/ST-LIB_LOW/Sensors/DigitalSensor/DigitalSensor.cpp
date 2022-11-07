@@ -10,8 +10,8 @@ void DigitalSensor::exti_interruption(){
 
 }
 
-void DigitalSensor::read(std::optional<PinState> &value){
-	value = DigitalInput::read_pin_state(id);
+void DigitalSensor::read(PinState &value){
+	value = DigitalInput::read_pin_state(id).value();
 
 }
 
