@@ -8,14 +8,13 @@
 typedef function<void()> Action;
 typedef function<bool()> Transition;
 
-enum State{
-	off = 0,
-	on = 1
+class State{
+	vector<Action*> actions;
 };
+
 class StateMachine {
 	State current_state;
 
-	map<State, vector<Action*>> on_update;
 	map<State, map<State, Transition*>> transitions;
 	map<State, map<State, vector<Action*>>> on_enter;
 

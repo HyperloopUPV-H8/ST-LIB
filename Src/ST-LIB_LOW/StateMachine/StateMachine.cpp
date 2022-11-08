@@ -5,11 +5,11 @@
 #include <StateMachine/StateMachine.hpp>
 
 void StateMachine::add_update_action(Action* action) {
-	on_update[current_state].push_back(action);
+	current_state.actions.push_back(action);
 }
 
 void StateMachine::add_update_action(Action* action, State state) {
-	on_update[state].push_back(action);
+	state.actions.push_back(action);
 }
 
 void StateMachine::add_enter_action(State old_state, State new_state,
