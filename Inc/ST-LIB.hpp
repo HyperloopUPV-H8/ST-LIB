@@ -1,5 +1,5 @@
-
 #pragma once
+
 #include "PinModel/Pin.hpp"
 #include "DigitalOutput/DigitalOutput.hpp"
 #include "DigitalInput/DigitalInput.hpp"

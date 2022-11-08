@@ -8,39 +8,42 @@
 #pragma once
 
 #include "ST-LIB.hpp"
+#include "C++Utilities/CppUtils.hpp"
+#include "Communication/SPI/SPIPacket.hpp"
 
 struct SPIPeripheral
 {
-	string spi_num;
 	Pin SCK; //TODO: Change string to PIN
 	Pin MOSI;
 	Pin MISO;
 	Pin SS;
 
 	bool operator<(const SPIPeripheral& other) const {
-		return spi_num < other.spi_num;
+		return SS < other.SS;
 	}
 
 	bool operator==(const SPIPeripheral& spi) const
 	{
-		return spi_num == spi.spi_num;
+		return SCK == spi.SCK && MOSI == spi.MOSI && MISO == spi.MISO && SS == spi.SS;
 	}
 };
+
+extern SPIPeripheral SPIPeripheral1(PE0, PE0, PE0, PE0);
 
 struct SPIPeripheral_hash_function {
 	size_t operator()(const SPIPeripheral& spi) const
 	{
-		return hash<string>()(spi.spi_num);
+		return hash<uint32_t>()((uint32_t)&spi.SS + (uint32_t)&spi.MOSI);
 	}
 };
 
-extern SPIPeripheral SPI1("spi3", PE1, "PC12", "PC11", "PD0");
-
 class SPI
 {
+
 private:
 	static forward_list<uint8_t> ID_manager;
 	static unordered_map<SPIPeripheral, SPI_HandleTypeDef*, SPIPeripheral_hash_function> spi_un_map;
+
 public:
 	static unordered_map<uint8_t, SPI_HandleTypeDef*> registered_spi;
 
@@ -52,6 +55,4 @@ public:
 
 	static void send_packet_by_SPI(uint8_t id, SPIPacket& packet);
 	static void try_send_next_packet(uint8_t id);
-
-
 };
