@@ -22,14 +22,14 @@ map<uint32_t, uint32_t> IC::channel_dict = {
 map<Pin, TimerChannelRisingFalling> IC::pin_timer_map = {
 		{PA0, {&htim2, TIM_CHANNEL_1, TIM_CHANNEL_2}}
 };
-map<uint8_t,Pin> IC::service_ids = {};
+map<uint8_t, Pin> IC::service_ids = {};
 map<TimerChannelRisingFalling, IC::data> IC::data_map = {};
 
 optional<uint8_t> IC::register_ic(Pin& pin){
  	if (!IC::pin_timer_map.contains(pin)) { return {}; }
 
  	TimerChannelRisingFalling tim_ch = IC::pin_timer_map[pin];
- 	IC::data ic_data = {{0, 0, 0, 0}, 0, 0};
+ 	IC::data ic_data = {{ 0 }, 0, 0};
  	IC::data_map[tim_ch] = ic_data;
 
 	Pin::register_pin(pin, ALTERNATIVE);
@@ -80,8 +80,11 @@ uint8_t IC::read_duty_cycle(uint8_t id) {
 
 ChannelsRisingFalling IC::find_other_channel(uint32_t channel) {
 	for (auto pin_timer : IC::pin_timer_map) {
-		if(pin_timer.second.channel_rising == channel || pin_timer.second.channel_falling == channel) {
-			return {pin_timer.second.channel_rising, pin_timer.second.channel_falling};
+		uint32_t& ch_rising = pin_timer.second.channel_rising;
+		uint32_t& ch_falling = pin_timer.second.channel_falling;
+
+		if(ch_rising == channel || ch_falling == channel) {
+			return {ch_rising, ch_falling};
 		}
 	}
 }
@@ -108,8 +111,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 		case 0: // First Rising edge
 			ic_data.counter_values[0] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_rising);
 			ic_data.count++;
-
-
 			break;
 
 		case 1: // First Falling edge
@@ -125,7 +126,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 		case 3: // Second falling edge (Redundant)
 			ic_data.counter_values[3] = HAL_TIM_ReadCapturedValue(tim_ch.timer, tim_ch.channel_falling);
 
+			//Reference clock of the IC timer calculation by dividing the clk frequency by the timer prescaler.
 			uint32_t refClock = HAL_RCC_GetPCLK1Freq()*2 / (tim_ch.timer->Init.Prescaler+1);
+
 			uint32_t diff;
 
 			if (ic_data.counter_values[2] > ic_data.counter_values[0]) {
@@ -137,12 +140,12 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 				diff = (IC_OVERFLOW - ic_data.counter_values[0]) + ic_data.counter_values[2];
 			}
 
+			// diff/refClock gives the real time between the two edges, so refClock/diff gives freq.
 			ic_data.frequency = refClock/diff;
 
 			float duty_diff;
 			if (ic_data.counter_values[1] > ic_data.counter_values[0]) {
 				duty_diff = ic_data.counter_values[1] - ic_data.counter_values[0];
-
 			}
 
 			// Overflow handling
@@ -150,6 +153,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 				duty_diff = (IC_OVERFLOW - ic_data.counter_values[0]) + ic_data.counter_values[1];
 			}
 
+			// duty_diff represents the amount of time the pin was high, dividing it between the whole period gives the percentage.
 			ic_data.duty_cycle = duty_diff / diff * 100;
 			ic_data.count = 0;
 			break;
