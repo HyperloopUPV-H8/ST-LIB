@@ -5,9 +5,8 @@
  *      Author: Pablo
  */
 
-
+#include <Communication/SPI/SPIPacket.hpp>
 #include "Communication/SPI/SPI.hpp"
-//#include "SPIPacket.h"
 
 unordered_map<uint8_t, pair<bool, queue<SPIPacket>>> SPI::tx_packet_buffer = {};
 
@@ -24,9 +23,7 @@ optional<uint8_t> SPI::register_SPI(SPIPeripheral& spi){
     if (!SPI::spi_un_map.contains(spi))
         return nullopt;
 
-    /*
     Pin::register_pin(spi.SCK, spi.MOSI, spi.MISO, spi.SS, ALTERNATIVE);
-    */
 
     uint8_t id = SPI::ID_manager.front();
     printf("%d", SPI::ID_manager.front());

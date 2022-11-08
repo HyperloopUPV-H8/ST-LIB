@@ -9,18 +9,13 @@
 
 #include "ST-LIB.hpp"
 
-struct SPI_HandleTypeDef {
-	string spi;
-};
-SPI_HandleTypeDef hspi3("spi3");
-
 struct SPIPeripheral
 {
 	string spi_num;
-	string SCK; //TODO: Change string to PIN
-	string MOSI;
-	string MISO;
-	string SS;
+	Pin SCK; //TODO: Change string to PIN
+	Pin MOSI;
+	Pin MISO;
+	Pin SS;
 
 	bool operator<(const SPIPeripheral& other) const {
 		return spi_num < other.spi_num;
@@ -39,7 +34,7 @@ struct SPIPeripheral_hash_function {
 	}
 };
 
-extern SPIPeripheral SPI1("spi3", "PC10", "PC12", "PC11", "PD0");
+extern SPIPeripheral SPI1("spi3", PE1, "PC12", "PC11", "PD0");
 
 class SPI
 {
