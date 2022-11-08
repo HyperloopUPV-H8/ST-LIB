@@ -7,6 +7,21 @@
 #include "Communication/SPI/SPI.hpp"
 
 extern SPI_HandleTypeDef hspi3;
+//TODO: A parte de todo lo que menciono abajo creo que tenemos que cambiar como estamos planteando
+//      el tema de las clases de comunicación que son para perifericos, por ejemplo el SPI
+//      deberiamos tener una clase para cada sensor que utilize las funciones de la clase SPI
+//      para comunicarse, y es esta clase sensor la que deberia guardar ya en un paquete los 
+//      datos obtenidos despues de realizar las medidas necesarias, es decir creo que (puede
+//      que fuese yo solo el que entedia mal lo que se pretendia) estamos enfocando mal este servicio
+//      que deberia limitarse a tener un buffer de salida y uno de entrada y despues tener funciones
+//      read send y read que hagan simplemente eso leer y escribir en estos buffers.
+//      Una clase por ejemplo IMU utilizara este servicio para obtener los datos de la 
+//      IMU haciendo read a x frequencia, calcularlo todo y meterlo dentro de packetsvalues y a su vez
+//      dentro packets. La clase SPI la voy ha hacer por DMA para ahorrar tiempo al procesador
+//      por esto es posible que cuando pidas un dato aun no este y tengas que esperar al próximo read,
+//      no pasaria nada pero habria que handlearlo en la clase IMU.
+
+
 //TODO: Refactorizar todo, hacer que SPIPeripheral maneje todo, que tenga el HANDLE y el packet buffer,
 //		es decir le pasas un hspi en vez de un SPIPeripheral y el te añade el SPIPeripheral al mapa de registrados.
 //		Por tanto un mapa spi_un_map de HAndle a SPIPeripheral y un mapa registered de uint8_t a SPIPeripheral
