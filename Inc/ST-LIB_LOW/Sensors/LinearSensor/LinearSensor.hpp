@@ -16,7 +16,7 @@ public:
 	void read();
 	uint8_t getID();
 
-private:
+protected:
 	Pin pin;
 	uint8_t id;
 	double slope;

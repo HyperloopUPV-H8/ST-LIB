@@ -19,9 +19,8 @@ public:
 	uint8_t getID();
 
 protected:
+	Pin pin;
 	uint8_t id;
 	PinState *value;
-	Pin pin;
-
 };
 

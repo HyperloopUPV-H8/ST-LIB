@@ -16,8 +16,7 @@ public:
 	virtual void read();
 	uint8_t getID();
 
-private:
-	uint8_t id;
+protected:
 	Pin pin;
-
+	uint8_t id;
 };

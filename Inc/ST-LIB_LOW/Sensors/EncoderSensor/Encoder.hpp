@@ -18,10 +18,9 @@ public:
 	void read();
 	uint8_t getID();
 
-private:
-	uint8_t id;
+protected:
 	Pin pin1;
 	Pin pin2;
 	Pin pin3;
-
+	uint8_t id;
 };
