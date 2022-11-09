@@ -13,13 +13,14 @@
 
 class DigitalSensor : public Sensor<PinState>::Sensor{
 public:
-	DigitalSensor(Pin pin);
+	DigitalSensor(Pin pin, PinState *value);
 	virtual void exti_interruption();
-	void read(PinState &value);
+	void read();
 	uint8_t getID();
 
-private:
+protected:
 	uint8_t id;
+	PinState *value;
 	Pin pin;
 
 };

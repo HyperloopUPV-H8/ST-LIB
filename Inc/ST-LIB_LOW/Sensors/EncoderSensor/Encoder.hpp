@@ -13,12 +13,12 @@
 
 class EncoderSensor : public Sensor<double>::Sensor{
 public:
-	void EncoderSensor(Pin pin1, Pin pin2);
-	void read(double &value);
+	EncoderSensor(Pin pin1, Pin pin2, double *value);
+	EncoderSensor(Pin pin1, Pin pin2, Pin pin3, double *value);
+	void read();
 	uint8_t getID();
 
 private:
-	double val;
 	uint8_t id;
 	Pin pin1;
 	Pin pin2;

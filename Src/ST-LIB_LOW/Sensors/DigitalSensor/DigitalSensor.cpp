@@ -2,15 +2,15 @@
 #include "DigitalInput/DigitalInput.hpp"
 
 
-DigitalSensor::DigitalSensor(Pin pin) : id(DigitalInput::register_digital_input(pin)){
+DigitalSensor::DigitalSensor(Pin pin, PinState *value) : id(DigitalInput::register_digital_input(pin)), value(value){
 }
 
 void DigitalSensor::exti_interruption(){
 
 }
 
-void DigitalSensor::read(PinState &value){
-	value = DigitalInput::read_pin_state(id).value();
+void DigitalSensor::read(){
+	*value = DigitalInput::read_pin_state(id).value();
 
 }
 

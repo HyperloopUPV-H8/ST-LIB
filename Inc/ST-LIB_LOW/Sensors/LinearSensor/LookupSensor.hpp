@@ -12,13 +12,14 @@
 
 class LookupSensor : public AnalogSensor::AnalogSensor{
 public:
-	LookupSensor(Pin pin, double *table);
-	void read(double &value);
+	LookupSensor(Pin pin, double *table, double *value);
+	void read();
 	uint8_t getID();
 
 private:
 	uint8_t id;
 	double *table;
+	double *value;
 	Pin pin;
 
 };
