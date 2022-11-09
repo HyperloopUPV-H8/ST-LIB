@@ -29,7 +29,7 @@ optional<uint8_t> IC::register_ic(Pin& pin){
  	if (!IC::pin_timer_map.contains(pin)) { return {}; }
 
  	TimerChannelRisingFalling tim_ch = IC::pin_timer_map[pin];
- 	IC::data ic_data = {{ 0 }, 0, 0};
+ 	IC::data ic_data = { .counter_values = { 0 }, .count = 0, .frequency = 0, .duty_cycle = 0};
  	IC::data_map[tim_ch] = ic_data;
 
 	Pin::register_pin(pin, ALTERNATIVE);
