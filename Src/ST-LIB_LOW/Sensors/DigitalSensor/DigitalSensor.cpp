@@ -3,7 +3,6 @@
 
 
 DigitalSensor::DigitalSensor(Pin pin) : id(DigitalInput::register_digital_input(pin)){
-
 }
 
 void DigitalSensor::exti_interruption(){

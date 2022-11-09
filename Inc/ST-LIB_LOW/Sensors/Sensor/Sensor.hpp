@@ -8,10 +8,12 @@
 #pragma once
 #include "ST-LIB.hpp"
 
+
 template <typename T>
 
+//asi es como deberia funcionar con template y virtual
 class Sensor{
 public:
-	void read(T &value);
+	virtual void read(T &value);
 
 };
