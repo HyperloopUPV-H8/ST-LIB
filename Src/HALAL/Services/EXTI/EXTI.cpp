@@ -26,7 +26,7 @@ optional<uint8_t> ExtI::register_exti(Pin& pin, Action* action) {
 	if (!ExtI::pin_gpio_map.contains(pin)) { return nullopt;}
 
 	ExtI::pin_gpio_map[pin].action = action;
-	Pin::register_pin(pin, INPUT);
+	Pin::register_pin(pin, ALTERNATIVE);
 	uint8_t id = ExtI::id_manager.front();
 	ExtI::service_ids[id] = pin;
 	ExtI::id_manager.pop_front();
