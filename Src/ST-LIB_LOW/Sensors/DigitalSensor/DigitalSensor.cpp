@@ -14,7 +14,7 @@ void DigitalSensor::read(){
 	if(val){
 		*value = val.value();
 	}else{
-
+		//errores de optional vacio aqui (por hacer)
 	}
 
 }
