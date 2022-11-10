@@ -1,7 +1,7 @@
 #include "ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.hpp"
 #include "DigitalInput/DigitalInput.hpp"
 
-
+//digitalInput no usa optionals para el register
 DigitalSensor::DigitalSensor(Pin pin, PinState *value) : id(DigitalInput::register_digital_input(pin)), value(value){
 }
 
@@ -10,7 +10,12 @@ void DigitalSensor::exti_interruption(){
 }
 
 void DigitalSensor::read(){
-	*value = DigitalInput::read_pin_state(id).value();
+	optional<PinState> val = DigitalInput::read_pin_state(id);
+	if(val){
+		*value = val.value();
+	}else{
+
+	}
 
 }
 
