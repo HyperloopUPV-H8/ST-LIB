@@ -1,7 +1,7 @@
 #include "ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.hpp"
 #include "DigitalInput/DigitalInput.hpp"
 
-//digitalInput no usa optionals para el register
+//digitalInput doesn t return an optional in register. Instead, it returns the value directly (fault free?)
 DigitalSensor::DigitalSensor(Pin pin, PinState *value) : id(DigitalInput::register_digital_input(pin)), value(value){
 }
 
