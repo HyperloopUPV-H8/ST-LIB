@@ -22,6 +22,7 @@ void EncoderSensor::read(){
 		value[0] = sign * ((double) counter.value()) * counter_distance / (last_check);
 		value[1] = value[1] + sign * ((double) counter.value()) * counter_distance;
 		Encoder::reset_encoder(id);
+		last_check = 1;
 	}
 	else{
 		//errores de optional vacio aqui (por hacer)
