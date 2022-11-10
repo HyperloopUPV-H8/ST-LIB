@@ -6,59 +6,8 @@
  */
 
 #pragma once
-#ifdef HAL_TIM_MODULE_ENABLED
+
 #include "ST-LIB.hpp"
-
-/**
- * @struct DoublePin
- * @brief Struct that contains a pair of pins
- *
- * @var DoublePin::pin1
- * The first pin of the structure
- * @var DoublePin::pin2
- * The second pin of the structure
- *
- * */
-struct DoublePin {
-	Pin* pin1;
-	Pin* pin2;
-
-	bool operator<(const DoublePin& other) const {
-		if (pin1 < other.pin1) {
-			return true;
-		}else if(pin1 == other.pin1){
-			if (pin2 < other.pin2) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool operator<(const DoublePin* other) const {
-		if (*pin1 < *other->pin1) {
-			return true;
-		}else if(*pin1 == *other->pin1){
-			if (*pin2 < *other->pin2) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool operator==(const DoublePin& other) const {
-		return pin1 == other.pin1 && pin2 == other.pin2;
-	}
-
-	bool operator==(const DoublePin* other) const {
-			return *pin1 == *other->pin1 && *pin2 == *other->pin2;
-		}
-};
-
-struct EncoderPinTimer{
-	Pin pin1;
-	Pin pin2;
-	TIM_HandleTypeDef* timer;
-};
 
 /**
  * @brief Encoder service class. Abstracts the use of the encoder with the HAL library.
@@ -67,8 +16,8 @@ struct EncoderPinTimer{
 class Encoder {
 public:
 	static forward_list<uint8_t> ID_manager;
-	static map<DoublePin, TIM_HandleTypeDef*> pin_timer_map;
-	static map<uint8_t, DoublePin> service_IDs;
+	static map<pair<Pin, Pin>, TIM_HandleTypeDef*> pin_timer_map;
+	static map<uint8_t, pair<Pin, Pin>> service_IDs;
 
 	/**
 	 * @brief This method registers a new encoder
@@ -78,7 +27,7 @@ public:
 	 *
 	 * @retval optional<uint8_t> Id of the service or empty if the pin pair is not valid
 	 */
-	static optional<uint8_t> register_encoder(Pin* pin1, Pin* pin2);
+	static optional<uint8_t> register_encoder(Pin& pin1, Pin& pin2);
 
 	/**
 	 * @brief Starts the timer of the encoder
@@ -117,4 +66,4 @@ public:
 	 */
 	static optional<bool> get_encoder_direction(uint8_t id);
 };
-#endif
+
