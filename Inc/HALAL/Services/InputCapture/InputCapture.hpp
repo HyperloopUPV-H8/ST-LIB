@@ -11,8 +11,6 @@
 
 #define IC_OVERFLOW 0xffffffff
 
-
-
 class IC {
 public:
 	struct data {
