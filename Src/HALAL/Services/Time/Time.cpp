@@ -54,7 +54,7 @@ uint64_t Time::get_global_tick(){
 }
 
 
-optional<uint8_t> Time::register_high_precision_alarm(function<void()> alarm_func, uint32_t period_in_uS){
+optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, function<void()> func){
 	if(available_high_precision_timers.size() == 0)
 		return {};
 
@@ -62,11 +62,11 @@ optional<uint8_t> Time::register_high_precision_alarm(function<void()> alarm_fun
 	TIM_HandleTypeDef* tim = Time::available_high_precision_timers.top();
 	Time::available_high_precision_timers.pop();
 
-	Time::Alarm alarm = { period_in_uS, tim, alarm_func };
+	Time::Alarm alarm = { period_in_us, tim, func };
 	Time::high_precision_alarms_by_id[id] = alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
 
-	Time::start_timer(tim, 275, period_in_uS);
+	Time::start_timer(tim, 275, period_in_us);
 
 	return {id};
 }
@@ -85,18 +85,25 @@ bool Time::unregister_high_precision_alarm(uint16_t id){
 	return true;
 }
 
-uint8_t Time::register_low_precision_alarm(function<void()> alarm_func, uint32_t period_in_uS){
+uint8_t Time::register_low_precision_alarm(uint32_t period_in_us, function<void()> func){
 	uint16_t id = Time::low_precision_alarm_id_count++;
-	Time::Alarm alarm = { period_in_uS, low_precision_timer, alarm_func };
+	Time::Alarm alarm = { period_in_us, low_precision_timer, func };
 	Time::low_precision_alarms_by_id[id] = alarm;
 	return { id };
 }
 
 bool Time::unregister_low_precision_alarm(uint16_t id){
-	if(Time::low_precision_alarms_by_id.find(id) == low_precision_alarms_by_id.end());
+	if(Time::low_precision_alarms_by_id.find(id) == low_precision_alarms_by_id.end())
 		return false;
 	Time::low_precision_alarms_by_id.erase(id);
 	return true;
+}
+
+void Time::set_timeout(int millseconds, function<void()> callback){
+	int id = Time::register_low_precision_alarm(millseconds, [&](){
+		callback();
+		Time::unregister_low_precision_alarm(id);
+	});
 }
 
 // HALAL TIMER CALLBACKS
