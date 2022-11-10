@@ -7,6 +7,9 @@
 #include "Communication/SPI/SPI.hpp"
 
 extern SPI_HandleTypeDef hspi3;
+
+extern SPIPeripheral SPIPeripheral1(PC10, PB2, PC11, PA4);
+
 //TODO: A parte de todo lo que menciono abajo creo que tenemos que cambiar como estamos planteando
 //      el tema de las clases de comunicación que son para perifericos, por ejemplo el SPI
 //      deberiamos tener una clase para cada sensor que utilize las funciones de la clase SPI
@@ -50,7 +53,6 @@ optional<uint8_t> SPI::register_SPI(SPIPeripheral& spi){
     	 return nullopt;
     }
 
-
 	Pin::register_pin(spi.SCK, ALTERNATIVE);
     Pin::register_pin(spi.MOSI, ALTERNATIVE);
     Pin::register_pin(spi.MISO, ALTERNATIVE);
@@ -70,9 +72,6 @@ void SPI::send_packet_by_SPI(uint8_t id, SPIPacket& packet){
     	return; //TODO: Handle exception if needed
     }
 
-
-    SPI_HandleTypeDef* spi = SPI::registered_spi[id];
-
     SPI::tx_packet_buffer[id].second.push(packet);
 
     try_send_next_packet(id);
@@ -82,7 +81,11 @@ void SPI::try_send_next_packet(uint8_t id) {
     if (!SPI::registered_spi.contains(id))
        return; //TODO: Handle exception if needed
 
-    pair<bool, queue<SPIPacket>> buffer_status = SPI::tx_packet_buffer[id];
+    pair<bool, queue<SPIPacket>>& buffer_status = SPI::tx_packet_buffer[id];
+
+//    if (buffer_status != SPI::tx_packet_buffer[id]) {
+//		__NOP();
+//	}
 
     if (!buffer_status.first || buffer_status.second.empty())
         return;
@@ -103,6 +106,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef* hspi){
         if (i.second == hspi) {
             SPI::tx_packet_buffer[i.first].first = true;
             SPI::try_send_next_packet(i.first);
+            return;
         }
     }
 }

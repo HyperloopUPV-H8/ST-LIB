@@ -28,12 +28,10 @@ struct SPIPeripheral
 	}
 };
 
-extern SPIPeripheral SPIPeripheral1(PE0, PE0, PE0, PE0);
-
 struct SPIPeripheral_hash_function {
 	size_t operator()(const SPIPeripheral& spi) const
 	{
-		return hash<uint32_t>()((uint32_t)&spi.SS + (uint32_t)&spi.MOSI);
+		return hash<uint32_t>()((uint32_t)spi.SS.pin);
 	}
 };
 
