@@ -23,4 +23,5 @@ protected:
 	Pin pin2;
 	Pin pin3;
 	uint8_t id;
+	double* value;
 };
