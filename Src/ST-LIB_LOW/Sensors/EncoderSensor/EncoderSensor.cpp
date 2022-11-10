@@ -1,11 +1,9 @@
 #include "ST-LIB_LOW/Sensors/EncoderSensor/EncoderSensor.hpp"
 #include "Encoder/Encoder.hpp"
 
-//I have to get the pin's address as register_encoder works with pin pointers.
-//quick note, all other services use references but ADC, which uses the value itself.
 EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double* value, double counter_distance)
 : value(value), counter_distance(counter_distance){
-	optional<uint8_t> identification = Encoder::register_encoder(&pin1,&pin2);
+	optional<uint8_t> identification = Encoder::register_encoder(pin1,pin2);
 	if(identification){
 		id = identification.value();
 		Encoder::turn_on_encoder(id);
