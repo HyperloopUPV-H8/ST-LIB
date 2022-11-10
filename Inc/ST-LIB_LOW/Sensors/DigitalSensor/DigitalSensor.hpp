@@ -14,7 +14,7 @@
 class DigitalSensor : public Sensor<PinState>::Sensor{
 public:
 	DigitalSensor(Pin pin, PinState *value);
-	virtual void exti_interruption();
+	void exti_interruption(std::function<auto> lambda);
 	void read();
 	uint8_t getID();
 
