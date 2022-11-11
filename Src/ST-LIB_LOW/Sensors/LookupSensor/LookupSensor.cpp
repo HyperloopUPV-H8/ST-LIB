@@ -1,4 +1,4 @@
-#include "ST-LIB_LOW/Sensors/LinearSensor/LookupSensor.hpp"
+#include "ST-LIB_LOW/Sensors/LookupSensor/LookupSensor.hpp"
 #include "ADC/ADC.hpp"
 
 LookupSensor::LookupSensor(Pin pin, double *table, double *value) : table(table), value(value){

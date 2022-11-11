@@ -7,7 +7,7 @@
 
 #pragma once
 #include "ST-LIB.hpp"
-#include "ST-LIB_LOW/Sensors/LinearSensor/AnalogSensor.hpp"
+#include "ST-LIB_LOW/Sensors/AnalogSensor/AnalogSensor.hpp"
 
 
 class LinearSensor : public AnalogSensor::AnalogSensor{
