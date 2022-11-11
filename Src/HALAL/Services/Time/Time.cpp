@@ -5,7 +5,7 @@
  *      Author: Dani
  */
 
-#include <Time/Time.hpp>
+#include <Time/Time.hpp>1
 
 uint64_t Time::global_tick = 0;
 uint64_t Time::low_precision_tick = 0;
@@ -21,8 +21,6 @@ uint16_t Time::low_precision_alarm_id_count = 0;
 map<uint8_t, Time::Alarm> Time::high_precision_alarms_by_id;
 map<uint8_t, Time::Alarm> Time::low_precision_alarms_by_id;
 map<TIM_HandleTypeDef*, Time::Alarm> Time::high_precision_alarms_by_timer;
-
-// START AND STOP METHODS
 
 void Time::start(){
 	Time::start_timer(global_timer, 0, Time::HIGH_PRECISION_MAX_ARR);
@@ -106,8 +104,6 @@ void Time::set_timeout(int millseconds, function<void()> callback){
 	});
 }
 
-// HALAL TIMER CALLBACKS
-
 void Time::global_timer_callback(){
 	Time::global_tick += Time::HIGH_PRECISION_MAX_ARR;
 }
@@ -125,8 +121,6 @@ void Time::low_precision_timer_callback(){
 
 	low_precision_tick += 1;
 }
-
-// HAL TIMER CALLBACK
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* tim){
 	if(tim == Time::global_timer)

@@ -22,6 +22,9 @@ class Time {
 
 private :
 
+	static forward_list<uint16_t> high_precision_ids = { };
+	static forward_list<uint16_t> low_precision_ids = { };
+
 	struct Alarm {
 		uint32_t period;
 		TIM_HandleTypeDef* tim;
@@ -33,8 +36,6 @@ private :
 	static uint64_t global_tick;
 	static uint64_t low_precision_tick;
 
-	static uint16_t high_precision_alarm_id_count;
-	static uint16_t low_precision_alarm_id_count;
 	static map<uint8_t, Alarm> high_precision_alarms_by_id;
 	static map<TIM_HandleTypeDef*, Alarm> high_precision_alarms_by_timer;
 	static map<uint8_t, Alarm> low_precision_alarms_by_id;
