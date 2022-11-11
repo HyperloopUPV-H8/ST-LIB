@@ -8,3 +8,4 @@
 #include "ADC/ADC.hpp"
 #include "PWM/PWM.hpp"
 #include "Encoder/Encoder.hpp"
+#include "Time/Time.hpp"
