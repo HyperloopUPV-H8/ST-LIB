@@ -1,5 +1,5 @@
-
 #pragma once
+
 #include "PinModel/Pin.hpp"
 #include "DigitalOutput/DigitalOutput.hpp"
 #include "DigitalInput/DigitalInput.hpp"
@@ -10,4 +10,5 @@
 #include "Time/Time.hpp"
 #include "Clocks/Counter.hpp"
 #include "Clocks/Stopwatch.hpp"
+#include "Encoder/Encoder.hpp"
 
