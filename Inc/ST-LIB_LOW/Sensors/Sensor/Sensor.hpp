@@ -14,7 +14,7 @@ template <typename T>
 //asi es como deberia funcionar con template y virtual
 class Sensor{
 public:
-	virtual void read();
+	virtual void read() = 0;
 
 protected:
 	Pin pin;

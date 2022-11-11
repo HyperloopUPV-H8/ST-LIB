@@ -13,8 +13,8 @@
 
 class AnalogSensor : public Sensor<double>::Sensor{
 public:
-	virtual void read();
-	virtual uint8_t getID();
+	virtual void read() = 0;
+	virtual uint8_t getID() = 0;
 
 protected:
 	Pin pin;
