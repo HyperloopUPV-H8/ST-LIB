@@ -1,8 +1,8 @@
 #include "ST-LIB_LOW/Sensors/LinearSensor/LinearSensor.hpp"
 #include "ADC/ADC.hpp"
 
-LinearSensor::LinearSensor(Pin pin, double slope, double offset, double destination, double *value)
-: slope(slope), offset(offset), destination(destination), value(value){
+LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
+: slope(slope), offset(offset), value(value){
 	optional<uint8_t> identification = ADC::register_adc(pin);
 	if(identification){
 		id = identification.value();

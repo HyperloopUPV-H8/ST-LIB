@@ -15,7 +15,6 @@ template <typename T>
 class Sensor{
 public:
 	virtual void read();
-	virtual uint8_t getID();
 
 protected:
 	Pin pin;

@@ -7,7 +7,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, double *value) : table(table)
 		id = identification.value();
 		ADC::turn_on_adc(id);
 	}else{
-		//errores de optional vacio aqui (por hacer)
+		//TODO: errores de optional vacio aqui (por hacer)
 	}
 }
 

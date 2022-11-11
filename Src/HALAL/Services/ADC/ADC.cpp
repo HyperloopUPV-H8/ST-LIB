@@ -97,7 +97,7 @@ void ADC::turn_off_adc(uint8_t id) {
 }
 
 optional<uint16_t> ADC::get_pin_value(uint8_t id) {
-	if (!service_IDs.contains(id)) { return {}; }
+	if (!service_IDs.contains(id)) { return nullopt; }
 	Pin pin = service_IDs[id];
 
 	ADCchannel adc_channel = pin_adc_map[pin];
@@ -110,4 +110,5 @@ optional<uint16_t> ADC::get_pin_value(uint8_t id) {
 	else if (adc_channel.adc == &hadc3){
 		return adc_read3[adc_channel.rank];
 	}
+	return nullopt; //eliminar el warning, nunca deberia llegar a caer aqui
 }
