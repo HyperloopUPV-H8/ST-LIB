@@ -8,3 +8,6 @@
 #include "ADC/ADC.hpp"
 #include "PWM/PWM.hpp"
 #include "Time/Time.hpp"
+#include "Clocks/Counter.hpp"
+#include "Clocks/Stopwatch.hpp"
+
