@@ -14,6 +14,7 @@ struct TimerChannel {
 	bool operator== (const TimerChannel &other) const {
 		return (timer == other.timer && channel == other.channel);
 	}
+	
 	bool operator< (const TimerChannel &other) const {
 		if (timer == other.timer) { return channel < other.channel; }
 		else { return timer < other.timer; }
