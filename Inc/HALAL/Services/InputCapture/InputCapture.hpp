@@ -7,19 +7,27 @@
 
 #pragma once
 #include "ST-LIB.hpp"
-#include "TimerChannelModel/TimerChannel.hpp"
 
 #define IC_OVERFLOW 0xffffffff
+
+static map<uint32_t, uint32_t> channel_dict = {
+	{HAL_TIM_ACTIVE_CHANNEL_1, TIM_CHANNEL_1},
+	{HAL_TIM_ACTIVE_CHANNEL_2, TIM_CHANNEL_2},
+	{HAL_TIM_ACTIVE_CHANNEL_3, TIM_CHANNEL_3},
+	{HAL_TIM_ACTIVE_CHANNEL_4, TIM_CHANNEL_4},
+	{HAL_TIM_ACTIVE_CHANNEL_5, TIM_CHANNEL_5},
+	{HAL_TIM_ACTIVE_CHANNEL_6, TIM_CHANNEL_6}
+};
 
 class IC {
 public:
 	class Instance {
 	public:
+		uint8_t id;
 		Pin pin;
 		TIM_HandleTypeDef* timer;
 		uint32_t channel_rising;
 		uint32_t channel_falling;
-		uint32_t counter_values[4];
 		uint8_t count;
 		uint32_t frequency;
 		uint8_t duty_cycle;
@@ -36,7 +44,6 @@ public:
 
 	static map<uint8_t, IC::Instance> instances;
 	static map<Pin, instance_constructor_data> instances_data;
-	static map<uint32_t, uint32_t> channel_dict;
 	static forward_list<uint8_t> id_manager;
 	static optional<uint8_t> register_ic(Pin& pin);
 	static void unregister_ic(uint8_t id);
