@@ -45,6 +45,7 @@ public:
 	static map<uint8_t, IC::Instance> instances;
 	static map<Pin, instance_constructor_data> instances_data;
 	static forward_list<uint8_t> id_manager;
+
 	static optional<uint8_t> register_ic(Pin& pin);
 	static void unregister_ic(uint8_t id);
 	static void turn_on_ic(uint8_t);
