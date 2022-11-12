@@ -7,7 +7,6 @@
 
 #pragma once
 #include "ST-LIB.hpp"
-#include "TimerChannelModel/TimerChannel.hpp"
 
 class PWM {
 public:
