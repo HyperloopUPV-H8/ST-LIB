@@ -28,7 +28,6 @@ public:
 		TIM_HandleTypeDef* timer;
 		uint32_t channel_rising;
 		uint32_t channel_falling;
-		uint8_t count;
 		uint32_t frequency;
 		uint8_t duty_cycle;
 
