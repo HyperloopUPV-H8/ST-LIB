@@ -6,6 +6,7 @@
  */
 
 #pragma once
+
 struct TimerChannel {
 	TIM_HandleTypeDef* timer;
 	uint32_t channel;
