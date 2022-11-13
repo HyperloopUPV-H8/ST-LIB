@@ -4,44 +4,55 @@
 
 #include <StateMachine/StateMachine.hpp>
 
-void StateMachine::add_update_action(Action* action) {
-	current_state.actions.push_back(action);
+void State::update() {
+	for (function<void()> action : actions) {
+		if (action != nullptr) {
+			action();
+		}
+	}
 }
 
-void StateMachine::add_update_action(Action* action, State state) {
-	state.actions.push_back(action);
+StateMachine::StateMachine(uint8_t initial_state) {
+	this->initial_state = initial_state;
+	current_state = initial_state;
+
 }
 
-void StateMachine::add_enter_action(State old_state, State new_state,
-		Action* action) {
+void StateMachine::add_update_action(function<void()> action) {
+	states[current_state].actions.push_back(action);
+}
+
+void StateMachine::add_update_action(function<void()> action, uint8_t state) {
+	states[state].actions.push_back(action);
+}
+
+void StateMachine::add_enter_action(uint8_t old_state, uint8_t new_state,
+		function<void()> action) {
 	on_enter[old_state][new_state].push_back(action);
 }
 
-void StateMachine::add_transition(State old_state, State new_state,
-		Transition* transition) {
+void StateMachine::add_transition(uint8_t old_state, uint8_t new_state,
+		function<bool()> transition) {
 	transitions[old_state][new_state] = transition;
 }
 
 void StateMachine::update() {
-	for (Action* action : on_update[current_state]) {
-		if (action != nullptr) {
-			(*action)();
-		}
-	}
+	states[current_state].update();
+	check_transitions();
 }
 
 void StateMachine::check_transitions() {
-	for (auto const &mem : transitions[current_state]) {
-		if ((*mem.second)()) {
-			change_state(mem.first);
+	for (auto const state_transition : transitions[current_state]) {
+		if (state_transition.second()) {
+			change_state(state_transition.first);
 		}
 	}
 }
 
-void StateMachine::change_state(State new_state) {
-	for (auto const action: on_enter[current_state][new_state]) {
+void StateMachine::change_state(uint8_t new_state) {
+	for (auto const action : on_enter[current_state][new_state]) {
 		if (action != nullptr) {
-			(*action)();
+			action();
 		}
 	}
 	current_state = new_state;
