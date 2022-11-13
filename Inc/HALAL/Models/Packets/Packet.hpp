@@ -4,7 +4,7 @@
 
 struct empty_type{};
 
-template<typename... ElementTypes> class Packet;
+template<class... ValueTypes> class Packet;
 
 template<>
 class Packet<>
@@ -23,9 +23,9 @@ public:
 	static decltype(id) get_id(uint8_t* new_data);
 };
 
-map<decltype(Packet<>::id), function<void(uint8_t*)>> save_packet_by_id;
+extern map<decltype(Packet<>::id), function<void(uint8_t*)>> save_packet_by_id;
 
-template<typename Type, typename... Types>
+template<class Type, class... Types>
 class Packet<Type, Types...> : public Packet<Types...>
 {
 public:
@@ -43,7 +43,7 @@ public:
 
 	Packet(int id);
 
-	Packet(int id, PacketValue<Type> a, PacketValue<Types>... args);
+	Packet(int id, PacketValue<Type> value, PacketValue<Types>... args);
 
 	template<int I>
 	const auto& get() const;
@@ -59,7 +59,7 @@ public:
 	template <size_t I = 0>
 	void fill_buffer();
 
-    bool check_id(uint8_t* new_data);
+	bool check_id(uint8_t* new_data);
 
     decltype(Packet<Type,Types...>::id) get_id();
 
@@ -76,10 +76,10 @@ public:
 };
 
 #if __cpp_deduction_guides >= 201606
-template<typename Type, typename... Types>
-Packet(int id, PacketValue<Type> a, PacketValue<Types>... args)->Packet<Type, Types...>;
-template<typename Type>
-Packet(int id, PacketValue<Type> a)->Packet<Type>;
+template<class Type, class... Types>
+Packet(int id, PacketValue<Type> value, PacketValue<Types>... args)->Packet<Type, Types...>;
+template<class Type>
+Packet(int id, PacketValue<Type> value)->Packet<Type>;
 Packet(int id)->Packet<>;
 #endif
 

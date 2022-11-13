@@ -10,11 +10,17 @@ public:
     double factor;
 
     PacketValue();
-    PacketValue(double* src, double factor);
+    PacketValue(double* src, double factor):src(src),factor(factor){}
 
-    ConversionType convert();
+    ConversionType convert() {
+    	return static_cast<ConversionType>((*src) * factor);
+    }
 
-    void load(ConversionType new_data);
+    void load(ConversionType new_data) {
+        *src = static_cast<double>(new_data / factor);
+    }
 
-    size_t size();
+    size_t size() {
+    	return sizeof(ConversionType);
+    }
 };

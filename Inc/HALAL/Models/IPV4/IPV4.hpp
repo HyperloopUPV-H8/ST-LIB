@@ -1,21 +1,18 @@
 #pragma once
-#include "C++Utilities/CppUtils.hpp"
-#include "App/lwip.h"
+#include "stm32h7xx_hal.h"
+#include "lwip/pbuf.h"
+#include "lwip/udp.h"
+#include "lwip/tcp.h"
 #include "lwip/ip_addr.h"
+#include "C++Utilities/CppUtils.hpp"
+
 
 class IPV4{
 public:
 	ip_addr_t ip_address;
 
-	IPV4(const string ip_address){
-		stringstream sstream(ip_address);
-		int ip_bytes[4];
-		for(int& byte : ip_bytes){
-			string temp;
-			getline(sstream, temp, '.');
-			byte = stoi(temp);
-		}
-		IP_ADDR4(&(this->ip_address),ip_bytes[0],ip_bytes[1],ip_bytes[2],ip_bytes[3]);
-	}
+	IPV4();
+
+	IPV4(string ip_address);
 
 };

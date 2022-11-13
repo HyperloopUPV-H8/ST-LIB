@@ -48,7 +48,9 @@
  * Include user defined options first. Anything not defined in these files
  * will be set to standard values. Override anything you don't like!
  */
+#ifdef __mx_lwip_H
 #include "lwipopts.h"
+#endif
 #include "lwip/debug.h"
 
 /**

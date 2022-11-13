@@ -1,5 +1,5 @@
 
-#include <Packets/Packet.hpp>
+#include "Packets/Packet.hpp"
 
 Packet<>::Packet(int id) : id(static_cast<uint16_t>(id)) {}
 
@@ -9,18 +9,18 @@ decltype(Packet<>::id) Packet<>::get_id(uint8_t* new_data){
 	return *(decltype(id)*)new_data;
 }
 
-template<typename Type, typename... Types>
+template<class Type, class... Types>
 Packet<Type, Types...>::Packet() = default;
 
-template<typename Type, typename... Types>
-Packet<Type, Types...>::Packet(int id) : id(static_cast<uint16_t>(id)) {}
+template<class Type, class... Types>
+Packet<Type, Types...>::Packet(int id) : id(id) {}
 
-template<typename Type, typename... Types>
-Packet<Type, Types...>::Packet(int id, PacketValue<Type> a, PacketValue<Types>... args) : Packet<Types...>(id, args...), value(a), id(id) {
-	save_packet_by_id[this->id] = [this](uint8_t* new_data) {save_data(new_data); };
+template<class Type, class... Types>
+Packet<Type, Types...>::Packet(int id, PacketValue<Type> value, PacketValue<Types>... args) : Packet<Types...>(id, args...), id(id), value(value) {
+	save_packet_by_id[this->id] = [thsis](uint8_t* new_data) {save_data(new_data); };
 }
 
-template<class Type, class ... Types> template<int I>
+template<class Type, class... Types> template<int I>
 const auto& Packet<Type, Types...>::get() const{
 	if constexpr (I == 0){
 		return this->value;
@@ -30,7 +30,7 @@ const auto& Packet<Type, Types...>::get() const{
 	}
 }
 
-template<class Type, class ... Types> template<int I>
+template<class Type, class... Types> template<int I>
 auto& Packet<Type, Types...>::get(){
 	if constexpr (I == 0){
 		return this->value;
@@ -40,19 +40,7 @@ auto& Packet<Type, Types...>::get(){
 	}
 }
 
-template<class Type, class ... Types>
-uint8_t* Packet<Type, Types...>::build() {
-	if (!has_been_built) {
-		calculate_sizes();
-		bffr = (uint8_t*)malloc(bffr_size);
-		memcpy(bffr, &id, sizeof(id));
-	}
-	fill_buffer();
-	ptr_loc = sizeof(id);
-	return this->bffr;
-}
-
-template<class Type, class ... Types> template <size_t I = 0>
+template<class Type, class... Types> template <size_t I = 0>
 void Packet<Type, Types...>::calculate_sizes() {
 	if constexpr (I == nbr_of_values) {
 		return;
@@ -64,7 +52,7 @@ void Packet<Type, Types...>::calculate_sizes() {
 	}
 }
 
-template<class Type, class ... Types> template <size_t I = 0>
+template<class Type, class... Types> template <size_t I = 0>
 void Packet<Type, Types...>::fill_buffer() {
 	if constexpr (I == nbr_of_values) {
 		return;
@@ -77,20 +65,21 @@ void Packet<Type, Types...>::fill_buffer() {
 		fill_buffer<I + 1>();
 	}
 }
-template<class Type, class ... Types>
-bool Packet<Type, Types...>::check_id(uint8_t* new_data) {
-    if (id != *(uint16_t*)new_data) {
-        return false;
-    }
-    return true;
+
+template<class Type, class... Types>
+uint8_t* Packet<Type, Types...>::build() {
+	if (!has_been_built) {
+		calculate_sizes();
+		bffr = (uint8_t*)malloc(bffr_size);
+		memcpy(bffr, &id, sizeof(id));
+	}
+	fill_buffer();
+	ptr_loc = sizeof(id);
+	has_been_built = true;
+	return this->bffr;
 }
 
-template<class Type, class ... Types>
-decltype(Packet<Type,Types...>::id) Packet<Type, Types...>::get_id() {
-    return this->id;
-}
-
-template<class Type, class ... Types> template <size_t I = 0>
+template<class Type, class... Types> template <size_t I = 0>
 void Packet<Type, Types...>::load_data(uint8_t* new_data) {
     if constexpr (I == nbr_of_values) {
         return;
@@ -106,6 +95,14 @@ void Packet<Type, Types...>::load_data(uint8_t* new_data) {
 }
 
 template<class Type, class ... Types>
+bool Packet<Type, Types...>::check_id(uint8_t* new_data) {
+    if (id != *(uint16_t*)new_data) {
+        return false;
+    }
+    return true;
+}
+
+template<class Type, class... Types>
 void Packet<Type, Types...>::save_data(uint8_t* new_data) {
     if (!check_id(new_data)) {
         return;
@@ -114,3 +111,10 @@ void Packet<Type, Types...>::save_data(uint8_t* new_data) {
     ptr_loc = sizeof(id);
 }
 
+
+template<class Type, class... Types>
+decltype(Packet<Type,Types...>::id) Packet<Type, Types...>::get_id() {
+    return this->id;
+}
+
+map<decltype(Packet<>::id), function<void(uint8_t*)>> save_packet_by_id = {};

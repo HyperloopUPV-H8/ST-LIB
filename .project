@@ -29,4 +29,11 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>HALAL</name>
+			<type>2</type>
+			<location>C:/Users/stefa/OneDrive - UPV/Documentos/Firmware-H8/ST-LIB/Src/HALAL</location>
+		</link>
+	</linkedResources>
 </projectDescription>
