@@ -26,5 +26,5 @@ public:
 	static void unregister_exti(uint8_t id);
 	static void turn_on_exti(uint8_t id);
 	static void turn_off_exti(uint8_t id);
-	bool get_pin_value(uint8_t id);
+	static bool get_pin_value(uint8_t id);
 };
