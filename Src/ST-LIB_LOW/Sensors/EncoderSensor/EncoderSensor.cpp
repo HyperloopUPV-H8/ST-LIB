@@ -19,17 +19,18 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double counter_distance, double
 void EncoderSensor::read(){
 	optional<uint32_t> counter = Encoder::get_encoder_counter(id);
 	optional<bool> direction = Encoder::get_encoder_direction(id);
-	uint64_t check = Time::get_global_tick();
+	uint64_t delta_time = Time::get_global_tick() - last_check;
+	
 
 	if(counter && direction){
 
 		int sign = (1 - 2*direction.value());
 
 		*position= sign * ((double) counter.value()) * counter_distance;
-		*speed = (*position - last_position) * clock_frequency / (check - last_check);
-		*acceleration = (*speed - last_speed) * clock_frequency/ (check - last_check);
+		*speed = (*position - last_position) * clock_frequency / (delta_time);
+		*acceleration = (*speed - last_speed) * clock_frequency/ (delta_time);
 
-		last_check = check;
+		last_check += delta_time;
 		last_position = *position;
 		last_speed = *speed;
 	}
