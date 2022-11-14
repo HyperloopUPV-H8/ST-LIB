@@ -9,6 +9,8 @@
 #pragma once
 #include "ST-LIB.hpp"
 #include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
+#define counter_distance 0.025
+#define clock_frequency = 300000000
 
 
 class EncoderSensor : public Sensor<double>::Sensor{
@@ -27,6 +29,4 @@ protected:
 	uint64_t last_time;
 	double last_position;
 	double last_speed;
-	double counter_distance = 0.025;
-	const int clock_frequency = 300000000;
 };
