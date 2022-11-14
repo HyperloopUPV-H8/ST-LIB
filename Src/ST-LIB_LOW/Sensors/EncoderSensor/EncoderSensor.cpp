@@ -12,7 +12,7 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double counter_distance, double
 		last_position = *position;
 		last_speed = *speed;
 	}else{
-		//errores de optional vacio aqui (por hacer)
+		//TODO: Error handler, Error during register of encoder x
 	}
 }
 
