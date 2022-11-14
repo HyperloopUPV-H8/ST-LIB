@@ -25,10 +25,9 @@ private:
 		SPI_HandleTypeDef* hspi;
 		bool tx_status;
 		queue<SPIPacket> tx_queue;
-		uint8_t* rx_temporal_buffer;
-		uint16_t rx_temporal_buffer_size;
 		bool rx_status;
-		queue<SPIPacket> rx_queue;
+		optional<SPIPacket> rx_buffer;
+
 
 		bool operator<(const SPI::Peripheral& other) const {
 			return SS < other.SS;
@@ -59,12 +58,7 @@ public:
 	static forward_list<uint8_t> ID_manager;
 	static unordered_map<uint8_t, SPI::Peripheral > registered_spi;
 
-	SPI::Peripheral peripheral1 = {.SCK = PC10, .MOSI = PB2, .MISO = PC11, .SS = PA4,
-								   .hspi = &hspi3,
-								   .tx_status = true, .tx_queue = queue<SPIPacket>(),
-								   .rx_temporal_buffer = nullptr, .rx_temporal_buffer_size = 0,
-								   .rx_status = true, .rx_queue = queue<SPIPacket>()
-								  };
+	static SPI::Peripheral peripheral1;
 
 	static optional<uint8_t> register_SPI(SPI::Peripheral& spi);
 
