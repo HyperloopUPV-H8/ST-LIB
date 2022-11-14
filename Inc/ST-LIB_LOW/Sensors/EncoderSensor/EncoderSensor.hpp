@@ -10,7 +10,7 @@
 #include "ST-LIB.hpp"
 #include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
 #define counter_distance 0.025
-#define clock_frequency = 300000000
+#define clock_frequency 300000000
 
 
 class EncoderSensor : public Sensor<double>::Sensor{
