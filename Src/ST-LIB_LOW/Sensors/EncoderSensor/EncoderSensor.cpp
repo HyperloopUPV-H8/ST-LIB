@@ -26,7 +26,7 @@ void EncoderSensor::read(){
 
 		int sign = (1 - 2*direction.value());
 
-		*position= sign * ((double) counter.value()) * counter_distance;
+		*position= ((double) counter.value()) * counter_distance;
 		*speed = (*position - last_position) * clock_frequency / (delta_time);
 		*acceleration = (*speed - last_speed) * clock_frequency/ (delta_time);
 
