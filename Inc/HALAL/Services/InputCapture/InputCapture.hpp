@@ -41,8 +41,8 @@ public:
 
 	static optional<uint8_t> register_ic(Pin& pin);
 	static void unregister_ic(uint8_t id);
-	static void turn_on_ic(uint8_t);
-	static void turn_off_ic(uint8_t);
+	static void turn_on_ic(uint8_t id);
+	static void turn_off_ic(uint8_t id);
 	static uint32_t read_frequency(uint8_t id);
 	static uint8_t read_duty_cycle(uint8_t id);
 	static Instance find_instance_by_channel(uint32_t channel);
