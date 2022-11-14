@@ -56,7 +56,7 @@ private:
 
 public:
 	static forward_list<uint8_t> ID_manager;
-	static unordered_map<uint8_t, SPI::Peripheral > registered_spi;
+	static unordered_map<uint8_t, SPI::Peripheral* > registered_spi;
 
 	static SPI::Peripheral peripheral1;
 
