@@ -53,7 +53,7 @@ void IC::turn_off_ic(uint8_t id){
 	HAL_TIM_IC_Stop(instance.timer, instance.channel_falling);
 }
 
-float IC::read_frequency(uint8_t id) {
+uint32_t IC::read_frequency(uint8_t id) {
 	IC::Instance instance = IC::instances[id];
 	return instance.frequency;
 }
