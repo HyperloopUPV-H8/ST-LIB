@@ -26,7 +26,7 @@ public:
 
 	template<typename Type>
 	SPIPacket(Type* data, uint32_t size){
-		this->size = sizeof(size) * sizeof(Type);
+		this->size = size * sizeof(Type);
 		this->data = (uint8_t*)malloc(this->size);
 		memcpy(this->data, data, this->size);
 	}

@@ -23,8 +23,7 @@ private:
 		Pin MISO;
 		Pin SS;
 		SPI_HandleTypeDef* hspi;
-		bool tx_status;
-		queue<SPIPacket> tx_queue;
+		optional<SPIPacket> tx_buffer;
 		bool rx_status;
 		optional<SPIPacket> rx_buffer;
 
@@ -51,9 +50,6 @@ private:
 		}
 	};
 
-private:
-	static void try_receive_next_packet(uint8_t id, uint16_t data_size);
-
 public:
 	static forward_list<uint8_t> ID_manager;
 	static unordered_map<uint8_t, SPI::Peripheral* > registered_spi;
@@ -62,10 +58,7 @@ public:
 
 	static optional<uint8_t> register_SPI(SPI::Peripheral& spi);
 
-	static void send_next_packet(uint8_t id, SPIPacket& packet);
-
-	//TODO: Use of this method is discouraged
-	static void try_send_next_packet(uint8_t id);
+	static bool send_next_packet(uint8_t id, SPIPacket& packet);
 
 	static optional<SPIPacket> get_next_packet(uint8_t id, uint16_t data_size);
 

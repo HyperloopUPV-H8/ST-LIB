@@ -11,13 +11,9 @@ void SPI::Peripheral::set_rx_status(bool new_status){
 	this->rx_status = new_status;
 }
 
-void SPI::Peripheral::set_tx_status(bool new_status){
-	this->tx_status = new_status;
-}
-
 SPI::Peripheral SPI::peripheral1 = { .SCK = PC10, .MOSI = PB2, .MISO = PC11, .SS = PA4,
 									 .hspi = &hspi3,
-									 .tx_status = true, .tx_queue = queue<SPIPacket>(),
+									 	 	 	 	 	.tx_buffer = nullopt,
 									 .rx_status = true, .rx_buffer = nullopt,
 									};
 
@@ -44,51 +40,23 @@ optional<uint8_t> SPI::register_SPI(SPI::Peripheral& spi){
 
 //////////////////////////////////////TX//////////////////////////////////////
 
-void SPI::send_next_packet(uint8_t id, SPIPacket& packet){
+bool SPI::send_next_packet(uint8_t id, SPIPacket& packet){
     if (!SPI::registered_spi.contains(id))
-    	return; //TODO: Handle exception if needed
-
-    SPI::registered_spi[id]->tx_queue.push(packet);
-
-    try_send_next_packet(id);
-}
-
-void SPI::try_send_next_packet(uint8_t id) {
-    if (!SPI::registered_spi.contains(id))
-       return; //TODO: Handle exception if needed
+    	return false; //TODO: Handle exception if needed
 
     SPI::Peripheral* spi = SPI::registered_spi[id];
 
-    if (!spi->tx_status || spi->tx_queue.empty())
-        return;
+    if(spi->hspi->State != HAL_SPI_STATE_READY)
+	   return false;
 
-    SPIPacket next_packet = spi->tx_queue.front();
+    spi->tx_buffer = packet;
 
-    if (HAL_SPI_Transmit_DMA(spi->hspi, next_packet.get_data(), next_packet.get_size()) != HAL_OK)
-    	return; //TODO: Warning, Error during tranmision
+    if (HAL_SPI_Transmit_IT(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK)
+        	return false; //TODO: Warning, Error during tranmision
 
-    spi->set_tx_status(false);
-    spi->tx_queue.pop();
+    spi->tx_buffer = nullopt;
+    return true;
 }
-
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef* hspi){
-
-    for (auto& i: SPI::registered_spi){
-    	uint8_t id = i.first;
-    	auto spi = i.second;
-
-        if (spi->hspi == hspi) {
-            spi->set_tx_status(true);
-            SPI::try_send_next_packet(id);
-            return;
-        }
-    }
-}
-
-void HAL_SPI_TxHalfCpltCallback(SPI_HandleTypeDef *hspi){
-	__NOP();
-}
-
 
 //////////////////////////////////////RX//////////////////////////////////////
 optional<SPIPacket> SPI::get_next_packet(uint8_t id, uint16_t data_size){
