@@ -8,7 +8,7 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double counter_distance, double
 	if(identification){
 		id = identification.value();
 		Encoder::turn_on_encoder(id);
-		last_check = Time::get_global_tick();
+		last_time = Time::get_global_tick();
 		last_position = *position;
 		last_speed = *speed;
 	}else{
@@ -19,7 +19,7 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double counter_distance, double
 void EncoderSensor::read(){
 	optional<uint32_t> counter = Encoder::get_encoder_counter(id);
 	optional<bool> direction = Encoder::get_encoder_direction(id);
-	uint64_t delta_time = Time::get_global_tick() - last_check;
+	uint64_t delta_time = Time::get_global_tick() - last_time;
 	
 
 	if(counter && direction){
@@ -30,12 +30,12 @@ void EncoderSensor::read(){
 		*speed = (*position - last_position) * clock_frequency / (delta_time);
 		*acceleration = (*speed - last_speed) * clock_frequency/ (delta_time);
 
-		last_check += delta_time;
+		last_time += delta_time;
 		last_position = *position;
 		last_speed = *speed;
 	}
 	else{
-		//errores de optional vacio aqui (por hacer)
+		//TODO: errores de optional vacio aqui (por hacer)
 	}
 }
 
