@@ -25,7 +25,7 @@ protected:
 	double* position;
 	double* speed;
 	double* acceleration;
-	uint64_t last_check;
+	uint64_t last_time;
 	double last_position;
 	double last_speed;
 	const int clock_frequency = 300000000;
