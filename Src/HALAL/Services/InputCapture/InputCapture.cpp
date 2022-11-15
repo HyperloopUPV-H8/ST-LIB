@@ -5,7 +5,6 @@
  *      Author: aleja
  */
 #include "InputCapture/InputCapture.hpp"
-#define MAGIC_OFFSET 3
 
 extern TIM_HandleTypeDef htim2;
 
@@ -83,11 +82,11 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
 	uint32_t rising_value = HAL_TIM_ReadCapturedValue(htim, instance.channel_rising);
 	if (rising_value != 0) {
-		uint32_t ref_clock = HAL_RCC_GetPCLK1Freq()*2 / (instance.timer->Init.Prescaler+1);
-		uint32_t falling_value = HAL_TIM_ReadCapturedValue(htim, instance.channel_falling);
+		float ref_clock = HAL_RCC_GetPCLK1Freq()*2 / (instance.timer->Init.Prescaler+1);
+		float falling_value = HAL_TIM_ReadCapturedValue(htim, instance.channel_falling);
 
-		IC::instances[instance.id].frequency = ref_clock / rising_value;
-		IC::instances[instance.id].duty_cycle = (falling_value * 100) / rising_value + MAGIC_OFFSET; // Testing has shown an error of 3 on the duty cycle calculations.
+		IC::instances[instance.id].frequency = round(ref_clock / rising_value);
+		IC::instances[instance.id].duty_cycle = round((falling_value * 100) / rising_value);
 	}
 }
 
