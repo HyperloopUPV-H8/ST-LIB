@@ -16,7 +16,9 @@ map<uint8_t, ExternalInterrupt::Instance> ExternalInterrupt::instances = {};
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin) {
 	for(auto i : ExternalInterrupt::instances) {
 		ExternalInterrupt::Instance& instance = i.second;
-		if (!(instance.gpio == GPIO_Pin)) { continue; }
+		if (!(instance.gpio == GPIO_Pin)) {
+			continue;
+		}
 		(*instance.action)();
 	}
 }
@@ -27,7 +29,9 @@ ExternalInterrupt::Instance::Instance(Pin p, uint16_t g) {
 }
 
 optional<uint8_t> ExternalInterrupt::register_exti(Pin& pin, function<void()>* action) {
-	if (!ExternalInterrupt::instances_data.contains(pin)) { return nullopt;}
+	if (!ExternalInterrupt::instances_data.contains(pin)) {
+		return nullopt;
+	}
 
 	Pin::register_pin(pin, ALTERNATIVE);
 	uint8_t id = id_manager.front();
