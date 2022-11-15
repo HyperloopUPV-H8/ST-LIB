@@ -14,12 +14,12 @@ map<Pin, IC::Instance> IC::instances_data = {
 };
 map<uint8_t, IC::Instance> IC::instances = {};
 
-IC::Instance::Instance(Pin _pin, TIM_HandleTypeDef* _tim, uint32_t _channel_rising, uint32_t _channel_falling) {
-	pin = _pin;
-	timer = _tim;
-	channel_rising = _channel_rising;
-	channel_falling = _channel_falling;
-}
+IC::Instance::Instance(Pin pin, TIM_HandleTypeDef* timer, uint32_t channel_rising, uint32_t channel_falling) :
+	pin(pin),
+	timer(timer),
+	channel_rising(channel_rising),
+	channel_falling(channel_falling)
+	{ }
 
 optional<uint8_t> IC::register_ic(Pin& pin){
  	if (!IC::instances_data.contains(pin)) {
