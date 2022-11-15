@@ -39,7 +39,6 @@ optional<uint8_t> ExternalInterrupt::register_exti(Pin& pin, function<void()>* a
 
 	Instance instance = instances_data[pin];
 	instances[id] = instance;
-	instances[id].id = id;
 	instances[id].action = action;
 
 	return id;
