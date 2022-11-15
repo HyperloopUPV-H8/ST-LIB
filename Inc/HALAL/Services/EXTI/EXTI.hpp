@@ -27,5 +27,5 @@ public:
 	static void unregister(uint8_t id);
 	static void turn_on(uint8_t id);
 	static void turn_off(uint8_t id);
-	static bool get_pin_value(uint8_t id);
+	static optional<bool> get_pin_value(uint8_t id);
 };

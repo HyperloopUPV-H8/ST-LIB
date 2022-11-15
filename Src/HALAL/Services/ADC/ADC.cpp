@@ -59,7 +59,9 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc) {
 }
 
 optional<uint8_t> ADC::register_(Pin pin) {
-	if (!pin_adc_map.contains(pin)) { return nullopt; }
+	if (!pin_adc_map.contains(pin)) {
+		return nullopt;
+	}
 
 	Pin::register_(pin, ALTERNATIVE);
 	uint8_t id = id_manager.front();
@@ -69,7 +71,9 @@ optional<uint8_t> ADC::register_(Pin pin) {
 }
 
 void ADC::turn_on(uint8_t id){
-	if (!service_ids.contains(id)) { return; }
+	if (not service_ids.contains(id)) {
+		return; // TODO error handler
+	}
 	Pin pin = service_ids[id];
 	ADCchannel adc_channel = pin_adc_map[pin];
 
@@ -88,7 +92,9 @@ void ADC::turn_on(uint8_t id){
 }
 
 void ADC::turn_off(uint8_t id) {
-	if (!service_ids.contains(id)) { return; }
+	if (not service_ids.contains(id)) {
+		return; //TODO error handler
+	}
 	Pin pin = service_ids[id];
 	ADCchannel adc_channel = pin_adc_map[pin];
 
@@ -97,7 +103,9 @@ void ADC::turn_off(uint8_t id) {
 }
 
 optional<uint16_t> ADC::get_value(uint8_t id) {
-	if (!service_ids.contains(id)) { return nullopt; }
+	if (not service_ids.contains(id)) {
+		return nullopt; // TODO error handler
+	}
 	Pin pin = service_ids[id];
 
 	ADCchannel adc_channel = pin_adc_map[pin];

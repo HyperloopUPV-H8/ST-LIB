@@ -22,7 +22,7 @@ IC::Instance::Instance(Pin pin, TIM_HandleTypeDef* timer, uint32_t channel_risin
 	{ }
 
 optional<uint8_t> IC::register_(Pin& pin){
- 	if (!IC::instances_data.contains(pin)) {
+ 	if (not IC::instances_data.contains(pin)) {
  		return nullopt;
  	}
 
@@ -37,29 +37,44 @@ optional<uint8_t> IC::register_(Pin& pin){
 }
 
 void IC::unregister(uint8_t id){
+	if (not IC::instances.contains(id)) {
+		return; // Error Handler
+	}
 	Pin::unregister(IC::instances[id].pin);
 	IC::instances.erase(id);
 	IC::id_manager.push_front(id);
 }
 
 void IC::turn_on(uint8_t id){
+	if (not IC::instances.contains(id)) {
+		return; // Error Handler
+	}
 	IC::Instance instance = IC::instances[id];
 	HAL_TIM_IC_Start_IT(instance.timer, instance.channel_rising);
 	HAL_TIM_IC_Start(instance.timer, instance.channel_falling);
 }
 
 void IC::turn_off(uint8_t id){
+	if (not IC::instances.contains(id)) {
+		return; // Error Handler
+	}
 	IC::Instance instance = IC::instances[id];
 	HAL_TIM_IC_Stop_IT(instance.timer, instance.channel_rising);
 	HAL_TIM_IC_Stop(instance.timer, instance.channel_falling);
 }
 
-uint32_t IC::read_frequency(uint8_t id) {
+optional<uint32_t> IC::read_frequency(uint8_t id) {
+	if (not IC::instances.contains(id)) {
+		return nullopt; // Error Handler
+	}
 	IC::Instance instance = IC::instances[id];
 	return instance.frequency;
 }
 
-uint8_t IC::read_duty_cycle(uint8_t id) {
+optional<uint8_t> IC::read_duty_cycle(uint8_t id) {
+	if (not IC::instances.contains(id)) {
+		return nullopt; // Error Handler
+	}
 	IC::Instance instance = IC::instances[id];
 	return instance.duty_cycle;
 }

@@ -43,7 +43,7 @@ public:
 	static void unregister(uint8_t id);
 	static void turn_on(uint8_t id);
 	static void turn_off(uint8_t id);
-	static uint32_t read_frequency(uint8_t id);
-	static uint8_t read_duty_cycle(uint8_t id);
+	static optional<uint32_t> read_frequency(uint8_t id);
+	static optional<uint8_t> read_duty_cycle(uint8_t id);
 	static Instance find_instance_by_channel(uint32_t channel);
 };
