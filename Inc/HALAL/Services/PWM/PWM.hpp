@@ -8,12 +8,6 @@
 #pragma once
 #include "ST-LIB.hpp"
 
-
-struct TimerChannel {
-	TIM_HandleTypeDef* timer;
-	uint32_t channel;
-};
-
 class PWM {
 public:
 	static map<uint8_t, Pin> service_ids;
