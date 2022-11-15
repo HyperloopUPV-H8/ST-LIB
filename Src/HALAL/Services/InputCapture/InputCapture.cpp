@@ -23,7 +23,9 @@ IC::Instance::Instance(Pin p, TIM_HandleTypeDef* tim, uint32_t ch_r, uint32_t ch
 }
 
 optional<uint8_t> IC::register_ic(Pin& pin){
- 	if (!IC::instances_data.contains(pin)) { return nullopt; }
+ 	if (!IC::instances_data.contains(pin)) {
+ 		return nullopt;
+ 	}
 
 	Pin::register_pin(pin, ALTERNATIVE);
 	uint8_t id = IC::id_manager.front();
