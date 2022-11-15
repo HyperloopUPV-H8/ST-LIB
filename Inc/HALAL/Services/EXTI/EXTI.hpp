@@ -15,7 +15,6 @@ class ExternalInterrupt {
 public:
 	class Instance {
 	public:
-		uint8_t id;
 		Pin pin;
 		uint16_t gpio;
 		function<void()>* action = nullptr;
