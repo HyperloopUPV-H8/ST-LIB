@@ -15,17 +15,12 @@ class ExternalInterrupt {
 public:
 	class Instance {
 	public:
-		Pin pin;
-		uint16_t gpio;
 		function<void()>* action = nullptr;
 		bool is_on = true;
-
-		Instance() = default;
-		Instance(Pin _pin, uint16_t _gpio);
 	};
 
-	static map<uint8_t, Instance> instances;
-	static map<Pin, Instance> instances_data;
+	static map<uint8_t, Pin> service_ids;
+	static map<uint16_t, Instance> instances;
 	static forward_list<uint8_t> id_manager;
 
 	static optional<uint8_t> register_exti(Pin& _pin, function<void()>* _action);
