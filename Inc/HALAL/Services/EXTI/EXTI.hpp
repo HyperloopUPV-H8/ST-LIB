@@ -22,7 +22,7 @@ public:
 		bool is_on = true;
 
 		Instance() = default;
-		Instance(Pin pin, uint16_t gpio);
+		Instance(Pin _pin, uint16_t _gpio);
 	};
 
 	static map<uint8_t, Instance> instances;
