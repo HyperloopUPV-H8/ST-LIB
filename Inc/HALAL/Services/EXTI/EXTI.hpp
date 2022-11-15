@@ -9,17 +9,24 @@
 #include <C++Utilities/CppUtils.hpp>
 #include "ST-LIB.hpp"
 
-struct EXTIdata {
-	uint16_t gpio;
-	function<void()>* action = nullptr;
-	bool is_on = true;
-};
+#define GPIO_PORT GPIOE
 
 class ExternalInterrupt {
 public:
-	static map<uint8_t, Pin> service_ids;
-	static map<Pin, EXTIdata> pin_gpio_map;
+	class Instance {
+	public:
+		uint8_t id;
+		Pin pin;
+		uint16_t gpio;
+		function<void()>* action = nullptr;
+		bool is_on = true;
 
+		Instance() = default;
+		Instance(Pin pin, uint16_t gpio);
+	};
+
+	static map<uint8_t, Instance> instances;
+	static map<Pin, Instance> instances_data;
 	static forward_list<uint8_t> id_manager;
 
 	static optional<uint8_t> register_exti(Pin& pin, function<void()>* action);
