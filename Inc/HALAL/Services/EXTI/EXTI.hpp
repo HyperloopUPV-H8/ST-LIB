@@ -29,7 +29,7 @@ public:
 	static map<Pin, Instance> instances_data;
 	static forward_list<uint8_t> id_manager;
 
-	static optional<uint8_t> register_exti(Pin& pin, function<void()>* action);
+	static optional<uint8_t> register_exti(Pin& _pin, function<void()>* _action);
 	static void unregister_exti(uint8_t id);
 	static void turn_on_exti(uint8_t id);
 	static void turn_off_exti(uint8_t id);
