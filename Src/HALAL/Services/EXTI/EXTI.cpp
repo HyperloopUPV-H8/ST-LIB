@@ -17,11 +17,11 @@ map<uint8_t, Pin> ExternalInterrupt::service_ids = {};
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin) {
 	ExternalInterrupt::Instance& exti = ExternalInterrupt::instances[GPIO_Pin];
 	if (exti.is_on) {
-		(*(exti.action))();
+		exti.action();
 	}
 }
 
-optional<uint8_t> ExternalInterrupt::register_exti(Pin& pin, function<void()>* action) {
+optional<uint8_t> ExternalInterrupt::register_exti(Pin& pin, function<void()>&& action) {
 	if (!instances.contains(pin.pin)) {
 		return nullopt;
 	}
