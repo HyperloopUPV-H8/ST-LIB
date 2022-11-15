@@ -32,7 +32,7 @@ public:
 		uint8_t duty_cycle;
 
 		Instance() = default;
-		Instance(Pin p, TIM_HandleTypeDef* tim, uint32_t ch_r, uint32_t ch_f);
+		Instance(Pin _pin, TIM_HandleTypeDef* _timer, uint32_t _channel_rising, uint32_t _channel_falling);
 	};
 
 	static map<uint8_t, IC::Instance> instances;
