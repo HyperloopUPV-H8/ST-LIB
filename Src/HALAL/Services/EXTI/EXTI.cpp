@@ -23,9 +23,9 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin) {
 	}
 }
 
-ExternalInterrupt::Instance::Instance(Pin p, uint16_t g) {
-	pin = p;
-	gpio = g;
+ExternalInterrupt::Instance::Instance(Pin _pin, uint16_t _gpio) {
+	pin = _pin;
+	gpio = _gpio;
 }
 
 optional<uint8_t> ExternalInterrupt::register_exti(Pin& pin, function<void()>* action) {
