@@ -14,7 +14,7 @@ void Flash::read(uint32_t source_addr, uint32_t* result, uint32_t number_of_word
 	}
 
 	HAL_FLASH_Unlock();
-	while(number_of_words > 0){
+	while(number_of_words){
 		*result = *(__IO uint32_t *)source_addr;
 		source_addr += 4;
 		result++;

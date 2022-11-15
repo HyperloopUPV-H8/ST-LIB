@@ -21,8 +21,8 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin) {
 	}
 }
 
-optional<uint8_t> ExternalInterrupt::register_exti(Pin& pin, function<void()>&& action) {
-	if (!instances.contains(pin.pin)) {
+optional<uint8_t> ExternalInterrupt::register_(Pin& pin, function<void()>&& action) {
+	if (not instances.contains(pin.pin)) {
 		return nullopt;
 	}
 
@@ -31,23 +31,27 @@ optional<uint8_t> ExternalInterrupt::register_exti(Pin& pin, function<void()>&& 
 	id_manager.pop_front();
 
 	service_ids[id] = pin;
-	instances[pin.pin].action = action;
+	instances[pin.gpio_pin].action = action;
 
 	return id;
 }
 
-void ExternalInterrupt::unregister_exti(uint8_t id) {
+void ExternalInterrupt::unregister(uint8_t id) {
+	if (not service_ids.contains(id)) {
+		return; // TODO error handler
+	}
+
 	Pin::unregister_pin(service_ids[id]);
 	instances.erase(id);
 	id_manager.push_front(id);
 }
 
-void ExternalInterrupt::turn_off_exti(uint8_t id) {
+void ExternalInterrupt::turn_off(uint8_t id) {
 	Instance& instance = instances[service_ids[id].pin];
 	instance.is_on = false;
 }
 
-void ExternalInterrupt::turn_on_exti(uint8_t id) {
+void ExternalInterrupt::turn_on(uint8_t id) {
 	Instance& instance = instances[service_ids[id].pin];
 	instance.is_on = true;
 }

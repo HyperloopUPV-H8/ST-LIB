@@ -26,50 +26,56 @@ map<uint8_t,Pin> PWM::service_ids = {};
 map<uint8_t,Pin> PWM::service_ids_negated = {};
 map<uint8_t,pair<Pin, Pin>> PWM::service_ids_dual = {};
 
-optional<uint8_t> PWM::register_pwm(Pin& pin){
-	if (!PWM::pin_timer_map.contains(pin)) { return nullopt; } 	// TODO error handling
-	Pin::register_pin(pin, ALTERNATIVE);
+optional<uint8_t> PWM::register_(Pin& pin){
+	if (!PWM::pin_timer_map.contains(pin)) {
+		return nullopt;
+	} 	// TODO error handling
+	Pin::register_(pin, ALTERNATIVE);
 	uint8_t id = PWM::id_manager.front();
 	PWM::service_ids[id] = pin;
 	PWM::id_manager.pop_front();
 	return id;
 }
 
-optional<uint8_t> PWM::register_pwm_negated(Pin& pin){
-	if (!PWM::pin_timer_map_negated.contains(pin)) { return nullopt; } 	// TODO error handling
-	Pin::register_pin(pin, ALTERNATIVE);
+optional<uint8_t> PWM::register_negated(Pin& pin){
+	if (not pin_timer_map_negated.contains(pin)) {
+		return nullopt;
+	} 	// TODO error handling
+	Pin::register_(pin, ALTERNATIVE);
 	uint8_t id = PWM::id_manager.front();
 	PWM::service_ids_negated[id] = pin;
 	PWM::id_manager.pop_front();
  	return id;
 }
 
-optional<uint8_t> PWM::register_pwm_dual(Pin& pin, Pin& pin_negated){
-	if (!PWM::pin_timer_map_dual.contains({pin, pin_negated})) { return nullopt; } 	// TODO error handling
-	Pin::register_pin(pin, ALTERNATIVE);
-	Pin::register_pin(pin_negated, ALTERNATIVE);
+optional<uint8_t> PWM::register_dual(Pin& pin, Pin& pin_negated){
+	if (not PWM::pin_timer_map_dual.contains({pin, pin_negated})) {
+		return nullopt;
+	} 	// TODO error handling
+	Pin::register_(pin, ALTERNATIVE);
+	Pin::register_(pin_negated, ALTERNATIVE);
 	uint8_t id = PWM::id_manager.front();
 	PWM::service_ids_dual[id] = {pin, pin_negated};
 	PWM::id_manager.pop_front();
 	return id;
 }
 
-void PWM::unregister_pwm(uint8_t id){
+void PWM::unregister(uint8_t id){
 	if (PWM::service_ids.contains(id)) {
-		Pin::unregister_pin(PWM::service_ids[id]);
+		Pin::unregister(PWM::service_ids[id]);
 		PWM::service_ids.erase(id);
 		PWM::id_manager.push_front(id);
 	}
 
 	else if (PWM::service_ids_negated.contains(id)) {
-		Pin::unregister_pin(PWM::service_ids_negated[id]);
+		Pin::unregister(PWM::service_ids_negated[id]);
 		PWM::service_ids_negated.erase(id);
 		PWM::id_manager.push_front(id);
 	}
 
 	else if (PWM::service_ids_dual.contains(id)) {
-		Pin::unregister_pin(PWM::service_ids_dual[id].first);
-		Pin::unregister_pin(PWM::service_ids_dual[id].second);
+		Pin::unregister(PWM::service_ids_dual[id].first);
+		Pin::unregister(PWM::service_ids_dual[id].second);
 		PWM::service_ids_dual.erase(id);
 		PWM::id_manager.push_front(id);
 	}
@@ -78,7 +84,7 @@ void PWM::unregister_pwm(uint8_t id){
 	}
 }
 
-void PWM::turn_on_pwm(uint8_t id){
+void PWM::turn_on(uint8_t id){
 	if (PWM::service_ids.contains(id)) {
 		Pin pin = PWM::service_ids[id];
 		TimerChannel tim_ch = PWM::pin_timer_map[pin];
@@ -103,7 +109,7 @@ void PWM::turn_on_pwm(uint8_t id){
 	}
 }
 
-void PWM::turn_off_pwm(uint8_t id){
+void PWM::turn_off(uint8_t id){
 	if (PWM::service_ids.contains(id)) {
 		Pin pin = PWM::service_ids[id];
 		TimerChannel tim_ch = PWM::pin_timer_map[pin];
@@ -128,7 +134,7 @@ void PWM::turn_off_pwm(uint8_t id){
 	}
 }
 
-void PWM::change_duty_cycle(uint8_t id, uint8_t duty_cycle) {
+void PWM::set_duty(uint8_t id, uint8_t duty_cycle) {
 	if (!(duty_cycle >= 0 && duty_cycle <= 100)) {
 		// TODO error handling
 		return;

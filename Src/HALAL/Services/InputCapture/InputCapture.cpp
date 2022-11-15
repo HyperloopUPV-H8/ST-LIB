@@ -21,12 +21,12 @@ IC::Instance::Instance(Pin pin, TIM_HandleTypeDef* timer, uint32_t channel_risin
 	channel_falling(channel_falling)
 	{ }
 
-optional<uint8_t> IC::register_ic(Pin& pin){
+optional<uint8_t> IC::register_(Pin& pin){
  	if (!IC::instances_data.contains(pin)) {
  		return nullopt;
  	}
 
-	Pin::register_pin(pin, ALTERNATIVE);
+	Pin::register_(pin, ALTERNATIVE);
 	uint8_t id = IC::id_manager.front();
 	IC::id_manager.pop_front();
 
@@ -36,19 +36,19 @@ optional<uint8_t> IC::register_ic(Pin& pin){
 	return id;
 }
 
-void IC::unregister_ic(uint8_t id){
-	Pin::unregister_pin(IC::instances[id].pin);
+void IC::unregister(uint8_t id){
+	Pin::unregister(IC::instances[id].pin);
 	IC::instances.erase(id);
 	IC::id_manager.push_front(id);
 }
 
-void IC::turn_on_ic(uint8_t id){
+void IC::turn_on(uint8_t id){
 	IC::Instance instance = IC::instances[id];
 	HAL_TIM_IC_Start_IT(instance.timer, instance.channel_rising);
 	HAL_TIM_IC_Start(instance.timer, instance.channel_falling);
 }
 
-void IC::turn_off_ic(uint8_t id){
+void IC::turn_off(uint8_t id){
 	IC::Instance instance = IC::instances[id];
 	HAL_TIM_IC_Stop_IT(instance.timer, instance.channel_rising);
 	HAL_TIM_IC_Stop(instance.timer, instance.channel_falling);

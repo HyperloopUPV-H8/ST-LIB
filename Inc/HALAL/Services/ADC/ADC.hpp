@@ -19,13 +19,13 @@ struct ADCchannel {
 
 class ADC {
 public:
-	static map<uint8_t, Pin> service_IDs;
+	static map<uint8_t, Pin> service_ids;
 
 	static map<Pin, ADCchannel> pin_adc_map;
-	static forward_list<uint8_t> ID_manager;
+	static forward_list<uint8_t> id_manager;
 
-	static optional<uint8_t> register_adc(Pin pin);
-	static void turn_on_adc(uint8_t id);
-	static void turn_off_adc(uint8_t id);
-	static optional<uint16_t> get_pin_value(uint8_t id);
+	static optional<uint8_t> register_(Pin pin);
+	static void turn_on(uint8_t id);
+	static void turn_off(uint8_t id);
+	static optional<uint16_t> get_value(uint8_t id);
 };

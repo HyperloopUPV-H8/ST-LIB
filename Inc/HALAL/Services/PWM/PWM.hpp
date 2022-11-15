@@ -19,15 +19,15 @@ public:
 
 	static forward_list<uint8_t> id_manager;
 
-	static optional<uint8_t> register_pwm(Pin& pin);
-	static optional<uint8_t> register_pwm_negated(Pin& pin);
-	static optional<uint8_t> register_pwm_dual(Pin& pin, Pin& pin_negated);
+	static optional<uint8_t> register_(Pin& pin);
+	static optional<uint8_t> register_negated(Pin& pin);
+	static optional<uint8_t> register_dual(Pin& pin, Pin& pin_negated);
 
-	static void unregister_pwm(uint8_t id);
+	static void unregister(uint8_t id);
 
-	static void turn_on_pwm(uint8_t id);
+	static void turn_on(uint8_t id);
 
-	static void turn_off_pwm(uint8_t id);
+	static void turn_off(uint8_t id);
 
-	static void change_duty_cycle(uint8_t id, uint8_t duty_cicle);
+	static void set_duty(uint8_t id, uint8_t duty_cicle);
 };

@@ -10,16 +10,12 @@
 
 class DigitalOutput{
 public:
-	static map<uint8_t,Pin> service_IDs;
-	static forward_list<uint8_t> ID_manager;
+	static map<uint8_t,Pin> service_ids;
+	static forward_list<uint8_t> id_manager;
 
-	static uint8_t register_digital_output(Pin& pin);
-
-	static void unregister_digital_output(uint8_t id);
-
-	static void turn_on_pin(uint8_t id);
-
-	static void turn_off_pin(uint8_t id);
-
+	static uint8_t register_(Pin& pin);
+	static void unregister(uint8_t id);
+	static void turn_on(uint8_t id);
+	static void turn_off(uint8_t id);
 	static void set_pin_state(uint8_t id, PinState state);
 };

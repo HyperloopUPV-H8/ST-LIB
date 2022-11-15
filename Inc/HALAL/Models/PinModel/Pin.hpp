@@ -43,23 +43,23 @@ enum PinState{
 class Pin {
 public:
 	GPIO_TypeDef * port;
-	GPIO_Pin pin;
+	GPIO_Pin gpio_pin;
 	Operation_Mode mode = Operation_Mode::NOT_USED;
 	static vector<reference_wrapper<Pin>> pinVector;
 
 	Pin();
-	Pin(GPIO_TypeDef* Port, GPIO_Pin Pin);
-	static void register_pin(Pin& pin, Operation_Mode mode);
-	static void unregister_pin(Pin& pin);
+	Pin(GPIO_TypeDef* port, GPIO_Pin pin);
+	static void register_(Pin& pin, Operation_Mode mode);
+	static void unregister(Pin& pin);
 	static void start();
 
 	bool operator== (const Pin &other) const {
-		return (pin == other.pin && port == other.port);
+		return (gpio_pin == other.gpio_pin && port == other.port);
 	}
 
 	bool operator< (const Pin &other) const {
 		if (port == other.port)
-			return pin < other.pin;
+			return gpio_pin < other.gpio_pin;
 		return port < other.port;
 	}
 };
