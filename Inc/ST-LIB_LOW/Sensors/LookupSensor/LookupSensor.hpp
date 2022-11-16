@@ -9,6 +9,8 @@
 #include "ST-LIB.hpp"
 #include "ST-LIB_LOW/Sensors/AnalogSensor/AnalogSensor.hpp"
 
+#define sensor_resolution 12
+
 
 class LookupSensor : public AnalogSensor::AnalogSensor{
 public:
@@ -21,4 +23,5 @@ protected:
 	uint8_t id;
 	double *table;
 	double *value;
+	int displacement;
 };
