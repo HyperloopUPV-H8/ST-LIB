@@ -9,7 +9,7 @@
 #include "ST-LIB.hpp"
 #include "ST-LIB_LOW/Sensors/AnalogSensor/AnalogSensor.hpp"
 
-#define sensor_resolution 12
+#define sensor_resolution 16
 
 
 class LookupSensor : public AnalogSensor::AnalogSensor{
