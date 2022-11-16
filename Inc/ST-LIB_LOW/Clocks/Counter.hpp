@@ -6,13 +6,12 @@
  */
 
 #pragma once
-
 #include "C++Utilities/CppUtils.hpp"
 
 class Counter{
 
 private:
-	static const uint16_t UDPATE_PERIOD = 125;
+	uint16_t update_period_ms = 125;
 	uint8_t time_id;
 	void update();
 
@@ -21,7 +20,7 @@ public:
 	double freq = 0.0;
 
 	~Counter();
-	Counter();
+	Counter(uint64_t v);
 	void count();
 
 };

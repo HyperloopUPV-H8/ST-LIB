@@ -22,8 +22,8 @@ class Time {
 
 private :
 
-	static forward_list<uint16_t> high_precision_ids = { };
-	static forward_list<uint16_t> low_precision_ids = { };
+	static forward_list<uint8_t> high_precision_ids;
+	static forward_list<uint8_t> low_precision_ids;
 
 	struct Alarm {
 		uint32_t period;
@@ -40,8 +40,9 @@ private :
 	static map<TIM_HandleTypeDef*, Alarm> high_precision_alarms_by_timer;
 	static map<uint8_t, Alarm> low_precision_alarms_by_id;
 
-	static void start_timer(TIM_HandleTypeDef* handle, uint32_t prescaler, uint32_t arr);
-	static void stop_timer(TIM_HandleTypeDef* handle);
+	static void stop_timer(TIM_HandleTypeDef* htim);
+	static void start_timer(TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
+	static void mx_init_tim(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
 
 public :
 	static TIM_HandleTypeDef* global_timer;
