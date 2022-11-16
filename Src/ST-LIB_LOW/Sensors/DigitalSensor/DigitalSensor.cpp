@@ -11,7 +11,7 @@ void DigitalSensor::exti_interruption(std::function<auto> lambda){
 	if(identification){
 		ExtI::turn_on_exti(identification.value());
 	}else{
-		//errores de optional vacio aqui (por hacer)
+		//TODO: errores de optional vacio aqui (por hacer)
 	}
 
 }
@@ -21,7 +21,7 @@ void DigitalSensor::read(){
 	if(val){
 		*value = val.value();
 	}else{
-		//errores de optional vacio aqui (por hacer)
+		//TODO: errores de optional vacio aqui (por hacer)
 	}
 
 }
