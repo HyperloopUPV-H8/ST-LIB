@@ -8,7 +8,7 @@ LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 		id = identification.value();
 		ADC::turn_on_adc(id);
 	}else{
-		//errores de optional vacio aqui (por hacer)
+		//TODO: errores de optional vacio aqui (por hacer)
 	}
 }
 
@@ -17,7 +17,7 @@ void LinearSensor::read(){
 	if(val){
 		*value = slope * (double) val.value() + offset;
 	}else{
-		//errores de optional vacio aqui (por hacer)
+		//TODO: errores de optional vacio aqui (por hacer)
 	}
 }
 
