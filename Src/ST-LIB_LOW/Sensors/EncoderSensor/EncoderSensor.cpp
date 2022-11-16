@@ -21,10 +21,7 @@ void EncoderSensor::read(){
 	optional<bool> direction = Encoder::get_encoder_direction(id);
 	uint64_t delta_time = Time::get_global_tick() - last_time;
 	
-
 	if(counter && direction){
-
-		int sign = (1 - 2*direction.value());
 
 		*position= ((double) counter.value()) * counter_distance;
 		*speed = (*position - last_position) * clock_frequency / (delta_time);
