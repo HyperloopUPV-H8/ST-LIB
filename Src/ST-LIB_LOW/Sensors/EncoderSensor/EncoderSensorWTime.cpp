@@ -35,16 +35,18 @@ void EncoderSensor::read(){
 				counters[i-1] = counters[i];
 				times[i-1] = times[i];
 			}
+
 			counters[n_frames-1] = counter.value();
 			times[n_frames-1] = time;
 			last_speed = *speed;
 		}
+
 		int delta_time = times[n_frames-1] - times[0];
 		last_position = ((double) counters[0]) * counter_distance;
 
 		*position= ((double) counters[n_frames-1]) * counter_distance;
 
-		*speed = (*position - last_position) * clock_frequency / (delta_time); //Usa n_frames frames para el calculo
+		*speed = abs(*position - last_position) * clock_frequency / (delta_time); //Usa n_frames frames para el calculo
 
 		*acceleration = (*speed - last_speed) * clock_frequency * (n_frames-1) / (delta_time); //usa solo 1 frame (y el anterior) para el calculo
 	}
