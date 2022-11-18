@@ -19,4 +19,5 @@ public:
 protected:
 	Pin pin;
 	uint8_t id;
+	double *value;
 };

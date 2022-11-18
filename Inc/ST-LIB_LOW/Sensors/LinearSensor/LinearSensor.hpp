@@ -22,5 +22,4 @@ protected:
 	double slope;
 	double offset;
 	double *value;
-
 };
