@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ST-LIB.hpp"
+#include "IPV4/IPV4.hpp"
 
 struct EthernetNode{
 	IPV4 ip;

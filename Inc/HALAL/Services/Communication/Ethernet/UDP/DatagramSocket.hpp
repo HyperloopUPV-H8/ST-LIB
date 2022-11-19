@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ST-LIB.hpp"
+#include "Communication/Ethernet/EthernetNode.hpp"
+#include "Packets/Packet.hpp"
 
 class DatagramSocket{
 public:
@@ -27,17 +28,23 @@ public:
 	void close();
 
 private:
-	static void receive_callback(void *args, struct udp_pcb *udp_control_block, struct pbuf *packet_buffer, const ip_addr_t *remote_address, u16_t port){
-
-		uint8_t* received_data = (uint8_t*)packet_buffer->payload;
-
-		uint16_t id = Packet<>::get_id(received_data);
-
-		save_packet_by_id[id](received_data);
-
-		pbuf_free(packet_buffer);
-	}
+	static void receive_callback(void *args, struct udp_pcb *udp_control_block, struct pbuf *packet_buffer, const ip_addr_t *remote_address, u16_t port);
 
 };
+
+template<class Type, class... Types>
+void DatagramSocket::send(Packet<Type, Types...> & packet){
+
+	packet.build();
+
+	struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.bffr_size, PBUF_RAM);
+
+	pbuf_take(tx_buffer, packet.bffr, packet.bffr_size);
+
+	udp_send(udp_control_block, tx_buffer);
+
+	pbuf_free(tx_buffer);
+
+}
 
 

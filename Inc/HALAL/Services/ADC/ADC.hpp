@@ -4,8 +4,8 @@
  *  Created on: 20 oct. 2022
  *      Author: alejandro
  */
-#include "ST-LIB.hpp"
 #pragma once
+#include "ST-LIB.hpp"
 #ifdef HAL_ADC_MODULE_ENABLE
 
 #define ADC_BUF1_LEN 4
