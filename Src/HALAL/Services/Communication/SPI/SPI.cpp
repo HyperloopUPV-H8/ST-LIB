@@ -7,14 +7,8 @@
 #include "Communication/SPI/SPI.hpp"
 
 ////////////////////////////////SPI::Peripheral////////////////////////////////
-void SPI::Peripheral::set_rx_status(bool new_status){
-	this->rx_status = new_status;
-}
-
-SPI::Peripheral SPI::peripheral1 = { .SCK = PC10, .MOSI = PB2, .MISO = PC11, .SS = PA4,
-									 .hspi = &hspi3,
-									 	 	 	 	 	.tx_buffer = nullopt,
-									 .rx_status = true, .rx_buffer = nullopt,
+SPI::Peripheral SPI::peripheral3 = { .SCK = PC10, .MOSI = PB2, .MISO = PC11, .SS = PA4,
+									 .hspi = &hspi3, .tx_buffer = nullopt, .receive_ready = false,
 									};
 
 //////////////////////////////////////SPI//////////////////////////////////////
@@ -38,9 +32,9 @@ optional<uint8_t> SPI::register_SPI(SPI::Peripheral& spi){
     return id;
 }
 
-//////////////////////////////////////TX//////////////////////////////////////
+//////////////////////////////////////TX///////////////////////////////////////
 
-bool SPI::send_next_packet(uint8_t id, SPIPacket& packet){
+bool SPI::transmit_next_packet(uint8_t id, SPIPacket& packet){
     if (!SPI::registered_spi.contains(id))
     	return false; //TODO: Handle exception if needed
 
@@ -49,54 +43,70 @@ bool SPI::send_next_packet(uint8_t id, SPIPacket& packet){
     if(spi->hspi->State != HAL_SPI_STATE_READY)
 	   return false;
 
-    spi->tx_buffer = packet;
 
-    if (HAL_SPI_Transmit_IT(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK)
+    if (HAL_SPI_Transmit_IT(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK){
+    	 	spi->tx_buffer = SPIPacket(packet.get_data(), packet.get_size());
         	return false; //TODO: Warning, Error during tranmision
+    }
 
     spi->tx_buffer = nullopt;
     return true;
 }
 
-//////////////////////////////////////RX//////////////////////////////////////
-optional<SPIPacket> SPI::get_next_packet(uint8_t id, uint16_t data_size){
+//////////////////////////////////////RX///////////////////////////////////////
+bool SPI::receive_next_packet(uint8_t id, SPIPacket& packet){
 	if (!SPI::registered_spi.contains(id))
-		return nullopt; //TODO: Handle exception if needed
+		return false; //TODO: Handle exception if needed
 
 	SPI::Peripheral* spi = SPI::registered_spi[id];
 
-	if (!spi->rx_buffer.has_value()) {
-		spi->rx_buffer = SPIPacket((uint8_t*)0, data_size);
+    if(spi->hspi->State != HAL_SPI_STATE_READY)
+	   return false;
 
-		if (HAL_SPI_Receive_DMA(spi->hspi, spi->rx_buffer.value().get_data(), data_size) != HAL_OK) {
-			spi->rx_buffer = nullopt;
-			return nullopt; //TODO: Handle exception if needed
-		}
+    *packet.get_data() = 0;
 
-		spi->set_rx_status(false);
-
-		return nullopt;
+	if (HAL_SPI_Receive_DMA(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK) {
+		return false; //TODO: Handle exception if needed
 	}
 
-	if (!spi->rx_status) {
-		return nullopt;
-	}
-
-	SPIPacket result = spi->rx_buffer.value();
-	spi->rx_buffer = nullopt;
-
-	return result;
+	spi->receive_ready = false;
+	return true;
 }
 
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi){
-	for (auto i: SPI::registered_spi){
-		auto spi = i.second;
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef * hspi){
+	auto result = find_if(SPI::registered_spi.begin(), SPI::registered_spi.end(), [&](auto spi){return spi.second->hspi == hspi;});
 
-		if (spi->hspi == hspi) {
-			spi->rx_status = true;
-			return;
-		}
+    if (result != SPI::registered_spi.end()) {
+    	(*result).second->receive_ready = true;
+	}else{
+		//TODO: Warning: SPI peripheral not found.
 	}
+}
+
+////////////////////////////////////Status/////////////////////////////////////
+bool has_next_packet(uint8_t id){
+	if (!SPI::registered_spi.contains(id))
+		return false; //TODO: Handle exception if needed
+
+	auto* spi = SPI::registered_spi[id];
+
+	if (spi->receive_ready) {
+		return true;
+	}
+
+	return false;
+}
+
+bool SPI::is_busy(uint8_t id){
+	if (!SPI::registered_spi.contains(id))
+		return false; //TODO: !(Important)! Handle exception if needed
+
+	SPI::Peripheral* spi = SPI::registered_spi[id];
+
+	if(spi->hspi->State != HAL_SPI_STATE_READY)
+	   return true;
+
+	return false;
 }
 
 /////////////////////////////General error Handling////////////////////////////

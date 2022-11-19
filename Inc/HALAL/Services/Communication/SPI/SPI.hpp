@@ -24,9 +24,7 @@ private:
 		Pin SS;
 		SPI_HandleTypeDef* hspi;
 		optional<SPIPacket> tx_buffer;
-		bool rx_status;
-		optional<SPIPacket> rx_buffer;
-
+		bool receive_ready;
 
 		bool operator<(const SPI::Peripheral& other) const {
 			return SS < other.SS;
@@ -36,11 +34,6 @@ private:
 		{
 			return SCK == spi.SCK && MOSI == spi.MOSI && MISO == spi.MISO && SS == spi.SS;
 		}
-
-	public:
-		void set_rx_status(bool new_status);
-
-		void set_tx_status(bool new_status);
 	};
 
 	struct SPIPeripheral_hash_function {
@@ -54,12 +47,16 @@ public:
 	static forward_list<uint8_t> ID_manager;
 	static unordered_map<uint8_t, SPI::Peripheral* > registered_spi;
 
-	static SPI::Peripheral peripheral1;
+	static SPI::Peripheral peripheral3;
 
 	static optional<uint8_t> register_SPI(SPI::Peripheral& spi);
 
-	static bool send_next_packet(uint8_t id, SPIPacket& packet);
+	static bool transmit_next_packet(uint8_t id, SPIPacket& packet);
 
-	static optional<SPIPacket> get_next_packet(uint8_t id, uint16_t data_size);
+	static bool receive_next_packet(uint8_t id, SPIPacket& packet);
+
+	static bool has_next_packet(uint8_t id);
+
+	static bool is_busy(uint8_t id);
 
 };
