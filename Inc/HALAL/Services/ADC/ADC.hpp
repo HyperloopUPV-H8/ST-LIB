@@ -17,7 +17,7 @@
 #define LPTIM2_PERIOD 3000
 #define LPTIM3_PERIOD 3000
 
-struct buffer { // Will be moved into appropiate file when include structure is fixed.
+struct buffer { // TODO Will be moved into appropiate file when include structure is fixed.
 	uint16_t* data;
 	uint8_t length;
 };
