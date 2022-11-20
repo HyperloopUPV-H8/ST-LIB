@@ -94,9 +94,9 @@ optional<float> ADC::get_value(uint8_t id) {
 
 	Instance& instance = active_instances[id];
 	if(instance.adc == &hadc3) {
-		return buffers[instance.adc].data[instance.rank-1] / 4096.0 * 3.3;
+		return buffers[instance.adc].data[instance.rank-1] / 4095.0 * 3.3;
 	}
 	else {
-		return buffers[instance.adc].data[instance.rank-1] / 65536.0 * 3.3;
+		return buffers[instance.adc].data[instance.rank-1] / 65535.0 * 3.3;
 	}
 }
