@@ -7,25 +7,45 @@
 
 #pragma once
 #include "ST-LIB.hpp"
+#include "C++Utilities/CppUtils.hpp"
 
 #define ADC_BUF1_LEN 4
 #define ADC_BUF2_LEN 2
 #define ADC_BUF3_LEN 2
 
-struct ADCchannel {
-	ADC_HandleTypeDef* adc;
-	uint8_t rank;
+#define LPTIM1_PERIOD 3000
+#define LPTIM2_PERIOD 3000
+#define LPTIM3_PERIOD 3000
+
+struct buffer { // Will be moved into appropiate file when include structure is fixed.
+	uint16_t* data;
+	uint8_t length;
 };
 
+struct low_power_timer {
+	LPTIM_HandleTypeDef* timer;
+	uint16_t period;
+};
 class ADC {
 public:
-	static map<uint8_t, Pin> service_IDs;
+	class Instance {
+	public:
+		ADC_HandleTypeDef* adc;
+		uint8_t rank;
 
-	static map<Pin, ADCchannel> pin_adc_map;
-	static forward_list<uint8_t> ID_manager;
+		Instance() = default;
+		Instance(ADC_HandleTypeDef* adc, uint8_t rank);
+	};
 
-	static optional<uint8_t> register_adc(Pin pin);
-	static void turn_on_adc(uint8_t id);
-	static void turn_off_adc(uint8_t id);
-	static optional<uint16_t> get_pin_value(uint8_t id);
+	static map<ADC_HandleTypeDef*, low_power_timer> low_power_timers;
+	static map<ADC_HandleTypeDef*, buffer> buffers;
+
+	static map<Pin, Instance> available_instances;
+	static map<uint8_t, Instance> active_instances;
+	static forward_list<uint8_t> id_manager;
+
+	static optional<uint8_t> inscribe(Pin pin);
+	static void turn_on(uint8_t id);
+	static void turn_off(uint8_t id);
+	static optional<float> get_value(uint8_t id);
 };
