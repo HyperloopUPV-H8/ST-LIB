@@ -14,15 +14,13 @@
  */
 class SPIPacket
 {
-	uint32_t size;
-    uint8_t* data;
-
-
+	uint32_t size; /**< Size in bytes of the data. */  
+    uint8_t* data; /**< Data pointer. */  
+	
 private:
 	SPIPacket(){};
 
 public:
-
 	/**
 	 * @brief Construct a new SPIPacket object. The constructor will handle automaticly
 	 * 		  the data type and size automatically.

@@ -12,7 +12,6 @@
 #include "Communication/SPI/SPIPacket.hpp"
 
 extern SPI_HandleTypeDef hspi3;
-extern SPI_HandleTypeDef hspi4;
 
 /**
  * @brief SPI service class. Abstracts the use of the encoder with the HAL library.SPI service for SPI communication 
@@ -67,9 +66,6 @@ public:
 	 * 
 	 */
 	static SPI::Peripheral peripheral3;
-
-	//!For temporal use, must be deleted on release version.
-	static SPI::Peripheral peripheral4;
 
 	/**
 	 * @brief This method register a new SPI.
