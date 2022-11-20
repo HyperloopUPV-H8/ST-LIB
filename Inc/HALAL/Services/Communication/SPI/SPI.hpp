@@ -26,8 +26,7 @@ private:
 	 * 		  predefined instaces should be used. 
 	 * 		  
 	 */
-	struct Peripheral
-	{
+	struct Peripheral{
 		Pin SCK; /**< Clock pin. */  
 		Pin MOSI; /**< MOSI pin. */  
 		Pin MISO; /**< MISO pin. */  
@@ -36,29 +35,11 @@ private:
 		optional<SPIPacket> tx_buffer; /**< Transceive temporal buffer pin. */  
 		bool receive_ready; /**< Receive value is ready to use pin. */  
 
-		bool operator<(const SPI::Peripheral& other) const {
-			return SS < other.SS;
-		}
-
-		bool operator==(const SPI::Peripheral& spi) const
-		{
-			return SCK == spi.SCK && MOSI == spi.MOSI && MISO == spi.MISO && SS == spi.SS;
-		}
-	};
-
-	/**
-	 * @brief Struct only used as hash operator for unoredered map.
-	 * 
-	 */
-	struct SPIPeripheral_hash_function {
-		size_t operator()(const SPI::Peripheral& spi) const
-		{
-			return hash<uint32_t>()((uint32_t)spi.SS.pin);
-		}
 	};
 
 public:
 	static forward_list<uint8_t> ID_manager;
+	
 	static unordered_map<uint8_t, SPI::Peripheral* > registered_spi;
 
 	/**
@@ -71,9 +52,9 @@ public:
 	 * @brief This method register a new SPI.
 	 * 
 	 * @param spi SPI peripheral to register.
-	 * @return optional<uint8_t> Id of the service.
+	 * @return uint8_t Id of the service.
 	 */
-	static optional<uint8_t> register_SPI(SPI::Peripheral& spi);
+	static uint8_t register_SPI(SPI::Peripheral& spi);
 
 	/**
 	 * @brief This method is used for transmit 1 SPIPacket of any size by DMA and
