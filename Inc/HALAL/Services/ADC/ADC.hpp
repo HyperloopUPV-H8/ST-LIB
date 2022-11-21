@@ -21,7 +21,7 @@
 #define MAX_12BIT 4095.0
 #define MAX_16BIT 65535.0
 
-struct buffer { // TODO Will be moved into appropiate file when include structure is fixed.
+struct dma_buffer { // TODO Will be moved into appropiate file when include structure is fixed.
 	uint16_t* data;
 	uint8_t length;
 };
@@ -42,7 +42,7 @@ public:
 	};
 
 	static map<ADC_HandleTypeDef*, low_power_timer> low_power_timers;
-	static map<ADC_HandleTypeDef*, buffer> buffers;
+	static map<ADC_HandleTypeDef*, dma_buffer> buffers;
 
 	static map<Pin, Instance> available_instances;
 	static map<uint8_t, Instance> active_instances;
