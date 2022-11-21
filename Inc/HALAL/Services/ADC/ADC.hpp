@@ -21,13 +21,15 @@
 #define MAX_12BIT 4095.0
 #define MAX_16BIT 65535.0
 
-struct dma_buffer { // TODO Will be moved into appropiate file when include structure is fixed.
+// TODO: Will be moved into appropiate file when include structure is fixed.
+struct dma_buffer {
 public:
 	uint16_t* data;
 	uint8_t length;
+	bool is_on = false;
 
 	dma_buffer() = default;
-	dma_buffer(uint16_t* data, uint8_t length) : data(data), length(length) {};
+	dma_buffer(uint16_t* data, uint8_t length) : data(data), length(length), is_on(false) {};
 };
 
 struct low_power_timer {
@@ -39,28 +41,19 @@ public:
 	low_power_timer(LPTIM_HandleTypeDef* handle, uint16_t period) : handle(handle), period(period) {};
 };
 
-struct adc_data {
-public:
-	dma_buffer buffer;
-	low_power_timer timer;
-	bool is_on = false;
-
-	adc_data() = default;
-	adc_data(dma_buffer buffer, low_power_timer timer) : buffer(buffer), timer(timer), is_on(false) {};
-};
-
 class ADC {
 public:
 	class Instance {
 	public:
 		ADC_HandleTypeDef* adc;
 		uint8_t rank;
+		low_power_timer* timer;
+		dma_buffer* buffer;
 
 		Instance() = default;
-		Instance(ADC_HandleTypeDef* adc, uint8_t rank);
+		Instance(ADC_HandleTypeDef* adc, uint8_t rank, low_power_timer* timer, dma_buffer* buffer);
 	};
 
-	static map<ADC_HandleTypeDef*, adc_data> peripheral_data;
 	static map<Pin, Instance> available_instances;
 	static map<uint8_t, Instance> active_instances;
 	static forward_list<uint8_t> id_manager;
@@ -68,6 +61,5 @@ public:
 	static optional<uint8_t> inscribe(Pin pin);
 	static void start();
 	static void turn_on(uint8_t id);
-	static void turn_off(uint8_t id);
 	static optional<float> get_value(uint8_t id);
 };
