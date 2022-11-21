@@ -19,9 +19,9 @@ public:
 
 	static forward_list<uint8_t> id_manager;
 
-	static optional<uint8_t> register_(Pin& pin);
-	static optional<uint8_t> register_negated(Pin& pin);
-	static optional<uint8_t> register_dual(Pin& pin, Pin& pin_negated);
+	static optional<uint8_t> inscribe(Pin& pin);
+	static optional<uint8_t> inscribe_negated(Pin& pin);
+	static optional<uint8_t> inscribe_dual(Pin& pin, Pin& pin_negated);
 
 	static void unregister(uint8_t id);
 

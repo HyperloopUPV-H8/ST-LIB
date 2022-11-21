@@ -8,7 +8,7 @@
 #pragma once
 #include "ST-LIB.hpp"
 
-#define IC_OVERFLOW 0xffffffff
+#define InputCapture_OVERFLOW 0xffffffff
 
 static map<uint32_t, uint32_t> channel_dict = {
 	{HAL_TIM_ACTIVE_CHANNEL_1, TIM_CHANNEL_1},
@@ -19,7 +19,7 @@ static map<uint32_t, uint32_t> channel_dict = {
 	{HAL_TIM_ACTIVE_CHANNEL_6, TIM_CHANNEL_6}
 };
 
-class IC {
+class InputCapture {
 public:
 	class Instance {
 	public:
@@ -35,11 +35,11 @@ public:
 		Instance(Pin pin, TIM_HandleTypeDef* timer, uint32_t channel_rising, uint32_t channel_falling);
 	};
 
-	static map<uint8_t, IC::Instance> instances;
-	static map<Pin, IC::Instance> instances_data;
+	static map<uint8_t, InputCapture::Instance> instances;
+	static map<Pin, InputCapture::Instance> instances_data;
 	static forward_list<uint8_t> id_manager;
 
-	static optional<uint8_t> register_(Pin& pin);
+	static optional<uint8_t> inscribe(Pin& pin);
 	static void unregister(uint8_t id);
 	static void turn_on(uint8_t id);
 	static void turn_off(uint8_t id);

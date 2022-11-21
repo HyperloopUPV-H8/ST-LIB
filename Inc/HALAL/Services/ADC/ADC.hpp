@@ -24,7 +24,7 @@ public:
 	static map<Pin, ADCchannel> pin_adc_map;
 	static forward_list<uint8_t> id_manager;
 
-	static optional<uint8_t> register_(Pin pin);
+	static optional<uint8_t> inscribe(Pin pin);
 	static void turn_on(uint8_t id);
 	static void turn_off(uint8_t id);
 	static optional<uint16_t> get_value(uint8_t id);

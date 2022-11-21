@@ -130,7 +130,7 @@ PE4,PE5,PE6,PE7,PE8,PE9,PF0,PF1,PF10,PF11,PF12,PF13,PF14,PF15,PF2,PF3,PF4,PF5,PF
 PF8,PF9,PG0,PG1,PG10,PG11,PG12,PG13,PG14,PG15,PG2,PG3,PG4,PG5,PG6,PG7,PG8,PG9,PH0,PH1,
 PA2,PA3,PA4,PA5,PA6,PA7,PA8};
 
-void Pin::register_(Pin& pin, Operation_Mode mode){
+void Pin::inscribe(Pin& pin, Operation_Mode mode){
 	if(pin.mode != Operation_Mode::NOT_USED){
 		return;
 	}

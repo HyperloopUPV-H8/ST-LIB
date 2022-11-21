@@ -49,7 +49,7 @@ public:
 
 	Pin();
 	Pin(GPIO_TypeDef* port, GPIO_Pin pin);
-	static void register_(Pin& pin, Operation_Mode mode);
+	static void inscribe(Pin& pin, Operation_Mode mode);
 	static void unregister(Pin& pin);
 	static void start();
 

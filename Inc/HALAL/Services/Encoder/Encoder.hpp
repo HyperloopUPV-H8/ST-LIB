@@ -27,7 +27,7 @@ public:
 	 *
 	 * @retval optional<uint8_t> Id of the service or empty if the pin pair is not valid
 	 */
-	static optional<uint8_t> register_(Pin& pin1, Pin& pin2);
+	static optional<uint8_t> inscribe(Pin& pin1, Pin& pin2);
 
 	/**
 	 * @brief Starts the timer of the encoder
