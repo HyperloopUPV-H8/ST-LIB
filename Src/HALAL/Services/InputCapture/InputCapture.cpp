@@ -2,7 +2,7 @@
  * InputCapture.cpp
  *
  *  Created on: 30 oct. 2022
- *      Author: aleja
+ *      Author: alejandro
  */
 #include "Runes/Runes.hpp"
 
@@ -26,15 +26,6 @@ optional<uint8_t> InputCapture::inscribe(Pin& pin){
 	instances[id] = data;
 	instances[id].id = id;
 	return id;
-}
-
-void InputCapture::unregister(uint8_t id){
-	if (not instances.contains(id)) {
-		return; // Error Handler
-	}
-	Pin::unregister(instances[id].pin);
-	InputCapture::instances.erase(id);
-	id_manager.push_front(id);
 }
 
 void InputCapture::turn_on(uint8_t id){
