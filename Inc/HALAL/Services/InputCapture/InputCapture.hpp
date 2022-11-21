@@ -6,18 +6,7 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
-
-#define InputCapture_OVERFLOW 0xffffffff
-
-static map<uint32_t, uint32_t> channel_dict = {
-	{HAL_TIM_ACTIVE_CHANNEL_1, TIM_CHANNEL_1},
-	{HAL_TIM_ACTIVE_CHANNEL_2, TIM_CHANNEL_2},
-	{HAL_TIM_ACTIVE_CHANNEL_3, TIM_CHANNEL_3},
-	{HAL_TIM_ACTIVE_CHANNEL_4, TIM_CHANNEL_4},
-	{HAL_TIM_ACTIVE_CHANNEL_5, TIM_CHANNEL_5},
-	{HAL_TIM_ACTIVE_CHANNEL_6, TIM_CHANNEL_6}
-};
+#include "ST-LIB-CORE.hpp"
 
 class InputCapture {
 public:
@@ -40,7 +29,6 @@ public:
 	static forward_list<uint8_t> id_manager;
 
 	static optional<uint8_t> inscribe(Pin& pin);
-	static void unregister(uint8_t id);
 	static void turn_on(uint8_t id);
 	static void turn_off(uint8_t id);
 	static optional<uint32_t> read_frequency(uint8_t id);

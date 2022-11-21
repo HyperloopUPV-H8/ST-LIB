@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "ST-LIB.hpp"
+#include "ST-LIB-CORE.hpp"
 
 /**
  * @brief Encoder service class. Abstracts the use of the encoder with the HAL library.

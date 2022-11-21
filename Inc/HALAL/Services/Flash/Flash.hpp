@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
+#include "ST-LIB-CORE.hpp"
 
 
 #define FLASHWORD 8

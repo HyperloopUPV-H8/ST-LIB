@@ -7,6 +7,7 @@
 #pragma once
 #include "stm32h7xx_hal.h"
 #include "C++Utilities/CppUtils.hpp"
+
 enum GPIO_Pin{
 	PIN_0 = ((uint16_t)0x0001),
 	PIN_1 = ((uint16_t)0x0002),

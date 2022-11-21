@@ -5,7 +5,7 @@
  *      Author: stefan
  */
 #pragma once
-#include "ST-LIB.hpp"
+#include "ST-LIB-CORE.hpp"
 
 
 class DigitalInput{

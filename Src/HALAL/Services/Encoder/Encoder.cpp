@@ -7,6 +7,8 @@
 
 #include "Runes/Runes.hpp"
 
+extern TIM_HandleTypeDef htim8;
+
 optional<uint8_t> Encoder::inscribe(Pin& pin1, Pin& pin2){
 	pair<Pin, Pin> doublepin = {pin1, pin2};
 	if (not pin_timer_map.contains(doublepin)) {

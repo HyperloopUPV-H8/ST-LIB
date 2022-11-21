@@ -6,8 +6,7 @@
  */
 
 #pragma once
-#include <C++Utilities/CppUtils.hpp>
-#include "ST-LIB.hpp"
+#include "ST-LIB-CORE.hpp"
 
 #define GPIO_PORT GPIOE
 
@@ -24,7 +23,6 @@ public:
 	static forward_list<uint8_t> id_manager;
 
 	static optional<uint8_t> inscribe(Pin& pin, function<void()>&& action);
-	static void unregister(uint8_t id);
 	static void turn_on(uint8_t id);
 	static void turn_off(uint8_t id);
 	static optional<bool> get_pin_value(uint8_t id);

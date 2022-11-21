@@ -38,12 +38,3 @@ void DigitalOutput::set_pin_state(uint8_t id, PinState state){
 	Pin pin = DigitalOutput::service_ids[id];
 	HAL_GPIO_WritePin(pin.port, pin.gpio_pin, (GPIO_PinState) state);
 }
-
-void DigitalOutput::unregister(uint8_t id){
-	if (!DigitalOutput::service_ids.contains(id))
-		return;
-
-	Pin::unregister(DigitalOutput::service_ids[id]);
-	DigitalOutput::service_ids.erase(id);
-	DigitalOutput::id_manager.push_front(id);
-}

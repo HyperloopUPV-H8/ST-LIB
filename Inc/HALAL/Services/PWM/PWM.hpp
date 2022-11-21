@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
+#include "ST-LIB-CORE.hpp"
 
 class PWM {
 public:
@@ -22,12 +22,7 @@ public:
 	static optional<uint8_t> inscribe(Pin& pin);
 	static optional<uint8_t> inscribe_negated(Pin& pin);
 	static optional<uint8_t> inscribe_dual(Pin& pin, Pin& pin_negated);
-
-	static void unregister(uint8_t id);
-
 	static void turn_on(uint8_t id);
-
 	static void turn_off(uint8_t id);
-
 	static void set_duty(uint8_t id, uint8_t duty_cicle);
 };

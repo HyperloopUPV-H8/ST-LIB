@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
+#include "ST-LIB-CORE.hpp"
 
 #define ADC_BUF1_LEN 4
 #define ADC_BUF2_LEN 2
@@ -26,6 +26,5 @@ public:
 
 	static optional<uint8_t> inscribe(Pin pin);
 	static void turn_on(uint8_t id);
-	static void turn_off(uint8_t id);
 	static optional<uint16_t> get_value(uint8_t id);
 };
