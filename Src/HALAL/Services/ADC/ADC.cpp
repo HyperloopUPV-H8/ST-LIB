@@ -68,13 +68,13 @@ void ADC::turn_on(uint8_t id){
 
 	ADC_HandleTypeDef* adc = active_instances[id].adc;
 	if (HAL_ADC_Start_DMA(adc, (uint32_t*) buffers[adc].data, buffers[adc].length) != HAL_OK) {
-		__NOP();
-	}// TODO Error handling
+		return; // TODO Error handling
 
+	}
 	low_power_timer& lptim = low_power_timers[adc];
 	if (HAL_LPTIM_TimeOut_Start_IT(lptim.timer, lptim.period, lptim.period / 2) != HAL_OK) {
-		__NOP();
-	} // TODO Error handling
+		return; // TODO Error handling
+	}
 }
 
 void ADC::turn_off(uint8_t id) {
