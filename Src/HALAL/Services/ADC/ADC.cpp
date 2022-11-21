@@ -6,7 +6,7 @@
  */
 
 #include "ADC/ADC.hpp"
-#ifdef HAL_ADC_MODULE_ENABLE
+
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 extern ADC_HandleTypeDef hadc3;
@@ -111,4 +111,3 @@ optional<uint16_t> ADC::get_pin_value(uint8_t id) {
 		return adc_read3[adc_channel.rank];
 	}
 }
-#endif

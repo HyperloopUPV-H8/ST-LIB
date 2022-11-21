@@ -4,9 +4,9 @@
  *  Created on: 20 oct. 2022
  *      Author: alejandro
  */
-#include "ST-LIB.hpp"
+
 #pragma once
-#ifdef HAL_ADC_MODULE_ENABLE
+#include "ST-LIB.hpp"
 
 #define ADC_BUF1_LEN 4
 #define ADC_BUF2_LEN 2
@@ -29,4 +29,3 @@ public:
 	static void turn_off_adc(uint8_t id);
 	static optional<uint16_t> get_pin_value(uint8_t id);
 };
-#endif
