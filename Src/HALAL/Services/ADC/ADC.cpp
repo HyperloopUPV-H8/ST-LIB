@@ -93,10 +93,11 @@ optional<float> ADC::get_value(uint8_t id) {
 	}
 
 	Instance& instance = active_instances[id];
+	uint16_t& raw = buffers[instance.adc].data[instance.rank-1];
 	if(instance.adc == &hadc3) {
-		return buffers[instance.adc].data[instance.rank-1] / 4095.0 * 3.3;
+		return raw / MAX_12BIT * MAX_VOLTAGE;
 	}
 	else {
-		return buffers[instance.adc].data[instance.rank-1] / 65535.0 * 3.3;
+		return raw / MAX_16BIT * MAX_VOLTAGE;
 	}
 }
