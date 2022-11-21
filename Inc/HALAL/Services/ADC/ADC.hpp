@@ -21,7 +21,7 @@
 #define MAX_12BIT 4095.0
 #define MAX_16BIT 65535.0
 
-struct buffer { // Will be moved into appropiate file when include structure is fixed.
+struct buffer { // TODO Will be moved into appropiate file when include structure is fixed.
 	uint16_t* data;
 	uint8_t length;
 };
