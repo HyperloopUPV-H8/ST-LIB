@@ -26,7 +26,7 @@ private:
 	 * 		  predefined instaces should be used. 
 	 * 		  
 	 */
-	struct Peripheral{
+	struct Instance{
 		Pin SCK; /**< Clock pin. */  
 		Pin MOSI; /**< MOSI pin. */  
 		Pin MISO; /**< MISO pin. */  
@@ -37,16 +37,31 @@ private:
 
 	};
 
+private:
+
+	enum Peripheral{
+		peripheral3 = 2,
+	};
+
 public:
+
+
+
 	static forward_list<uint8_t> ID_manager;
 	
-	static unordered_map<uint8_t, SPI::Peripheral* > registered_spi;
+	static unordered_map<uint8_t, SPI::Instance* > registered_spi;
 
 	/**
-	 * @brief SPI 3 of the STM32H723.
-	 * 
+		 * @brief SPI 3 wrapper enum of the STM32H723.
+		 *
+		 */
+	static SPI::Peripheral spi3;
+
+	/**
+	 * @brief SPI 3 instance of the STM32H723.
+	 *
 	 */
-	static SPI::Peripheral peripheral3;
+	static SPI::Instance instance3;
 
 	/**
 	 * @brief This method register a new SPI.
