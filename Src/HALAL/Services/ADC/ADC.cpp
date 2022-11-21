@@ -29,17 +29,14 @@ map<ADC_HandleTypeDef*, low_power_timer> ADC::low_power_timers = {
 
 };
 
-map<ADC_HandleTypeDef*, buffer> ADC::buffers = {
+map<ADC_HandleTypeDef*, dma_buffer> ADC::buffers = {
 		{&hadc1, {.data = adc_buf1, .length = ADC_BUF1_LEN}},
 		{&hadc2, {.data = adc_buf2, .length = ADC_BUF2_LEN}},
 		{&hadc3, {.data = adc_buf3, .length = ADC_BUF3_LEN}}
 
 };
 
-ADC::Instance::Instance(ADC_HandleTypeDef* adc, uint8_t rank) :
-		adc(adc),
-		rank(rank)
-		{ }
+ADC::Instance::Instance(ADC_HandleTypeDef* adc, uint8_t rank) : adc(adc), rank(rank){}
 
 map<Pin, ADC::Instance> ADC::available_instances = {
 		{PF11, Instance(&hadc1, 1)},
