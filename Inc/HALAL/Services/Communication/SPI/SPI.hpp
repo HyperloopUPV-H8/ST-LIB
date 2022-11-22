@@ -9,7 +9,7 @@
 
 #include "ST-LIB.hpp"
 #include "C++Utilities/CppUtils.hpp"
-#include "Communication/SPI/SPIPacket.hpp"
+#include "Packets/RawPacket.hpp"
 
 extern SPI_HandleTypeDef hspi3;
 
@@ -32,7 +32,7 @@ private:
 		Pin MISO; /**< MISO pin. */  
 		Pin SS; /**< Slave select pin. */  
 		SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
-		optional<SPIPacket> tx_buffer; /**< Transceive temporal buffer pin. */  
+		optional<RawPacket> tx_buffer; /**< Transceive temporal buffer pin. */
 		bool receive_ready; /**< Receive value is ready to use pin. */  
 
 	};
@@ -83,7 +83,7 @@ public:
 	 * 		   successfully. Returns false if the SPI is busy or a problem
 	 * 		   has occurred.
 	 */
-	static bool transmit_next_packet(uint8_t id, SPIPacket& packet);
+	static bool transmit_next_packet(uint8_t id, RawPacket& packet);
 
 	/**
 	 * @brief This method request the receive of a new SPIPacket of any size
@@ -98,7 +98,7 @@ public:
 	 * 		   processed correctly. Return false if the SPI is busy or a
 	 * 		   problem has occurred.
 	 */
-	static bool receive_next_packet(uint8_t id, SPIPacket& packet);
+	static bool receive_next_packet(uint8_t id, RawPacket& packet);
 
 	/**
 	 * @brief This method is used to check if the receive packet is ready.

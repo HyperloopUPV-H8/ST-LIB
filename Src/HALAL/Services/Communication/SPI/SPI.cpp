@@ -39,7 +39,7 @@ uint8_t SPI::register_SPI(SPI::Peripheral& spi){
     return id;
 }
 
-bool SPI::transmit_next_packet(uint8_t id, SPIPacket& packet){
+bool SPI::transmit_next_packet(uint8_t id, RawPacket& packet){
     if (!SPI::registered_spi.contains(id))
     	return false; //TODO: Handle exception if needed
 
@@ -50,7 +50,7 @@ bool SPI::transmit_next_packet(uint8_t id, SPIPacket& packet){
 
 
     if (HAL_SPI_Transmit_IT(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK){
-    	 	spi->tx_buffer = SPIPacket(packet.get_data(), packet.get_size());
+    	 	spi->tx_buffer = RawPacket(packet.get_data(), packet.get_size());
         	return false; //TODO: Warning, Error during tranmision
     }
 
@@ -58,7 +58,7 @@ bool SPI::transmit_next_packet(uint8_t id, SPIPacket& packet){
     return true;
 }
 
-bool SPI::receive_next_packet(uint8_t id, SPIPacket& packet){
+bool SPI::receive_next_packet(uint8_t id, RawPacket& packet){
 	if (!SPI::registered_spi.contains(id))
 		return false; //TODO: Handle exception if needed
 
