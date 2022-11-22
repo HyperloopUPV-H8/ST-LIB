@@ -8,6 +8,7 @@
 #pragma once
 #include "ST-LIB-CORE.hpp"
 
+#ifdef HAL_EXTI_MODULE_ENABLED
 #define GPIO_PORT GPIOE
 
 class ExternalInterrupt {
@@ -27,3 +28,4 @@ public:
 	static void turn_off(uint8_t id);
 	static optional<bool> get_pin_value(uint8_t id);
 };
+#endif

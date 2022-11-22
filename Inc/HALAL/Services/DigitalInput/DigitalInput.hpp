@@ -7,7 +7,7 @@
 #pragma once
 #include "ST-LIB-CORE.hpp"
 
-
+#ifdef HAL_GPIO_MODULE_ENABLED
 class DigitalInput{
 public:
 	static map<uint8_t,Pin> service_ids;
@@ -17,3 +17,4 @@ public:
 	static void unregister(uint8_t id);
 	static optional<PinState> read_pin_state(uint8_t id);
 };
+#endif

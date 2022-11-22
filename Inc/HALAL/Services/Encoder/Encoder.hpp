@@ -9,6 +9,7 @@
 
 #include "ST-LIB-CORE.hpp"
 
+#ifdef HAL_TIM_MODULE_ENABLED
 /**
  * @brief Encoder service class. Abstracts the use of the encoder with the HAL library.
  *
@@ -66,4 +67,4 @@ public:
 	 */
 	static optional<bool> get_direction(uint8_t id);
 };
-
+#endif

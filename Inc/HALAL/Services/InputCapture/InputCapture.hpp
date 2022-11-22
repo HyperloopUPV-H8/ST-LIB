@@ -8,6 +8,7 @@
 #pragma once
 #include "ST-LIB-CORE.hpp"
 
+#ifdef HAL_TIM_MODULE_ENABLED
 class InputCapture {
 public:
 	class Instance {
@@ -35,3 +36,4 @@ public:
 	static optional<uint8_t> read_duty_cycle(uint8_t id);
 	static Instance find_instance_by_channel(uint32_t channel);
 };
+#endif

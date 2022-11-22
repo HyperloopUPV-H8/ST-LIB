@@ -8,6 +8,7 @@
 #pragma once
 #include "ST-LIB-CORE.hpp"
 
+#ifdef HAL_TIM_MODULE_ENABLED
 class PWM {
 public:
 	static map<uint8_t, Pin> service_ids;
@@ -26,3 +27,4 @@ public:
 	static void turn_off(uint8_t id);
 	static void set_duty(uint8_t id, uint8_t duty_cicle);
 };
+#endif

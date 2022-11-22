@@ -8,9 +8,11 @@
 #pragma once
 #include "ST-LIB-CORE.hpp"
 
-#define ADC_BUF1_LEN 4
+#ifdef HAL_ADC_MODULE_ENABLED
+
+#define ADC_BUF1_LEN 10
 #define ADC_BUF2_LEN 2
-#define ADC_BUF3_LEN 2
+#define ADC_BUF3_LEN 8
 
 struct ADCchannel {
 	ADC_HandleTypeDef* adc;
@@ -28,3 +30,5 @@ public:
 	static void turn_on(uint8_t id);
 	static optional<uint16_t> get_value(uint8_t id);
 };
+
+#endif
