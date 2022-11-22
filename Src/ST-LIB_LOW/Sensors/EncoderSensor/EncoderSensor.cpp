@@ -57,7 +57,7 @@ void EncoderSensor::read(){
 		*acceleration = (*speed - last_speed) * clock_frequency * (n_frames-1) / (delta_time); //usa solo 1 frame (y el anterior) para el calculo
 	}
 	else{
-		//TODO: errores de optional vacio aqui (por hacer)
+		//TODO: empty optional error handle 
 	}
 }
 
