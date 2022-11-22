@@ -32,7 +32,6 @@ private :
 	};
 
 	static const uint32_t HIGH_PRECISION_MAX_ARR = 4294967295;
-	static const uint32_t APB1_TIM_FREQ = 275000000;
 	static uint64_t global_tick;
 	static uint64_t low_precision_tick;
 
@@ -42,7 +41,7 @@ private :
 
 	static void stop_timer(TIM_HandleTypeDef* htim);
 	static void start_timer(TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
-	static void mx_init_tim(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
+	static void init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
 
 public :
 	static TIM_HandleTypeDef* global_timer;
@@ -61,7 +60,7 @@ public :
 	static optional<uint8_t> register_high_precision_alarm(uint32_t period_in_us, function<void()> func);
 	static bool unregister_high_precision_alarm(uint16_t id);
 
-	static uint8_t register_low_precision_alarm(uint32_t period_in_ms, function<void()> func);
+	static optional<uint8_t> register_low_precision_alarm(uint32_t period_in_ms, function<void()> func);
 	static bool unregister_low_precision_alarm(uint16_t id);
 
 	static void set_timeout(int milliseconds, function<void()> callback);
