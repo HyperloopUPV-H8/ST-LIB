@@ -48,6 +48,7 @@ public :
 
 	static set<TIM_HandleTypeDef*> high_precision_timers;
 	static stack<TIM_HandleTypeDef*> available_high_precision_timers;
+	static bool is_low_precision_timer_registered;
 
 	static TIM_HandleTypeDef* low_precision_timer;
 

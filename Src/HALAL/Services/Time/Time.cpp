@@ -22,6 +22,8 @@ map<TIM_HandleTypeDef*, Time::Alarm> Time::high_precision_alarms_by_timer;
 uint64_t Time::global_tick = 0;
 uint64_t Time::low_precision_tick = 0;
 
+bool Time::is_low_precision_timer_registered = false;
+
 void Time::init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period){
 	  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 	  TIM_MasterConfigTypeDef sMasterConfig = {0};
@@ -122,12 +124,18 @@ bool Time::unregister_high_precision_alarm(uint16_t id){
 }
 
 optional<uint8_t> Time::register_low_precision_alarm(uint32_t period_in_ms, function<void()> func){
+	if (is_low_precision_timer_registered) {
+		return nullopt;
+	}
+
 	uint16_t id = Time::low_precision_ids.front();
 	Time::low_precision_ids.pop_front();
 
 	Time::Alarm alarm = { period_in_ms, low_precision_timer, func };
 	Time::low_precision_alarms_by_id[id] = alarm;
 	Time::high_precision_ids.push_front(id);
+
+	is_low_precision_timer_registered = true;
 	return id;
 }
 
@@ -137,6 +145,8 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 	}
 	Time::low_precision_alarms_by_id.erase(id);
 	Time::high_precision_ids.push_front(id);
+
+	is_low_precision_timer_registered = false;
 	return true;
 }
 
