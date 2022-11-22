@@ -13,7 +13,7 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed
 		last_speed = *speed;
 	}else{
 		id = 0xFFFF;
-		//TODO: Error handler, Error during register of encoder x
+		//TODO: Error handler,Error during register of encoder x
 	}
 }
 
