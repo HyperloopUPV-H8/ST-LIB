@@ -2,11 +2,6 @@
 #include "Encoder/Encoder.hpp"
 #include "Time/Time.hpp"
 
-const int n_frames = 5; //debe ser >1, cuanto mas alto mayor suavizado y mayor coste de computacion
-const double frame_size = 0.01; //sacrificar tiempo de refresco por minima velocidad detectable (mas alto, mejor precision (minimo baja), mas bajo mejor tiempo de refresco)
-uint32_t counters[n_frames]; //minima velocidad detectable es igual a counter_distance * n_frames / frame_size
-uint64_t times[n_frames];
-
 EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed, double *acceleration)
 : position(position), speed(speed), acceleration(acceleration){
 	optional<uint8_t> identification = Encoder::register_encoder(pin1,pin2);
@@ -17,7 +12,6 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed
 						counters[i] = 0;
 						times[i] = Time::get_global_tick();;
 					}
-		last_position = *position;
 		last_speed = *speed;
 	}else{
 		//TODO: Error handler, Error during register of encoder x
@@ -48,9 +42,9 @@ void EncoderSensor::read(){
 		}
 
 		int delta_time = times[n_frames-1] - times[0];
-		last_position = ((double) counters[0]) * counter_distance;
+		double last_position = ((int) counters[0]) * counter_distance;
 
-		*position= ((double) counters[n_frames-1]) * counter_distance;
+		*position= ((int) counters[n_frames-1]) * counter_distance;
 
 		*speed = abs(*position - last_position) * clock_frequency / (delta_time); //Usa n_frames frames para el calculo
 

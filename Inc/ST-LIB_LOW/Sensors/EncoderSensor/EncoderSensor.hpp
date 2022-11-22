@@ -26,7 +26,9 @@ protected:
 	double* position;
 	double* speed;
 	double* acceleration;
-	uint64_t last_time;
-	double last_position;
 	double last_speed;
+	const int n_frames = 5; //Cannot be lower than one
+	const double frame_size = 0.01;
+	uint32_t counters[n_frames];
+	uint64_t times[n_frames];
 };
