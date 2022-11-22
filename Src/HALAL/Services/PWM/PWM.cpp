@@ -153,7 +153,7 @@ void PWM::change_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 		// TODO error handling
 		return;
 	}
-	uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(tim_ch.timer) / 100.0 * duty_cycle;
+	uint16_t raw_duty = round(__HAL_TIM_GET_AUTORELOAD(tim_ch.timer) / 100.0 * duty_cycle);
 	__HAL_TIM_SET_COMPARE(tim_ch.timer, tim_ch.channel, raw_duty);
 }
 
