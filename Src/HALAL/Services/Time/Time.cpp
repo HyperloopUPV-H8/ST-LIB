@@ -22,7 +22,7 @@ map<TIM_HandleTypeDef*, Time::Alarm> Time::high_precision_alarms_by_timer;
 uint64_t Time::global_tick = 0;
 uint64_t Time::low_precision_tick = 0;
 
-void Time::mx_init_tim(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period){
+void Time::init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period){
 	  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 	  TIM_MasterConfigTypeDef sMasterConfig = {0};
 
@@ -45,10 +45,10 @@ void Time::mx_init_tim(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t presca
 }
 
 void Time::start(){
-	Time::mx_init_tim(TIM2, &htim2, 0, 4294967295);
-	Time::mx_init_tim(TIM5, &htim5, 0, 4294967295);
-	Time::mx_init_tim(TIM24, &htim24, 0, 4294967295);
-	Time::mx_init_tim(TIM6, &htim6, 275, 1000);
+	Time::init_timer(TIM2, &htim2, 0, HIGH_PRECISION_MAX_ARR);
+	Time::init_timer(TIM5, &htim5, 0, HIGH_PRECISION_MAX_ARR);
+	Time::init_timer(TIM24, &htim24, 0, HIGH_PRECISION_MAX_ARR);
+	Time::init_timer(TIM6, &htim6, 275, 1000);
 
 	HAL_TIM_Base_Start_IT(global_timer);
 	HAL_TIM_Base_Start_IT(low_precision_timer);
@@ -65,7 +65,8 @@ void Time::start(){
 
 uint64_t Time::get_global_tick(){
 	uint64_t current_tick = Time::global_tick + global_timer->Instance->CNT;
-	double to_nanoseconds = 1.0 / Time::APB1_TIM_FREQ * 1000000000.0;
+	uint32_t apb1_tim_freq = HAL_RCC_GetPCLK1Freq()*2;
+	double to_nanoseconds = 1.0 / apb1_tim_freq * 1000000000.0;
 	return current_tick * to_nanoseconds;
 }
 
@@ -80,8 +81,9 @@ void Time::stop_timer(TIM_HandleTypeDef* handle){
 }
 
 optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, function<void()> func){
-	if(available_high_precision_timers.size() == 0)
-		return {};
+	if(available_high_precision_timers.size() == 0) {
+		return nullopt;
+	}
 
 	uint16_t id = Time::high_precision_ids.front();
 	Time::high_precision_ids.pop_front();
@@ -89,7 +91,11 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 	TIM_HandleTypeDef* tim = Time::available_high_precision_timers.top();
 	Time::available_high_precision_timers.pop();
 
-	Time::Alarm alarm = { period_in_us, tim, func };
+	Time::Alarm alarm = {
+			.period = period_in_us,
+			.tim = tim,
+			.alarm = func
+	};
 	Time::high_precision_alarms_by_id[id] = alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
 
@@ -97,12 +103,13 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 	tim->Instance->ARR = period_in_us;
 	HAL_TIM_Base_Start_IT(tim);
 
-	return {id};
+	return id;
 }
 
 bool Time::unregister_high_precision_alarm(uint16_t id){
-	if(Time::high_precision_alarms_by_id.find(id) == high_precision_alarms_by_id.end())
+	if(not Time::high_precision_alarms_by_id.contains(id)) {
 		return false;
+	}
 
 	Time::Alarm alarm = high_precision_alarms_by_id[id];
 	Time::available_high_precision_timers.push(alarm.tim);
@@ -114,19 +121,20 @@ bool Time::unregister_high_precision_alarm(uint16_t id){
 	return true;
 }
 
-uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void()> func){
+optional<uint8_t> Time::register_low_precision_alarm(uint32_t period_in_ms, function<void()> func){
 	uint16_t id = Time::low_precision_ids.front();
 	Time::low_precision_ids.pop_front();
 
 	Time::Alarm alarm = { period_in_ms, low_precision_timer, func };
 	Time::low_precision_alarms_by_id[id] = alarm;
 	Time::high_precision_ids.push_front(id);
-	return { id };
+	return id;
 }
 
 bool Time::unregister_low_precision_alarm(uint16_t id){
-	if(Time::low_precision_alarms_by_id.find(id) == low_precision_alarms_by_id.end())
+	if(not Time::low_precision_alarms_by_id.contains(id)){
 		return false;
+	}
 	Time::low_precision_alarms_by_id.erase(id);
 	Time::high_precision_ids.push_front(id);
 	return true;
@@ -153,15 +161,18 @@ void Time::low_precision_timer_callback(){
 		if(Time::low_precision_tick % alarm.period == 0)
 			alarm.alarm();
 	}
-
 	low_precision_tick += 1;
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* tim){
-	if(tim == Time::global_timer)
+	if(tim == Time::global_timer) {
 			Time::global_timer_callback();
-	else if(tim == Time::low_precision_timer)
+	}
+	else if(tim == Time::low_precision_timer) {
 			Time::low_precision_timer_callback();
-	else if(Time::high_precision_timers.count(tim) !=0)
+	}
+
+	else if(Time::high_precision_timers.contains(tim)) {
 			Time::high_precision_timer_callback(tim);
+	}
 }
