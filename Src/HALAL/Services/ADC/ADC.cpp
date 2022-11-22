@@ -5,7 +5,7 @@
  *      Author: alejandro
  */
 
-#include <Runes/Runes.hpp>
+#include "ADC/ADC.hpp"
 
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;

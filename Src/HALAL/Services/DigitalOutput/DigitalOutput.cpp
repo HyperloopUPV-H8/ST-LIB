@@ -5,7 +5,7 @@
  *      Author: stefa
  */
 
-#include "Runes/Runes.hpp"
+#include "DigitalOutput/DigitalOutput.hpp"
 
 uint8_t DigitalOutput::inscribe(Pin& pin){
         Pin::inscribe(pin, OUTPUT);

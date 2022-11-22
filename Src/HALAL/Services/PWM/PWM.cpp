@@ -5,7 +5,7 @@
  *      Author: aleja
  */
 
-#include <Runes/Runes.hpp>
+#include "PWM/PWM.hpp"
 
 optional<uint8_t> PWM::inscribe(Pin& pin){
 	if (!PWM::pin_timer_map.contains(pin)) {

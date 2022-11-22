@@ -4,7 +4,16 @@
  *  Created on: 30 oct. 2022
  *      Author: alejandro
  */
-#include "Runes/Runes.hpp"
+#include "InputCapture/InputCapture.hpp"
+
+static map<uint32_t, uint32_t> channel_dict = {
+	{HAL_TIM_ACTIVE_CHANNEL_1, TIM_CHANNEL_1},
+	{HAL_TIM_ACTIVE_CHANNEL_2, TIM_CHANNEL_2},
+	{HAL_TIM_ACTIVE_CHANNEL_3, TIM_CHANNEL_3},
+	{HAL_TIM_ACTIVE_CHANNEL_4, TIM_CHANNEL_4},
+	{HAL_TIM_ACTIVE_CHANNEL_5, TIM_CHANNEL_5},
+	{HAL_TIM_ACTIVE_CHANNEL_6, TIM_CHANNEL_6}
+};
 
 InputCapture::Instance::Instance(Pin pin, TIM_HandleTypeDef* timer, uint32_t channel_rising, uint32_t channel_falling) :
 	pin(pin),
