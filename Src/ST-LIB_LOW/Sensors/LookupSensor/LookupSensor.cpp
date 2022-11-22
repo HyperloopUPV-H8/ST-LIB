@@ -15,7 +15,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, double *value) : table(table)
 void LookupSensor::read(){
 	optional<uint16_t> val = ADC::get_pin_value(id);
 	if(val){
-		*value = table[val.value()>>displacement];
+		*value = table[((uint16_t)val.value())>>displacement];
 	}else{
 		//TODO: errores de optional vacio aqui (por hacer)
 	}
