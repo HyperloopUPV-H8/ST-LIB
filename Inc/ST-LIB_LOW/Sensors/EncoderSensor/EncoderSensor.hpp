@@ -11,6 +11,9 @@
 #include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
 #define counter_distance 0.025
 #define clock_frequency 300000000
+#define n_frames 5
+#define frame_size 0.01
+
 
 
 class EncoderSensor : public Sensor<double>::Sensor{
@@ -27,8 +30,6 @@ protected:
 	double* speed;
 	double* acceleration;
 	double last_speed;
-	const int n_frames = 5; //Cannot be lower than one
-	const double frame_size = 0.01;
 	uint32_t counters[n_frames];
 	uint64_t times[n_frames];
 };
