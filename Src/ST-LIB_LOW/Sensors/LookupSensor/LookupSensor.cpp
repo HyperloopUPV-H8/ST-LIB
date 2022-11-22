@@ -2,7 +2,7 @@
 #include "ADC/ADC.hpp"
 
 LookupSensor::LookupSensor(Pin pin, double *table, double *value) : table(table), value(value){
-	optional<uint8_t> identification = ADC::register_adc(pin);
+	optional<uint8_t> identification = ADC::inscribe(pin);
 	if(identification){
 		id = identification.value();
 		ADC::turn_on_adc(id);

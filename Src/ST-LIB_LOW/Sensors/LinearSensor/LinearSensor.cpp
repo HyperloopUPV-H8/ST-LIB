@@ -3,7 +3,7 @@
 
 LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 : slope(slope), offset(offset), value(value){
-	optional<uint8_t> identification = ADC::register_adc(pin);
+	optional<uint8_t> identification = ADC::inscribe(pin);
 	if(identification){
 		id = identification.value();
 		ADC::turn_on_adc(id);
