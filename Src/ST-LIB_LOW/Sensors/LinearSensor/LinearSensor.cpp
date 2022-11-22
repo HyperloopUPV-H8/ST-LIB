@@ -6,7 +6,7 @@ LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 	optional<uint8_t> identification = ADC::inscribe(pin);
 	if(identification){
 		id = identification.value();
-		ADC::turn_on_adc(id);
+		ADC::turn_on(id);
 	}else{
 		//TODO: errores de optional vacio aqui (por hacer)
 	}

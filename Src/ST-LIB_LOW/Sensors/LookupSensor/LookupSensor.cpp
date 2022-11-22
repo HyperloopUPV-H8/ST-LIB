@@ -5,7 +5,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, double *value) : table(table)
 	optional<uint8_t> identification = ADC::inscribe(pin);
 	if(identification){
 		id = identification.value();
-		ADC::turn_on_adc(id);
+		ADC::turn_on(id);
 		displacement = sensor_resolution - log2(sizeof(table));
 	}else{
 		//TODO: errores de optional vacio aqui (por hacer)
