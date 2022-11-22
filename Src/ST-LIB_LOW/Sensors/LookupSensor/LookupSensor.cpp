@@ -13,7 +13,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, double *value) : table(table)
 }
 
 void LookupSensor::read(){
-	optional<uint16_t> val = ADC::get_pin_value(id);
+	optional<uint16_t> val = ADC::get_value(id);
 	if(val){
 		*value = table[((uint16_t)val.value())>>displacement];
 	}else{
