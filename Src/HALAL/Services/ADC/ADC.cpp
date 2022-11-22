@@ -76,34 +76,3 @@ void ADC::turn_on(uint8_t id){
 
 	if (status != HAL_OK) { }// TODO Error handling
 }
-
-void ADC::turn_off(uint8_t id) {
-	if (not service_ids.contains(id)) {
-		return; //TODO error handler
-	}
-	Pin pin = service_ids[id];
-	ADCchannel adc_channel = pin_adc_map[pin];
-
-	HAL_StatusTypeDef status = HAL_ADC_Stop_DMA(adc_channel.adc);
-	if (status != HAL_OK) { } // TODO Error handling
-}
-
-optional<uint16_t> ADC::get_value(uint8_t id) {
-	if (not service_ids.contains(id)) {
-		return nullopt; // TODO error handler
-	}
-	Pin pin = service_ids[id];
-
-	ADCchannel adc_channel = pin_adc_map[pin];
-	if (adc_channel.adc == &hadc1){
-		return adc_read1[adc_channel.rank];
-	}
-	else if (adc_channel.adc == &hadc2){
-		return adc_read2[adc_channel.rank];
-	}
-	else if (adc_channel.adc == &hadc3){
-		return adc_read3[adc_channel.rank];
-	}
-
-	return nullopt;
-}

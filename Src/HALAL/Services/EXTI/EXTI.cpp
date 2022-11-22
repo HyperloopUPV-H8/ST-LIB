@@ -29,25 +29,6 @@ optional<uint8_t> ExternalInterrupt::inscribe(Pin& pin, function<void()>&& actio
 	return id;
 }
 
-void ExternalInterrupt::unregister(uint8_t id) {
-	if (not service_ids.contains(id)) {
-		return; // TODO error handler
-	}
-
-	Pin::unregister(service_ids[id]);
-	instances.erase(id);
-	id_manager.push_front(id);
-}
-
-void ExternalInterrupt::turn_off(uint8_t id) {
-	if (not service_ids.contains(id)) {
-		return; // TODO error handler
-	}
-
-	Instance& instance = instances[service_ids[id].gpio_pin];
-	instance.is_on = false;
-}
-
 void ExternalInterrupt::turn_on(uint8_t id) {
 	if (not service_ids.contains(id)) {
 		return; // TODO error handler

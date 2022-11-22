@@ -41,30 +41,6 @@ optional<uint8_t> PWM::inscribe_dual(Pin& pin, Pin& pin_negated){
 	return id;
 }
 
-void PWM::unregister(uint8_t id){
-	if (PWM::service_ids.contains(id)) {
-		Pin::unregister(PWM::service_ids[id]);
-		PWM::service_ids.erase(id);
-		PWM::id_manager.push_front(id);
-	}
-
-	else if (PWM::service_ids_negated.contains(id)) {
-		Pin::unregister(PWM::service_ids_negated[id]);
-		PWM::service_ids_negated.erase(id);
-		PWM::id_manager.push_front(id);
-	}
-
-	else if (PWM::service_ids_dual.contains(id)) {
-		Pin::unregister(PWM::service_ids_dual[id].first);
-		Pin::unregister(PWM::service_ids_dual[id].second);
-		PWM::service_ids_dual.erase(id);
-		PWM::id_manager.push_front(id);
-	}
-	else {
-		// TODO error handling
-	}
-}
-
 void PWM::turn_on(uint8_t id){
 	if (PWM::service_ids.contains(id)) {
 		Pin pin = PWM::service_ids[id];
