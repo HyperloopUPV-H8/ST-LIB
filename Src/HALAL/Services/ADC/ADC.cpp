@@ -96,12 +96,12 @@ void ADC::turn_on(uint8_t id){
 	}
 
 	if (HAL_ADC_Start_DMA(active_instances[id].adc, (uint32_t*) buffer->data, buffer->length) != HAL_OK) {
-		return; // TODO: Error handling
+		return; //TODO: Error handler
 	}
 
 	low_power_timer* timer = active_instances[id].timer;
 	if (HAL_LPTIM_TimeOut_Start_IT(timer->handle, timer->period, timer->period / 2) != HAL_OK) {
-		return; // TODO: Error handling
+		return; //TODO: Error handler
 	}
 	buffer->is_on = true;
 }
@@ -144,12 +144,12 @@ void ADC::init(ADC_HandleTypeDef& adc_handle) {
 	  adc_handle.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
 	  adc_handle.Init.OversamplingMode = DISABLE;
 	  if (HAL_ADC_Init(&adc_handle) != HAL_OK) {
-	    // TODO: Error handler
+	    //TODO: Error handler
 	  }
 
 	  multimode.Mode = ADC_MODE_INDEPENDENT;
 	  if (HAL_ADCEx_MultiModeConfigChannel(&adc_handle, &multimode) != HAL_OK) {
-	    // TODO: Error handler
+	    //TODO: Error handler
 	  }
 
 
@@ -162,7 +162,7 @@ void ADC::init(ADC_HandleTypeDef& adc_handle) {
 	  	  sConfig.Offset = 0;
 	  	  sConfig.OffsetSignedSaturation = DISABLE;
 	  	  if (HAL_ADC_ConfigChannel(&adc_handle, &sConfig) != HAL_OK) {
-	  		  // TODO: Error handler
+	  		  //TODO: Error handler
 	  	  }
 	  }
 }
