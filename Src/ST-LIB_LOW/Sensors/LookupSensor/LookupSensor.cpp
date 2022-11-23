@@ -6,7 +6,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, double *value) : table(table)
 	if(identification){
 		id = identification.value();
 		ADC::turn_on(id);
-		displacement = sensor_resolution - log2(sizeof(table));
+		displacement = sizeof(table);
 	}else{
 		//TODO: errores de optional vacio aqui (por hacer)
 	}
@@ -15,7 +15,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, double *value) : table(table)
 void LookupSensor::read(){
 	optional<uint16_t> val = ADC::get_value(id);
 	if(val){
-		*value = table[((uint16_t)val.value())>>displacement];
+		*value = table[((int)val.value()) * table_size / reference_voltage];
 	}else{
 		//TODO: errores de optional vacio aqui (por hacer)
 	}

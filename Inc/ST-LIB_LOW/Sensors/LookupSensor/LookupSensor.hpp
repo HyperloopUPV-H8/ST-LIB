@@ -10,6 +10,7 @@
 #include "ST-LIB_LOW/Sensors/AnalogSensor/AnalogSensor.hpp"
 
 #define sensor_resolution 16
+#define reference_voltage 3.3
 
 
 class LookupSensor : public AnalogSensor::AnalogSensor{
@@ -23,5 +24,5 @@ protected:
 	uint8_t id;
 	double *table;
 	double *value;
-	int displacement;
+	int table_size;
 };
