@@ -48,7 +48,6 @@ public :
 
 	static set<TIM_HandleTypeDef*> high_precision_timers;
 	static stack<TIM_HandleTypeDef*> available_high_precision_timers;
-	static bool is_low_precision_timer_registered;
 
 	static TIM_HandleTypeDef* low_precision_timer;
 
@@ -61,7 +60,7 @@ public :
 	static optional<uint8_t> register_high_precision_alarm(uint32_t period_in_us, function<void()> func);
 	static bool unregister_high_precision_alarm(uint16_t id);
 
-	static optional<uint8_t> register_low_precision_alarm(uint32_t period_in_ms, function<void()> func);
+	static uint8_t register_low_precision_alarm(uint32_t period_in_ms, function<void()> func);
 	static bool unregister_low_precision_alarm(uint16_t id);
 
 	static void set_timeout(int milliseconds, function<void()> callback);
