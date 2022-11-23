@@ -92,7 +92,7 @@ void PWM::turn_off(uint8_t id){
 	}
 }
 
-void PWM::set_duty(uint8_t id, uint8_t duty_cycle) {
+void PWM::set_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	if (not (duty_cycle >= 0 && duty_cycle <= 100)) {
 		//TODO: error handler
 		return;
