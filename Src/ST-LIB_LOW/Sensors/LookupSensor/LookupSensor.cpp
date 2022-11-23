@@ -15,7 +15,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, double *value) : table(table)
 void LookupSensor::read(){
 	optional<uint16_t> val = ADC::get_value(id);
 	if(val){
-		*value = table[((int)val.value()) * table_size / reference_voltage];
+		*value = table[val.value() * table_size / reference_voltage];
 	}else{
 		//TODO: errores de optional vacio aqui (por hacer)
 	}
