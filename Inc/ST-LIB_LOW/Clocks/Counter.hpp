@@ -20,7 +20,7 @@ public:
 	double freq = 0.0;
 
 	~Counter();
-	Counter(uint64_t v);
+	Counter(uint64_t update_period_ms);
 	void count();
 
 };
