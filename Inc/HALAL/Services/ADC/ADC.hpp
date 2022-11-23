@@ -6,7 +6,9 @@
  */
 
 #pragma once
-#include "ST-LIB-CORE.hpp"
+#include "PinModel/Pin.hpp"
+#include "DMAStream/DMAStream.hpp"
+#include "LowPowerTimer/LowPowerTimer.hpp"
 
 #ifdef HAL_ADC_MODULE_ENABLED
 
@@ -23,24 +25,9 @@
 #define MAX_16BIT 65535.0
 
 // TODO: Will be moved into appropiate file when include structure is fixed.
-struct dma_buffer {
-public:
-	uint16_t* data;
-	uint8_t length;
-	bool is_on = false;
 
-	dma_buffer() = default;
-	dma_buffer(uint16_t* data, uint8_t length) : data(data), length(length), is_on(false) {};
-};
 
-struct low_power_timer {
-public:
-	LPTIM_HandleTypeDef* handle;
-	uint16_t period;
 
-	low_power_timer() = default;
-	low_power_timer(LPTIM_HandleTypeDef* handle, uint16_t period) : handle(handle), period(period) {};
-};
 
 class ADC {
 public:
@@ -48,11 +35,11 @@ public:
 	public:
 		ADC_HandleTypeDef* adc;
 		uint8_t rank;
-		low_power_timer timer;
-		dma_buffer buffer;
+		LowPowerTimer timer;
+		DMAStream dma_stream;
 
 		Instance() = default;
-		Instance(ADC_HandleTypeDef* adc, uint8_t rank, low_power_timer& timer, dma_buffer& buffer);
+		Instance(ADC_HandleTypeDef* adc, uint8_t rank, LowPowerTimer& timer, DMAStream& buffer);
 	};
 
 	static map<Pin, Instance> available_instances;

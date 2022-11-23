@@ -6,7 +6,8 @@
  */
 
 #pragma once
-#include "ST-LIB-CORE.hpp"
+#include "PinModel/Pin.hpp"
+#include "TimerChannelModel/TimerChannel.hpp"
 
 #ifdef HAL_TIM_MODULE_ENABLED
 class PWM {

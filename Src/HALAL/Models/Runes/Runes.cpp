@@ -109,22 +109,22 @@ uint16_t adc_buf1[ADC_BUF1_LEN];
 uint16_t adc_buf2[ADC_BUF2_LEN];
 uint16_t adc_buf3[ADC_BUF3_LEN];
 
-dma_buffer dma_buffer1 = dma_buffer(adc_buf1, ADC_BUF1_LEN);
-low_power_timer lptim1 = low_power_timer(&hlptim1, LPTIM1_PERIOD);
-dma_buffer dma_buffer2 = dma_buffer(adc_buf2, ADC_BUF2_LEN);
-low_power_timer lptim2 = low_power_timer(&hlptim2, LPTIM2_PERIOD);
-dma_buffer dma_buffer3 = dma_buffer(adc_buf3, ADC_BUF3_LEN);
-low_power_timer lptim3 = low_power_timer(&hlptim3, LPTIM3_PERIOD);
+DMAStream DMAStream1 = DMAStream(adc_buf1, ADC_BUF1_LEN);
+LowPowerTimer lptim1 = LowPowerTimer(&hlptim1, LPTIM1_PERIOD);
+DMAStream DMAStream2 = DMAStream(adc_buf2, ADC_BUF2_LEN);
+LowPowerTimer lptim2 = LowPowerTimer(&hlptim2, LPTIM2_PERIOD);
+DMAStream DMAStream3 = DMAStream(adc_buf3, ADC_BUF3_LEN);
+LowPowerTimer lptim3 = LowPowerTimer(&hlptim3, LPTIM3_PERIOD);
 
 map<Pin, ADC::Instance> ADC::available_instances = {
-		{PF11, Instance(&hadc1, 1, lptim1, dma_buffer1)},
-		{PA6, Instance(&hadc1, 2, lptim1, dma_buffer1)},
-		{PC4, Instance(&hadc1, 3, lptim1, dma_buffer1)},
-		{PB1, Instance(&hadc1, 4, lptim1, dma_buffer1)},
-		{PF13, Instance(&hadc2, 1, lptim2, dma_buffer2)},
-		{PF14, Instance(&hadc2, 2, lptim2, dma_buffer2)},
-		{PC2, Instance(&hadc3, 1, lptim3, dma_buffer3)},
-		{PC3, Instance(&hadc3, 2, lptim3, dma_buffer3)}
+		{PF11, Instance(&hadc1, 1, lptim1, DMAStream1)},
+		{PA6, Instance(&hadc1, 2, lptim1, DMAStream1)},
+		{PC4, Instance(&hadc1, 3, lptim1, DMAStream1)},
+		{PB1, Instance(&hadc1, 4, lptim1, DMAStream1)},
+		{PF13, Instance(&hadc2, 1, lptim2, DMAStream2)},
+		{PF14, Instance(&hadc2, 2, lptim2, DMAStream2)},
+		{PC2, Instance(&hadc3, 1, lptim3, DMAStream3)},
+		{PC3, Instance(&hadc3, 2, lptim3, DMAStream3)}
 };
 
 #endif

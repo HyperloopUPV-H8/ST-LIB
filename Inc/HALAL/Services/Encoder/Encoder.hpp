@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "ST-LIB-CORE.hpp"
+#include "PinModel/Pin.hpp"
 
 #ifdef HAL_TIM_MODULE_ENABLED
 /**

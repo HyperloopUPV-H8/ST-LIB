@@ -5,7 +5,7 @@
  *      Author: stefan
  */
 #pragma once
-#include "ST-LIB-CORE.hpp"
+#include "PinModel/Pin.hpp"
 
 #ifdef HAL_GPIO_MODULE_ENABLED
 class DigitalOutput{
