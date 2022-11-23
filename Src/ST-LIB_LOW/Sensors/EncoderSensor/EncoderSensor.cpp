@@ -7,6 +7,7 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed
 	optional<uint8_t> identification = Encoder::register_encoder(pin1,pin2);
 	if(identification){
 		id = identification.value();
+		Encoder::reset_encoder(id);
 		Encoder::turn_on_encoder(id);
 		for(int i = 0; i < n_frames; i++){
 						counters[i] = 0;
