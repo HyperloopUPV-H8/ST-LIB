@@ -7,7 +7,7 @@ DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInp
 }
 
 void DigitalSensor::exti_interruption(std::function<auto> action){
-	optional<uint8_t> identification = ExternalInterrupt::register_exti(pin, lambda);
+	optional<uint8_t> identification = ExternalInterrupt::register_exti(pin, action);
 	if(identification){
 		ExternalInterrupt::turn_on_exti(identification.value());
 	}else{
