@@ -15,9 +15,9 @@ LookupSensor::LookupSensor(Pin pin, double *table, int table_size, double *value
 }
 
 void LookupSensor::read(){
-	optional<uint16_t> val = ADC::get_value(id);
+	optional<float> val = ADC::get_value(id);
 	if(val){
-		int table_index = (int)(val * table_size / reference_voltage);
+		int table_index = (int)(val.value() * table_size / reference_voltage);
 		if(table_index >= table_size){table_index = table_size - 1;} //temas de redondeo
 		*value = table[table_index];
 	}else{

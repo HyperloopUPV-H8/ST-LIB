@@ -13,7 +13,7 @@ LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 }
 
 void LinearSensor::read(){
-	optional<uint16_t> val = ADC::get_value(id);
+	optional<float> val = ADC::get_value(id);
 	if(val){
 		*value = slope * (double) val.value() + offset;
 	}else{
