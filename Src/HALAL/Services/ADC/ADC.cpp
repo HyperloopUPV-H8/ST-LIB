@@ -80,9 +80,9 @@ optional<uint8_t> ADC::inscribe(Pin pin) {
 }
 
 void ADC::start() {
-	ADC::init(hadc1);
-	ADC::init(hadc2);
-	ADC::init(hadc3);
+	for(auto adc_initinfo : init_data_map) {
+		ADC::init(*adc_initinfo.first);
+	}
 }
 
 void ADC::turn_on(uint8_t id){

@@ -9,9 +9,9 @@
 #include "ST-LIB.hpp"
 #include "C++Utilities/CppUtils.hpp"
 
-#define ADC_BUF1_LEN 4
+#define ADC_BUF1_LEN 10
 #define ADC_BUF2_LEN 2
-#define ADC_BUF3_LEN 2
+#define ADC_BUF3_LEN 8
 
 #define LPTIM1_PERIOD 3000
 #define LPTIM2_PERIOD 3000
