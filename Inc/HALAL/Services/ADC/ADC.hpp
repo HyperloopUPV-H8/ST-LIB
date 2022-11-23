@@ -48,11 +48,11 @@ public:
 	public:
 		ADC_HandleTypeDef* adc;
 		uint8_t rank;
-		low_power_timer* timer;
-		dma_buffer* buffer;
+		low_power_timer timer;
+		dma_buffer buffer;
 
 		Instance() = default;
-		Instance(ADC_HandleTypeDef* adc, uint8_t rank, low_power_timer* timer, dma_buffer* buffer);
+		Instance(ADC_HandleTypeDef* adc, uint8_t rank, low_power_timer& timer, dma_buffer& buffer);
 	};
 
 	static map<Pin, Instance> available_instances;
