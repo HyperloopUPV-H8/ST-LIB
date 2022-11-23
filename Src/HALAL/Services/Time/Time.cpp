@@ -146,7 +146,7 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 	return true;
 }
 
-void Time::set_timeout(int millseconds, function<void()> callback){
+void Time::set_timeout(int milliseconds, function<void()> callback){
 	int id = Time::register_low_precision_alarm(millseconds, [&](){
 		callback();
 		Time::unregister_low_precision_alarm(id);

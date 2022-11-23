@@ -21,7 +21,6 @@ extern TIM_HandleTypeDef htim6;		// Used for the low precision alarms (1mS)
 class Time {
 
 private :
-
 	static forward_list<uint8_t> high_precision_ids;
 	static forward_list<uint8_t> low_precision_ids;
 
@@ -55,9 +54,26 @@ public :
 	static void global_timer_callback();
 	static void low_precision_timer_callback();
 
+	/**
+	 * @brief Initializes instances registered with init_timer.
+	 *
+	 * @return void
+	 */
 	static void start();
+
 	static uint64_t get_global_tick();
+
+	/**
+	* @brief Tries to register a high_precision_alarm that will execute a function on timeout
+	* until unregistered.
+	*
+	* @param period_in_us period in microseconds until timeout.
+	* @param func function to be executed on timeout.
+	* @return optional<uint8_t> Returns id of the alarm if succesful, nullopt if it is able
+	* to register the timer correctly (probably because there aren't any timer available).
+	*/
 	static optional<uint8_t> register_high_precision_alarm(uint32_t period_in_us, function<void()> func);
+
 	static bool unregister_high_precision_alarm(uint16_t id);
 
 	static uint8_t register_low_precision_alarm(uint32_t period_in_ms, function<void()> func);
