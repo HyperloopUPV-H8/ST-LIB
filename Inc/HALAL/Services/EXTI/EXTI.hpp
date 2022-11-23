@@ -2,13 +2,13 @@
  * EXTI.hpp
  *
  *  Created on: Nov 5, 2022
- *      Author: aleja
+ *      Author: alejandro 
  */
 
 #pragma once
-#include <C++Utilities/CppUtils.hpp>
-#include "ST-LIB.hpp"
+#include "ST-LIB-CORE.hpp"
 
+#ifdef HAL_EXTI_MODULE_ENABLED
 #define GPIO_PORT GPIOE
 
 class ExternalInterrupt {
@@ -23,9 +23,9 @@ public:
 	static map<uint16_t, Instance> instances;
 	static forward_list<uint8_t> id_manager;
 
-	static optional<uint8_t> register_exti(Pin& pin, function<void()>&& action);
-	static void unregister_exti(uint8_t id);
-	static void turn_on_exti(uint8_t id);
-	static void turn_off_exti(uint8_t id);
-	static bool get_pin_value(uint8_t id);
+	static optional<uint8_t> inscribe(Pin& pin, function<void()>&& action);
+	static void turn_on(uint8_t id);
+	static void turn_off(uint8_t id);
+	static optional<bool> get_pin_value(uint8_t id);
 };
+#endif

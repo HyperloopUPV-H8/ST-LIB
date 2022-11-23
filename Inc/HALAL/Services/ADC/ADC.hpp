@@ -6,8 +6,9 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
-#include "C++Utilities/CppUtils.hpp"
+#include "ST-LIB-CORE.hpp"
+
+#ifdef HAL_ADC_MODULE_ENABLED
 
 #define ADC_BUF1_LEN 10
 #define ADC_BUF2_LEN 2
@@ -47,11 +48,11 @@ public:
 	public:
 		ADC_HandleTypeDef* adc;
 		uint8_t rank;
-		low_power_timer* timer;
-		dma_buffer* buffer;
+		low_power_timer timer;
+		dma_buffer buffer;
 
 		Instance() = default;
-		Instance(ADC_HandleTypeDef* adc, uint8_t rank, low_power_timer* timer, dma_buffer* buffer);
+		Instance(ADC_HandleTypeDef* adc, uint8_t rank, low_power_timer& timer, dma_buffer& buffer);
 	};
 
 	static map<Pin, Instance> available_instances;
@@ -82,3 +83,5 @@ private:
 	static void init(ADC_HandleTypeDef& adc_handle);
 	static map<ADC_HandleTypeDef*, InitData> init_data_map;
 };
+
+#endif
