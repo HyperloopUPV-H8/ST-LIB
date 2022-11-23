@@ -12,7 +12,6 @@ extern ADC_HandleTypeDef hadc3;
 ADC::Instance::Instance(ADC_HandleTypeDef* adc, uint8_t rank, low_power_timer& timer, dma_buffer& buffer) :
 		adc(adc), rank(rank), timer(timer), buffer(buffer) {}
 
-<<<<<<< HEAD
 ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<ChannelRank> channel_rank_vector) :
 		adc(adc), resolution(resolution), external_trigger(external_trigger), channel_rank_vector(channel_rank_vector) {}
 
