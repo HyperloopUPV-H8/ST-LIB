@@ -14,7 +14,7 @@ void Flash::read(uint32_t source_addr, uint32_t* result, uint32_t number_of_word
 	}
 
 	HAL_FLASH_Unlock();
-	while(number_of_words){
+	while(number_of_words > 0){
 		*result = *(__IO uint32_t *)source_addr;
 		source_addr += 4;
 		result++;
@@ -51,7 +51,7 @@ bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_word
 		source_pos++;
 	}
 
-	if (!Flash::erase(start_sector, end_sector)) {
+	if (not Flash::erase(start_sector, end_sector)) {
 		//TODO: Exception handle (Error while erasing for writing, aborting...)
 		return false;
 	}

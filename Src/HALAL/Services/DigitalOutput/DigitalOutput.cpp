@@ -2,7 +2,7 @@
  * DigitalOutput.cpp
  *
  *  Created on: Oct 18, 2022
- *      Author: stefa
+ *      Author: stefan
  */
 
 #include "DigitalOutput/DigitalOutput.hpp"
@@ -16,7 +16,7 @@ uint8_t DigitalOutput::inscribe(Pin& pin){
 }
 
 void DigitalOutput::turn_off(uint8_t id){
-	if (!DigitalOutput::service_ids.contains(id))
+	if (not DigitalOutput::service_ids.contains(id))
 		return;
 
 	Pin pin = DigitalOutput::service_ids[id];
@@ -24,7 +24,7 @@ void DigitalOutput::turn_off(uint8_t id){
 }
 
 void DigitalOutput::turn_on(uint8_t id){
-	if (!DigitalOutput::service_ids.contains(id))
+	if (not DigitalOutput::service_ids.contains(id))
 		return;
 
 	Pin pin = DigitalOutput::service_ids[id];
@@ -32,7 +32,7 @@ void DigitalOutput::turn_on(uint8_t id){
 }
 
 void DigitalOutput::set_pin_state(uint8_t id, PinState state){
-	if (!DigitalOutput::service_ids.contains(id))
+	if (not DigitalOutput::service_ids.contains(id))
 		return;
 
 	Pin pin = DigitalOutput::service_ids[id];

@@ -16,15 +16,9 @@ uint8_t DigitalInput::inscribe(Pin& pin){
 }
 
 optional<PinState> DigitalInput::read_pin_state(uint8_t id){
-	if (!DigitalInput::service_ids.contains(id))
+	if (not DigitalInput::service_ids.contains(id))
 		return nullopt;
 
 	Pin pin = DigitalInput::service_ids[id];
 	return (PinState)HAL_GPIO_ReadPin(pin.port, pin.gpio_pin);
-}
-
-void DigitalInput::unregister(uint8_t id){
-	Pin::unregister(DigitalInput::service_ids[id]);
-	DigitalInput::service_ids.erase(id);
-	DigitalInput::id_manager.push_front(id);
 }

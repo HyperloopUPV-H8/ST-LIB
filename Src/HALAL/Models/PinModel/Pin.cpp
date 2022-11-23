@@ -2,14 +2,14 @@
  * Pin.cpp
  *
  *  Created on: 19 oct. 2022
- *      Author: stefa
+ *      Author: stefan
  */
 
 #include "PinModel/Pin.hpp"
 
 Pin::Pin(){}
 
-Pin::Pin(GPIO_TypeDef* port, GPIO_Pin gpio_pin):port(port),gpio_pin(gpio_pin){}
+Pin::Pin(GPIO_TypeDef* port, GPIO_Pin gpio_pin) : port(port), gpio_pin(gpio_pin){}
 
 Pin PE2(GPIOE,GPIO_Pin::PIN_2);
 Pin PE3(GPIOE,GPIO_Pin::PIN_3);
@@ -137,15 +137,6 @@ void Pin::inscribe(Pin& pin, Operation_Mode mode){
 	pin.mode = mode;
 }
 
-void Pin::unregister(Pin& pin){
-	pin.mode = Operation_Mode::NOT_USED;
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Mode =  GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
-}
-
 void Pin::start(){
 	GPIO_InitTypeDef GPIO_InitStruct;
 	__HAL_RCC_GPIOB_CLK_ENABLE();
@@ -155,6 +146,7 @@ void Pin::start(){
 	__HAL_RCC_GPIOE_CLK_ENABLE();
 	__HAL_RCC_GPIOF_CLK_ENABLE();
 	__HAL_RCC_GPIOG_CLK_ENABLE();
+
 	for(Pin& pin : Pin::pinVector){
 		GPIO_InitStruct = {0};
 		GPIO_InitStruct.Pin = pin.gpio_pin;

@@ -2,7 +2,7 @@
  * EXTI.cpp
  *
  *  Created on: Nov 5, 2022
- *      Author: aleja
+ *      Author: alejandro 
  */
 
 #include "EXTI/EXTI.hpp"
@@ -31,7 +31,7 @@ optional<uint8_t> ExternalInterrupt::inscribe(Pin& pin, function<void()>&& actio
 
 void ExternalInterrupt::turn_on(uint8_t id) {
 	if (not service_ids.contains(id)) {
-		return; // TODO error handler
+		return; //TODO: error handler
 	}
 
 	Instance& instance = instances[service_ids[id].gpio_pin];
@@ -40,12 +40,9 @@ void ExternalInterrupt::turn_on(uint8_t id) {
 
 optional<bool> ExternalInterrupt::get_pin_value(uint8_t id) {
 	if (not service_ids.contains(id)) {
-		return nullopt; // TODO error handler
+		return nullopt; //TODO: error handler
 	}
 
 	Pin& pin = service_ids[id];
 	return HAL_GPIO_ReadPin(GPIO_PORT, pin.gpio_pin);
 }
-
-
-

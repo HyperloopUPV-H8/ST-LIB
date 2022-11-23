@@ -14,7 +14,6 @@ public:
 	static forward_list<uint8_t> id_manager;
 
 	static uint8_t inscribe(Pin& pin);
-	static void unregister(uint8_t id);
 	static optional<PinState> read_pin_state(uint8_t id);
 };
 #endif

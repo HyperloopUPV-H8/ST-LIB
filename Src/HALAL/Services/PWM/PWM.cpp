@@ -2,15 +2,16 @@
  * PWM_Module.cpp
  *
  *  Created on: 19 oct. 2022
- *      Author: aleja
+ *      Author: alejandro
  */
 
 #include "PWM/PWM.hpp"
 
 optional<uint8_t> PWM::inscribe(Pin& pin){
-	if (!PWM::pin_timer_map.contains(pin)) {
-		return nullopt;
-	} 	// TODO error handling
+	if (not PWM::pin_timer_map.contains(pin)) {
+		return nullopt; //TODO: error handler
+	}
+
 	Pin::inscribe(pin, ALTERNATIVE);
 	uint8_t id = PWM::id_manager.front();
 	PWM::service_ids[id] = pin;
@@ -20,8 +21,8 @@ optional<uint8_t> PWM::inscribe(Pin& pin){
 
 optional<uint8_t> PWM::inscribe_negated(Pin& pin) {
 	if (not pin_timer_map_negated.contains(pin)) {
-		return nullopt;
-	} 	// TODO error handling
+		return nullopt; //TODO: error handler
+	} 	
 	Pin::inscribe(pin, ALTERNATIVE);
 	uint8_t id = PWM::id_manager.front();
 	PWM::service_ids_negated[id] = pin;
@@ -31,8 +32,8 @@ optional<uint8_t> PWM::inscribe_negated(Pin& pin) {
 
 optional<uint8_t> PWM::inscribe_dual(Pin& pin, Pin& pin_negated){
 	if (not PWM::pin_timer_map_dual.contains({pin, pin_negated})) {
-		return nullopt;
-	} 	// TODO error handling
+		return nullopt; //TODO: error handler
+	} 	
 	Pin::inscribe(pin, ALTERNATIVE);
 	Pin::inscribe(pin_negated, ALTERNATIVE);
 	uint8_t id = PWM::id_manager.front();
@@ -62,7 +63,7 @@ void PWM::turn_on(uint8_t id){
 	}
 
 	else {
-		// TODO error handling
+		//TODO: error handler
 	}
 }
 
@@ -87,13 +88,13 @@ void PWM::turn_off(uint8_t id){
 	}
 
 	else {
-		// TODO Error handling
+		//TODO: Error handler
 	}
 }
 
 void PWM::set_duty(uint8_t id, uint8_t duty_cycle) {
-	if (!(duty_cycle >= 0 && duty_cycle <= 100)) {
-		// TODO error handling
+	if (not (duty_cycle >= 0 && duty_cycle <= 100)) {
+		//TODO: error handler
 		return;
 	}
 
@@ -113,7 +114,7 @@ void PWM::set_duty(uint8_t id, uint8_t duty_cycle) {
 		tim_ch = PWM::pin_timer_map_dual[pin_pair];
 	}
 	else {
-		// TODO error handling
+		//TODO: error handler
 		return;
 	}
 	uint16_t raw_duty = round(__HAL_TIM_GET_AUTORELOAD(tim_ch.timer) / 100.0 * duty_cycle);

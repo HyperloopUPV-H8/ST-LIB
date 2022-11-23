@@ -28,7 +28,7 @@ optional<uint8_t> Encoder::inscribe(Pin& pin1, Pin& pin2){
 
 void Encoder::turn_on(uint8_t id){
 	if (not Encoder::service_ids.contains(id)) {
-		return; // TODO error handler
+		return; //TODO: error handler
 	}
 
 	TIM_HandleTypeDef* timer = pin_timer_map[service_ids[id]];
@@ -45,19 +45,19 @@ void Encoder::turn_on(uint8_t id){
 
 void Encoder::turn_off(uint8_t id){
 	if (not Encoder::service_ids.contains(id)) {
-		return; // TODO error handler
+		return; //TODO: error handler
 	}
 
 	TIM_HandleTypeDef* timer = pin_timer_map[service_ids[id]];
 
 	if (HAL_TIM_Encoder_Stop(timer, TIM_CHANNEL_ALL) != HAL_OK) {
-		// TODO: Exception handle, Warning (Error stopping encoder)
+		//TODO: Exception handle, Warning (Error stopping encoder)
 	}
 }
 
 void Encoder::reset(uint8_t id){
 	if (not Encoder::service_ids.contains(id)) {
-		return; // TODO error handler
+		return; //TODO: error handler
 	}
 
 	TIM_HandleTypeDef* timer =  pin_timer_map[service_ids[id]];
@@ -67,7 +67,7 @@ void Encoder::reset(uint8_t id){
 
 optional<uint32_t> Encoder::get_counter(uint8_t id){
 	if (not Encoder::service_ids.contains(id)) {
-		return nullopt; // TODO error handler
+		return nullopt; //TODO: error handler
 	}
 
 	TIM_HandleTypeDef* timer = pin_timer_map[service_ids[id]];
@@ -77,7 +77,7 @@ optional<uint32_t> Encoder::get_counter(uint8_t id){
 
 optional<bool> Encoder::get_direction(uint8_t id){
 	if (not Encoder::service_ids.contains(id)) {
-		return nullopt; // TODO error handler
+		return nullopt; //TODO: error handler
 	}
 
 	TIM_HandleTypeDef* timer =  pin_timer_map[service_ids[id]];

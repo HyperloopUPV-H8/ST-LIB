@@ -2,7 +2,7 @@
  * InputCapture.hpp
  *
  *  Created on: 30 oct. 2022
- *      Author: aleja
+ *      Author: alejandro 
  */
 
 #pragma once

@@ -2,7 +2,7 @@
  * Pin.hpp
  *
  *  Created on: 19 oct. 2022
- *      Author: stefa
+ *      Author: stefan
  */
 #pragma once
 #include "stm32h7xx_hal.h"
@@ -51,7 +51,6 @@ public:
 	Pin();
 	Pin(GPIO_TypeDef* port, GPIO_Pin pin);
 	static void inscribe(Pin& pin, Operation_Mode mode);
-	static void unregister(Pin& pin);
 	static void start();
 
 	bool operator== (const Pin &other) const {

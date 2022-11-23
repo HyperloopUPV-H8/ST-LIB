@@ -39,7 +39,7 @@ optional<uint8_t> InputCapture::inscribe(Pin& pin){
 
 void InputCapture::turn_on(uint8_t id){
 	if (not instances.contains(id)) {
-		return; // Error Handler
+		return; //TODO: Error Handler
 	}
 	Instance instance = instances[id];
 	HAL_TIM_IC_Start_IT(instance.timer, instance.channel_rising);
@@ -48,7 +48,7 @@ void InputCapture::turn_on(uint8_t id){
 
 void InputCapture::turn_off(uint8_t id){
 	if (not instances.contains(id)) {
-		return; // Error Handler
+		return; //TODO: Error Handler
 	}
 	Instance instance = instances[id];
 	HAL_TIM_IC_Stop_IT(instance.timer, instance.channel_rising);
@@ -57,7 +57,7 @@ void InputCapture::turn_off(uint8_t id){
 
 optional<uint32_t> InputCapture::read_frequency(uint8_t id) {
 	if (not instances.contains(id)) {
-		return nullopt; // Error Handler
+		return nullopt; //TODO: Error Handler
 	}
 	Instance instance = instances[id];
 	return instance.frequency;
@@ -65,7 +65,7 @@ optional<uint32_t> InputCapture::read_frequency(uint8_t id) {
 
 optional<uint8_t> InputCapture::read_duty_cycle(uint8_t id) {
 	if (not instances.contains(id)) {
-		return nullopt; // Error Handler
+		return nullopt; //TODO: Error Handler
 	}
 	Instance instance = instances[id];
 	return instance.duty_cycle;

@@ -2,7 +2,7 @@
  * ST-LIB-CORE.hpp
  *
  *  Created on: Nov 21, 2022
- *      Author: aleja
+ *      Author: alejandro 
  */
 
 #pragma once

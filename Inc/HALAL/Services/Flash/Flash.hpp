@@ -9,6 +9,7 @@
 #include "ST-LIB-CORE.hpp"
 
 #ifdef HAL_FLASH_MODULE_ENABLED
+
 #define FLASHWORD 8
 #define FLASH_START_ADDRESS 0x08000000
 #define FLASH_SECTOR0_START_ADDRESS 0x08000000
@@ -44,7 +45,7 @@
 	Then we can write on the variable using HAL:
 		HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&userConfig[index], someData);
 
-	More info: https://github.com/HyperloopUPV-H8/ST-LIB/issues/16
+	More info: https://github.com/HyperloopUPV-H8/ST-LIB/wiki/All-about-Flash-module
 */
 
 class Flash{
@@ -56,4 +57,5 @@ private:
 	static uint32_t get_sector(uint32_t address);
 	static uint32_t get_sector_starting_address(uint32_t sector);
 };
+
 #endif
