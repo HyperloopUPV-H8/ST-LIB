@@ -125,7 +125,11 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 	uint16_t id = Time::low_precision_ids.front();
 	Time::low_precision_ids.pop_front();
 
-	Time::Alarm alarm = { period_in_ms, low_precision_timer, func };
+	Time::Alarm alarm = {
+			.period = period_in_us,
+			.tim = tim,
+			.alarm = func
+	};
 	Time::low_precision_alarms_by_id[id] = alarm;
 	Time::high_precision_ids.push_front(id);
 
