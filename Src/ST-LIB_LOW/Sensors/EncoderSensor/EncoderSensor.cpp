@@ -32,7 +32,7 @@ void EncoderSensor::read(){
 	uint64_t clock_time = Time::get_global_tick();
 	
 	if(optional_counter && optional_direction){
-		time = time + ((int) clock_time - (int) last_clock_time) / CLOCK_FREQUENCY;
+		time = time + ((int)clock_time - (int)last_clock_time) / CLOCK_FREQUENCY;
 
 		*position= ((int) optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE;
 		double delta_time = time - times[0];
@@ -43,8 +43,7 @@ void EncoderSensor::read(){
 
 		*acceleration = (delta_speed) / (delta_time);
 
-		//if(time - times[N_FRAMES-1] >= FRAME_SIZE){EncoderSensor::update_arrays(time);}
-		if(true){EncoderSensor::update_arrays();}
+		if(time - times[N_FRAMES-1] >= FRAME_SIZE){EncoderSensor::update_arrays(time);}
 		last_clock_time = clock_time;
 	}
 	else{
