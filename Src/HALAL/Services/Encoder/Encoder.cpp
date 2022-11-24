@@ -66,7 +66,7 @@ void Encoder::reset_encoder(uint8_t id){
 
 	TIM_HandleTypeDef* timer =  Encoder::pin_timer_map[service_IDs[id]];
 
-	timer->Instance->CNT = 0;
+	timer->Instance->CNT = 32768;
 }
 
 optional<uint32_t> Encoder::get_encoder_counter(uint8_t id){
