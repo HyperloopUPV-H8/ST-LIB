@@ -64,7 +64,7 @@ public :
 	static uint64_t get_global_tick();
 
 	/**
-	* @brief Tries to register a high_precision_alarm that will execute a function on timeout
+	* @brief Tries to register a high_precision_alarm that will execute a function cyclically
 	* until unregistered.
 	*
 	* @param period_in_us period in microseconds until timeout.
@@ -76,8 +76,23 @@ public :
 
 	static bool unregister_high_precision_alarm(uint16_t id);
 
+	/**
+	* @brief Registers a low_precision_alarm that will execute a function cyclically until unregistered.
+	*
+	* @param period_in_ms period in milliseconds until timeout.
+	* @param func function to be executed on timeout.
+	* @return uint8_t Returns id of the alarm.
+	*/
 	static uint8_t register_low_precision_alarm(uint32_t period_in_ms, function<void()> func);
 	static bool unregister_low_precision_alarm(uint16_t id);
 
+	/**
+	* @brief Registers a low_precision_alarm, executes an action ONLY ONE TIME
+	* and unregisters the alarm.
+	*
+	* @param milliseconds time until the action is executed.
+	* @param func function to be executed on timeout.
+	* @return void
+	*/
 	static void set_timeout(int milliseconds, function<void()> callback);
 };
