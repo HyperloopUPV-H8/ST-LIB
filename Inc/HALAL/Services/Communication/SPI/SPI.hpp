@@ -14,11 +14,10 @@
 extern SPI_HandleTypeDef hspi3;
 
 /**
- * @brief SPI service class. Abstracts the use of the encoder with the HAL library.SPI service for SPI communication 
+ * @brief SPI service class. Abstracts the use of the SPI service of the HAL library.
  * 
  */
 class SPI{
-
 private:
 	/**
 	 * @brief Struct wich defines all data refering to SPI peripherals. It is 
@@ -44,7 +43,7 @@ private:
 	};
 
 public:
-	static forward_list<uint8_t> ID_manager;
+	static forward_list<uint8_t> id_manager;
 	
 	static unordered_map<uint8_t, SPI::Instance* > registered_spi;
 
@@ -61,18 +60,17 @@ public:
 	static SPI::Instance instance3;
 
 	/**
-	 * @brief This method register a new SPI.
+	 * @brief Registers a new SPI.
 	 * 
 	 * @param spi SPI peripheral to register.
 	 * @return uint8_t Id of the service.
 	 */
 	static uint8_t register_SPI(SPI::Peripheral& spi);
 
-	/**
-	 * @brief This method is used for transmit 1 SPIPacket of any size by DMA and
-	 * 		  interrupts. It handles the pakcet size automatically. In order to
-	 * 		  to send various packet in a row you must check if the spi is busy
-	 * 		  using the method is_busi().
+	/**@brief   Transmits 1 SPIPacket of any size by DMA and
+	 * 		  interrupts. Handles the packet size automatically. To
+	 * 		  to send various packets in a row you must check if the spi is busy
+	 * 		  using is_busy().
 	 * 
 	 * @param id Id of the SPI
 	 * @param packet Pakcet to be send
