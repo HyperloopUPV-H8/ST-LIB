@@ -127,6 +127,27 @@ map<Pin, ADC::Instance> ADC::available_instances = {
 		{PC3, Instance(&hadc3, 2, lptim3, DMAStream3)}
 };
 
+map<ADC_HandleTypeDef*, ADC::InitData> ADC::init_data_map = {
+		{&hadc1, InitData(
+			ADC1,
+			ADC_RESOLUTION_16B,
+			ADC_EXTERNALTRIG_LPTIM1_OUT,
+			{{ADC_CHANNEL_2, ADC_REGULAR_RANK_1}, {ADC_CHANNEL_3, ADC_REGULAR_RANK_2}}
+		)},
+		{&hadc2, InitData(
+			ADC2,
+			ADC_RESOLUTION_16B,
+			ADC_EXTERNALTRIG_LPTIM2_OUT,
+			{{ADC_CHANNEL_2, ADC_REGULAR_RANK_1}, {ADC_CHANNEL_3, ADC_REGULAR_RANK_2}}
+		)},
+		{&hadc3, InitData(
+			ADC3,
+			ADC_RESOLUTION_12B,
+			ADC_EXTERNALTRIG_LPTIM3_OUT,
+			{{ADC_CHANNEL_2, ADC_REGULAR_RANK_1}, {ADC_CHANNEL_3, ADC_REGULAR_RANK_2}}
+		)}
+};
+
 #endif
 
 /************************************************

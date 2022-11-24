@@ -45,6 +45,25 @@ public:
 	static void start();
 	static void turn_on(uint8_t id);
 	static optional<float> get_value(uint8_t id);
+
+private:
+	struct ChannelRank {
+		uint32_t channel;
+		uint32_t rank;
+	};
+
+	struct InitData {
+		ADC_TypeDef* adc;
+		uint32_t resolution;
+		uint32_t external_trigger;
+		vector<ChannelRank> channel_rank_vector;
+		InitData() = default;
+		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<ChannelRank> channel_rank_vector);
+	};
+
+
+	static void init(ADC_HandleTypeDef& adc_handle);
+	static map<ADC_HandleTypeDef*, InitData> init_data_map;
 };
 
 #endif
