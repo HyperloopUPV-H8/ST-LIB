@@ -27,34 +27,31 @@ private:
 	 * 		  
 	 */
 	struct Instance{
-		Pin SCK; /**< Clock pin. */  
-		Pin MOSI; /**< MOSI pin. */  
-		Pin MISO; /**< MISO pin. */  
-		Pin SS; /**< Slave select pin. */  
+		Pin SCK; /**< Clock pin. */
+		Pin MOSI; /**< MOSI pin. */
+		Pin MISO; /**< MISO pin. */
+		Pin SS; /**< Slave select pin. */
 		SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
-		optional<RawPacket> tx_buffer; /**< Transceive temporal buffer pin. */
-		bool receive_ready; /**< Receive value is ready to use pin. */  
-
+		bool receive_ready = false; /**< Receive value is ready to use pin. */
 	};
 
-private:
-
+	/**
+	 * @brief Enum which abstracts the use of the Instance struct to facilitate the mocking of the HALAL.Struct
+	 *
+	 */
 	enum Peripheral{
 		peripheral3 = 2,
 	};
 
 public:
-
-
-
 	static forward_list<uint8_t> ID_manager;
 	
 	static unordered_map<uint8_t, SPI::Instance* > registered_spi;
 
 	/**
-		 * @brief SPI 3 wrapper enum of the STM32H723.
-		 *
-		 */
+	 * @brief SPI 3 wrapper enum of the STM32H723.
+	 *
+	 */
 	static SPI::Peripheral spi3;
 
 	/**
@@ -101,7 +98,7 @@ public:
 	static bool receive_next_packet(uint8_t id, RawPacket& packet);
 
 	/**
-	 * @brief This method is used to check if the receive packet is ready.
+	 * @brief This method is used to check if the SPI receive operation has finished and data is ready.
 	 * 
 	 * @param id Id of the SPI
 	 * @return bool Return true if the packet is ready to use and false if not.
@@ -109,10 +106,10 @@ public:
 	static bool has_next_packet(uint8_t id);
 
 	/**
-	 * @brief This method is used to check if the SPI is busy.
+	 * @brief This method is used to check if the SPI transmit operations busy.
 	 * 
 	 * @param id Id of the SPI
-	 * @return bool Return true if the SPI is busy and false if not.
+	 * @return bool Return true if the SPI transmit operation is busy and false if not.
 	 */
 	static bool is_busy(uint8_t id);
 };
