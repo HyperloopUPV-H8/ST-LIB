@@ -126,8 +126,8 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 	Time::low_precision_ids.pop_front();
 
 	Time::Alarm alarm = {
-			.period = period_in_us,
-			.tim = tim,
+			.period = period_in_ms,
+			.tim = low_precision_timer,
 			.alarm = func
 	};
 	Time::low_precision_alarms_by_id[id] = alarm;
@@ -147,7 +147,7 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 }
 
 void Time::set_timeout(int milliseconds, function<void()> callback){
-	int id = Time::register_low_precision_alarm(millseconds, [&](){
+	int id = Time::register_low_precision_alarm(milliseconds, [&](){
 		callback();
 		Time::unregister_low_precision_alarm(id);
 	});
