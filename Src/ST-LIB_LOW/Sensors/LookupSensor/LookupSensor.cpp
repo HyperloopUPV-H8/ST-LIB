@@ -8,10 +8,14 @@ LookupSensor::LookupSensor(Pin pin, double *table, int table_size, double *value
 	optional<uint8_t> identification = ADC::inscribe(pin);
 	if(identification){
 		id = identification.value();
-		ADC::turn_on(id);
 	}else{
 		//TODO: errores de optional vacio aqui (por hacer)
+		id = 69;
 	}
+}
+
+void LookupSensor::start(){
+	ADC::turn_on(id);
 }
 
 void LookupSensor::read(){
@@ -25,6 +29,6 @@ void LookupSensor::read(){
 	}
 }
 
-uint8_t LookupSensor::getID(){
+uint8_t LookupSensor::get_id(){
 	return id;
 }

@@ -16,6 +16,10 @@ void DigitalSensor::exti_interruption(std::function<auto> action){
 
 }
 
+void DigitalSensor::start(){
+	//TODO: discuss if it needs start for consistency or not (doesnt have a use for it)
+}
+
 void DigitalSensor::read(){
 	optional<PinState> val = DigitalInput::read_pin_state(id);
 	if(val){
@@ -26,6 +30,6 @@ void DigitalSensor::read(){
 
 }
 
-uint8_t DigitalSensor::getID(){
+uint8_t DigitalSensor::get_id(){
 	return id;
 }

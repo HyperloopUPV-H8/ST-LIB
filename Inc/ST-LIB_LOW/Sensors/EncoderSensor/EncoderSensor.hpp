@@ -19,8 +19,9 @@
 class EncoderSensor : public Sensor<double>::Sensor{
 public:
 	EncoderSensor(Pin pin1, Pin pin2, double* position, double* speed, double* acceleration);
+	void start();
 	void read();
-	uint8_t getID();
+	uint8_t get_id();
 
 protected:
 	Pin pin1;

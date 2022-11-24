@@ -7,16 +7,20 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed
 	optional<uint8_t> identification = Encoder::register_encoder(pin1,pin2);
 	if(identification){
 		id = identification.value();
-		Encoder::reset_encoder(id);
-		Encoder::turn_on_encoder(id);
-		for(int i = 0; i < n_frames; i++){
-						counters[i] = 0;
-						times[i] = Time::get_global_tick();;
-					}
-		last_speed = *speed;
 	}else{
 		//TODO: Error handler, Error during register of encoder x
+		id = 69;
 	}
+}
+
+void EncoderSensor::start(){
+	Encoder::reset_encoder(id);
+	Encoder::turn_on_encoder(id);
+	for(int i = 0; i < n_frames; i++){
+		counters[i] = 0;
+		times[i] = Time::get_global_tick();;
+	}
+	last_speed = *speed;
 }
 
 void EncoderSensor::read(){
@@ -56,6 +60,6 @@ void EncoderSensor::read(){
 	}
 }
 
-uint8_t EncoderSensor::getID(){
+uint8_t EncoderSensor::get_id(){
 	return id;
 }
