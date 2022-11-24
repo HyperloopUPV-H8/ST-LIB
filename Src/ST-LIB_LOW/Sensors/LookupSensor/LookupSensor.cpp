@@ -9,7 +9,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, int table_size, double *value
 	if(identification){
 		id = identification.value();
 	}else{
-		//TODO: errores de optional vacio aqui (por hacer)
+		//TODO: add Error handler for register here (register returns empty optional)
 		id = 69;
 	}
 }
@@ -22,10 +22,10 @@ void LookupSensor::read(){
 	optional<float> val = ADC::get_value(id);
 	if(val){
 		int table_index = (int)(val.value() * table_size / reference_voltage);
-		if(table_index >= table_size){table_index = table_size - 1;} //temas de redondeo
+		if(table_index >= table_size){table_index = table_size - 1;}
 		*value = table[table_index];
 	}else{
-		//TODO: errores de optional vacio aqui (por hacer)
+		//TODO: add Error handler for read here (read returns empty optional)
 	}
 }
 

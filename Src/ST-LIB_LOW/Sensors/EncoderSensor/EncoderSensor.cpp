@@ -8,7 +8,7 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed
 	if(identification){
 		id = identification.value();
 	}else{
-		//TODO: Error handler, Error during register of encoder x
+		//TODO: add Error handler for register here (register returns empty optional)
 		id = 69;
 	}
 }
@@ -56,7 +56,7 @@ void EncoderSensor::read(){
 		*acceleration = (*speed - last_speed) * clock_frequency * (n_frames-1) / (delta_time); //usa solo 1 frame (y el anterior) para el calculo
 	}
 	else{
-		//TODO: empty optional error handle 
+		//TODO: add Error handler for read here (read returns empty optional)
 	}
 }
 

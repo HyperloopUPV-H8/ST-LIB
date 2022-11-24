@@ -2,7 +2,6 @@
 #include "DigitalInput/DigitalInput.hpp"
 #include "EXTI/EXTI.hpp"
 
-//digitalInput doesn t return an optional in register. Instead, it returns the value directly (fault free?)
 DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInput::register_digital_input(pin)), value(value){
 }
 
@@ -11,7 +10,7 @@ void DigitalSensor::exti_interruption(std::function<auto> action){
 	if(identification){
 		ExternalInterrupt::turn_on_exti(identification.value());
 	}else{
-		//TODO: errores de optional vacio aqui (por hacer)
+		//TODO: add Error handler for register here (register returns empty optional)
 	}
 
 }
@@ -25,7 +24,7 @@ void DigitalSensor::read(){
 	if(val){
 		*value = val.value();
 	}else{
-		//TODO: errores de optional vacio aqui (por hacer)
+		//TODO: add Error handler for read here (read returns empty optional)
 	}
 
 }

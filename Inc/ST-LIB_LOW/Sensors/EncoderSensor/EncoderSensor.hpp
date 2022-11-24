@@ -9,10 +9,10 @@
 #pragma once
 #include "ST-LIB.hpp"
 #include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
-#define counter_distance 0.025
+#define counter_distance 0.025 //meters
 #define clock_frequency 300000000
-#define n_frames 5
-#define frame_size 0.01
+#define n_frames 5 //number of time frames captured (compares first to last)
+#define frame_size 0.01 //seconds
 
 
 

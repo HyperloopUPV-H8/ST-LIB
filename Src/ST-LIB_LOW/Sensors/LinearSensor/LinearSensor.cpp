@@ -7,7 +7,7 @@ LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 	if(identification){
 		id = identification.value();
 	}else{
-		//TODO: errores de optional vacio aqui (por hacer)
+		//TODO: add Error handler for register here (register returns empty optional)
 		id = 69;
 	}
 }
@@ -21,7 +21,7 @@ void LinearSensor::read(){
 	if(val){
 		*value = slope * (double) val.value() + offset;
 	}else{
-		//TODO: errores de optional vacio aqui (por hacer)
+		//TODO: add Error handler for read here (read returns empty optional)
 	}
 }
 
