@@ -43,7 +43,7 @@ void EncoderSensor::read(){
 
 		*acceleration = (delta_speed) / (delta_time);
 
-		if(time - times[N_FRAMES-1] >= FRAME_SIZE){EncoderSensor::update_arrays(time);}
+		if(time - times[N_FRAMES-1] >= FRAME_SIZE){EncoderSensor::update_arrays();}
 		last_clock_time = clock_time;
 	}
 	else{
