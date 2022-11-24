@@ -24,11 +24,6 @@
 #define MAX_12BIT 4095.0
 #define MAX_16BIT 65535.0
 
-// TODO: Will be moved into appropiate file when include structure is fixed.
-
-
-
-
 class ADC {
 public:
 	class Instance {
