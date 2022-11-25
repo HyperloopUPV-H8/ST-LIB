@@ -93,4 +93,5 @@ optional<float> ADC::get_value(uint8_t id) {
 	else {
 		return raw / MAX_16BIT * MAX_VOLTAGE;
 	}
+	return nullopt;
 }
