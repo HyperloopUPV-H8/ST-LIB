@@ -9,10 +9,10 @@
 #pragma once
 #include "ST-LIB.hpp"
 #include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
-#define COUNTER_DISTANCE 0.025 //meters
+#define COUNTER_DISTANCE_IN_METERS 0.025
 #define NANO_SECOND 1000000000.0
-#define N_FRAMES 5 //number of time frames captured (compares first to last)
-#define FRAME_SIZE 0.01 //seconds
+#define N_FRAMES 5
+#define FRAME_SIZE_IN_SECONDS 0.01
 #define START_COUNTER 32768
 
 #define CLOCK_FREQUENCY 275000000 //here goes the tim2 frequency

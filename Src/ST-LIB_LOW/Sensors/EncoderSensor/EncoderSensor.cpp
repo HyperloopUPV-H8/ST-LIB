@@ -21,7 +21,7 @@ void EncoderSensor::start(){
 	uint64_t clock_time = Time::get_global_tick();
 	for(int i = 0; i < N_FRAMES; i++){
 		positions[i] = 0.0;
-		times[i] = i*FRAME_SIZE - N_FRAMES*FRAME_SIZE + (((int) clock_time)/ NANO_SECOND);
+		times[i] = i*FRAME_SIZE_IN_SECONDS - N_FRAMES*FRAME_SIZE_IN_SECONDS + (((int) clock_time)/ NANO_SECOND);
 		speeds[i] = 0.0;
 	}
 	time = 0.0;
@@ -39,7 +39,7 @@ void EncoderSensor::read(){
 		time = time + delta_clock / NANO_SECOND;
 		last_clock_time = clock_time;
 
-		*position= ((int) optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE;
+		*position= ((int) optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE_IN_METERS;
 		double delta_time = time - times[0];
 		double delta_position = *position - positions[0];
 
@@ -48,7 +48,7 @@ void EncoderSensor::read(){
 
 		*acceleration = (delta_speed) / (delta_time);
 
-		if(time - times[N_FRAMES-1] >= FRAME_SIZE){EncoderSensor::update_arrays();}
+		if(time - times[N_FRAMES-1] >= FRAME_SIZE_IN_SECONDS){EncoderSensor::update_arrays();}
 	}
 	else{
 		//TODO: add Error handler for read here (read returns empty optional)
