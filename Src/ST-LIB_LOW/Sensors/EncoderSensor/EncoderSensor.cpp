@@ -26,6 +26,7 @@ void EncoderSensor::start(){
 	}
 	time = 0.0;
 	last_clock_time = clock_time;
+	clock_frequency = HAL_RCC_GetPCLK1Freq()*2; //TODO: Abstract this out of the HAL (HALAL method needed)
 }
 
 void EncoderSensor::read(){
@@ -35,7 +36,7 @@ void EncoderSensor::read(){
 	
 	if(optional_counter && optional_direction){
 		long int delta_clock = clock_time - last_clock_time;
-		if(clock_time < last_clock_time){delta_clock = clock_time + CLOCK_MAX_VALUE * NANO_SECOND / CLOCK_FREQUENCY - last_clock_time;}
+		if(clock_time < last_clock_time){delta_clock = clock_time + CLOCK_MAX_VALUE * NANO_SECOND / clock_frequency - last_clock_time;}
 		time = time + delta_clock / NANO_SECOND;
 		last_clock_time = clock_time;
 

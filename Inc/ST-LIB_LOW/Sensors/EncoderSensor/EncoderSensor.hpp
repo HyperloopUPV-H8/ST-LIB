@@ -14,8 +14,6 @@
 #define N_FRAMES 5
 #define FRAME_SIZE_IN_SECONDS 0.01
 #define START_COUNTER 32768
-
-#define CLOCK_FREQUENCY 275000000 //here goes the tim2 frequency
 #define CLOCK_MAX_VALUE 4294967295 //here goes the tim2 counter period
 
 
@@ -40,6 +38,7 @@ protected:
 	double times[N_FRAMES];
 	double speeds[N_FRAMES];
 	uint64_t last_clock_time;
+	uint32_t clock_frequency = 275000000;
 
 private:
 	void update_arrays();
