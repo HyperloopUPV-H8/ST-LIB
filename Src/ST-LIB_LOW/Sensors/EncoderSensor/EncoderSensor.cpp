@@ -36,7 +36,9 @@ void EncoderSensor::read(){
 	
 	if(optional_counter && optional_direction){
 		long int delta_clock = clock_time - last_clock_time;
-		if(clock_time < last_clock_time){delta_clock = clock_time + CLOCK_MAX_VALUE * NANO_SECOND / clock_frequency - last_clock_time;}
+		if(clock_time < last_clock_time){ //overflow handle
+			delta_clock = clock_time + CLOCK_MAX_VALUE * NANO_SECOND / clock_frequency - last_clock_time;
+		}
 		time = time + delta_clock / NANO_SECOND;
 		last_clock_time = clock_time;
 
