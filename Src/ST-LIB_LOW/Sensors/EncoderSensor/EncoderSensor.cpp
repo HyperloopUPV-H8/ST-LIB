@@ -64,7 +64,7 @@ uint8_t EncoderSensor::get_id(){
 
 
 void EncoderSensor::get_arrays(double ret[][N_FRAMES]){
-	for(int n = 0; n < 4; n++){
+	for(int n = 0; n < 3; n++){
 		for(int i = 0; i < N_FRAMES; i++){
 			if(n == 0)
 				ret[n][i] = positions[i];
