@@ -32,6 +32,7 @@ void EncoderSensor::read(){
 	uint64_t clock_time = Time::get_global_tick();
 	
 	if(optional_counter && optional_direction){
+		if(clock_time < last_clock_time){last_clock_time = clock_time;}
 		time = time + ((int)clock_time - (int)last_clock_time) / CLOCK_FREQUENCY;
 
 		*position= ((int) optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE;
