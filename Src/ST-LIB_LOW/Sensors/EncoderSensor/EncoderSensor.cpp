@@ -2,6 +2,8 @@
 #include "Encoder/Encoder.hpp"
 #include "Time/Time.hpp"
 
+double d = 0.0;
+
 EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed, double *acceleration)
 : position(position), speed(speed), acceleration(acceleration){
 	optional<uint8_t> identification = Encoder::register_encoder(pin1,pin2);
@@ -19,7 +21,7 @@ void EncoderSensor::start(){
 	uint64_t clock_time = Time::get_global_tick();
 	for(int i = 0; i < N_FRAMES; i++){
 		positions[i] = 0.0;
-		times[i] = i*FRAME_SIZE - N_FRAMES*FRAME_SIZE + (((int) clock_time)/ CLOCK_FREQUENCY);
+		times[i] = i*FRAME_SIZE - N_FRAMES*FRAME_SIZE + (((int) clock_time)/ NANO_SECOND);
 		speeds[i] = 0.0;
 	}
 	time = 0.0;
@@ -32,8 +34,10 @@ void EncoderSensor::read(){
 	uint64_t clock_time = Time::get_global_tick();
 	
 	if(optional_counter && optional_direction){
-		if(clock_time < last_clock_time){last_clock_time = clock_time;}
-		time = time + ((int)clock_time - (int)last_clock_time) / CLOCK_FREQUENCY;
+		long int delta_clock = clock_time - last_clock_time;
+		if(clock_time < last_clock_time){delta_clock = clock_time + CLOCK_MAX_VALUE * NANO_SECOND / CLOCK_FREQUENCY - last_clock_time;}
+		time = time + delta_clock / NANO_SECOND;
+		last_clock_time = clock_time;
 
 		*position= ((int) optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE;
 		double delta_time = time - times[0];
@@ -45,7 +49,6 @@ void EncoderSensor::read(){
 		*acceleration = (delta_speed) / (delta_time);
 
 		if(time - times[N_FRAMES-1] >= FRAME_SIZE){EncoderSensor::update_arrays();}
-		last_clock_time = clock_time;
 	}
 	else{
 		//TODO: add Error handler for read here (read returns empty optional)
@@ -57,10 +60,8 @@ uint8_t EncoderSensor::get_id(){
 }
 
 
-double** EncoderSensor::get_arrays(){
-	double **ret = new double*[3];
-	for(int n = 0; n < 3; n++){
-		ret[n] = new double[N_FRAMES];
+void EncoderSensor::get_arrays(double ret[][N_FRAMES]){
+	for(int n = 0; n < 4; n++){
 		for(int i = 0; i < N_FRAMES; i++){
 			if(n == 0)
 				ret[n][i] = positions[i];
@@ -70,7 +71,6 @@ double** EncoderSensor::get_arrays(){
 				ret[n][i] = speeds[i];
 		}
 	}
-	return ret;
 }
 
 void EncoderSensor::update_arrays(){

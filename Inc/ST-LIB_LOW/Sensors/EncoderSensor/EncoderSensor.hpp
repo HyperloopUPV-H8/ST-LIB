@@ -10,10 +10,13 @@
 #include "ST-LIB.hpp"
 #include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
 #define COUNTER_DISTANCE 0.025 //meters
-#define CLOCK_FREQUENCY 1000000000.0
+#define NANO_SECOND 1000000000.0
 #define N_FRAMES 5 //number of time frames captured (compares first to last)
 #define FRAME_SIZE 0.01 //seconds
 #define START_COUNTER 32768
+
+#define CLOCK_FREQUENCY 275000000 //here goes the tim2 frequency
+#define CLOCK_MAX_VALUE 4294967295 //here goes the tim2 counter period
 
 
 
@@ -23,7 +26,7 @@ public:
 	void start();
 	void read();
 	uint8_t get_id();
-	double** get_arrays();
+	void get_arrays(double ret[][N_FRAMES]);
 
 protected:
 	Pin pin1;
