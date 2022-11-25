@@ -21,7 +21,7 @@ void LookupSensor::start(){
 void LookupSensor::read(){
 	optional<float> val = ADC::get_value(id);
 	if(val){
-		int table_index = (int)(val.value() * table_size / reference_voltage);
+		int table_index = (int)(val.value() * table_size / REFERENCE_VOLTAGE);
 		if(table_index >= table_size){table_index = table_size - 1;}
 		*value = table[table_index];
 	}else{

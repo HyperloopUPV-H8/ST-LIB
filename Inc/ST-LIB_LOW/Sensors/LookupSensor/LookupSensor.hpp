@@ -9,7 +9,7 @@
 #include "ST-LIB.hpp"
 #include "ST-LIB_LOW/Sensors/AnalogSensor/AnalogSensor.hpp"
 
-#define reference_voltage 3.3
+#define REFERENCE_VOLTAGE 3.3
 
 
 class LookupSensor : public AnalogSensor::AnalogSensor{
