@@ -8,7 +8,7 @@
 
 #pragma once
 #include "ST-LIB.hpp"
-#include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
+#include "Sensors/Sensor/Sensor.hpp"
 
 
 class AnalogSensor : public Sensor<double>::Sensor{
