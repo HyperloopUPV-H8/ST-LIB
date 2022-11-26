@@ -8,7 +8,7 @@
 #pragma once
 
 /**
- * @brief Raw data pakcet class. This class contains a pointer to the data stored
+ * @brief Raw data packet class. Contains a pointer to the data stored
  * 	 	  in bytes and the number of bytes.
  *
  */
@@ -22,8 +22,8 @@ private:
 
 public:
 	/**
-	 * @brief Construct a new RawPacket object. The constructor will handle automaticly
-	 * 		  the data type and size automatically.
+	 * @brief Constructs a new RawPacket object. The constructor will handle automatically
+	 * 		  the data type and size.
 	 *
 	 * @tparam Type Generic data type.
 	 * @param data Data to be stored in the packet.
@@ -37,7 +37,7 @@ public:
 	}
 
 	/**
-	 * @brief Construct a new RawPacket object. Create a RawPacket by passing an array
+	 * @brief Constructs a new RawPacket object by passing an array
 	 * 		  of any type and length.
 	 *
 	 * @tparam Type Generic data type.
@@ -52,7 +52,7 @@ public:
 	}
 
 	/**
-	 * @brief Destroy the RawPacket object.
+	 * @brief Deletes a RawPacket instance.
 	 *
 	 */
 	~RawPacket() {
@@ -61,7 +61,7 @@ public:
 	}
 
 	/**
-	 * @brief Get the data size in bytes.
+	 * @brief Gets the data size in bytes.
 	 *
 	 * @return uint32_t Returns the data size in bytes.
 	 */
