@@ -18,6 +18,15 @@ ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external
 ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data) :
 	handle(handle), dma_stream(dma_stream), timer(timer), init_data(init_data) {}
 
+bool ADC::Peripheral::is_registered() {
+	if (init_data.channels.size() == 0) {
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
 ADC::Instance::Instance(ADC::Peripheral* peripheral, uint32_t channel) :
 		peripheral(peripheral), channel(channel) {}
 

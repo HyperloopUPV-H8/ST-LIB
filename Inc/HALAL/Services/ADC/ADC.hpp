@@ -43,14 +43,7 @@ public:
 		Peripheral() = default;
 		Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data);
 
-		bool is_registered() {
-			if (init_data.channels.size() == 0) {
-				return false;
-			}
-			else {
-				return true;
-			}
-		}
+		bool is_registered();
 	};
 
 	class Instance {
