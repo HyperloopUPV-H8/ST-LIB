@@ -11,6 +11,7 @@
 
 #ifdef HAL_ADC_MODULE_ENABLED
 
+#define ADC_BUF_LEN 16
 #define LPTIM1_PERIOD 3000
 #define LPTIM2_PERIOD 3000
 #define LPTIM3_PERIOD 3000
@@ -28,7 +29,7 @@ public:
 		uint32_t external_trigger;
 		vector<uint32_t> channels;
 		InitData() = default;
-		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger);
+		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels);
 	};
 
 	class Peripheral {
@@ -37,14 +38,13 @@ public:
 		uint16_t* dma_stream;
 		LowPowerTimer timer;
 		InitData init_data;
-		map<Pin, Channel> available_pins;
 		bool is_on = false;
 
 		Peripheral() = default;
-		Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data, map<Pin, uint32_t>& available_pins);
+		Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data);
 
 		bool is_registered() {
-			if (init_data.channel_rank_vector.size() == 0) {
+			if (init_data.channels.size() == 0) {
 				return false;
 			}
 			else {
@@ -55,11 +55,12 @@ public:
 
 	class Instance {
 	public:
-		Peripheral peripheral;
-		uint8_t rank;
+		Peripheral* peripheral;
+		uint32_t channel;
+		uint32_t rank;
 
 		Instance() = default;
-		Instance(Peripheral& peripheral, uint8_t rank);
+		Instance(Peripheral* peripheral, uint32_t channel);
 	};
 
 	static map<Pin, Instance> available_instances;
