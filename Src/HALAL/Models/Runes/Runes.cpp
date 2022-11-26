@@ -73,46 +73,25 @@ uint16_t* adc_buf1;
 uint16_t* adc_buf2;
 uint16_t* adc_buf3;
 
-DMAStream DMAStream1 = DMAStream(adc_buf1);
 LowPowerTimer lptim1 = LowPowerTimer(&hlptim1, LPTIM1_PERIOD);
-
-DMAStream DMAStream2 = DMAStream(adc_buf2);
 LowPowerTimer lptim2 = LowPowerTimer(&hlptim2, LPTIM2_PERIOD);
-
-DMAStream DMAStream3 = DMAStream(adc_buf3);
 LowPowerTimer lptim3 = LowPowerTimer(&hlptim3, LPTIM3_PERIOD);
 
-map<Pin, ADC::Instance> ADC::available_instances = {
-		{PF11, Instance(&hadc1, 1, lptim1, DMAStream1)},
-		{PA6, Instance(&hadc1, 2, lptim1, DMAStream1)},
-		{PC4, Instance(&hadc1, 3, lptim1, DMAStream1)},
-		{PB1, Instance(&hadc1, 4, lptim1, DMAStream1)},
-		{PF13, Instance(&hadc2, 1, lptim2, DMAStream2)},
-		{PF14, Instance(&hadc2, 2, lptim2, DMAStream2)},
-		{PC2, Instance(&hadc3, 1, lptim3, DMAStream3)},
-		{PC3, Instance(&hadc3, 2, lptim3, DMAStream3)}
-};
+ADC::InitData init_data1 = ADC::InitData(ADC1, ADC_RESOLUTION_16B, ADC_EXTERNALTRIG_LPTIM1_OUT);
+ADC::InitData init_data2 = ADC::InitData(ADC2, ADC_RESOLUTION_16B, ADC_EXTERNALTRIG_LPTIM2_OUT);
+ADC::InitData init_data3 = ADC::InitData(ADC3, ADC_RESOLUTION_12B, ADC_EXTERNALTRIG_LPTIM3_OUT);
 
-map<ADC_HandleTypeDef*, ADC::InitData> ADC::init_data_map = {
-		{&hadc1, InitData(
-			ADC1,
-			ADC_RESOLUTION_16B,
-			ADC_EXTERNALTRIG_LPTIM1_OUT,
-			{{ADC_CHANNEL_2, ADC_REGULAR_RANK_1}, {ADC_CHANNEL_3, ADC_REGULAR_RANK_2}}
-		)},
-		{&hadc2, InitData(
-			ADC2,
-			ADC_RESOLUTION_16B,
-			ADC_EXTERNALTRIG_LPTIM2_OUT,
-			{{ADC_CHANNEL_2, ADC_REGULAR_RANK_1}, {ADC_CHANNEL_3, ADC_REGULAR_RANK_2}}
-		)},
-		{&hadc3, InitData(
-			ADC3,
-			ADC_RESOLUTION_12B,
-			ADC_EXTERNALTRIG_LPTIM3_OUT,
-			{{ADC_CHANNEL_2, ADC_REGULAR_RANK_1}, {ADC_CHANNEL_3, ADC_REGULAR_RANK_2}}
-		)}
-};
+map<Pin, uint32_t> available_pins1 = {
+		{PF11, TIM_CHANNEL_2},
+		{PA6, TIM_CHANNEL_3}};
+map<Pin, uint32_t> available_pins2 = {};
+map<Pin, uint32_t> available_pins3 = {};
+
+
+
+ADC::Peripheral adc1 = ADC::Peripheral(&hadc1, adc_buf1, hlptim1, init_data1, available_pins1);
+ADC::Peripheral adc2 = ADC::Peripheral(&hadc2, adc_buf2, hlptim2, init_data2, available_pins2);
+ADC::Peripheral adc3 = ADC::Peripheral(&hadc3, adc_buf3, hlptim3, init_data3, available_pins3);
 
 #endif
 

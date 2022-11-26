@@ -12,14 +12,17 @@ extern ADC_HandleTypeDef hadc3;
 forward_list<uint8_t> ADC::id_manager = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
 map<uint8_t, ADC::Instance> ADC::active_instances = {};
 
-ADC::Instance::Instance(ADC_HandleTypeDef* adc, uint8_t rank, LowPowerTimer& timer, DMAStream& dma_stream) :
-		adc(adc), rank(rank), timer(timer), dma_stream(dma_stream) {}
-
 ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<ChannelRank> channel_rank_vector) :
-		adc(adc), resolution(resolution), external_trigger(external_trigger), channel_rank_vector(channel_rank_vector) {}
+		adc(adc), resolution(resolution), external_trigger(external_trigger) {}
+
+ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer timer, InitData init_data, map<Pin, uint32_t>& available_pins) :
+	handle(handle), dma_stream(dma_stream), timer(timer), init_data(init_data) {}
+
+ADC::Instance::Instance(ADC::Peripheral& peripheral, uint8_t rank) :
+		peripheral(peripheral), rank(rank) {}
 
 optional<uint8_t> ADC::inscribe(Pin pin) {
-	if (not available_instances.contains(pin)) {
+	if (not available_pins.contains(pin)) {
 		return nullopt;
 	}
 
@@ -27,12 +30,15 @@ optional<uint8_t> ADC::inscribe(Pin pin) {
 	uint8_t id = id_manager.front();
 	active_instances[id] = available_instances[pin];
 	id_manager.pop_front();
+	available_pins.pop_front();
 	return id;
 }
 
 void ADC::start() {
-	for(auto adc_initinfo : init_data_map) {
-		ADC::init(*adc_initinfo.first);
+	for(Peripheral peripheral : peripherals) {
+		if (peripheral.is_registered()) {
+			ADC::init(peripheral);
+		}
 	}
 }
 
@@ -41,21 +47,21 @@ void ADC::turn_on(uint8_t id){
 		return;
 	}
 
-	DMAStream& dma_stream = active_instances[id].dma_stream;
-	if (dma_stream.is_on) {
+	Peripheral& peripheral = active_instances[id].peripheral;
+	if (peripheral.is_on) {
 		return;
 	}
 
-	uint32_t buffer_length = init_data_map[active_instances[id].adc].channel_rank_vector.size();
-	if (HAL_ADC_Start_DMA(active_instances[id].adc, (uint32_t*) dma_stream.buffer, buffer_length) != HAL_OK) {
+	uint32_t buffer_length = peripheral.init_data.channel_rank_vector.size();
+	if (HAL_ADC_Start_DMA(peripheral.handle, (uint32_t*) peripheral.dma_stream, buffer_length) != HAL_OK) {
 		return; //TODO: Error handler
 	}
 
-	LowPowerTimer& timer = active_instances[id].timer;
+	LowPowerTimer& timer = peripheral.timer;
 	if (HAL_LPTIM_TimeOut_Start_IT(timer.handle, timer.period, timer.period / 2) != HAL_OK) {
 		return; //TODO: Error handler
 	}
-	dma_stream.is_on = true;
+	peripheral.is_on = true;
 }
 
 optional<float> ADC::get_value(uint8_t id) {
@@ -64,8 +70,8 @@ optional<float> ADC::get_value(uint8_t id) {
 	}
 
 	Instance& instance = active_instances[id];
-	uint16_t& raw = instance.dma_stream.buffer[instance.rank-1];
-	if(instance.adc == &hadc3) {
+	uint16_t& raw = instance.peripheral.dma_stream[instance.rank-1];
+	if(instance.peripheral.handle == &hadc3) {
 		return raw / MAX_12BIT * MAX_VOLTAGE;
 	}
 	else {
@@ -73,12 +79,13 @@ optional<float> ADC::get_value(uint8_t id) {
 	}
 }
 
-void ADC::init(ADC_HandleTypeDef& adc_handle) {
+void ADC::init(Peripheral& peripheral) {
 
 
 	  ADC_MultiModeTypeDef multimode = {0};
 	  ADC_ChannelConfTypeDef sConfig = {0};
-	  ADC::InitData init_data = init_data_map[&adc_handle];
+	  ADC_HandleTypeDef& adc_handle = *peripheral.handle;
+	  InitData init_data = peripheral.init_data;
 
 	  adc_handle.Instance = init_data.adc;
 	  adc_handle.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
@@ -105,9 +112,10 @@ void ADC::init(ADC_HandleTypeDef& adc_handle) {
 	  }
 
 
-	  for(auto channel_rank : init_data.channel_rank_vector) {
-		  sConfig.Channel = channel_rank.channel;
-	  	  sConfig.Rank = channel_rank.rank;
+	  uint8_t counter = 0;
+	  for(uint32_t channel : peripheral.init_data.channels) {
+		  sConfig.Channel = channel;
+	  	  sConfig.Rank = ranks[counter];
 	  	  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
 	  	  sConfig.SingleDiff = ADC_SINGLE_ENDED;
 	  	  sConfig.OffsetNumber = ADC_OFFSET_NONE;
@@ -116,5 +124,15 @@ void ADC::init(ADC_HandleTypeDef& adc_handle) {
 	  	  if (HAL_ADC_ConfigChannel(&adc_handle, &sConfig) != HAL_OK) {
 	  		  //TODO: Error handler
 	  	  }
+	  	  counter++;
 	  }
+}
+
+optional<Pin> ADC::get_available_pin() {
+	if (available_pins.empty()) {
+		return nullopt;
+	}
+	Pin pin = available_pins.front();
+	return pin;
+
 }

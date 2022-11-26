@@ -7,7 +7,6 @@
 
 #pragma once
 #include "PinModel/Pin.hpp"
-#include "DMAStream/DMAStream.hpp"
 #include "LowPowerTimer/LowPowerTimer.hpp"
 
 #ifdef HAL_ADC_MODULE_ENABLED
@@ -22,19 +21,51 @@
 
 class ADC {
 public:
+	struct InitData {
+	public:
+		ADC_TypeDef* adc;
+		uint32_t resolution;
+		uint32_t external_trigger;
+		vector<uint32_t> channels;
+		InitData() = default;
+		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger);
+	};
+
+	class Peripheral {
+	public:
+		ADC_HandleTypeDef* handle;
+		uint16_t* dma_stream;
+		LowPowerTimer timer;
+		InitData init_data;
+		map<Pin, Channel> available_pins;
+		bool is_on = false;
+
+		Peripheral() = default;
+		Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data, map<Pin, uint32_t>& available_pins);
+
+		bool is_registered() {
+			if (init_data.channel_rank_vector.size() == 0) {
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
+	};
+
 	class Instance {
 	public:
-		ADC_HandleTypeDef* adc;
+		Peripheral peripheral;
 		uint8_t rank;
-		LowPowerTimer timer;
-		DMAStream dma_stream;
 
 		Instance() = default;
-		Instance(ADC_HandleTypeDef* adc, uint8_t rank, LowPowerTimer& timer, DMAStream& buffer);
+		Instance(Peripheral& peripheral, uint8_t rank);
 	};
 
 	static map<Pin, Instance> available_instances;
 	static map<uint8_t, Instance> active_instances;
+	static Peripheral peripherals[3];
+	static uint32_t ranks[16];
 	static forward_list<uint8_t> id_manager;
 
 	static optional<uint8_t> inscribe(Pin pin);
@@ -42,24 +73,11 @@ public:
 	static void turn_on(uint8_t id);
 	static optional<float> get_value(uint8_t id);
 
-private:
-	struct ChannelRank {
-		uint32_t channel;
-		uint32_t rank;
-	};
+	static optional<Pin> get_high_resolution_available_pin();
+	static optional<Pin> get_low_resolution_available_pin();
 
-	struct InitData {
-		ADC_TypeDef* adc;
-		uint32_t resolution;
-		uint32_t external_trigger;
-		vector<ChannelRank> channel_rank_vector;
-		InitData() = default;
-		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<ChannelRank> channel_rank_vector);
-	};
-
-
-	static void init(ADC_HandleTypeDef& adc_handle);
-	static map<ADC_HandleTypeDef*, InitData> init_data_map;
+	// private functions (erase this comment)
+	static void init(Peripheral& peripheral);
 };
 
 #endif
