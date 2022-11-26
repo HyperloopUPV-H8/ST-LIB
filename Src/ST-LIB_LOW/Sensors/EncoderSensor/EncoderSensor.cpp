@@ -2,8 +2,6 @@
 #include "Encoder/Encoder.hpp"
 #include "Time/Time.hpp"
 
-double d = 0.0;
-
 EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed, double *acceleration)
 : position(position), speed(speed), acceleration(acceleration){
 	optional<uint8_t> identification = Encoder::register_encoder(pin1,pin2);
