@@ -7,8 +7,8 @@
 #include "Communication/SPI/SPI.hpp"
 
 SPI::Instance SPI::instance3 = { .SCK = PC10, .MOSI = PB2, .MISO = PC11, .SS = PA4,
-								 .hspi = &hspi3
-								};
+                                 .hspi = &hspi3
+                               };
 
 SPI::Peripheral SPI::spi3 = SPI::Peripheral::peripheral3;
 
@@ -17,15 +17,15 @@ forward_list<uint8_t> SPI::id_manager = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 
 unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi;
 
 uint8_t SPI::register_SPI(SPI::Peripheral& spi){
-	SPI::Instance* spi_instance;
+    SPI::Instance* spi_instance;
 
-	switch(spi){
-		case SPI::Peripheral::peripheral3:
-		spi_instance = &SPI::instance3;
-		break;
-	}
+    switch(spi){
+        case SPI::Peripheral::peripheral3:
+        spi_instance = &SPI::instance3;
+        break;
+    }
 
-	Pin::register_pin(spi_instance->SCK, ALTERNATIVE);
+    Pin::register_pin(spi_instance->SCK, ALTERNATIVE);
     Pin::register_pin(spi_instance->MOSI, ALTERNATIVE);
     Pin::register_pin(spi_instance->MISO, ALTERNATIVE);
     Pin::register_pin(spi_instance->SS, ALTERNATIVE);
@@ -41,72 +41,72 @@ uint8_t SPI::register_SPI(SPI::Peripheral& spi){
 
 bool SPI::transmit_next_packet(uint8_t id, RawPacket& packet){
     if (!SPI::registered_spi.contains(id))
-    	return false; //TODO: Error handler
+        return false; //TODO: Error handler
 
     SPI::Instance* spi = SPI::registered_spi[id];
 
     if(spi->hspi->State == HAL_SPI_STATE_BUSY_TX)
-	   return false;
+       return false;
 
 
     if (HAL_SPI_Transmit_IT(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK){
-        	return false; //TODO: Warning, Error during transmision
+        return false; //TODO: Warning, Error during transmision
     }
 
     return true;
 }
 
 bool SPI::receive_next_packet(uint8_t id, RawPacket& packet){
-	if (!SPI::registered_spi.contains(id))
-		return false; //TODO: Error handler
+    if (!SPI::registered_spi.contains(id))
+        return false; //TODO: Error handler
 
-	SPI::Instance* spi = SPI::registered_spi[id];
+    SPI::Instance* spi = SPI::registered_spi[id];
 
     if(spi->hspi->State == HAL_SPI_STATE_BUSY_RX)
-	   return false;
+       return false;
 
     *packet.get_data() = 0;
 
-	if (HAL_SPI_Receive_DMA(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK) {
-		return false; //TODO: Warning, Error during receive
-	}
+    if (HAL_SPI_Receive_DMA(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK) {
+        return false; //TODO: Warning, Error during receive
+    }
 
-	spi->receive_ready = false;
-	return true;
+    spi->receive_ready = false;
+    return true;
 }
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef * hspi){
-	auto result = find_if(SPI::registered_spi.begin(), SPI::registered_spi.end(), [&](auto spi){return spi.second->hspi == hspi;});
+    auto result = find_if(SPI::registered_spi.begin(), SPI::registered_spi.end(), [&](auto spi){return spi.second->hspi == hspi;});
 
     if (result != SPI::registered_spi.end()) {
-    	(*result).second->receive_ready = true;
-	}else{
-		//TODO: Warning: Data receive form an unknown SPI
-	}
+        (*result).second->receive_ready = true;
+    }else{
+        //TODO: Warning: Data receive form an unknown SPI
+    }
 }
 
 bool SPI::has_next_packet(uint8_t id){
-	if (!SPI::registered_spi.contains(id))
-		return false; //TODO: Error handler
+    if (!SPI::registered_spi.contains(id))
+        return false; //TODO: Error handler
 
-	auto* spi = SPI::registered_spi[id];
+    auto* spi = SPI::registered_spi[id];
 
-	return spi->receive_ready;
+    return spi->receive_ready;
 }
 
 bool SPI::is_busy(uint8_t id){
-	if (!SPI::registered_spi.contains(id))
-		return false; //TODO: Error handler
+    if (!SPI::registered_spi.contains(id))
+        return false; //TODO: Error handler
 
-	SPI::Instance* spi = SPI::registered_spi[id];
+    SPI::Instance* spi = SPI::registered_spi[id];
 
-	if(spi->hspi->State == HAL_SPI_STATE_BUSY_TX)
-	   return true;
+    if(spi->hspi->State == HAL_SPI_STATE_BUSY_TX)
+       return true;
 
-	return false;
+    return false;
 }
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
-	//TODO: Fault, SPI error
-	return;
+    //TODO: Fault, SPI error
+    return;
 }
