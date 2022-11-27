@@ -29,18 +29,21 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim15;
 extern TIM_HandleTypeDef htim23;
 
-PWM::TimerInitData init_data_timer1 = PWM::TimerInitData(TIM1, 0, 65535);
+PWM::TimerInitData init_data_timer1 = PWM::TimerInitData(TIM1, 2750, 1000);
+PWM::TimerInitData init_data_timer15 = PWM::TimerInitData(TIM15, 0, 65535);
 
-PWM::TimerPeripheral timer1 = PWM::TimerPeripheral(&htim1, init_data_timer1);
 
-map<Pin, Instance> PWM::available_instances = {
-		{PE14, PWM::Instance(timer1, TIM_CHANNEL_4)}
+PWM::TimerPeripheral PWM::timer_peripherals[H723_TIMERS] = {
+		TimerPeripheral(&htim1, init_data_timer1),
+		TimerPeripheral(&htim15, init_data_timer15)};
+map<Pin, PWM::Instance> PWM::available_instances = {
+		{PE14, PWM::Instance(&timer_peripherals[0], TIM_CHANNEL_4, normal)}
 };
 
-map<Pin, TimerChannel> PWM::available_instances_negated = {};
+map<Pin, PWM::Instance> PWM::available_instances_negated = {};
 
-map<pair<Pin, Pin>, TimerChannel> PWM::available_instances_dual = {
-		{{PE4, PE5}, {&htim15, TIM_CHANNEL_1}}
+map<pair<Pin, Pin>, PWM::Instance> PWM::available_instances_dual = {
+		{{PE4, PE5}, PWM::Instance(&timer_peripherals[1], TIM_CHANNEL_1, dual)}
 };
 
 #endif
@@ -128,7 +131,7 @@ uint32_t ADC::ranks[16] = {
 #ifdef HAL_EXTI_MODULE_ENABLED
 
 map<uint16_t, ExternalInterrupt::Instance> ExternalInterrupt::instances = {
-	{PE7.gpio_pin, Instance()}
+	{PE0.gpio_pin, Instance()}
 };
 
 #endif

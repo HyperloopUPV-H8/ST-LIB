@@ -15,6 +15,9 @@ PWM::TimerInitData::TimerInitData(TIM_TypeDef* timer, uint32_t prescaler, uint32
 
 PWM::TimerPeripheral::TimerPeripheral(TIM_HandleTypeDef* handle, TimerInitData init_data) :
 		handle(handle), init_data(init_data) {}
+bool PWM::TimerPeripheral::is_registered() {
+	return init_data.channels.size();
+}
 
 PWM::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PWM::Mode mode) :
 		peripheral(peripheral), channel(channel), mode(mode) {}
@@ -28,6 +31,9 @@ optional<uint8_t> PWM::inscribe(Pin& pin){
 	uint8_t id = id_manager.front();
 	active_instances[id] = available_instances[pin];
 	id_manager.pop_front();
+
+	TimerInitData& init_data = active_instances[id].peripheral->init_data;
+	init_data.channels.push_back(active_instances[id].channel);
 	return id;
 }
 
@@ -39,6 +45,9 @@ optional<uint8_t> PWM::inscribe_negated(Pin& pin) {
 	uint8_t id = id_manager.front();
 	active_instances[id] = available_instances_negated[pin];
 	id_manager.pop_front();
+
+	TimerInitData& init_data = active_instances[id].peripheral->init_data;
+	init_data.channels.push_back(active_instances[id].channel);
  	return id;
 }
 
@@ -51,9 +60,19 @@ optional<uint8_t> PWM::inscribe_dual(Pin& pin, Pin& pin_negated){
 	uint8_t id = PWM::id_manager.front();
 	active_instances[id] = available_instances_dual[{pin, pin_negated}];
 	id_manager.pop_front();
+
+	TimerInitData& init_data = active_instances[id].peripheral->init_data;
+	init_data.channels.push_back(active_instances[id].channel);
 	return id;
 }
 
+void PWM::start() {
+	for(TimerPeripheral peripheral : timer_peripherals) {
+		if (peripheral.is_registered()) {
+			PWM::init(peripheral);
+		}
+	}
+}
 void PWM::turn_on(uint8_t id) {
 	if (not instance_exists(id)) {
 		//TODO: error handle
@@ -165,7 +184,7 @@ void PWM::init(TimerPeripheral& peripheral) {
 	if (HAL_TIMEx_ConfigBreakDeadTime(&tim_handle, &sBreakDeadTimeConfig) != HAL_OK) {
 		//TODO: Error Handler
 	}
-	HAL_TIM_MspPostInit(&tim_handle);
+	//HAL_TIM_MspPostInit(&tim_handle); I think it is unncecesary.
 }
 
 bool PWM::instance_exists(uint8_t id) {
