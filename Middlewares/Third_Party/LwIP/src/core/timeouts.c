@@ -393,6 +393,7 @@ sys_check_timeouts(void)
 
     /* Repeat until all expired timers have been called */
   } while (1);
+  SCB_CleanInvalidateDCache();
 }
 
 /** Rebase the timeout times to the current time.

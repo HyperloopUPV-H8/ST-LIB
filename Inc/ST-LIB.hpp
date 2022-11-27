@@ -1,11 +1,11 @@
 
 #pragma once
 #include "PinModel/Pin.hpp"
-//#include "DigitalOutput/DigitalOutput.hpp"
-//#include "DigitalInput/DigitalInput.hpp"
-//#include "Flash/Flash.hpp"
-//#include "Flash/FlashTests/Flash_Test.hpp"
-//#include "ADC/ADC.hpp"
-//#include "PWM/PWM.hpp"
+#include "DigitalOutput/DigitalOutput.hpp"
+#include "DigitalInput/DigitalInput.hpp"
+#include "Flash/Flash.hpp"
+#include "Flash/FlashTests/Flash_Test.hpp"
+#include "ADC/ADC.hpp"
+#include "PWM/PWM.hpp"
 #include "Communication/Ethernet/UDP/DatagramSocket.hpp"
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"

@@ -48,9 +48,7 @@
  * Include user defined options first. Anything not defined in these files
  * will be set to standard values. Override anything you don't like!
  */
-#ifdef __mx_lwip_H
 #include "lwipopts.h"
-#endif
 #include "lwip/debug.h"
 
 /**
@@ -356,7 +354,7 @@
  * bigger pool - WARNING: THIS MIGHT WASTE MEMORY but it can make a system more
  * reliable. */
 #if !defined MEM_USE_POOLS_TRY_BIGGER_POOL || defined __DOXYGEN__
-#define MEM_USE_POOLS_TRY_BIGGER_POOL   0
+#define MEM_USE_POOLS_TRY_BIGGER_POOL   1
 #endif
 
 /**
@@ -410,7 +408,7 @@
  * this should be set high.
  */
 #if !defined MEMP_NUM_PBUF || defined __DOXYGEN__
-#define MEMP_NUM_PBUF                   16
+#define MEMP_NUM_PBUF                   32
 #endif
 
 /**
@@ -451,7 +449,7 @@
  * (requires the LWIP_TCP option)
  */
 #if !defined MEMP_NUM_TCP_SEG || defined __DOXYGEN__
-#define MEMP_NUM_TCP_SEG                16
+#define MEMP_NUM_TCP_SEG                64
 #endif
 
 /**
@@ -581,7 +579,7 @@
  * PBUF_POOL_SIZE: the number of buffers in the pbuf pool.
  */
 #if !defined PBUF_POOL_SIZE || defined __DOXYGEN__
-#define PBUF_POOL_SIZE                  16
+#define PBUF_POOL_SIZE                  128
 #endif
 
 /** MEMP_NUM_API_MSG: the number of concurrently active calls to various
@@ -1292,7 +1290,7 @@
  * an upper limit on the MSS advertised by the remote host.
  */
 #if !defined TCP_MSS || defined __DOXYGEN__
-#define TCP_MSS                         536
+#define TCP_MSS                         1460
 #endif
 
 /**
@@ -1371,7 +1369,7 @@
  * Only valid for TCP_QUEUE_OOSEQ==1.
  */
 #if !defined TCP_OOSEQ_MAX_PBUFS || defined __DOXYGEN__
-#define TCP_OOSEQ_MAX_PBUFS             0
+#define TCP_OOSEQ_MAX_PBUFS             3
 #endif
 
 /**
@@ -1576,7 +1574,7 @@
  * small real-life targets. Some code like routing etc. can be left out.
  */
 #if !defined LWIP_SINGLE_NETIF || defined __DOXYGEN__
-#define LWIP_SINGLE_NETIF               0
+#define LWIP_SINGLE_NETIF               1
 #endif
 
 /**

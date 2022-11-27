@@ -3,6 +3,8 @@
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 
+#define PBUF_POOL_MEMORY_DESC_POSITION 8
+
 class DatagramSocket{
 public:
 
@@ -23,7 +25,7 @@ public:
 	~DatagramSocket();
 
 	template<class Type, class... Types>
-	void send(Packet<Type,Types...>& packet);
+	bool send(Packet<Type,Types...>& packet);
 
 	void close();
 
@@ -33,7 +35,7 @@ private:
 };
 
 template<class Type, class... Types>
-void DatagramSocket::send(Packet<Type, Types...> & packet){
+bool DatagramSocket::send(Packet<Type, Types...> & packet){
 
 	packet.build();
 
@@ -45,6 +47,8 @@ void DatagramSocket::send(Packet<Type, Types...> & packet){
 
 	pbuf_free(tx_buffer);
 
+	return true;
 }
+
 
 
