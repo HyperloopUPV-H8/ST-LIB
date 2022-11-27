@@ -2,12 +2,14 @@
  * PWM_Module.hpp
  *
  *  Created on: 19 oct. 2022
- *      Author: aleja
+ *      Author: alejandro 
  */
 
 #pragma once
-#include "ST-LIB.hpp"
+#include "PinModel/Pin.hpp"
+#include "TimerChannelModel/TimerChannel.hpp"
 
+#ifdef HAL_TIM_MODULE_ENABLED
 class PWM {
 public:
 	static map<uint8_t, Pin> service_ids;
@@ -19,15 +21,11 @@ public:
 
 	static forward_list<uint8_t> id_manager;
 
-	static optional<uint8_t> register_pwm(Pin& pin);
-	static optional<uint8_t> register_pwm_negated(Pin& pin);
-	static optional<uint8_t> register_pwm_dual(Pin& pin, Pin& pin_negated);
-
-	static void unregister_pwm(uint8_t id);
-
-	static void turn_on_pwm(uint8_t id);
-
-	static void turn_off_pwm(uint8_t id);
-
-	static void change_duty_cycle(uint8_t id, uint8_t duty_cicle);
+	static optional<uint8_t> inscribe(Pin& pin);
+	static optional<uint8_t> inscribe_negated(Pin& pin);
+	static optional<uint8_t> inscribe_dual(Pin& pin, Pin& pin_negated);
+	static void turn_on(uint8_t id);
+	static void turn_off(uint8_t id);
+	static void set_duty_cycle(uint8_t id, uint8_t duty_cicle);
 };
+#endif
