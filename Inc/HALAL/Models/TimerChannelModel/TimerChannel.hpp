@@ -2,7 +2,7 @@
  * TimerChannel.hpp
  *
  *  Created on: Nov 1, 2022
- *      Author: aleja
+ *      Author: alejandro 
  */
 
 #pragma once

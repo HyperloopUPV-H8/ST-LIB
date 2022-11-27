@@ -4,7 +4,7 @@
  *  Created on: Oct 20, 2022
  *      Author: Pablo
  */
-#include "../../../../../Inc/HALAL/Services/Flash/FlashTests/Flash_Test.hpp"
+#include "Flash/FlashTests/Flash_Test.hpp"
 
 #define PI 					3.1415
 #define E  					2.7183

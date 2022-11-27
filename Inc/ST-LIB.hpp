@@ -1,7 +1,5 @@
 #pragma once
 
-#include "PinModel/Pin.hpp"
-#include "TimerChannelModel/TimerChannel.hpp"
 #include "DigitalOutput/DigitalOutput.hpp"
 #include "DigitalInput/DigitalInput.hpp"
 #include "Flash/Flash.hpp"
