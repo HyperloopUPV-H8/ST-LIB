@@ -6,16 +6,22 @@
 
 void State::update() {
 	for (function<void()> action : actions) {
-		if (action != nullptr) {
+		if (action) {
 			action();
 		}
 	}
 }
 
-StateMachine::StateMachine(uint8_t initial_state) {
-	this->initial_state = initial_state;
-	current_state = initial_state;
+StateMachine::StateMachine(uint8_t initial_state) :
+	initial_state(initial_state), current_state(initial_state) {
+	states[initial_state] = State();
+}
 
+void StateMachine::add_state(uint8_t state) {
+	if (states.contains(state)) {
+		return;
+	}
+	states[state] = State();
 }
 
 void StateMachine::add_update_action(function<void()> action) {
@@ -51,7 +57,7 @@ void StateMachine::check_transitions() {
 
 void StateMachine::change_state(uint8_t new_state) {
 	for (auto const action : on_enter[current_state][new_state]) {
-		if (action != nullptr) {
+		if (action) {
 			action();
 		}
 	}
