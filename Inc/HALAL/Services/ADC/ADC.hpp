@@ -56,21 +56,18 @@ public:
 		Instance(Peripheral* peripheral, uint32_t channel);
 	};
 
-	static map<Pin, Instance> available_instances;
-	static map<uint8_t, Instance> active_instances;
-	static Peripheral peripherals[3];
-	static uint32_t ranks[16];
-	static forward_list<uint8_t> id_manager;
-
 	static optional<uint8_t> inscribe(Pin pin);
 	static void start();
 	static void turn_on(uint8_t id);
 	static optional<float> get_value(uint8_t id);
 
-	static optional<Pin> get_high_resolution_available_pin();
-	static optional<Pin> get_low_resolution_available_pin();
+private:
+	static uint32_t ranks[16];
+	static Peripheral peripherals[3];
+	static map<Pin, Instance> available_instances;
+	static map<uint8_t, Instance> active_instances;
+	static forward_list<uint8_t> id_manager;
 
-	// private functions (erase this comment)
 	static void init(Peripheral& peripheral);
 };
 

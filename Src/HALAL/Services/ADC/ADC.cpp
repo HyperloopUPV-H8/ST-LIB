@@ -19,12 +19,7 @@ ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, Low
 	handle(handle), dma_stream(dma_stream), timer(timer), init_data(init_data) {}
 
 bool ADC::Peripheral::is_registered() {
-	if (init_data.channels.size() == 0) {
-		return false;
-	}
-	else {
-		return true;
-	}
+	return init_data.channels.size();
 }
 
 ADC::Instance::Instance(ADC::Peripheral* peripheral, uint32_t channel) :
