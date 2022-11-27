@@ -60,11 +60,8 @@
 									<listOptionValue builtIn="false" value="../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
-<<<<<<< HEAD
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services}&quot;"/>
-=======
->>>>>>> HALAL
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1475030527" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -83,12 +80,9 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Device/ST/STM32H7xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Include}&quot;"/>
-<<<<<<< HEAD
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services}&quot;"/>
-=======
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
->>>>>>> HALAL
 								</option>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard.1092333469" name="Language standard" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard.value.gnupp20" valueType="enumerated"/>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.2042651219" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
@@ -185,11 +179,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services/}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
-<<<<<<< HEAD
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services}&quot;"/>
-=======
->>>>>>> HALAL
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1583550009" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -208,11 +199,8 @@
 									<listOptionValue builtIn="false" value="../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
-<<<<<<< HEAD
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services}&quot;"/>
-=======
->>>>>>> HALAL
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.640356923" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -225,12 +213,9 @@
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.includepaths.724629025" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
-<<<<<<< HEAD
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services}&quot;"/>
-=======
->>>>>>> HALAL
 								</option>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard.619270748" name="Language standard" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard.value.gnupp20" valueType="enumerated"/>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1603283963" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
