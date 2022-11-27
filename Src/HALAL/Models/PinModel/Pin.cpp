@@ -2,14 +2,14 @@
  * Pin.cpp
  *
  *  Created on: 19 oct. 2022
- *      Author: stefa
+ *      Author: stefan
  */
 
 #include "PinModel/Pin.hpp"
 
 Pin::Pin(){}
 
-Pin::Pin(GPIO_TypeDef* Port, GPIO_Pin Pin):port(Port),pin(Pin){}
+Pin::Pin(GPIO_TypeDef* port, GPIO_Pin gpio_pin) : port(port), gpio_pin(gpio_pin){}
 
 Pin PE2(GPIOE,GPIO_Pin::PIN_2);
 Pin PE3(GPIOE,GPIO_Pin::PIN_3);
@@ -130,20 +130,11 @@ PE4,PE5,PE6,PE7,PE8,PE9,PF0,PF1,PF10,PF11,PF12,PF13,PF14,PF15,PF2,PF3,PF4,PF5,PF
 PF8,PF9,PG0,PG1,PG10,PG11,PG12,PG13,PG14,PG15,PG2,PG3,PG4,PG5,PG6,PG7,PG8,PG9,PH0,PH1,
 PA2,PA3,PA4,PA5,PA6,PA7,PA8};
 
-void Pin::register_pin(Pin& pin, Operation_Mode mode){
+void Pin::inscribe(Pin& pin, Operation_Mode mode){
 	if(pin.mode != Operation_Mode::NOT_USED){
 		return;
 	}
 	pin.mode = mode;
-}
-
-void Pin::unregister_pin(Pin& pin){
-	pin.mode = Operation_Mode::NOT_USED;
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Mode =  GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
 }
 
 void Pin::start(){
@@ -155,9 +146,10 @@ void Pin::start(){
 	__HAL_RCC_GPIOE_CLK_ENABLE();
 	__HAL_RCC_GPIOF_CLK_ENABLE();
 	__HAL_RCC_GPIOG_CLK_ENABLE();
+
 	for(Pin& pin : Pin::pinVector){
 		GPIO_InitStruct = {0};
-		GPIO_InitStruct.Pin = pin.pin;
+		GPIO_InitStruct.Pin = pin.gpio_pin;
 		switch(pin.mode){
 
 		case Operation_Mode::NOT_USED:
