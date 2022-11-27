@@ -6,6 +6,7 @@
 #include "Flash/FlashTests/Flash_Test.hpp"
 #include "ADC/ADC.hpp"
 #include "PWM/PWM.hpp"
+#include "Communication/SPI/SPI.hpp"
 #include "Time/Time.hpp"
 #include "Clocks/Counter.hpp"
 #include "Clocks/Stopwatch.hpp"
