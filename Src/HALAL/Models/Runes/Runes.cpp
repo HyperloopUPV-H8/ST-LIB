@@ -29,14 +29,17 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim15;
 extern TIM_HandleTypeDef htim23;
 
-map<Pin, TimerChannel> PWM::pin_timer_map = {
-		{PE6, {&htim15, TIM_CHANNEL_2}},
-		{PF1, {&htim23, TIM_CHANNEL_2}}
+PWM::TimerInitData init_data_timer1 = PWM::TimerInitData(TIM1, 0, 65535);
+
+PWM::TimerPeripheral timer1 = PWM::TimerPeripheral(&htim1, init_data_timer1);
+
+map<Pin, Instance> PWM::available_instances = {
+		{PE14, PWM::Instance(timer1, TIM_CHANNEL_4)}
 };
 
-map<Pin, TimerChannel> PWM::pin_timer_map_negated = {};
+map<Pin, TimerChannel> PWM::available_instances_negated = {};
 
-map<pair<Pin, Pin>, TimerChannel> PWM::pin_timer_map_dual = {
+map<pair<Pin, Pin>, TimerChannel> PWM::available_instances_dual = {
 		{{PE4, PE5}, {&htim15, TIM_CHANNEL_1}}
 };
 
