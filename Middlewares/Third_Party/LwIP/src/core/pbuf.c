@@ -811,10 +811,16 @@ pbuf_clen(const struct pbuf *p)
   u16_t len;
 
   len = 0;
+  __disable_irq();
   while (p != NULL) {
     ++len;
-    p = p->next;
+    if(p->next > (uint32_t*)0x5000000){
+    	return len;
+    }
+	  p = p->next;
+
   }
+  __enable_irq();
   return len;
 }
 

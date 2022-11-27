@@ -1,7 +1,7 @@
 
 #include "IPV4/IPV4.hpp"
 
-IPV4::IPV4(string ip_address){
+IPV4::IPV4(string ip_address):string_ip(ip_address){
 	stringstream sstream(ip_address);
 	int ip_bytes[4];
 	for(int& byte : ip_bytes){

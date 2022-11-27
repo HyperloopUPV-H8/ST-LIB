@@ -5,17 +5,15 @@
  *      Author: stefan
  */
 #pragma once
-#include "ST-LIB.hpp"
+#include "PinModel/Pin.hpp"
 
-
+#ifdef HAL_GPIO_MODULE_ENABLED
 class DigitalInput{
 public:
-	static map<uint8_t,Pin> service_IDs;
-	static forward_list<uint8_t> ID_manager;
+	static map<uint8_t,Pin> service_ids;
+	static forward_list<uint8_t> id_manager;
 
-	static uint8_t register_digital_input(Pin& pin);
-
-	static void unregister_digital_input(uint8_t id);
-
+	static uint8_t inscribe(Pin& pin);
 	static optional<PinState> read_pin_state(uint8_t id);
 };
+#endif

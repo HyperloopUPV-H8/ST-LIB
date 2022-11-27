@@ -1,15 +1,32 @@
+/*
+ * EthernetNode.cpp
+ *
+ *  Created on: Nov 23, 2022
+ *      Author: stefa
+ */
+
 #pragma once
 
-#include "ST-LIB.hpp"
+#include "C++Utilities/CppUtils.hpp"
+#include "PinModel/Pin.hpp"
+#include "EthernetNode.hpp"
+#include "lwip.h"
+#include "ethernetif.h"
+
+#define ETHERNET_POOLS_BASE_ADDRESS 0x30000000
 
 class Ethernet{
+public:
+	static bool is_ready;
 
-	IPV4 local_ip;
+	static bool is_running;
 
-	uint32_t local_port;
+	static void inscribe();
 
-	static void register_eth(IPV4 local_ip, uint32_t local_port);
+	static void start();
 
 	static void update();
 
+private:
+	static void mpu_start();
 };
