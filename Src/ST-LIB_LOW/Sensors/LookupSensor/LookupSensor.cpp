@@ -10,7 +10,6 @@ LookupSensor::LookupSensor(Pin pin, double *table, int table_size, double *value
 		id = identification.value();
 	}else{
 		//TODO: add Error handler for register here (register returns empty optional)
-		id = 69;
 	}
 }
 
