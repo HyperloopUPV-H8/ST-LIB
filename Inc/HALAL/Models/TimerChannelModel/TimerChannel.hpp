@@ -7,6 +7,7 @@
 
 #pragma once
 
+#ifdef HAL_TIM_MODULE_ENABLED
 struct TimerChannel {
 	TIM_HandleTypeDef* timer;
 	uint32_t channel;
@@ -20,3 +21,4 @@ struct TimerChannel {
 		else { return timer < other.timer; }
 	}
 };
+#endif
