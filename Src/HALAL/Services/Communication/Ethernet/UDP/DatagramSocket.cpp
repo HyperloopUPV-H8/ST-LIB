@@ -16,13 +16,13 @@ DatagramSocket::DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_i
 
 		udp_control_block = udp_new();
 
-		err_t error = udp_bind(udp_control_block, &local_ip.ip_address, local_port);
+		err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
 
 		if(error == ERR_OK){
 
 		   udp_recv(udp_control_block, receive_callback, nullptr);
 
-		   udp_connect(udp_control_block, &remote_ip.ip_address, remote_port);
+		   udp_connect(udp_control_block, &remote_ip.address, remote_port);
 		}
 		else{
 
@@ -51,7 +51,6 @@ void DatagramSocket::close(){
 void DatagramSocket::receive_callback(void *args, struct udp_pcb *udp_control_block, struct pbuf *packet_buffer, const ip_addr_t *remote_address, u16_t port){
 
 	uint8_t* received_data = (uint8_t*)packet_buffer->payload;
-
 	uint16_t id = Packet<>::get_id(received_data);
 
 	if(Packet<>::save_by_id.contains(id)){

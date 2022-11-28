@@ -15,7 +15,7 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 	state = INACTIVE;
 	server_control_block = tcp_new();
 	tcp_nagle_disable(server_control_block);
-	err_t error = tcp_bind(server_control_block, &local_ip.ip_address, local_port);
+	err_t error = tcp_bind(server_control_block, &local_ip.address, local_port);
 
 	if(error == ERR_OK){
 		server_control_block = tcp_listen(server_control_block);

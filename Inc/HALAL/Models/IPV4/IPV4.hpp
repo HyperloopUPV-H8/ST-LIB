@@ -14,11 +14,10 @@
 
 class IPV4{
 public:
-	ip_addr_t ip_address;
-	string string_ip;
+	ip_addr_t address;
+	string string_address;
 
 	IPV4();
-
-	IPV4(string ip_address);
+	IPV4(string address);
 
 };

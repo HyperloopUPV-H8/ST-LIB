@@ -49,9 +49,9 @@ void Ethernet::start(string local_ip, string subnet_mask, string gateway){
 
 void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway){
 	if(!is_running && is_ready){
-		ipaddr = local_ip.ip_address;
-		netmask = subnet_mask.ip_address;
-		gw = gateway.ip_address;
+		ipaddr = local_ip.address;
+		netmask = subnet_mask.address;
+		gw = gateway.address;
 		MX_LWIP_Init();
 		is_running = true;
 	}else{
@@ -83,8 +83,7 @@ void Ethernet::update(){
 	if(is_running){
 		ethernetif_input(&gnetif);
 		sys_check_timeouts();
-		if (HAL_GetTick() - EthernetLinkTimer >= 100)
-		{
+		if (HAL_GetTick() - EthernetLinkTimer >= 100){
 		EthernetLinkTimer = HAL_GetTick();
 		ethernet_link_check_state(&gnetif);
 		}

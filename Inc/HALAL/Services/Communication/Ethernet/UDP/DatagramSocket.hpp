@@ -39,9 +39,9 @@ bool DatagramSocket::send(Packet<Type, Types...> & packet){
 
 	packet.build();
 
-	struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.bffr_size, PBUF_RAM);
+	struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.buffer_size, PBUF_RAM);
 
-	pbuf_take(tx_buffer, packet.bffr, packet.bffr_size);
+	pbuf_take(tx_buffer, packet.buffer, packet.buffer_size);
 
 	udp_send(udp_control_block, tx_buffer);
 

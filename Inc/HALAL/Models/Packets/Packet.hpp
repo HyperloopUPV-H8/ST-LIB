@@ -1,5 +1,4 @@
-#ifndef PACKET_STLIB_HPP
-#define PACKET_STLIB_HPP
+#pragma once
 
 #include "PacketValue.hpp"
 
@@ -13,14 +12,13 @@ class Packet<>
 public:
 	uint16_t id;
 	using value_type = empty_type;
-	static constexpr size_t nbr_of_values = 0;
+	static constexpr size_t number_of_values = 0;
 	using base_type = empty_type;
 	static map<decltype(Packet<>::id), function<void(uint8_t*)>> save_by_id;
 	static map<decltype(Packet<>::id), void(*)()> on_received;
 
 public:
 	Packet(int id): id(static_cast<decltype(this->id)>(id)){}
-
 	Packet() = default;
 
 	static decltype(id) get_id(uint8_t* new_data){
@@ -33,9 +31,9 @@ class Packet<Type, Types...> : public Packet<Types...>
 {
 public:
 	uint16_t id = 0;
-	uint8_t* bffr = nullptr;
+	uint8_t* buffer = nullptr;
 	using value_type = Type;
-	static constexpr size_t nbr_of_values = 1 + sizeof...(Types);
+	static constexpr size_t number_of_values = 1 + sizeof...(Types);
 	using base_type = Packet<Types...>;
 
 protected:
@@ -43,9 +41,7 @@ protected:
 
 public:
 	Packet();
-
 	Packet(int id);
-
 	Packet(int id, PacketValue<Type> value, PacketValue<Types>... args);
 
 	template<int I>
@@ -71,9 +67,8 @@ public:
 
     void save_data(uint8_t* new_data);
 
-
 public:
-	uint16_t bffr_size = sizeof(id);
+	uint16_t buffer_size = sizeof(id);
 	uint16_t ptr_loc = sizeof(id);
 	bool has_been_built = false;
 };
@@ -119,25 +114,25 @@ auto& Packet<Type, Types...>::get(){
 
 template<class Type, class... Types> template <size_t I = 0>
 void Packet<Type, Types...>::calculate_sizes() {
-	if constexpr (I == nbr_of_values) {
+	if constexpr (I == number_of_values) {
 		return;
 	}
-	else if constexpr (I < nbr_of_values) {
+	else if constexpr (I < number_of_values) {
 		auto elem = get<I>();
-		bffr_size += (uint16_t)elem.size();
+		buffer_size += (uint16_t)elem.size();
 		calculate_sizes<I + 1>();
 	}
 }
 
 template<class Type, class... Types> template <size_t I = 0>
 void Packet<Type, Types...>::fill_buffer() {
-	if constexpr (I == nbr_of_values) {
+	if constexpr (I == number_of_values) {
 		return;
 	}
-	else if constexpr (I < nbr_of_values) {
+	else if constexpr (I < number_of_values) {
 		auto elem = get<I>();
 		auto data = elem.convert();
-		memcpy(bffr + ptr_loc, &data, elem.size());
+		memcpy(buffer + ptr_loc, &data, elem.size());
 		ptr_loc += (uint16_t)elem.size();
 		fill_buffer<I + 1>();
 	}
@@ -147,21 +142,21 @@ template<class Type, class... Types>
 uint8_t* Packet<Type, Types...>::build() {
 	if (!has_been_built) {
 		calculate_sizes();
-		bffr = (uint8_t*)malloc(bffr_size);
-		memcpy(bffr, &id, sizeof(id));
+		buffer = (uint8_t*)malloc(buffer_size);
+		memcpy(buffer, &id, sizeof(id));
 	}
 	fill_buffer();
 	ptr_loc = sizeof(id);
 	has_been_built = true;
-	return this->bffr;
+	return this->buffer;
 }
 
 template<class Type, class... Types> template <size_t I = 0>
 void Packet<Type, Types...>::load_data(uint8_t* new_data) {
-    if constexpr (I == nbr_of_values) {
+    if constexpr (I == number_of_values) {
         return;
     }
-    else if constexpr (I < nbr_of_values) {
+    else if constexpr (I < number_of_values) {
         auto elem = get<I>();
         using cast_type = remove_reference<decltype(elem)>::type::value_type;
         cast_type* new_value = (cast_type*)(new_data+ptr_loc);
@@ -193,6 +188,3 @@ template<class Type, class... Types>
 decltype(Packet<Type,Types...>::id) Packet<Type, Types...>::get_id() {
     return this->id;
 }
-
-#endif
-

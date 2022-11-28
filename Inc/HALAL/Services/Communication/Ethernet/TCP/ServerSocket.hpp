@@ -34,13 +34,9 @@ public:
 
 
 	ServerSocket();
-
 	ServerSocket(IPV4 local_ip, uint32_t local_port);
-
 	ServerSocket(string local_ip, uint32_t local_port);
-
 	ServerSocket(EthernetNode local_node);
-
 	~ServerSocket();
 
 	void close();
@@ -55,13 +51,9 @@ public:
 private:
 
 	static err_t accept_callback(void* arg, struct tcp_pcb* incomming_control_block, err_t error);
-
 	static err_t receive_callback(void* arg, struct tcp_pcb* client_control_block, struct pbuf* packet_buffer, err_t error);
-
 	static void error_callback(void *arg, err_t error);
-
 	static err_t poll_callback(void *arg, struct tcp_pcb *client_control_block);
-
 	static err_t send_callback(void *arg, struct tcp_pcb *client_control_block, u16_t len);
 
 };
@@ -71,6 +63,7 @@ bool ServerSocket::send_order(Order<Type,Types...>& order){
 	if(state != ACCEPTED){
 		return false;
 	}
+
 	if((*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next == nullptr){
 		if(client_control_block->unsent != nullptr){
 			tcp_output(client_control_block);
@@ -79,10 +72,12 @@ bool ServerSocket::send_order(Order<Type,Types...>& order){
 		}
 		return false;
 	}
+
 	order.build();
 	if(order.bffr_size > tcp_sndbuf(client_control_block)){
 		return false;
 	}
+
 	tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.bffr_size, PBUF_POOL);
 	pbuf_take(tx_packet_buffer, order.bffr, order.bffr_size);
 	send();

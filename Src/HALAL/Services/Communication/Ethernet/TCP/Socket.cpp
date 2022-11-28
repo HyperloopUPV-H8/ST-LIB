@@ -13,12 +13,12 @@ Socket::Socket() = default;
 
 Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port):remote_ip(remote_ip), remote_port(remote_port){
 	connection_control_block = tcp_new();
-	tcp_bind(connection_control_block, &local_ip.ip_address, local_port);
+	tcp_bind(connection_control_block, &local_ip.address, local_port);
 	tcp_nagle_disable(connection_control_block);
 	state = INACTIVE;
 	EthernetNode remote_node(remote_ip, remote_port);
 	connecting_sockets[remote_node] = this;
-	tcp_connect(connection_control_block, &remote_ip.ip_address , remote_port, connect_callback);
+	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
 }
 
 Socket::Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port):Socket(IPV4(local_ip),local_port,IPV4(remote_ip),remote_port){}
@@ -48,7 +48,7 @@ void Socket::reconnect(){
 	if(!connecting_sockets.contains(remote_node)){
 		connecting_sockets[remote_node] = this;
 	}
-	tcp_connect(connection_control_block, &remote_ip.ip_address , remote_port, connect_callback);
+	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
 }
 
 
@@ -87,7 +87,7 @@ void Socket::process_data(){
 
 err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, err_t error){
 	IPV4 remote_ip;
-	remote_ip.ip_address = client_control_block->remote_ip;
+	remote_ip.address = client_control_block->remote_ip;
 	EthernetNode remote_node(remote_ip,client_control_block->remote_port);
 	if(connecting_sockets.contains(remote_node)){
 		Socket* socket = connecting_sockets[remote_node];
