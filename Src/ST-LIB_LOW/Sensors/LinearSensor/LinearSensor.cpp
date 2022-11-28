@@ -8,7 +8,6 @@ LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 		id = identification.value();
 	}else{
 		//TODO: add Error handler for register here (register returns empty optional)
-		id = 69;
 	}
 }
 
