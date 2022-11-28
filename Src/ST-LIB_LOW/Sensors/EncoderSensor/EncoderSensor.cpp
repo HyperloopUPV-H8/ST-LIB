@@ -81,10 +81,10 @@ void EncoderSensor::get_arrays(double ret[][N_FRAMES]){
 
 void EncoderSensor::update_arrays(){
 	for(int i = 1; i < N_FRAMES; i++){
-			positions[i-1] = positions[i];
-			times[i-1] = times[i];
-			speeds[i-1] = speeds[i];
-		}
+		positions[i-1] = positions[i];
+		times[i-1] = times[i];
+		speeds[i-1] = speeds[i];
+	}
 	positions[N_FRAMES-1] = *position;
 	times[N_FRAMES-1] = time;
 	speeds[N_FRAMES-1] = *speed;
