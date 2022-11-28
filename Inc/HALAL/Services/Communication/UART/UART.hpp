@@ -1,7 +1,7 @@
 /*
- * SPI.hpp
+ * UART.hpp
  *
- *  Created on: 5 nov. 2022
+ *  Created on: 28 nov. 2022
  *      Author: Pablo
  */
 
@@ -11,26 +11,24 @@
 #include "C++Utilities/CppUtils.hpp"
 #include "Packets/RawPacket.hpp"
 
-extern SPI_HandleTypeDef hspi3;
+extern UART_HandleTypeDef huart3;
 
 /**
- * @brief SPI service class. Abstracts the use of the SPI service of the HAL library.
+ * @brief UART service class. Abstracts the use of the UART service of the HAL library.
  * 
  */
-class SPI{
+class UART{
 private:
     /**
-     * @brief Struct wich defines all data refering to SPI peripherals. It is 
+     * @brief Struct which defines all data referring to UART peripherals. It is
      *        declared private in order to prevent unwanted use. Only 
-     *        predefined instaces should be used. 
+     *        predefined instances should be used.
      *           
      */
     struct Instance{
         Pin SCK; /**< Clock pin. */
         Pin MOSI; /**< MOSI pin. */
-        Pin MISO; /**< MISO pin. */
-        Pin SS; /**< Slave select pin. */
-        SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
+        UART_HandleTypeDef* huart;  /**< HAL UART struct. */
         bool receive_ready = false; /**< Receive value is ready to use pin. */
     };
 
@@ -45,35 +43,35 @@ private:
 public:
     static forward_list<uint8_t> id_manager;
     
-    static unordered_map<uint8_t, SPI::Instance* > registered_spi;
+    static unordered_map<uint8_t, UART::Instance* > registered_uart;
 
     /**
-     * @brief SPI 3 wrapper enum of the STM32H723.
+     * @brief UART 3 wrapper enum of the STM32H723.
      *
      */
-    static SPI::Peripheral spi3;
+    static UART::Peripheral spi3;
 
     /**
-     * @brief SPI 3 instance of the STM32H723.
+     * @brief UART 3 instance of the STM32H723.
      *
      */
-    static SPI::Instance instance3;
+    static UART::Instance instance3;
 
     /**
-     * @brief Registers a new SPI.
+     * @brief Registers a new UART.
      * 
-     * @param spi SPI peripheral to register.
+     * @param uart UART peripheral to register.
      * @return uint8_t Id of the service.
      */
-    static uint8_t inscribe(SPI::Peripheral& spi);
+    static uint8_t inscribe(UART::Peripheral& uart);
 
-    /**@brief	Transmits 1 SPIPacket of any size by DMA and
+    /**@brief	Transmits 1 RawPacket of any size by DMA and
      *          interrupts. Handles the packet size automatically. To
-     *          to send various packets in a row you must check if the spi is busy
+     *          to send various packets in a row you must check if the UART is busy
      *          using is_busy().
      * 
      * @param id Id of the SPI
-     * @param packet Pakcet to be send
+     * @param packet Packet to be send
      * @return bool Returns true if the request to send the packet has been done
      *            successfully. Returns false if the SPI is busy or a problem
      *            has occurred.
@@ -81,14 +79,14 @@ public:
     static bool transmit_next_packet(uint8_t id, RawPacket& packet);
 
     /**						
-     * @brief This method request the receive of a new SPIPacket of any size
+     * @brief This method request the receive of a new RawPacket of any size
      *        by DMA and interrupts. Thus the packet should not be used until
      *        you have checked that the value is already available using the 
      *        method has_next_paclet().
-     * @see   SPI::has_next_packet()
+     * @see   UART::has_next_packet()
      * 
-     * @param id Id of the SPI
-     * @param packet SPIPacket in which the data will be stored
+     * @param id Id of the UART
+     * @param packet RawPacket in which the data will be stored
      * @return bool Return true if the order to receive a new packet has been
      *            processed correctly. Return false if the SPI is busy or a
      *            problem has occurred.
@@ -96,18 +94,18 @@ public:
     static bool receive_next_packet(uint8_t id, RawPacket& packet);
 
     /**
-     * @brief This method is used to check if the SPI receive operation has finished and data is ready.
+     * @brief This method is used to check if the UART receive operation has finished and data is ready.
      * 
-     * @param id Id of the SPI
+     * @param id Id of the UART
      * @return bool Return true if the packet is ready to use and false if not.
      */
     static bool has_next_packet(uint8_t id);
 
     /**
-     * @brief This method is used to check if the SPI transmit operations busy.
+     * @brief This method is used to check if the UART transmit operations busy.
      * 
-     * @param id Id of the SPI
-     * @return bool Return true if the SPI transmit operation is busy and false if not.
+     * @param id Id of the UART
+     * @return bool Return true if the UART transmit operation is busy and false if not.
      */
     static bool is_busy(uint8_t id);
 };
