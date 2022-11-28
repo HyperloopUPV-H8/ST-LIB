@@ -5,7 +5,7 @@
  *      Author: Dani
  */
 
-#include <ST-LIB_LOW/Clocks/Counter.hpp>
+#include <Clocks/Counter.hpp>
 #include <Time/Time.hpp>
 
 void Counter::update(){
