@@ -23,7 +23,9 @@ public:
 
 	static void inscribe();
 
-	static void start();
+	static void start(string local_ip, string subnet_mask, string gateway);
+
+	static void start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway);
 
 	static void update();
 

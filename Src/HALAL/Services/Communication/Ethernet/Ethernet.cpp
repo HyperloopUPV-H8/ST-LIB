@@ -9,6 +9,7 @@
 
 extern uint32_t EthernetLinkTimer;
 extern struct netif gnetif;
+extern ip4_addr_t ipaddr,netmask,gw;
 
 bool Ethernet::is_ready = false;
 bool Ethernet::is_running = false;
@@ -42,10 +43,15 @@ void Ethernet::mpu_start(){
 	  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
 
+void Ethernet::start(string local_ip, string subnet_mask, string gateway){
+	start(IPV4(local_ip), IPV4(subnet_mask), IPV4(gateway));
+}
 
-
-void Ethernet::start(){
+void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway){
 	if(!is_running && is_ready){
+		ipaddr = local_ip.ip_address;
+		netmask = subnet_mask.ip_address;
+		gw = gateway.ip_address;
 		MX_LWIP_Init();
 		is_running = true;
 	}else{
@@ -55,15 +61,15 @@ void Ethernet::start(){
 
 void Ethernet::inscribe(){
 	if(!is_ready){
-		Pin::register_pin(PA1, ALTERNATIVE);
-		Pin::register_pin(PA2, ALTERNATIVE);
-		Pin::register_pin(PA7, ALTERNATIVE);
-		Pin::register_pin(PB13, ALTERNATIVE);
-		Pin::register_pin(PC1, ALTERNATIVE);
-		Pin::register_pin(PC4, ALTERNATIVE);
-		Pin::register_pin(PC5, ALTERNATIVE);
-		Pin::register_pin(PG11, ALTERNATIVE);
-		Pin::register_pin(PG13, ALTERNATIVE);
+		Pin::inscribe(PA1, ALTERNATIVE);
+		Pin::inscribe(PA2, ALTERNATIVE);
+		Pin::inscribe(PA7, ALTERNATIVE);
+		Pin::inscribe(PB13, ALTERNATIVE);
+		Pin::inscribe(PC1, ALTERNATIVE);
+		Pin::inscribe(PC4, ALTERNATIVE);
+		Pin::inscribe(PC5, ALTERNATIVE);
+		Pin::inscribe(PG11, ALTERNATIVE);
+		Pin::inscribe(PG13, ALTERNATIVE);
 		mpu_start();
 		SCB_EnableICache();
 		SCB_EnableDCache();
