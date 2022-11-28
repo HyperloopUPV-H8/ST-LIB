@@ -14,6 +14,11 @@ public:
 
 class StateMachine {
 public:
+	uint8_t initial_state;
+	uint8_t current_state;
+
+
+	StateMachine() = default;
 	StateMachine(uint8_t initial_state);
 	void add_state(uint8_t state);
 	void add_update_action(function<void()> action);
@@ -25,9 +30,6 @@ public:
 	void change_state(uint8_t new_state);
 
 private:
-	uint8_t initial_state;
-	uint8_t current_state;
-
 	map<uint8_t, State> states;
 	map<uint8_t, map<uint8_t, function<bool()>>> transitions;
 	map<uint8_t, map<uint8_t, vector<function<void()>>>> on_enter;

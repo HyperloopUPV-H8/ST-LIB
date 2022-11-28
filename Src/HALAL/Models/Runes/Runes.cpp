@@ -125,7 +125,7 @@ uint32_t ADC::ranks[16] = {
 #ifdef HAL_EXTI_MODULE_ENABLED
 
 map<uint16_t, ExternalInterrupt::Instance> ExternalInterrupt::instances = {
-	{PE7.gpio_pin, Instance()}
+	{PE0.gpio_pin, Instance()}
 };
 
 #endif
