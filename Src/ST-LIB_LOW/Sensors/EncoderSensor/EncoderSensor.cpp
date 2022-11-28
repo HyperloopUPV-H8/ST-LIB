@@ -29,10 +29,10 @@ void EncoderSensor::start(){
 
 void EncoderSensor::read(){
 	optional<uint32_t> optional_counter = Encoder::get_encoder_counter(id);
-	optional<bool> optional_direction = Encoder::get_encoder_direction(id);
+	optional<bool> direction = Encoder::get_encoder_direction(id);
 	uint64_t clock_time = Time::get_global_tick();
 	
-	if(optional_counter && optional_direction){
+	if(optional_counter && direction){
 		long int delta_clock = clock_time - last_clock_time;
 		if(clock_time < last_clock_time){ //overflow handle
 			delta_clock = clock_time + CLOCK_MAX_VALUE * NANO_SECOND / clock_frequency - last_clock_time;
