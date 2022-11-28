@@ -9,7 +9,6 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed
 		id = identification.value();
 	}else{
 		//TODO: add Error handler for register here (register returns empty optional)
-		id = 69;
 	}
 }
 
