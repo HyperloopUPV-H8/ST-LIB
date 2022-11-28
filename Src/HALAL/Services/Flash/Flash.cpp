@@ -51,7 +51,7 @@ bool Flash::write(uint32_t * source, uint32_t dest_addr, uint32_t number_of_word
 		source_pos++;
 	}
 
-	if (!Flash::erase(start_sector, end_sector)) {
+	if (not Flash::erase(start_sector, end_sector)) {
 		//TODO: Exception handle (Error while erasing for writing, aborting...)
 		return false;
 	}
