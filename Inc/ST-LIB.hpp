@@ -1,16 +1,4 @@
 #pragma once
 
-#include "PinModel/Pin.hpp"
-#include "TimerChannelModel/TimerChannel.hpp"
-#include "DigitalOutput/DigitalOutput.hpp"
-#include "DigitalInput/DigitalInput.hpp"
-#include "Flash/Flash.hpp"
-#include "Flash/FlashTests/Flash_Test.hpp"
-#include "ADC/ADC.hpp"
-#include "PWM/PWM.hpp"
-#include "Time/Time.hpp"
-#include "Clocks/Counter.hpp"
-#include "Clocks/Stopwatch.hpp"
-#include "InputCapture/InputCapture.hpp"
-#include "Encoder/Encoder.hpp"
-#include "EXTI/EXTI.hpp"
+#include "HALAL/HALAL.hpp" // Erase this when ST-LIB_LOW is finished.
+#include "ST-LIB_LOW.hpp" // Highest layer up to the moment
