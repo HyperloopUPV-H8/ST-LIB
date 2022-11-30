@@ -36,15 +36,11 @@ private:
 
 template<class Type, class... Types>
 bool DatagramSocket::send(Packet<Type, Types...> & packet){
-
 	packet.build();
 
 	struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.buffer_size, PBUF_RAM);
-
 	pbuf_take(tx_buffer, packet.buffer, packet.buffer_size);
-
 	udp_send(udp_control_block, tx_buffer);
-
 	pbuf_free(tx_buffer);
 
 	return true;

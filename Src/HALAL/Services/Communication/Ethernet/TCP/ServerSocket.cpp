@@ -62,6 +62,7 @@ void ServerSocket::process_data(){
 	if(Packet<>::save_by_id.contains(id)){
 		Packet<>::save_by_id[id](new_data);
 	}
+
 	if(Packet<>::on_received.contains(id)){
 		Packet<>::on_received[id]();
 	}
@@ -164,7 +165,6 @@ err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_bloc
 	if(server_socket != nullptr){
 		if(server_socket->tx_packet_buffer != nullptr){
 			server_socket->send();
-
 		}else{
 			if(server_socket->state == CLOSING){
 				server_socket->close();

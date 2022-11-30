@@ -80,6 +80,7 @@ void Socket::process_data(){
 	if(Packet<>::save_by_id.contains(id)){
 		Packet<>::save_by_id[id](new_data);
 	}
+	
 	if(Packet<>::on_received.contains(id)){
 		Packet<>::on_received[id]();
 	}

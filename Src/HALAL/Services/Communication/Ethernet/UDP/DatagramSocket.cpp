@@ -41,11 +41,8 @@ DatagramSocket::~DatagramSocket(){
 }
 
 void DatagramSocket::close(){
-
 	udp_disconnect(udp_control_block);
-
 	udp_remove(udp_control_block);
-
 }
 
 void DatagramSocket::receive_callback(void *args, struct udp_pcb *udp_control_block, struct pbuf *packet_buffer, const ip_addr_t *remote_address, u16_t port){
