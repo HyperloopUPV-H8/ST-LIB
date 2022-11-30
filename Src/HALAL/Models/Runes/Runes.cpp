@@ -21,7 +21,7 @@ map<pair<Pin, Pin>, TIM_HandleTypeDef*> Encoder::pin_timer_map = {
 #endif
 
 /************************************************
- *                     PWM
+ *                     PWMservice
  ***********************************************/
 #ifdef HAL_TIM_MODULE_ENABLED
 
@@ -29,21 +29,21 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim15;
 extern TIM_HandleTypeDef htim23;
 
-PWM::TimerInitData init_data_timer1 = PWM::TimerInitData(TIM1, GPIOE, 2750, 1000);
-PWM::TimerInitData init_data_timer15 = PWM::TimerInitData(TIM15, GPIOE, 0, 65535);
+PWMservice::TimerInitData init_data_timer1 = PWMservice::TimerInitData(TIM1, GPIOE, 2750, 1000);
+PWMservice::TimerInitData init_data_timer15 = PWMservice::TimerInitData(TIM15, GPIOE, 0, 65535);
 
 
-PWM::TimerPeripheral PWM::timer_peripherals[H723_TIMERS] = {
+PWMservice::TimerPeripheral PWMservice::timer_peripherals[H723_TIMERS] = {
 		TimerPeripheral(&htim1, init_data_timer1),
 		TimerPeripheral(&htim15, init_data_timer15)};
-map<Pin, PWM::Instance> PWM::available_instances = {
-		{PE14, PWM::Instance(&timer_peripherals[0], TIM_CHANNEL_4, NORMAL)}
+map<Pin, PWMservice::Instance> PWMservice::available_instances = {
+		{PE14, PWMservice::Instance(&timer_peripherals[0], TIM_CHANNEL_4, NORMAL)}
 };
 
-map<Pin, PWM::Instance> PWM::available_instances_negated = {};
+map<Pin, PWMservice::Instance> PWMservice::available_instances_negated = {};
 
-map<pair<Pin, Pin>, PWM::Instance> PWM::available_instances_dual = {
-		{{PE4, PE5}, PWM::Instance(&timer_peripherals[1], TIM_CHANNEL_1, DUAL)}
+map<pair<Pin, Pin>, PWMservice::Instance> PWMservice::available_instances_dual = {
+		{{PE4, PE5}, PWMservice::Instance(&timer_peripherals[1], TIM_CHANNEL_1, DUAL)}
 };
 
 #endif
