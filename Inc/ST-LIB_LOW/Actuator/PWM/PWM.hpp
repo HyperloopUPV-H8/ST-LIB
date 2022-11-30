@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include "Services/PWM/PWM.hpp"
+#include "PWMservice/PWMservice.hpp"
 
-class PwmInstance {
+class PWM {
 public:
-	PwmInstance(Pin pin);
-	PwmInstance(Pin pin, Pin pin_negated);
+	PWM(Pin pin);
+	PWM(Pin pin, Pin pin_negated);
 
 	void turn_on();
 	void turn_off();
