@@ -16,7 +16,7 @@ forward_list<uint8_t> SPI::id_manager = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 
 
 unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi;
 
-uint8_t SPI::register_SPI(SPI::Peripheral& spi){
+uint8_t SPI::inscribe(SPI::Peripheral& spi){
     SPI::Instance* spi_instance;
 
     switch(spi){
@@ -25,10 +25,10 @@ uint8_t SPI::register_SPI(SPI::Peripheral& spi){
         break;
     }
 
-    Pin::register_pin(spi_instance->SCK, ALTERNATIVE);
-    Pin::register_pin(spi_instance->MOSI, ALTERNATIVE);
-    Pin::register_pin(spi_instance->MISO, ALTERNATIVE);
-    Pin::register_pin(spi_instance->SS, ALTERNATIVE);
+    Pin::inscribe(spi_instance->SCK, ALTERNATIVE);
+    Pin::inscribe(spi_instance->MOSI, ALTERNATIVE);
+    Pin::inscribe(spi_instance->MISO, ALTERNATIVE);
+    Pin::inscribe(spi_instance->SS, ALTERNATIVE);
 
     uint8_t id = SPI::id_manager.front();
 
