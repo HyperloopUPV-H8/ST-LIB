@@ -33,6 +33,7 @@ enum Operation_Mode{
 	INPUT,
 	OUTPUT,
 	ANALOG,
+	EXTERNAL_INTERRUPT,
 	ALTERNATIVE,
 };
 
