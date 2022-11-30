@@ -90,12 +90,15 @@ err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, 
 	IPV4 remote_ip;
 	remote_ip.address = client_control_block->remote_ip;
 	EthernetNode remote_node(remote_ip,client_control_block->remote_port);
+
 	if(connecting_sockets.contains(remote_node)){
 		Socket* socket = connecting_sockets[remote_node];
 		connecting_sockets.erase(remote_node);
-		tcp_nagle_disable(client_control_block);
+
 		socket->socket_control_block = client_control_block;
 		socket->state = CONNECTED;
+		
+		tcp_nagle_disable(client_control_block);
 		tcp_arg(client_control_block, socket);
 		tcp_recv(client_control_block, receive_callback);
 		tcp_poll(client_control_block, poll_callback,0);

@@ -15,13 +15,9 @@ public:
 	uint32_t remote_port;
 
 	DatagramSocket();
-
 	DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
-
 	DatagramSocket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port);
-
 	DatagramSocket(EthernetNode local_node, EthernetNode remote_node);
-
 	~DatagramSocket();
 
 	template<class Type, class... Types>
@@ -31,7 +27,7 @@ public:
 
 private:
 	static void receive_callback(void *args, struct udp_pcb *udp_control_block, struct pbuf *packet_buffer, const ip_addr_t *remote_address, u16_t port);
-
+	
 };
 
 template<class Type, class... Types>

@@ -93,20 +93,24 @@ void ServerSocket::send(){
 }
 
 err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control_block, err_t error){
-	tcp_setprio(incomming_control_block, priority);
-	priority++;
 	if(listening_sockets.contains(incomming_control_block->local_port)){
 		ServerSocket* server_socket = listening_sockets[incomming_control_block->local_port];
 		listening_sockets.erase(incomming_control_block->local_port);
-		tcp_nagle_disable(incomming_control_block);
-		tcp_arg(incomming_control_block, server_socket);
+
 		server_socket->state = ACCEPTED;
 		server_socket->client_control_block = incomming_control_block;
 		server_socket->tx_packet_buffer = nullptr;
+	
+		tcp_setprio(incomming_control_block, priority);
+		tcp_nagle_disable(incomming_control_block);
+		tcp_arg(incomming_control_block, server_socket);
 		tcp_recv(incomming_control_block, receive_callback);
 		tcp_sent(incomming_control_block, send_callback);
 		tcp_err(incomming_control_block, error_callback);
 		tcp_poll(incomming_control_block, poll_callback , 0);
+
+		priority++;
+
 		return ERR_OK;
 	}else
 		return ERROR;
