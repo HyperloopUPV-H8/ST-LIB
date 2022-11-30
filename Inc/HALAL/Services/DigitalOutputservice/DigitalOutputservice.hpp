@@ -8,7 +8,7 @@
 #include "PinModel/Pin.hpp"
 
 #ifdef HAL_GPIO_MODULE_ENABLED
-class DigitalOutput{
+class DigitalOutputservice{
 public:
 	static map<uint8_t,Pin> service_ids;
 	static forward_list<uint8_t> id_manager;

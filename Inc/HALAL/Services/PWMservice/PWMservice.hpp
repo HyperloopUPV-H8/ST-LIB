@@ -10,7 +10,7 @@
 #include "TimerChannelModel/TimerChannel.hpp"
 
 #ifdef HAL_TIM_MODULE_ENABLED
-class PWM {
+class PWMservice {
 public:
 	static map<uint8_t, Pin> service_ids;
 	static map<uint8_t, Pin> service_ids_negated;
