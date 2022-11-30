@@ -65,7 +65,7 @@ public:
      * @param spi SPI peripheral to register.
      * @return uint8_t Id of the service.
      */
-    static uint8_t register_SPI(SPI::Peripheral& spi);
+    static uint8_t inscribe(SPI::Peripheral& spi);
 
     /**@brief	Transmits 1 SPIPacket of any size by DMA and
      *          interrupts. Handles the packet size automatically. To
