@@ -17,9 +17,9 @@ class PWM {
 public:
 
 	enum Mode {
-		normal = 0,
-		negated = 1,
-		dual = 2
+		NORMAL = 0,
+		NEGATED = 1,
+		DUAL = 2
 	};
 	struct TimerInitData {
 	public:

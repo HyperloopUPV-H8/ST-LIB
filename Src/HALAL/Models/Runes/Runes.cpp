@@ -37,13 +37,13 @@ PWM::TimerPeripheral PWM::timer_peripherals[H723_TIMERS] = {
 		TimerPeripheral(&htim1, init_data_timer1),
 		TimerPeripheral(&htim15, init_data_timer15)};
 map<Pin, PWM::Instance> PWM::available_instances = {
-		{PE14, PWM::Instance(&timer_peripherals[0], TIM_CHANNEL_4, normal)}
+		{PE14, PWM::Instance(&timer_peripherals[0], TIM_CHANNEL_4, NORMAL)}
 };
 
 map<Pin, PWM::Instance> PWM::available_instances_negated = {};
 
 map<pair<Pin, Pin>, PWM::Instance> PWM::available_instances_dual = {
-		{{PE4, PE5}, PWM::Instance(&timer_peripherals[1], TIM_CHANNEL_1, dual)}
+		{{PE4, PE5}, PWM::Instance(&timer_peripherals[1], TIM_CHANNEL_1, DUAL)}
 };
 
 #endif

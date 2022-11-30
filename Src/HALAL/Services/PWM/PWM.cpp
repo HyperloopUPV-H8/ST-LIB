@@ -82,15 +82,15 @@ void PWM::turn_on(uint8_t id) {
 
 	Instance& instance = get_instance(id);
 
-	if (instance.mode == normal) {
+	if (instance.mode == NORMAL) {
 		HAL_TIM_PWM_Start(instance.peripheral->handle, instance.channel);
 	}
 
-	else if (instance.mode == negated) {
+	else if (instance.mode == NEGATED) {
 		HAL_TIMEx_PWMN_Start(instance.peripheral->handle, instance.channel);
 	}
 
-	else if(instance.mode == dual) {
+	else if(instance.mode == DUAL) {
 		HAL_TIMEx_PWMN_Start(instance.peripheral->handle, instance.channel);
 	}
 }
@@ -101,15 +101,15 @@ void PWM::turn_off(uint8_t id){
 	}
 
 	Instance& instance = get_instance(id);
-	if (instance.mode == normal) {
+	if (instance.mode == NORMAL) {
 		HAL_TIM_PWM_Stop(instance.peripheral->handle, instance.channel);
 	}
 
-	else if (instance.mode == negated) {
+	else if (instance.mode == NEGATED) {
 		HAL_TIMEx_PWMN_Stop(instance.peripheral->handle, instance.channel);
 	}
 
-	else if (instance.mode == dual) {
+	else if (instance.mode == DUAL) {
 		HAL_TIM_PWM_Stop(instance.peripheral->handle, instance.channel);
 		HAL_TIMEx_PWMN_Stop(instance.peripheral->handle, instance.channel);
 	}
