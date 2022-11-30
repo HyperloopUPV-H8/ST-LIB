@@ -65,7 +65,7 @@ map<Pin, InputCapture::Instance> InputCapture::instances_data = {
 /************************************************
  *					   ADC
  ***********************************************/
-#ifdef HAL_ADC_MODULE_ENABLED
+#ifdef HAL_ADC_MODULE_ENABLED && HAL_LPTIM_MODULE_ENABLED
 
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
@@ -131,7 +131,7 @@ uint32_t ADC::ranks[16] = {
 #ifdef HAL_EXTI_MODULE_ENABLED
 
 map<uint16_t, ExternalInterrupt::Instance> ExternalInterrupt::instances = {
-	{PE0.gpio_pin, Instance()}
+	{PE0.gpio_pin, Instance(EXTI0_IRQn)}
 };
 
 #endif
