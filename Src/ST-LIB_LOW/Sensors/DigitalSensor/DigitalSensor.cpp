@@ -2,12 +2,12 @@
 #include "DigitalInput/DigitalInput.hpp"
 #include "EXTI/EXTI.hpp"
 
-DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInput::register_digital_input(pin)), value(value){}
+DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInput::inscribe(pin)), value(value){}
 
 void DigitalSensor::exti_interruption(std::function<auto> action){
-	optional<uint8_t> identification = ExternalInterrupt::register_exti(pin, action);
+	optional<uint8_t> identification = ExternalInterrupt::inscribe(pin, action);
 	if(identification){
-		ExternalInterrupt::turn_on_exti(identification.value());
+		ExternalInterrupt::turn_on(identification.value());
 	}else{
 		//TODO: add Error handler for register here (register returns empty optional)
 	}
