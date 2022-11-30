@@ -25,7 +25,7 @@ PWM::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PWM::Mode
 
 optional<uint8_t> PWM::inscribe(Pin& pin){
 	if (not available_instances.contains(pin)) {
-		return nullopt; //TODO: error handle
+		return nullopt; //TODO: error handlerr
 	}
 
 	Pin::inscribe(pin, ALTERNATIVE);
@@ -41,7 +41,7 @@ optional<uint8_t> PWM::inscribe(Pin& pin){
 
 optional<uint8_t> PWM::inscribe_negated(Pin& pin) {
 	if (not available_instances_negated.contains(pin)) {
-		return nullopt; //TODO: error handle
+		return nullopt; //TODO: error handlerr
 	} 	
 	Pin::inscribe(pin, ALTERNATIVE);
 	uint8_t id = id_manager.front();
@@ -55,7 +55,7 @@ optional<uint8_t> PWM::inscribe_negated(Pin& pin) {
 
 optional<uint8_t> PWM::inscribe_dual(Pin& pin, Pin& pin_negated){
 	if (not available_instances_dual.contains({pin, pin_negated})) {
-		return nullopt; //TODO: error handle
+		return nullopt; //TODO: error handlerr
 	} 	
 	Pin::inscribe(pin, ALTERNATIVE);
 	Pin::inscribe(pin_negated, ALTERNATIVE);
@@ -77,7 +77,7 @@ void PWM::start() {
 }
 void PWM::turn_on(uint8_t id) {
 	if (not instance_exists(id)) {
-		//TODO: error handle
+		//TODO: error handlerr
 	}
 
 	Instance& instance = get_instance(id);
@@ -97,7 +97,7 @@ void PWM::turn_on(uint8_t id) {
 
 void PWM::turn_off(uint8_t id){
 	if (not instance_exists(id)) {
-		//TODO: Error handle
+		//TODO: Error handler
 	}
 
 	Instance& instance = get_instance(id);
@@ -115,17 +115,17 @@ void PWM::turn_off(uint8_t id){
 	}
 
 	else {
-		//TODO: Error handle
+		//TODO: Error handler
 	}
 }
 
 void PWM::set_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	if (not (duty_cycle >= 0 && duty_cycle <= 100)) {
-		//TODO: error handle
+		//TODO: error handlerr
 		return;
 	}
 	if (not instance_exists(id)) {
-		//TODO: error handle
+		//TODO: error handlerr
 		return;
 	}
 
