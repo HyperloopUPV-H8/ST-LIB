@@ -176,6 +176,11 @@ void Pin::start(){
 			GPIO_InitStruct.Pull = GPIO_NOPULL;
 			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
 			break;
+		case Operation_Mode::EXTERNAL_INTERRUPT:
+			  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
+			  break;
 
 		default:
 			break;

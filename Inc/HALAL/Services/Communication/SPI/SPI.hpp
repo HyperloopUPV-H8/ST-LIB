@@ -7,9 +7,10 @@
 
 #pragma once
 
-#include "ST-LIB.hpp"
-#include "C++Utilities/CppUtils.hpp"
+#include "PinModel/Pin.hpp"
 #include "Packets/RawPacket.hpp"
+
+#ifdef HAL_SPI_MODULE_ENABLED
 
 extern SPI_HandleTypeDef hspi3;
 
@@ -111,3 +112,5 @@ public:
      */
     static bool is_busy(uint8_t id);
 };
+
+#endif
