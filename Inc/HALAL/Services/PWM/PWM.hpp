@@ -22,7 +22,6 @@ public:
 		DUAL = 2
 	};
 	struct TimerInitData {
-	public:
 		TIM_TypeDef* timer;
 		GPIO_TypeDef* gpio_port;
 		uint32_t gpio_pins = 0;
