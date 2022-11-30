@@ -4,7 +4,7 @@
 
 EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed, double *acceleration)
 : position(position), speed(speed), acceleration(acceleration){
-	optional<uint8_t> identification = Encoder::register_encoder(pin1,pin2);
+	optional<uint8_t> identification = Encoder::inscribe(pin1,pin2);
 	if(identification){
 		id = identification.value();
 	}else{
@@ -13,8 +13,8 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed
 }
 
 void EncoderSensor::start(){
-	Encoder::reset_encoder(id);
-	Encoder::turn_on_encoder(id);
+	Encoder::reset(id);
+	Encoder::turn_on(id);
 	uint64_t clock_time = Time::get_global_tick();
 	for(int i = 0; i < N_FRAMES; i++){
 		positions[i] = 0.0;
@@ -27,8 +27,8 @@ void EncoderSensor::start(){
 }
 
 void EncoderSensor::read(){
-	optional<uint32_t> optional_counter = Encoder::get_encoder_counter(id);
-	optional<bool> direction = Encoder::get_encoder_direction(id);
+	optional<uint32_t> optional_counter = Encoder::get_counter(id);
+	optional<bool> direction = Encoder::get_direction(id);
 	uint64_t clock_time = Time::get_global_tick();
 	
 	if(optional_counter && direction){
