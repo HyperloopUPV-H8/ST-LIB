@@ -7,6 +7,7 @@
 #include "ADC/ADC.hpp"
 #include "PWM/PWM.hpp"
 #include "Communication/SPI/SPI.hpp"
+#include "Communication/UART/UART.hpp"
 #include "Time/Time.hpp"
 #include "Clocks/Counter.hpp"
 #include "Clocks/Stopwatch.hpp"

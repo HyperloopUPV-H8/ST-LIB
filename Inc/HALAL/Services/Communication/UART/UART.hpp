@@ -13,6 +13,8 @@
 
 extern UART_HandleTypeDef huart3;
 
+#define TXBUSYMASK 0b1
+#define RXBUSYMASK 0b10
 /**
  * @brief UART service class. Abstracts the use of the UART service of the HAL library.
  * 
@@ -26,8 +28,8 @@ private:
      *           
      */
     struct Instance{
-        Pin SCK; /**< Clock pin. */
-        Pin MOSI; /**< MOSI pin. */
+        Pin TX; /**< Clock pin. */
+        Pin RX; /**< MOSI pin. */
         UART_HandleTypeDef* huart;  /**< HAL UART struct. */
         bool receive_ready = false; /**< Receive value is ready to use pin. */
     };
@@ -49,7 +51,7 @@ public:
      * @brief UART 3 wrapper enum of the STM32H723.
      *
      */
-    static UART::Peripheral spi3;
+    static UART::Peripheral uart3;
 
     /**
      * @brief UART 3 instance of the STM32H723.
@@ -70,10 +72,10 @@ public:
      *          to send various packets in a row you must check if the UART is busy
      *          using is_busy().
      * 
-     * @param id Id of the SPI
+     * @param id Id of the UART
      * @param packet Packet to be send
      * @return bool Returns true if the request to send the packet has been done
-     *            successfully. Returns false if the SPI is busy or a problem
+     *            successfully. Returns false if the UART is busy or a problem
      *            has occurred.
      */
     static bool transmit_next_packet(uint8_t id, RawPacket& packet);
@@ -82,13 +84,15 @@ public:
      * @brief This method request the receive of a new RawPacket of any size
      *        by DMA and interrupts. Thus the packet should not be used until
      *        you have checked that the value is already available using the 
-     *        method has_next_paclet().
+     *        method has_next_paclet(). All calls to this functions previous
+     *        the last packet is ready will be ignored.
+     *
      * @see   UART::has_next_packet()
      * 
      * @param id Id of the UART
      * @param packet RawPacket in which the data will be stored
      * @return bool Return true if the order to receive a new packet has been
-     *            processed correctly. Return false if the SPI is busy or a
+     *            processed correctly. Return false if the UART is busy or a
      *            problem has occurred.
      */
     static bool receive_next_packet(uint8_t id, RawPacket& packet);
