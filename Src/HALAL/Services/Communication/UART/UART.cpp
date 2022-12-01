@@ -38,7 +38,7 @@ uint8_t UART::inscribe(UART::Peripheral& uart){
 }
 
 bool UART::transmit_next_packet(uint8_t id, RawPacket& packet){
-    if (!UART::registered_uart.contains(id))
+    if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
     UART::Instance* uart = UART::registered_uart[id];
@@ -54,7 +54,7 @@ bool UART::transmit_next_packet(uint8_t id, RawPacket& packet){
 }
 
 bool UART::receive_next_packet(uint8_t id, RawPacket& packet){
-    if (!UART::registered_uart.contains(id))
+    if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
     UART::Instance* uart = UART::registered_uart[id];
@@ -83,16 +83,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef * huart){
 }
 
 bool UART::has_next_packet(uint8_t id){
-    if (!UART::registered_uart.contains(id))
+    if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
-    auto* uart = UART::registered_uart[id];
+    UART::Instance* uart = UART::registered_uart[id];
 
     return uart->receive_ready;
 }
 
 bool UART::is_busy(uint8_t id){
-    if (!UART::registered_uart.contains(id))
+    if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
     UART::Instance* uart = UART::registered_uart[id];
