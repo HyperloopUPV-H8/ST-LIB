@@ -7,7 +7,7 @@
 
 #include "Actuator/HalfBridge/HalfBridge.hpp"
 
-HalfBridge::HalfBridge(Pin positive_voltage_pwm_pin, Pin negative_voltage_pwm_pin, Pin enable_pin, uint8_t deadtime_in_clock_cycles) :
+HalfBridge::HalfBridge(Pin& positive_voltage_pwm_pin, Pin& negative_voltage_pwm_pin, Pin& enable_pin, uint8_t deadtime_in_clock_cycles) :
 	deadtime_in_clock_cycles(deadtime_in_clock_cycles) {
 	HalfBridge::positive_voltage_pwm = PWM(positive_voltage_pwm_pin);
 	HalfBridge::negative_voltage_pwm = PWM(negative_voltage_pwm_pin);
@@ -15,8 +15,8 @@ HalfBridge::HalfBridge(Pin positive_voltage_pwm_pin, Pin negative_voltage_pwm_pi
 
 }
 
-HalfBridge::HalfBridge(Pin positive_voltage_pwm_pin, Pin positive_voltage_pwm_negated_pin,
-		Pin negative_voltage_pwm_pin, Pin negative_voltage_pwm_negated_pin, Pin enable_pin, uint8_t deadtime_in_clock_cycles) :
+HalfBridge::HalfBridge(Pin& positive_voltage_pwm_pin, Pin& positive_voltage_pwm_negated_pin,
+		Pin& negative_voltage_pwm_pin, Pin& negative_voltage_pwm_negated_pin, Pin& enable_pin, uint8_t deadtime_in_clock_cycles) :
 			deadtime_in_clock_cycles(deadtime_in_clock_cycles){
 	HalfBridge::positive_voltage_pwm = PWM(positive_voltage_pwm_pin, positive_voltage_pwm_negated_pin);
 	HalfBridge::negative_voltage_pwm = PWM(negative_voltage_pwm_pin, negative_voltage_pwm_negated_pin);
