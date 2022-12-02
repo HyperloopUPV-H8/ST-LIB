@@ -13,6 +13,7 @@
 
 class HalfBridge {
 public:
+	HalfBridge() = default;
 	HalfBridge(Pin& positive_voltage_pwm_pin, Pin& negative_voltage_pwm_pin, Pin& enable_pin, uint8_t deadtime_in_clock_cycles = 45);
 	HalfBridge(Pin& positive_voltage_pwm_pin, Pin& positive_voltage_pwm_negated_pin, Pin& negative_voltage_pwm_pin, Pin& negative_voltage_pwm_negated_pin,
 			Pin& enable_pin, uint8_t deadtime_in_clock_cycles = 45);
@@ -22,8 +23,7 @@ public:
 	void set_duty_cycle(int8_t duty_cycle);
 
 private:
-	const uint8_t deadtime_in_clock_cycles;
-
+	uint8_t deadtime_in_clock_cycles;
 	PWM positive_voltage_pwm;
 	PWM negative_voltage_pwm;
 	DigitalOutput enable;
