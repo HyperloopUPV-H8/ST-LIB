@@ -36,8 +36,12 @@ void HalfBridge::turn_off() {
 }
 
 void HalfBridge::set_duty_cycle(int8_t duty_cycle) {
-	if (duty_cycle > 0){
+	if (duty_cycle >= 0) {
+		negative_voltage_pwm.set_duty_cycle(0);
 		positive_voltage_pwm.set_duty_cycle(duty_cycle);
 	}
-	negative_voltage_pwm.set_duty_cycle(duty_cycle);
+	else {
+		positive_voltage_pwm.set_duty_cycle(0);
+		negative_voltage_pwm.set_duty_cycle(duty_cycle);
+	}
 }

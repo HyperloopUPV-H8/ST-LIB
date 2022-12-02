@@ -5,6 +5,7 @@
  *      Author: aleja
  */
 
+#include "Time/Time.hpp"
 #include "Actuator/PWM/PWM.hpp"
 #include "Actuator/DigitalOutput/DigitalOutput.hpp"
 
@@ -20,8 +21,6 @@ public:
 
 private:
 	const uint8_t deadtime_in_clock_cycles;
-	int8_t duty_cycle;
-
 
 	PWM positive_voltage_pwm;
 	PWM negative_voltage_pwm;
