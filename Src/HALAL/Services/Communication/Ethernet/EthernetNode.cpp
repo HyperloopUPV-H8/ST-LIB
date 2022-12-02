@@ -4,7 +4,7 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
-
+#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/EthernetNode.hpp"
 
 EthernetNode::EthernetNode(IPV4 ip, uint32_t port):ip(ip), port(port){}
@@ -21,4 +21,4 @@ std::size_t hash<EthernetNode>::operator()(const EthernetNode& key) const
 
   return (hash<uint32_t>()(key.ip.address.addr)) ^ (hash<uint32_t>()(key.port) << 1);
 }
-
+#endif

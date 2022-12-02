@@ -4,7 +4,7 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
-
+#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/Ethernet.hpp"
 
 extern uint32_t EthernetLinkTimer;
@@ -96,3 +96,4 @@ void Ethernet::update(){
 		//TODO: Error Handler;
 	}
 }
+#endif

@@ -1,4 +1,4 @@
-
+#ifdef HAL_ETH_MODULE_ENABLED
 #include "IPV4/IPV4.hpp"
 
 IPV4::IPV4(string address) : string_address(address){
@@ -13,3 +13,4 @@ IPV4::IPV4(string address) : string_address(address){
 }
 
 IPV4::IPV4() = default;
+#endif

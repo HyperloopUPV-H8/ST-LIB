@@ -23,7 +23,7 @@ template<class ConversionType>
 PacketValue<ConversionType>::PacketValue() = default;
 
 template<class ConversionType>
-PacketValue<ConversionType>::PacketValue(double* src, double factor):src(src),factor(factor){}
+PacketValue<ConversionType>::PacketValue(double* src, double factor):src(src),factor(factor !=0 ? factor : 1){}
 
 template<class ConversionType>
 ConversionType PacketValue<ConversionType>::convert() {
