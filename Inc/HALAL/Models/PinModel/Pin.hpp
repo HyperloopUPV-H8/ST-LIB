@@ -28,6 +28,17 @@ enum GPIO_Pin{
 	PIN_ALL = ((uint16_t)0xFFFF)
 };
 
+enum GPIO_Port{
+	PORT_A = GPIOA_BASE,
+	PORT_B = GPIOB_BASE,
+	PORT_C = GPIOC_BASE,
+	PORT_D = GPIOD_BASE,
+	PORT_E = GPIOE_BASE,
+	PORT_F = GPIOF_BASE,
+	PORT_G = GPIOG_BASE,
+	PORT_H = GPIOH_BASE
+};
+
 enum Operation_Mode{
 	NOT_USED,
 	INPUT,
@@ -50,7 +61,7 @@ public:
 	static vector<reference_wrapper<Pin>> pinVector;
 
 	Pin();
-	Pin(GPIO_TypeDef* port, GPIO_Pin pin);
+	Pin(GPIO_Port port, GPIO_Pin pin);
 	static void inscribe(Pin& pin, Operation_Mode mode);
 	static void start();
 
