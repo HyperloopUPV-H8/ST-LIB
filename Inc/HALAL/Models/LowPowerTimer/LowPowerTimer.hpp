@@ -6,6 +6,8 @@
  */
 
 #pragma once
+#ifdef HAL_LPTIM_MODULE_ENABLED
+
 
 struct LowPowerTimer {
 public:
@@ -16,3 +18,4 @@ public:
 	LowPowerTimer(LPTIM_HandleTypeDef* handle, uint16_t period) : handle(handle), period(period) {};
 };
 
+#endif
