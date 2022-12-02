@@ -29,8 +29,8 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim15;
 extern TIM_HandleTypeDef htim23;
 
-PWMservice::TimerInitData init_data_timer1 = PWMservice::TimerInitData(TIM1, GPIOE, 2750, 1000);
-PWMservice::TimerInitData init_data_timer15 = PWMservice::TimerInitData(TIM15, GPIOE, 0, 65535);
+PWMservice::TimerInitData init_data_timer1 = PWMservice::TimerInitData(TIM1, 2750, 1000);
+PWMservice::TimerInitData init_data_timer15 = PWMservice::TimerInitData(TIM15, 0, 65535);
 
 
 PWMservice::TimerPeripheral PWMservice::timer_peripherals[H723_TIMERS] = {
