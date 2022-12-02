@@ -25,9 +25,10 @@ public:
 		TIM_TypeDef* timer;
 		uint32_t prescaler;
 		uint32_t period;
+		uint32_t deadtime;
 		vector<uint32_t> channels;
 		TimerInitData() = default;
-		TimerInitData(TIM_TypeDef* timer, uint32_t prescaler, uint32_t period);
+		TimerInitData(TIM_TypeDef* timer, uint32_t prescaler = 275, uint32_t period = 1000, uint32_t deadtime = 0);
 	};
 
 	class TimerPeripheral {
