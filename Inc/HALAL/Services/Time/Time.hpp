@@ -6,8 +6,11 @@
  */
 
 #pragma once
-#include "C++Utilities/CppUtils.hpp"
+
 #include "stm32h7xx_hal.h"
+#ifdef HAL_TIM_MODULE_ENABLED
+
+#include "C++Utilities/CppUtils.hpp"
 
 // HIGH RESOLUTION TIMERS
 extern TIM_HandleTypeDef htim2;		// Used for the global timer (3,36nS step)
@@ -96,3 +99,5 @@ public :
 	*/
 	static void set_timeout(int milliseconds, function<void()> callback);
 };
+
+#endif

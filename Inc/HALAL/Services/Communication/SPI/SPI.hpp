@@ -7,9 +7,10 @@
 
 #pragma once
 
-#include "ST-LIB.hpp"
-#include "C++Utilities/CppUtils.hpp"
+#include "PinModel/Pin.hpp"
 #include "Packets/RawPacket.hpp"
+
+#ifdef HAL_SPI_MODULE_ENABLED
 
 extern SPI_HandleTypeDef hspi3;
 
@@ -65,7 +66,7 @@ public:
      * @param spi SPI peripheral to register.
      * @return uint8_t Id of the service.
      */
-    static uint8_t register_SPI(SPI::Peripheral& spi);
+    static uint8_t inscribe(SPI::Peripheral& spi);
 
     /**@brief	Transmits 1 SPIPacket of any size by DMA and
      *          interrupts. Handles the packet size automatically. To
@@ -111,3 +112,5 @@ public:
      */
     static bool is_busy(uint8_t id);
 };
+
+#endif
