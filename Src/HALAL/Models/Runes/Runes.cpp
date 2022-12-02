@@ -43,7 +43,8 @@ map<Pin, PWMservice::Instance> PWMservice::available_instances = {
 map<Pin, PWMservice::Instance> PWMservice::available_instances_negated = {};
 
 map<pair<Pin, Pin>, PWMservice::Instance> PWMservice::available_instances_dual = {
-		{{PE4, PE5}, PWMservice::Instance(&timer_peripherals[1], TIM_CHANNEL_1, DUAL)}
+		{{PE9, PE8}, PWMservice::Instance(&timer_peripherals[1], TIM_CHANNEL_1, DUAL)},
+		{{PE11, PE10}, PWMservice::Instance(&timer_peripherals[1], TIM_CHANNEL_2, DUAL)},
 };
 
 #endif

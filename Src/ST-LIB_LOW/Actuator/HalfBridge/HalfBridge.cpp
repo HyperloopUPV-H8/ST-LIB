@@ -15,7 +15,7 @@ HalfBridge::HalfBridge(Pin& positive_voltage_pwm_pin, Pin& negative_voltage_pwm_
 }
 
 HalfBridge::HalfBridge(Pin& positive_voltage_pwm_pin, Pin& positive_voltage_pwm_negated_pin,
-		Pin& negative_voltage_pwm_pin, Pin& negative_voltage_pwm_negated_pin, Pin& enable_pin, uint8_t deadtime_in_clock_cycles) {
+		Pin& negative_voltage_pwm_pin, Pin& negative_voltage_pwm_negated_pin, Pin& enable_pin) {
 	HalfBridge::positive_voltage_pwm = PWM(positive_voltage_pwm_pin, positive_voltage_pwm_negated_pin);
 	HalfBridge::negative_voltage_pwm = PWM(negative_voltage_pwm_pin, negative_voltage_pwm_negated_pin);
 	HalfBridge::enable = DigitalOutput(enable_pin);

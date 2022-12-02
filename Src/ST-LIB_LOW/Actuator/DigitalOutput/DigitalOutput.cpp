@@ -5,8 +5,6 @@
  *      Author: aleja
  */
 
-#pragma once
-
 #include "Actuator/DigitalOutput/DigitalOutput.hpp"
 
 DigitalOutput::DigitalOutput(Pin& pin) : pin(pin) {
