@@ -5,7 +5,7 @@
  *      Author: stefa
  */
 #pragma once
-
+#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
@@ -63,12 +63,12 @@ bool ServerSocket::send_order(Order<Type,Types...>& order){
 	if(state != ACCEPTED){
 		return false;
 	}
-
-	if((*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next == nullptr){
+	struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
+	if(next_memory_pointer_in_packet_buffer_pool == nullptr){
 		if(client_control_block->unsent != nullptr){
 			tcp_output(client_control_block);
 		}else{
-			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next);
+			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], next_memory_pointer_in_packet_buffer_pool);
 		}
 		return false;
 	}
@@ -83,3 +83,4 @@ bool ServerSocket::send_order(Order<Type,Types...>& order){
 	send();
 	return true;
 }
+#endif

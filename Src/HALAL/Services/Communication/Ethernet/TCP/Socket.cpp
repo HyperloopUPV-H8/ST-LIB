@@ -4,7 +4,7 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
-
+#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/TCP/Socket.hpp"
 
 unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
@@ -12,11 +12,13 @@ unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
 Socket::Socket() = default;
 
 Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port):remote_ip(remote_ip), remote_port(remote_port){
+	state = INACTIVE;
+	EthernetNode remote_node(remote_ip, remote_port);
+
 	connection_control_block = tcp_new();
 	tcp_bind(connection_control_block, &local_ip.address, local_port);
 	tcp_nagle_disable(connection_control_block);
-	state = INACTIVE;
-	EthernetNode remote_node(remote_ip, remote_port);
+
 	connecting_sockets[remote_node] = this;
 	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
 }
@@ -171,11 +173,8 @@ void Socket::error_callback(void *arg, err_t error){
 	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
 	}
-	while(true){
-		// Not all errors are covered, while True for debugging purpose
-		//TODO: Error Handler
-	}
+	//TODO: Error Handler
 }
 
-
+#endif
 

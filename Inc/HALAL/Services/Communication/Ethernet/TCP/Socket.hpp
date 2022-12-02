@@ -4,6 +4,8 @@
  *  Created on: 14 nov. 2022
  *      Author: stefa
  */
+#pragma once
+#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
@@ -58,12 +60,12 @@ bool Socket::send_order(Order<Type,Types...>& order){
 		reconnect();
 		return false;
 	}
-
-	if((*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next == nullptr){
+	struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
+	if(next_memory_pointer_in_packet_buffer_pool == nullptr){
 		if(socket_control_block->unsent != nullptr){
 			tcp_output(socket_control_block);
 		}else{
-			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next);
+			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], next_memory_pointer_in_packet_buffer_pool);
 		}
 		return false;
 	}
@@ -78,3 +80,4 @@ bool Socket::send_order(Order<Type,Types...>& order){
 	send();
 	return true;
 }
+#endif

@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 
@@ -41,6 +41,6 @@ bool DatagramSocket::send(Packet<Type, Types...> & packet){
 
 	return true;
 }
-
+#endif
 
 

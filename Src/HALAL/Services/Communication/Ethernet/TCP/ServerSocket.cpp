@@ -4,6 +4,7 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
+#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 
 uint8_t ServerSocket::priority = 0;
@@ -156,10 +157,7 @@ void ServerSocket::error_callback(void *arg, err_t error){
 	if(error == ERR_RST || error == ERR_ABRT){
 		server_socket->close();
 	}
-	while(true){
-		// Not all errors are covered, while True for debugging purpose
-		//TODO: Error Handler
-	}
+	//TODO: Error Handler
 }
 
 err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_block){
@@ -199,4 +197,4 @@ err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_bloc
 }
 
 
-
+#endif
