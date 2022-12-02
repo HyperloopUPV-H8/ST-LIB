@@ -34,6 +34,7 @@ enum Operation_Mode{
 	OUTPUT,
 	ANALOG,
 	EXTERNAL_INTERRUPT,
+	PWM,
 	ALTERNATIVE,
 };
 
