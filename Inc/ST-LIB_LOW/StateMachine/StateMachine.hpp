@@ -8,8 +8,12 @@
 
 class State {
 public:
-	vector<function<void()>> actions = {};
+	vector<function<void()>> on_update_actions = {};
+	vector<function<void()>> on_enter_actions = {};
+	vector<function<void()>> on_exit_actions = {};
 	void update();
+	void enter();
+	void exit();
 };
 
 class StateMachine {
@@ -20,11 +24,19 @@ public:
 
 	StateMachine() = default;
 	StateMachine(uint8_t initial_state);
+
 	void add_state(uint8_t state);
+	void add_transition(uint8_t old_state, uint8_t new_state, function<bool()> transition);
+
 	void add_update_action(function<void()> action);
 	void add_update_action(function<void()> action, uint8_t state);
-	void add_enter_action(uint8_t old_state, uint8_t new_state, function<void()> action);
-	void add_transition(uint8_t old_state, uint8_t new_state, function<bool()> transition);
+
+	void add_enter_action(function<void()> action);
+	void add_enter_action(function<void()> action, uint8_t state);
+
+	void add_exit_action(function<void()> action);
+	void add_exit_action(function<void()> action, uint8_t state);
+
 	void update();
 	void check_transitions();
 	void change_state(uint8_t new_state);
@@ -32,5 +44,4 @@ public:
 private:
 	map<uint8_t, State> states;
 	map<uint8_t, map<uint8_t, function<bool()>>> transitions;
-	map<uint8_t, map<uint8_t, vector<function<void()>>>> on_enter;
 };

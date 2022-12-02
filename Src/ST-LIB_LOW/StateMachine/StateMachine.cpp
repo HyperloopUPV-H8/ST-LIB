@@ -5,7 +5,23 @@
 #include <StateMachine/StateMachine.hpp>
 
 void State::update() {
-	for (function<void()> action : actions) {
+	for (function<void()> action : on_update_actions) {
+		if (action) {
+			action();
+		}
+	}
+}
+
+void State::enter() {
+	for (function<void()> action : on_enter_actions) {
+		if (action) {
+			action();
+		}
+	}
+}
+
+void State::exit() {
+	for (function<void()> action : on_exit_actions) {
 		if (action) {
 			action();
 		}
@@ -25,16 +41,24 @@ void StateMachine::add_state(uint8_t state) {
 }
 
 void StateMachine::add_update_action(function<void()> action) {
-	states[current_state].actions.push_back(action);
+	states[current_state].on_update_actions.push_back(action);
 }
-
 void StateMachine::add_update_action(function<void()> action, uint8_t state) {
-	states[state].actions.push_back(action);
+	states[state].on_update_actions.push_back(action);
 }
 
-void StateMachine::add_enter_action(uint8_t old_state, uint8_t new_state,
-		function<void()> action) {
-	on_enter[old_state][new_state].push_back(action);
+void StateMachine::add_enter_action(function<void()> action) {
+	states[current_state].on_enter_actions.push_back(action);
+}
+void StateMachine::add_enter_action(function<void()> action, uint8_t state) {
+	states[state].on_enter_actions.push_back(action);
+}
+
+void StateMachine::add_exit_action(function<void()> action) {
+	states[current_state].on_exit_actions.push_back(action);
+}
+void StateMachine::add_exit_action(function<void()> action, uint8_t state) {
+	states[state].on_exit_actions.push_back(action);
 }
 
 void StateMachine::add_transition(uint8_t old_state, uint8_t new_state,
@@ -56,10 +80,7 @@ void StateMachine::check_transitions() {
 }
 
 void StateMachine::change_state(uint8_t new_state) {
-	for (auto const action : on_enter[current_state][new_state]) {
-		if (action) {
-			action();
-		}
-	}
+	states[current_state].exit();
 	current_state = new_state;
+	states[current_state].enter();
 }

@@ -25,10 +25,10 @@ uint8_t SPI::register_SPI(SPI::Peripheral& spi){
         break;
     }
 
-    Pin::register_pin(spi_instance->SCK, ALTERNATIVE);
-    Pin::register_pin(spi_instance->MOSI, ALTERNATIVE);
-    Pin::register_pin(spi_instance->MISO, ALTERNATIVE);
-    Pin::register_pin(spi_instance->SS, ALTERNATIVE);
+    Pin::inscribe(spi_instance->SCK, ALTERNATIVE);
+    Pin::inscribe(spi_instance->MOSI, ALTERNATIVE);
+    Pin::inscribe(spi_instance->MISO, ALTERNATIVE);
+    Pin::inscribe(spi_instance->SS, ALTERNATIVE);
 
     uint8_t id = SPI::id_manager.front();
 
