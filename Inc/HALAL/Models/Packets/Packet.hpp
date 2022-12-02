@@ -18,7 +18,7 @@ public:
 	static map<decltype(Packet<>::id), void(*)()> on_received;
 
 public:
-	Packet(int id): id(static_cast<decltype(this->id)>(id)){}
+	Packet(uint16_t id): id(static_cast<decltype(this->id)>(id)){}
 	Packet() = default;
 
 	static decltype(id) get_id(uint8_t* new_data){
@@ -41,8 +41,8 @@ protected:
 
 public:
 	Packet();
-	Packet(int id);
-	Packet(int id, PacketValue<Type> value, PacketValue<Types>... args);
+	Packet(uint16_t id);
+	Packet(uint16_t id, PacketValue<Type> value, PacketValue<Types>... args);
 
 	template<int I>
 	const auto& get() const;
@@ -85,10 +85,10 @@ template<class Type, class... Types>
 Packet<Type, Types...>::Packet() = default;
 
 template<class Type, class... Types>
-Packet<Type, Types...>::Packet(int id) : id(id) {}
+Packet<Type, Types...>::Packet(uint16_t id) : id(id) {}
 
 template<class Type, class... Types>
-Packet<Type, Types...>::Packet(int id, PacketValue<Type> value, PacketValue<Types>... args) : Packet<Types...>(id, args...), id(id), value(value) {
+Packet<Type, Types...>::Packet(uint16_t id, PacketValue<Type> value, PacketValue<Types>... args) : Packet<Types...>(id, args...), id(id), value(value) {
 	Packet<>::save_by_id[this->id] = [this](uint8_t* new_data) {save_data(new_data); };
 }
 
