@@ -35,34 +35,60 @@ StateMachine::StateMachine(uint8_t initial_state) :
 
 void StateMachine::add_state(uint8_t state) {
 	if (states.contains(state)) {
-		return;
+		return; //TODO: Error handler
+	}
+
+	if (states.empty()) {
+		initial_state = state;
+		current_state = state;
 	}
 	states[state] = State();
 }
 
 void StateMachine::add_update_action(function<void()> action) {
+	if (not current_state) {
+		return; //TODO: Error handler
+	}
 	states[current_state].on_update_actions.push_back(action);
 }
 void StateMachine::add_update_action(function<void()> action, uint8_t state) {
+	if (not states.contains(state)) {
+		return; //TODO: Error handler
+	}
 	states[state].on_update_actions.push_back(action);
 }
 
 void StateMachine::add_enter_action(function<void()> action) {
+	if (not current_state) {
+		return; //TODO: Error handler
+	}
 	states[current_state].on_enter_actions.push_back(action);
 }
 void StateMachine::add_enter_action(function<void()> action, uint8_t state) {
+	if (not states.contains(state)) {
+		return; //TODO: Error handler
+	}
 	states[state].on_enter_actions.push_back(action);
 }
 
 void StateMachine::add_exit_action(function<void()> action) {
+	if (not current_state) {
+		return; //TODO: Error handler
+	}
 	states[current_state].on_exit_actions.push_back(action);
 }
 void StateMachine::add_exit_action(function<void()> action, uint8_t state) {
+	if (not states.contains(state)) {
+		return; //TODO: Error handler
+	}
 	states[state].on_exit_actions.push_back(action);
 }
 
 void StateMachine::add_transition(uint8_t old_state, uint8_t new_state,
 		function<bool()> transition) {
+	if (not states.contains(old_state) or not states.contains(new_state)) {
+		return; //TODO: Error handler
+	}
 	transitions[old_state][new_state] = transition;
 }
 
@@ -74,12 +100,15 @@ void StateMachine::update() {
 void StateMachine::check_transitions() {
 	for (auto const state_transition : transitions[current_state]) {
 		if (state_transition.second()) {
-			change_state(state_transition.first);
+			force_change_state(state_transition.first);
 		}
 	}
 }
 
-void StateMachine::change_state(uint8_t new_state) {
+void StateMachine::force_change_state(uint8_t new_state) {
+	if (not states.contains(new_state)) {
+		return; //TODO: Error handler
+	}
 	states[current_state].exit();
 	current_state = new_state;
 	states[current_state].enter();

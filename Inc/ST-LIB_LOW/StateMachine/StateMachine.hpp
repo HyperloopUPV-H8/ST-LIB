@@ -18,8 +18,8 @@ public:
 
 class StateMachine {
 public:
-	uint8_t initial_state;
-	uint8_t current_state;
+	uint8_t initial_state = 0;
+	uint8_t current_state = 0;
 
 
 	StateMachine() = default;
@@ -39,7 +39,7 @@ public:
 
 	void update();
 	void check_transitions();
-	void change_state(uint8_t new_state);
+	void force_change_state(uint8_t new_state);
 
 private:
 	map<uint8_t, State> states;
