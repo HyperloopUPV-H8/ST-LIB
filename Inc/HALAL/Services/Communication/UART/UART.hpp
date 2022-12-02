@@ -47,6 +47,8 @@ public:
     
     static unordered_map<uint8_t, UART::Instance* > registered_uart;
 
+    static unordered_map<UART::Peripheral, UART::Instance*> available_uarts;
+
     /**
      * @brief UART 3 wrapper enum of the STM32H723.
      *
