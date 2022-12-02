@@ -11,6 +11,7 @@
 
 class DigitalOutput {
 public:
+	DigitalOutput() = default;
 	DigitalOutput(Pin& pin);
 
 	void turn_on();
