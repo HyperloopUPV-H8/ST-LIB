@@ -4,7 +4,7 @@
  *  Created on: Oct 20, 2022
  *      Author: Pablo
  */
-
+#pragma once
 #include "Flash/Flash.hpp"
 namespace FlashTest{
 

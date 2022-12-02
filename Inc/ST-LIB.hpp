@@ -6,6 +6,8 @@
 #include "Flash/FlashTests/Flash_Test.hpp"
 #include "ADC/ADC.hpp"
 #include "PWMservice/PWMservice.hpp"
+#include "Communication/Ethernet/UDP/DatagramSocket.hpp"
+#include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "Communication/SPI/SPI.hpp"
 #include "Time/Time.hpp"
 #include "Clocks/Counter.hpp"
