@@ -75,10 +75,10 @@ public:
 
 #if __cpp_deduction_guides >= 201606
 template<class Type, class... Types>
-Packet(int id, PacketValue<Type> value, PacketValue<Types>... args)->Packet<Type, Types...>;
+Packet(uint16_t id, PacketValue<Type> value, PacketValue<Types>... args)->Packet<Type, Types...>;
 template<class Type>
-Packet(int id, PacketValue<Type> value)->Packet<Type>;
-Packet(int id)->Packet<>;
+Packet(uint16_t id, PacketValue<Type> value)->Packet<Type>;
+Packet(uint16_t id)->Packet<>;
 #endif
 
 template<class Type, class... Types>
