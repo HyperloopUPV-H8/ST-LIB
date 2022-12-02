@@ -11,6 +11,7 @@
 
 class PWM {
 public:
+	PWM() = default;
 	PWM(Pin pin);
 	PWM(Pin pin, Pin pin_negated);
 
