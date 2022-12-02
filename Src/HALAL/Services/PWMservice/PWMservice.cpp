@@ -28,7 +28,7 @@ optional<uint8_t> PWMservice::inscribe(Pin& pin){
 		return nullopt; //TODO: error handlerr
 	}
 
-	Pin::inscribe(pin, PWM);
+	Pin::inscribe(pin, PWM_MODE);
 	uint8_t id = id_manager.front();
 	active_instances[id] = available_instances[pin];
 	id_manager.pop_front();
