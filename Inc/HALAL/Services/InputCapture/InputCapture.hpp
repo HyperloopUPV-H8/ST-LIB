@@ -25,8 +25,8 @@ public:
 		Instance(Pin pin, TIM_HandleTypeDef* timer, uint32_t channel_rising, uint32_t channel_falling);
 	};
 
-	static map<uint8_t, InputCapture::Instance> instances;
-	static map<Pin, InputCapture::Instance> instances_data;
+	static map<uint8_t, InputCapture::Instance> active_instances;
+	static map<Pin, InputCapture::Instance> available_instances;
 	static forward_list<uint8_t> id_manager;
 
 	static optional<uint8_t> inscribe(Pin& pin);
