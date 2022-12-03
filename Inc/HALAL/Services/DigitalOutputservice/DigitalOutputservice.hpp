@@ -7,7 +7,6 @@
 #pragma once
 #include "PinModel/Pin.hpp"
 
-#ifdef HAL_GPIO_MODULE_ENABLED
 class DigitalOutputService{
 public:
 	static map<uint8_t,Pin> service_ids;
@@ -18,4 +17,3 @@ public:
 	static void turn_off(uint8_t id);
 	static void set_pin_state(uint8_t id, PinState state);
 };
-#endif
