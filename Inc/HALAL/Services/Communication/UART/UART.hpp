@@ -5,7 +5,6 @@
  *      Author: Pablo
  */
 
-
 #pragma once
 
 #include "ST-LIB.hpp"
@@ -140,11 +139,9 @@ public:
 
     private:
     /**
-     * @brief 
+     * @brief This method initializes the UART peripheral that is passed to it as a parameter.
      * 
-     * @param id 
-     * @return true 
-     * @return false 
+     * @param uart Peripheral instance to be initialized.
      */
     static void init(UART::Instance* uart);
 };
