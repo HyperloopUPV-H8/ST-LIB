@@ -77,6 +77,14 @@ public:
     static uint8_t inscribe(UART::Peripheral& uart);
 
     /**
+     * @brief Registers a new UART.
+     *
+     * @param uart UART peripheral to register.
+     * @return uint8_t Id of the service.
+     */
+    static uint8_t inscribe(UART::Peripheral& uart, uint32_t baud_rate, uint32_t word_length);
+
+    /**
      * @brief 
      * 
      * @return true 

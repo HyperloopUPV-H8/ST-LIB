@@ -39,6 +39,20 @@ uint8_t UART::inscribe(UART::Peripheral& uart){
     return id;
 }
 
+uint8_t UART::inscribe(UART::Peripheral& uart, uint32_t baud_rate, uint32_t word_length){
+
+	uint8_t res = UART::inscribe(uart);
+
+	if(res){
+	    UART::Instance* uart = UART::registered_uart[res];
+
+	    uart->baud_rate = baud_rate;
+	    uart->word_length = word_length;
+	}
+
+    return res;
+}
+
 void UART::start(){
 		for_each(UART::registered_uart.begin(), UART::registered_uart.end(),
 				[](pair<uint8_t, UART::Instance*> iter) { UART::init(iter.second); }
