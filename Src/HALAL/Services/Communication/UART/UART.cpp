@@ -6,8 +6,8 @@
  */
 #include "Communication/UART/UART.hpp"
 
-UART::Instance UART::instance3 = { .TX = PC10, .RX = PB2,
-                                 .huart = &huart3
+UART::Instance UART::instance3 = { .TX = PC10, .RX = PB2, .huart = &huart3,
+								   .instance = USART3, .baud_rate = 115200, .word_length = UART_WORDLENGTH_8B,
                                };
 
 UART::Peripheral UART::uart3 = UART::Peripheral::peripheral3;
@@ -37,6 +37,12 @@ uint8_t UART::inscribe(UART::Peripheral& uart){
     UART::id_manager.pop_front();
 
     return id;
+}
+
+void UART::start(){
+		for_each(UART::registered_uart.begin(), UART::registered_uart.end(),
+				[](pair<uint8_t, UART::Instance*> iter) { UART::init(iter.second); }
+		);
 }
 
 bool UART::transmit_next_packet(uint8_t id, RawPacket& packet){
@@ -109,3 +115,35 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *uart){
     //TODO: Fault, UART error
     return;
 }
+
+void UART::init(UART::Instance* uart){
+
+	uart->huart->Instance = uart->instance;
+	uart->huart->Init.BaudRate = uart->baud_rate;
+	uart->huart->Init.WordLength = uart->word_length;
+	uart->huart->Init.StopBits = UART_STOPBITS_1;
+	uart->huart->Init.Parity = UART_PARITY_NONE;
+	uart->huart->Init.Mode = UART_MODE_TX_RX;
+	uart->huart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	uart->huart->Init.OverSampling = UART_OVERSAMPLING_16;
+	uart->huart->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+	uart->huart->Init.ClockPrescaler = UART_PRESCALER_DIV1;
+	uart->huart->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+
+	if (HAL_UART_Init(uart->huart) != HAL_OK){
+		//TODO: Error Handler
+	}
+
+	if (HAL_UARTEx_SetTxFifoThreshold(uart->huart, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK){
+		//TODO: Error Handler
+	}
+
+	if (HAL_UARTEx_SetRxFifoThreshold(uart->huart, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK){
+		//TODO: Error Handler
+	}
+
+	if (HAL_UARTEx_DisableFifoMode(uart->huart) != HAL_OK){
+		//TODO: Error Handler
+	}
+}
+

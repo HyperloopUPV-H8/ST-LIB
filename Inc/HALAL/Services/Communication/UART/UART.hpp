@@ -5,11 +5,14 @@
  *      Author: Pablo
  */
 
+
 #pragma once
 
 #include "ST-LIB.hpp"
 #include "C++Utilities/CppUtils.hpp"
 #include "Packets/RawPacket.hpp"
+
+#ifdef HAL_UART_MODULE_ENABLED
 
 extern UART_HandleTypeDef huart3;
 
@@ -31,7 +34,11 @@ private:
         Pin TX; /**< Clock pin. */
         Pin RX; /**< MOSI pin. */
         UART_HandleTypeDef* huart;  /**< HAL UART struct. */
+        USART_TypeDef* instance;
+        uint32_t baud_rate;
+        uint32_t word_length;
         bool receive_ready = false; /**< Receive value is ready to use pin. */
+
     };
 
     /**
@@ -68,6 +75,14 @@ public:
      * @return uint8_t Id of the service.
      */
     static uint8_t inscribe(UART::Peripheral& uart);
+
+    /**
+     * @brief 
+     * 
+     * @return true 
+     * @return false 
+     */
+    static void start();
 
     /**@brief	Transmits 1 RawPacket of any size by DMA and
      *          interrupts. Handles the packet size automatically. To
@@ -114,4 +129,16 @@ public:
      * @return bool Return true if the UART transmit operation is busy and false if not.
      */
     static bool is_busy(uint8_t id);
+
+    private:
+    /**
+     * @brief 
+     * 
+     * @param id 
+     * @return true 
+     * @return false 
+     */
+    static void init(UART::Instance* uart);
 };
+
+#endif
