@@ -4,7 +4,6 @@
  *  Created on: 28 nov. 2022
  *      Author: Pablo
  */
-
 #pragma once
 
 #include "ST-LIB.hpp"
@@ -84,10 +83,9 @@ public:
     static uint8_t inscribe(UART::Peripheral& uart, uint32_t baud_rate, uint32_t word_length);
 
     /**
-     * @brief 
+     * @brief This method initializes all registered UARTs. The peripherals
+     * 		  must be enrolled before calling this method.
      * 
-     * @return true 
-     * @return false 
      */
     static void start();
 

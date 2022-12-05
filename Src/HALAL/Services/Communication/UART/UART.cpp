@@ -6,8 +6,10 @@
  */
 #include "Communication/UART/UART.hpp"
 
+#ifdef HAL_UART_MODULE_ENABLED
+
 UART::Instance UART::instance3 = { .TX = PC10, .RX = PB2, .huart = &huart3,
-								   .instance = USART3, .baud_rate = 115200, .word_length = UART_WORDLENGTH_8B,
+								   .instance = USART3,
                                };
 
 UART::Peripheral UART::uart3 = UART::Peripheral::peripheral3;
@@ -161,3 +163,4 @@ void UART::init(UART::Instance* uart){
 	}
 }
 
+#endif
