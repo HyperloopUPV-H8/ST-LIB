@@ -58,7 +58,7 @@ private:
     };
 
 public:
-    static forward_list<uint8_t> id_manager;
+    static uint16_t id_counter;
     
     static unordered_map<uint8_t, SPI::Instance* > registered_spi;
 
