@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DigitalOutputservice/DigitalOutputservice.hpp"
+#include "DigitalOutputService/DigitalOutputservice.hpp"
 #include "DigitalInput/DigitalInput.hpp"
 #include "Flash/Flash.hpp"
 #include "Flash/FlashTests/Flash_Test.hpp"

@@ -16,9 +16,9 @@
  */
 class Encoder {
 public:
-	static forward_list<uint8_t> id_manager;
+	static uint8_t id_counter;
 	static map<pair<Pin, Pin>, TIM_HandleTypeDef*> pin_timer_map;
-	static map<uint8_t, pair<Pin, Pin>> service_ids;
+	static map<uint8_t, pair<Pin, Pin>> registered;
 
 	/**
 	 * @brief This method registers a new encoder

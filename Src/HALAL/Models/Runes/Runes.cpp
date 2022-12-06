@@ -65,7 +65,7 @@ map<Pin, InputCapture::Instance> InputCapture::instances_data = {
 /************************************************
  *					   ADC
  ***********************************************/
-#ifdef HAL_ADC_MODULE_ENABLED && HAL_LPTIM_MODULE_ENABLED
+#if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
 
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
