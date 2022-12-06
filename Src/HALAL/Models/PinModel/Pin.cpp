@@ -9,118 +9,118 @@
 
 Pin::Pin(){}
 
-Pin::Pin(GPIO_Port port, GPIO_Pin gpio_pin) : port((GPIO_TypeDef*)port), gpio_pin(gpio_pin){}
+Pin::Pin(GPIOPort port, GPIOPin gpio_pin) : port((GPIO_TypeDef*)port), gpio_pin(gpio_pin){}
 
-Pin PE2(GPIO_Port::PORT_E,GPIO_Pin::PIN_2);
-Pin PE3(GPIO_Port::PORT_E,GPIO_Pin::PIN_3);
-Pin PE4(GPIO_Port::PORT_E,GPIO_Pin::PIN_4);
-Pin PE5(GPIO_Port::PORT_E,GPIO_Pin::PIN_5);
-Pin PE6(GPIO_Port::PORT_E,GPIO_Pin::PIN_6);
-Pin PC13(GPIO_Port::PORT_C,GPIO_Pin::PIN_13);
-Pin PC14(GPIO_Port::PORT_C,GPIO_Pin::PIN_14);
-Pin PC15(GPIO_Port::PORT_C,GPIO_Pin::PIN_15);
-Pin PF0(GPIO_Port::PORT_F,GPIO_Pin::PIN_0);
-Pin PF1(GPIO_Port::PORT_F,GPIO_Pin::PIN_1);
-Pin PF2(GPIO_Port::PORT_F,GPIO_Pin::PIN_2);
-Pin PF3(GPIO_Port::PORT_F,GPIO_Pin::PIN_3);
-Pin PF4(GPIO_Port::PORT_F,GPIO_Pin::PIN_4);
-Pin PF5(GPIO_Port::PORT_F,GPIO_Pin::PIN_5);
-Pin PF6(GPIO_Port::PORT_F,GPIO_Pin::PIN_6);
-Pin PF7(GPIO_Port::PORT_F,GPIO_Pin::PIN_7);
-Pin PF8(GPIO_Port::PORT_F,GPIO_Pin::PIN_8);
-Pin PF9(GPIO_Port::PORT_F,GPIO_Pin::PIN_9);
-Pin PF10(GPIO_Port::PORT_F,GPIO_Pin::PIN_10);
-Pin PH0(GPIO_Port::PORT_H,GPIO_Pin::PIN_0);
-Pin PH1(GPIO_Port::PORT_H,GPIO_Pin::PIN_1);
-Pin PC0(GPIO_Port::PORT_C,GPIO_Pin::PIN_0);
-Pin PC1(GPIO_Port::PORT_C,GPIO_Pin::PIN_1);
-Pin PC2(GPIO_Port::PORT_C,GPIO_Pin::PIN_2);
-Pin PC3(GPIO_Port::PORT_C,GPIO_Pin::PIN_3);
-Pin PA0(GPIO_Port::PORT_A,GPIO_Pin::PIN_0);
-Pin PA1(GPIO_Port::PORT_A,GPIO_Pin::PIN_1);
-Pin PA2(GPIO_Port::PORT_A,GPIO_Pin::PIN_2);
-Pin PA3(GPIO_Port::PORT_A,GPIO_Pin::PIN_3);
-Pin PA4(GPIO_Port::PORT_A,GPIO_Pin::PIN_4);
-Pin PA5(GPIO_Port::PORT_A,GPIO_Pin::PIN_5);
-Pin PA6(GPIO_Port::PORT_A,GPIO_Pin::PIN_6);
-Pin PA7(GPIO_Port::PORT_A,GPIO_Pin::PIN_7);
-Pin PC4(GPIO_Port::PORT_C,GPIO_Pin::PIN_4);
-Pin PC5(GPIO_Port::PORT_C,GPIO_Pin::PIN_5);
-Pin PB0(GPIO_Port::PORT_B,GPIO_Pin::PIN_0);
-Pin PB1(GPIO_Port::PORT_B,GPIO_Pin::PIN_1);
-Pin PB2(GPIO_Port::PORT_B,GPIO_Pin::PIN_2);
-Pin PF11(GPIO_Port::PORT_F,GPIO_Pin::PIN_11);
-Pin PF12(GPIO_Port::PORT_F,GPIO_Pin::PIN_12);
-Pin PF13(GPIO_Port::PORT_F,GPIO_Pin::PIN_13);
-Pin PF14(GPIO_Port::PORT_F,GPIO_Pin::PIN_14);
-Pin PF15(GPIO_Port::PORT_F,GPIO_Pin::PIN_15);
-Pin PG0(GPIO_Port::PORT_G,GPIO_Pin::PIN_0);
-Pin PG1(GPIO_Port::PORT_G,GPIO_Pin::PIN_1);
-Pin PE7(GPIO_Port::PORT_E,GPIO_Pin::PIN_7);
-Pin PE8(GPIO_Port::PORT_E,GPIO_Pin::PIN_8);
-Pin PE9(GPIO_Port::PORT_E,GPIO_Pin::PIN_9);
-Pin PE10(GPIO_Port::PORT_E,GPIO_Pin::PIN_10);
-Pin PE11(GPIO_Port::PORT_E,GPIO_Pin::PIN_11);
-Pin PE12(GPIO_Port::PORT_E,GPIO_Pin::PIN_12);
-Pin PE13(GPIO_Port::PORT_E,GPIO_Pin::PIN_13);
-Pin PE14(GPIO_Port::PORT_E,GPIO_Pin::PIN_14);
-Pin PE15(GPIO_Port::PORT_E,GPIO_Pin::PIN_15);
-Pin PB10(GPIO_Port::PORT_B,GPIO_Pin::PIN_10);
-Pin PB11(GPIO_Port::PORT_B,GPIO_Pin::PIN_11);
-Pin PB12(GPIO_Port::PORT_B,GPIO_Pin::PIN_12);
-Pin PB13(GPIO_Port::PORT_B,GPIO_Pin::PIN_13);
-Pin PB14(GPIO_Port::PORT_B,GPIO_Pin::PIN_14);
-Pin PB15(GPIO_Port::PORT_B,GPIO_Pin::PIN_15);
-Pin PD8(GPIO_Port::PORT_D,GPIO_Pin::PIN_8);
-Pin PD9(GPIO_Port::PORT_D,GPIO_Pin::PIN_9);
-Pin PD10(GPIO_Port::PORT_D,GPIO_Pin::PIN_10);
-Pin PD11(GPIO_Port::PORT_D,GPIO_Pin::PIN_11);
-Pin PD12(GPIO_Port::PORT_D,GPIO_Pin::PIN_12);
-Pin PD13(GPIO_Port::PORT_D,GPIO_Pin::PIN_13);
-Pin PD14(GPIO_Port::PORT_D,GPIO_Pin::PIN_14);
-Pin PD15(GPIO_Port::PORT_D,GPIO_Pin::PIN_15);
-Pin PG2(GPIO_Port::PORT_G,GPIO_Pin::PIN_2);
-Pin PG3(GPIO_Port::PORT_G,GPIO_Pin::PIN_3);
-Pin PG4(GPIO_Port::PORT_G,GPIO_Pin::PIN_4);
-Pin PG5(GPIO_Port::PORT_G,GPIO_Pin::PIN_5);
-Pin PG6(GPIO_Port::PORT_G,GPIO_Pin::PIN_6);
-Pin PG7(GPIO_Port::PORT_G,GPIO_Pin::PIN_7);
-Pin PG8(GPIO_Port::PORT_G,GPIO_Pin::PIN_8);
-Pin PC6(GPIO_Port::PORT_C,GPIO_Pin::PIN_6);
-Pin PC7(GPIO_Port::PORT_C,GPIO_Pin::PIN_7);
-Pin PC8(GPIO_Port::PORT_C,GPIO_Pin::PIN_8);
-Pin PC9(GPIO_Port::PORT_C,GPIO_Pin::PIN_9);
-Pin PA8(GPIO_Port::PORT_A,GPIO_Pin::PIN_8);
-Pin PA9(GPIO_Port::PORT_A,GPIO_Pin::PIN_9);
-Pin PA10(GPIO_Port::PORT_A,GPIO_Pin::PIN_10);
-Pin PA11(GPIO_Port::PORT_A,GPIO_Pin::PIN_11);
-Pin PA12(GPIO_Port::PORT_A,GPIO_Pin::PIN_12);
-Pin PC10(GPIO_Port::PORT_C,GPIO_Pin::PIN_10);
-Pin PC11(GPIO_Port::PORT_C,GPIO_Pin::PIN_11);
-Pin PC12(GPIO_Port::PORT_C,GPIO_Pin::PIN_12);
-Pin PD0(GPIO_Port::PORT_D,GPIO_Pin::PIN_0);
-Pin PD1(GPIO_Port::PORT_D,GPIO_Pin::PIN_1);
-Pin PD2(GPIO_Port::PORT_D,GPIO_Pin::PIN_2);
-Pin PD3(GPIO_Port::PORT_D,GPIO_Pin::PIN_3);
-Pin PD4(GPIO_Port::PORT_D,GPIO_Pin::PIN_4);
-Pin PD5(GPIO_Port::PORT_D,GPIO_Pin::PIN_5);
-Pin PD6(GPIO_Port::PORT_D,GPIO_Pin::PIN_6);
-Pin PD7(GPIO_Port::PORT_D,GPIO_Pin::PIN_7);
-Pin PG9(GPIO_Port::PORT_G,GPIO_Pin::PIN_9);
-Pin PG10(GPIO_Port::PORT_G,GPIO_Pin::PIN_10);
-Pin PG11(GPIO_Port::PORT_G,GPIO_Pin::PIN_11);
-Pin PG12(GPIO_Port::PORT_G,GPIO_Pin::PIN_12);
-Pin PG13(GPIO_Port::PORT_G,GPIO_Pin::PIN_13);
-Pin PG14(GPIO_Port::PORT_G,GPIO_Pin::PIN_14);
-Pin PG15(GPIO_Port::PORT_G,GPIO_Pin::PIN_15);
-Pin PB4(GPIO_Port::PORT_B,GPIO_Pin::PIN_4);
-Pin PB5(GPIO_Port::PORT_B,GPIO_Pin::PIN_5);
-Pin PB6(GPIO_Port::PORT_B,GPIO_Pin::PIN_6);
-Pin PB7(GPIO_Port::PORT_B,GPIO_Pin::PIN_7);
-Pin PB8(GPIO_Port::PORT_B,GPIO_Pin::PIN_8);
-Pin PB9(GPIO_Port::PORT_B,GPIO_Pin::PIN_9);
-Pin PE0(GPIO_Port::PORT_E,GPIO_Pin::PIN_0);
-Pin PE1(GPIO_Port::PORT_E,GPIO_Pin::PIN_1);
+Pin PE2(GPIOPort::PORT_E,GPIOPin::PIN_2);
+Pin PE3(GPIOPort::PORT_E,GPIOPin::PIN_3);
+Pin PE4(GPIOPort::PORT_E,GPIOPin::PIN_4);
+Pin PE5(GPIOPort::PORT_E,GPIOPin::PIN_5);
+Pin PE6(GPIOPort::PORT_E,GPIOPin::PIN_6);
+Pin PC13(GPIOPort::PORT_C,GPIOPin::PIN_13);
+Pin PC14(GPIOPort::PORT_C,GPIOPin::PIN_14);
+Pin PC15(GPIOPort::PORT_C,GPIOPin::PIN_15);
+Pin PF0(GPIOPort::PORT_F,GPIOPin::PIN_0);
+Pin PF1(GPIOPort::PORT_F,GPIOPin::PIN_1);
+Pin PF2(GPIOPort::PORT_F,GPIOPin::PIN_2);
+Pin PF3(GPIOPort::PORT_F,GPIOPin::PIN_3);
+Pin PF4(GPIOPort::PORT_F,GPIOPin::PIN_4);
+Pin PF5(GPIOPort::PORT_F,GPIOPin::PIN_5);
+Pin PF6(GPIOPort::PORT_F,GPIOPin::PIN_6);
+Pin PF7(GPIOPort::PORT_F,GPIOPin::PIN_7);
+Pin PF8(GPIOPort::PORT_F,GPIOPin::PIN_8);
+Pin PF9(GPIOPort::PORT_F,GPIOPin::PIN_9);
+Pin PF10(GPIOPort::PORT_F,GPIOPin::PIN_10);
+Pin PH0(GPIOPort::PORT_H,GPIOPin::PIN_0);
+Pin PH1(GPIOPort::PORT_H,GPIOPin::PIN_1);
+Pin PC0(GPIOPort::PORT_C,GPIOPin::PIN_0);
+Pin PC1(GPIOPort::PORT_C,GPIOPin::PIN_1);
+Pin PC2(GPIOPort::PORT_C,GPIOPin::PIN_2);
+Pin PC3(GPIOPort::PORT_C,GPIOPin::PIN_3);
+Pin PA0(GPIOPort::PORT_A,GPIOPin::PIN_0);
+Pin PA1(GPIOPort::PORT_A,GPIOPin::PIN_1);
+Pin PA2(GPIOPort::PORT_A,GPIOPin::PIN_2);
+Pin PA3(GPIOPort::PORT_A,GPIOPin::PIN_3);
+Pin PA4(GPIOPort::PORT_A,GPIOPin::PIN_4);
+Pin PA5(GPIOPort::PORT_A,GPIOPin::PIN_5);
+Pin PA6(GPIOPort::PORT_A,GPIOPin::PIN_6);
+Pin PA7(GPIOPort::PORT_A,GPIOPin::PIN_7);
+Pin PC4(GPIOPort::PORT_C,GPIOPin::PIN_4);
+Pin PC5(GPIOPort::PORT_C,GPIOPin::PIN_5);
+Pin PB0(GPIOPort::PORT_B,GPIOPin::PIN_0);
+Pin PB1(GPIOPort::PORT_B,GPIOPin::PIN_1);
+Pin PB2(GPIOPort::PORT_B,GPIOPin::PIN_2);
+Pin PF11(GPIOPort::PORT_F,GPIOPin::PIN_11);
+Pin PF12(GPIOPort::PORT_F,GPIOPin::PIN_12);
+Pin PF13(GPIOPort::PORT_F,GPIOPin::PIN_13);
+Pin PF14(GPIOPort::PORT_F,GPIOPin::PIN_14);
+Pin PF15(GPIOPort::PORT_F,GPIOPin::PIN_15);
+Pin PG0(GPIOPort::PORT_G,GPIOPin::PIN_0);
+Pin PG1(GPIOPort::PORT_G,GPIOPin::PIN_1);
+Pin PE7(GPIOPort::PORT_E,GPIOPin::PIN_7);
+Pin PE8(GPIOPort::PORT_E,GPIOPin::PIN_8);
+Pin PE9(GPIOPort::PORT_E,GPIOPin::PIN_9);
+Pin PE10(GPIOPort::PORT_E,GPIOPin::PIN_10);
+Pin PE11(GPIOPort::PORT_E,GPIOPin::PIN_11);
+Pin PE12(GPIOPort::PORT_E,GPIOPin::PIN_12);
+Pin PE13(GPIOPort::PORT_E,GPIOPin::PIN_13);
+Pin PE14(GPIOPort::PORT_E,GPIOPin::PIN_14);
+Pin PE15(GPIOPort::PORT_E,GPIOPin::PIN_15);
+Pin PB10(GPIOPort::PORT_B,GPIOPin::PIN_10);
+Pin PB11(GPIOPort::PORT_B,GPIOPin::PIN_11);
+Pin PB12(GPIOPort::PORT_B,GPIOPin::PIN_12);
+Pin PB13(GPIOPort::PORT_B,GPIOPin::PIN_13);
+Pin PB14(GPIOPort::PORT_B,GPIOPin::PIN_14);
+Pin PB15(GPIOPort::PORT_B,GPIOPin::PIN_15);
+Pin PD8(GPIOPort::PORT_D,GPIOPin::PIN_8);
+Pin PD9(GPIOPort::PORT_D,GPIOPin::PIN_9);
+Pin PD10(GPIOPort::PORT_D,GPIOPin::PIN_10);
+Pin PD11(GPIOPort::PORT_D,GPIOPin::PIN_11);
+Pin PD12(GPIOPort::PORT_D,GPIOPin::PIN_12);
+Pin PD13(GPIOPort::PORT_D,GPIOPin::PIN_13);
+Pin PD14(GPIOPort::PORT_D,GPIOPin::PIN_14);
+Pin PD15(GPIOPort::PORT_D,GPIOPin::PIN_15);
+Pin PG2(GPIOPort::PORT_G,GPIOPin::PIN_2);
+Pin PG3(GPIOPort::PORT_G,GPIOPin::PIN_3);
+Pin PG4(GPIOPort::PORT_G,GPIOPin::PIN_4);
+Pin PG5(GPIOPort::PORT_G,GPIOPin::PIN_5);
+Pin PG6(GPIOPort::PORT_G,GPIOPin::PIN_6);
+Pin PG7(GPIOPort::PORT_G,GPIOPin::PIN_7);
+Pin PG8(GPIOPort::PORT_G,GPIOPin::PIN_8);
+Pin PC6(GPIOPort::PORT_C,GPIOPin::PIN_6);
+Pin PC7(GPIOPort::PORT_C,GPIOPin::PIN_7);
+Pin PC8(GPIOPort::PORT_C,GPIOPin::PIN_8);
+Pin PC9(GPIOPort::PORT_C,GPIOPin::PIN_9);
+Pin PA8(GPIOPort::PORT_A,GPIOPin::PIN_8);
+Pin PA9(GPIOPort::PORT_A,GPIOPin::PIN_9);
+Pin PA10(GPIOPort::PORT_A,GPIOPin::PIN_10);
+Pin PA11(GPIOPort::PORT_A,GPIOPin::PIN_11);
+Pin PA12(GPIOPort::PORT_A,GPIOPin::PIN_12);
+Pin PC10(GPIOPort::PORT_C,GPIOPin::PIN_10);
+Pin PC11(GPIOPort::PORT_C,GPIOPin::PIN_11);
+Pin PC12(GPIOPort::PORT_C,GPIOPin::PIN_12);
+Pin PD0(GPIOPort::PORT_D,GPIOPin::PIN_0);
+Pin PD1(GPIOPort::PORT_D,GPIOPin::PIN_1);
+Pin PD2(GPIOPort::PORT_D,GPIOPin::PIN_2);
+Pin PD3(GPIOPort::PORT_D,GPIOPin::PIN_3);
+Pin PD4(GPIOPort::PORT_D,GPIOPin::PIN_4);
+Pin PD5(GPIOPort::PORT_D,GPIOPin::PIN_5);
+Pin PD6(GPIOPort::PORT_D,GPIOPin::PIN_6);
+Pin PD7(GPIOPort::PORT_D,GPIOPin::PIN_7);
+Pin PG9(GPIOPort::PORT_G,GPIOPin::PIN_9);
+Pin PG10(GPIOPort::PORT_G,GPIOPin::PIN_10);
+Pin PG11(GPIOPort::PORT_G,GPIOPin::PIN_11);
+Pin PG12(GPIOPort::PORT_G,GPIOPin::PIN_12);
+Pin PG13(GPIOPort::PORT_G,GPIOPin::PIN_13);
+Pin PG14(GPIOPort::PORT_G,GPIOPin::PIN_14);
+Pin PG15(GPIOPort::PORT_G,GPIOPin::PIN_15);
+Pin PB4(GPIOPort::PORT_B,GPIOPin::PIN_4);
+Pin PB5(GPIOPort::PORT_B,GPIOPin::PIN_5);
+Pin PB6(GPIOPort::PORT_B,GPIOPin::PIN_6);
+Pin PB7(GPIOPort::PORT_B,GPIOPin::PIN_7);
+Pin PB8(GPIOPort::PORT_B,GPIOPin::PIN_8);
+Pin PB9(GPIOPort::PORT_B,GPIOPin::PIN_9);
+Pin PE0(GPIOPort::PORT_E,GPIOPin::PIN_0);
+Pin PE1(GPIOPort::PORT_E,GPIOPin::PIN_1);
 
 vector<reference_wrapper<Pin>> Pin::pinVector = {PA0,PA1,PA10,PA11,PA12,
 PA9,PB0,PB1,PB10,PB11,PB12,PB13,PB14,PB15,PB2,PB4,PB5,PB6,PB7,PB8,PB9,PC0,PC1,PC10,
@@ -130,8 +130,8 @@ PE4,PE5,PE6,PE7,PE8,PE9,PF0,PF1,PF10,PF11,PF12,PF13,PF14,PF15,PF2,PF3,PF4,PF5,PF
 PF8,PF9,PG0,PG1,PG10,PG11,PG12,PG13,PG14,PG15,PG2,PG3,PG4,PG5,PG6,PG7,PG8,PG9,PH0,PH1,
 PA2,PA3,PA4,PA5,PA6,PA7,PA8};
 
-void Pin::inscribe(Pin& pin, Operation_Mode mode){
-	if(pin.mode != Operation_Mode::NOT_USED){
+void Pin::inscribe(Pin& pin, OperationMode mode){
+	if(pin.mode != OperationMode::NOT_USED){
 		return;
 	}
 	pin.mode = mode;
@@ -152,36 +152,36 @@ void Pin::start(){
 		GPIO_InitStruct.Pin = pin.gpio_pin;
 		switch(pin.mode){
 
-		case Operation_Mode::NOT_USED:
+		case OperationMode::NOT_USED:
 			GPIO_InitStruct.Mode =  GPIO_MODE_INPUT;
 			GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
 			break;
 
-		case Operation_Mode::OUTPUT:
+		case OperationMode::OUTPUT:
 			GPIO_InitStruct.Mode =  GPIO_MODE_OUTPUT_PP;
 			GPIO_InitStruct.Pull = GPIO_NOPULL;
 			GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
 			break;
 
-		case Operation_Mode::INPUT:
+		case OperationMode::INPUT:
 			GPIO_InitStruct.Mode =  GPIO_MODE_INPUT;
 			GPIO_InitStruct.Pull = GPIO_NOPULL;
 			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
 			break;
 
-		case Operation_Mode::ANALOG:
+		case OperationMode::ANALOG:
 			GPIO_InitStruct.Mode =  GPIO_MODE_ANALOG;
 			GPIO_InitStruct.Pull = GPIO_NOPULL;
 			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
 			break;
-		case Operation_Mode::EXTERNAL_INTERRUPT:
+		case OperationMode::EXTERNAL_INTERRUPT:
 			GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
 			GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
 			break;
-		case Operation_Mode::PWM_MODE:
+		case OperationMode::PWM_MODE:
 			GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 			GPIO_InitStruct.Pull = GPIO_NOPULL;
 			GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
