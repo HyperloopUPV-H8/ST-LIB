@@ -55,11 +55,54 @@ void RotationComputer::cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *si
 	}
 }
 
+void RotationComputer::phase(int32_t *x, int32_t *y, int32_t *angle_out, int size){
+	if(RotationComputer::mode != PHASE){
+		RotationComputer::mode = PHASE;
+		MODIFY_REG(CORDIC -> CSR,
+					0x007F07FF,
+					0x00100052
+		);
+	}
+	for(int n = 0; n < size; n++){
+		CORDIC -> WDATA = x[n];
+		CORDIC -> WDATA = y[n];
+		angle_out[n] = CORDIC -> RDATA;
+	}
+}
+
+void RotationComputer::modulus(int32_t *x, int32_t *y, int32_t *out, int size){
+	if(RotationComputer::mode != MODULUS){
+		RotationComputer::mode = MODULUS;
+		MODIFY_REG(CORDIC -> CSR,
+					0x007F07FF,
+					0x00100053
+		);
+	}
+	for(int n = 0; n < size; n++){
+		CORDIC -> WDATA = x[n];
+		CORDIC -> WDATA = y[n];
+		out[n] = CORDIC -> RDATA;
+	}
+}
+
+void RotationComputer::phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int size){
+	if(RotationComputer::mode != PHASE_MODULUS){
+			RotationComputer::mode = PHASE_MODULUS;
+			MODIFY_REG(CORDIC -> CSR,
+						0x007F07FF,
+						0x00180052
+			);
+		}
+		for(int n = 0; n < size; n++){
+			CORDIC -> WDATA = x[n];
+			CORDIC -> WDATA = y[n];
+			angle_out[n] = CORDIC -> RDATA;
+			mod_out[n] = CORDIC -> RDATA;
+		}
+}
 
 
-void RotationComputer::configurate(Operation_Computation operation_mode) {
-
-	/*In CSR you can directly configurate CORDIC. The masks for the variables are defined as follow
+/*In CSR you can directly configurate CORDIC. The masks for the variables are defined as follow
 	 Functions : 0x0000000F (0.COSINE 1.SINE 2.PHASE 3.MODULUS 4.ARCTANGENT 5.HCOSINE 6.HSINE 7.HARCTANGENT 8.NATLOG 9.SQRT)
 	 Precision : 0x000000F0 (0.1_cycle 1.2_cycles 2.3_cycles ...)
 	 Scale : 0x00000700 (0 = 0, 1 = 1 ... means that the in has been shifted to the right and the output needs to be shifted to the left)
@@ -70,41 +113,11 @@ void RotationComputer::configurate(Operation_Computation operation_mode) {
 	 Ready flag : 0x80000000
 
 	 */
-	switch(operation_mode){
-	case COSINE:
-			MODIFY_REG(CORDIC -> CSR,//REGISTER
-				0x007F07FF, //CLEAR MASK
-				0x00000050	//WRITE
-				);
-			RotationComputer::mode = COSINE;
-			break;
-	case SINE:
-		MODIFY_REG(CORDIC -> CSR,
-			0x007F07FF,
-			0x00000051
-			);
-		RotationComputer::mode = SINE;
-		break;
-	case SINE_COSINE:
-			MODIFY_REG(CORDIC -> CSR,
-				0x007F07FF,
-				0x00000051
-				);
-			RotationComputer::mode = SINE_COSINE;
-			break;
-	}
-
-
+float RotationComputer::q31_to_f32(uint32_t in){
+	return ldexp((int32_t) in, -31);
 }
 
-
-float RotationComputer::q31_to_f32(int32_t in){
-	return ldexp((int32_t)in, -31);
-}
-
-int32_t RotationComputer::f32_to_q31(float in){
-	const float MAX_F = 0.99995f;
-	const float MIN_F = -0.99995f;
-	return (int) roundf(scalbnf(in/M_PI,31));
+int32_t RotationComputer::f32_to_q31(double in){
+	return (int)roundf(scalbnf(fmaxf(fminf(in/M_PI,0.9995),-0.9995),31));
 }
 
