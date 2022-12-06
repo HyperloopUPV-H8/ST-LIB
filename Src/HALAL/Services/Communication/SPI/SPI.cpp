@@ -138,6 +138,9 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
 }
 
 void SPI::init(SPI::Instance* spi){
+	if (spi->initialized) {
+		return;
+	}
 
 	spi->hspi->Instance = spi->instance;
 	spi->hspi->Init.Mode = spi->mode;
@@ -172,6 +175,8 @@ void SPI::init(SPI::Instance* spi){
 	if (HAL_SPI_Init(&hspi3) != HAL_OK){
 		//TODO: Error handler
 	}
+
+	spi->initialized = true;
 }
 #endif
 
