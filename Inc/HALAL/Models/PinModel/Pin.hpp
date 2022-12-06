@@ -5,9 +5,18 @@
  *      Author: stefan
  */
 #pragma once
-#include "stm32h7xx_hal.h"
 #include "C++Utilities/CppUtils.hpp"
 
+#define GPIOA_PORT (((0x40000000UL) + 0x18020000UL) + 0x0000UL)
+#define GPIOB_PORT (((0x40000000UL) + 0x18020000UL) + 0x0400UL)
+#define GPIOC_PORT (((0x40000000UL) + 0x18020000UL) + 0x0800UL)
+#define GPIOD_PORT (((0x40000000UL) + 0x18020000UL) + 0x0C00UL)
+#define GPIOE_PORT (((0x40000000UL) + 0x18020000UL) + 0x1000UL)
+#define GPIOF_PORT (((0x40000000UL) + 0x18020000UL) + 0x1400UL)
+#define GPIOG_PORT (((0x40000000UL) + 0x18020000UL) + 0x1800UL)
+#define GPIOH_PORT (((0x40000000UL) + 0x18020000UL) + 0x1C00UL)
+
+#include "stm32h7xx_hal.h"
 enum GPIO_Pin{
 	PIN_0 = ((uint16_t)0x0001),
 	PIN_1 = ((uint16_t)0x0002),
@@ -26,6 +35,17 @@ enum GPIO_Pin{
 	PIN_14 = ((uint16_t)0x4000),
 	PIN_15 = ((uint16_t)0x8000),
 	PIN_ALL = ((uint16_t)0xFFFF)
+};
+
+enum GPIO_Port{
+	PORT_A = GPIOA_PORT,
+	PORT_B = GPIOB_PORT,
+	PORT_C = GPIOC_PORT,
+	PORT_D = GPIOD_PORT,
+	PORT_E = GPIOE_PORT,
+	PORT_F = GPIOF_PORT,
+	PORT_G = GPIOG_PORT,
+	PORT_H = GPIOH_PORT
 };
 
 enum Operation_Mode{
@@ -51,7 +71,7 @@ public:
 	static vector<reference_wrapper<Pin>> pinVector;
 
 	Pin();
-	Pin(GPIO_TypeDef* port, GPIO_Pin pin);
+	Pin(GPIO_Port port, GPIO_Pin pin);
 	static void inscribe(Pin& pin, Operation_Mode mode);
 	static void start();
 
