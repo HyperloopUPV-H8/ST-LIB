@@ -19,6 +19,8 @@ extern SPI_HandleTypeDef hspi3;
  * 
  */
 class SPI{
+public:
+
 private:
     /**
      * @brief Struct wich defines all data refering to SPI peripherals. It is 
@@ -32,6 +34,14 @@ private:
         Pin MISO; /**< MISO pin. */
         Pin SS; /**< Slave select pin. */
         SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
+        SPI_TypeDef* instance; /**< HAL spi instance. */
+        uint32_t baud_rate_prescaler; /**< SPI baud prescaler. */
+        uint32_t mode = SPI_MODE_MASTER; /**< SPI mode. */
+        uint32_t data_size = SPI_DATASIZE_8BIT;  /**< SPI data size. Default 8 bit */
+        uint32_t first_bit = SPI_FIRSTBIT_MSB; /**< SPI first bit,. */
+        uint32_t clock_polarity = SPI_POLARITY_LOW; /**< SPI clock polarity. */
+        uint32_t clock_phase = SPI_PHASE_1EDGE; /**< SPI clock phase. */
+        uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
         bool receive_ready = false; /**< Receive value is ready to use pin. */
     };
 
@@ -47,6 +57,8 @@ public:
     static forward_list<uint8_t> id_manager;
     
     static unordered_map<uint8_t, SPI::Instance* > registered_spi;
+
+    static unordered_map<SPI::Peripheral, SPI::Instance*> available_spi;
 
     /**
      * @brief SPI 3 wrapper enum of the STM32H723.
@@ -66,7 +78,11 @@ public:
      * @param spi SPI peripheral to register.
      * @return uint8_t Id of the service.
      */
-    static uint8_t inscribe(SPI::Peripheral& spi);
+    static optional<uint8_t> inscribe(SPI::Peripheral& spi);
+
+    static optional<uint8_t> inscribe(SPI::Peripheral& spi, uint32_t data_size);
+
+    static void start();
 
     /**@brief	Transmits 1 SPIPacket of any size by DMA and
      *          interrupts. Handles the packet size automatically. To
@@ -111,6 +127,10 @@ public:
      * @return bool Return true if the SPI transmit operation is busy and false if not.
      */
     static bool is_busy(uint8_t id);
+
+private:
+
+    static void init(SPI::Instance* spi);
 };
 
 #endif
