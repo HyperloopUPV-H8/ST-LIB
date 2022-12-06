@@ -36,6 +36,7 @@ private:
         uint32_t baud_rate;
         uint32_t word_length;
         bool receive_ready = false; /**< Receive value is ready to use pin. */
+        bool initialized = false;;
 
     };
 
@@ -48,7 +49,7 @@ private:
     };
 
 public:
-    static forward_list<uint8_t> id_manager;
+    static uint16_t id_counter;
     
     static unordered_map<uint8_t, UART::Instance* > registered_uart;
 
@@ -72,15 +73,7 @@ public:
      * @param uart UART peripheral to register.
      * @return uint8_t Id of the service.
      */
-    static uint8_t inscribe(UART::Peripheral& uart);
-
-    /**
-     * @brief Registers a new UART.
-     *
-     * @param uart UART peripheral to register.
-     * @return uint8_t Id of the service.
-     */
-    static uint8_t inscribe(UART::Peripheral& uart, uint32_t baud_rate, uint32_t word_length);
+    static optional<uint8_t> inscribe(UART::Peripheral& uart);
 
     /**
      * @brief This method initializes all registered UARTs. The peripherals
