@@ -12,7 +12,7 @@ Operation_Computation RotationComputer::mode = NONE;
 
 
 
-void RotationComputer::cos(int32_t *in, int32_t *out, int size){
+void RotationComputer::cos(int32_t *angle, int32_t *out, int size){
 	if(RotationComputer::mode != COSINE){
 		RotationComputer::mode = COSINE;
 		MODIFY_REG(CORDIC -> CSR,
@@ -21,12 +21,12 @@ void RotationComputer::cos(int32_t *in, int32_t *out, int size){
 		);
 	}
 	for(int n = 0; n < size; n++){
-		CORDIC -> WDATA = in[n];
+		CORDIC -> WDATA = angle[n];
 		out[n] = CORDIC -> RDATA;
 	}
 }
 
-void RotationComputer::sin(int32_t *in, int32_t *out, int size){
+void RotationComputer::sin(int32_t *angle, int32_t *out, int size){
 	if(RotationComputer::mode != SINE){
 		RotationComputer::mode = SINE;
 		MODIFY_REG(CORDIC -> CSR,
@@ -35,12 +35,12 @@ void RotationComputer::sin(int32_t *in, int32_t *out, int size){
 		);
 	}
 	for(int n = 0; n < size; n++){
-		CORDIC -> WDATA = in[n];
+		CORDIC -> WDATA = angle[n];
 		out[n] = CORDIC -> RDATA;
 	}
 }
 
-void RotationComputer::cos_and_sin(int32_t *in, int32_t *cos_out, int32_t *sin_out, int size){
+void RotationComputer::cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *sin_out, int size){
 	if(RotationComputer::mode != SINE_COSINE){
 		RotationComputer::mode = SINE_COSINE;
 		MODIFY_REG(CORDIC -> CSR,
@@ -49,7 +49,7 @@ void RotationComputer::cos_and_sin(int32_t *in, int32_t *cos_out, int32_t *sin_o
 		);
 	}
 	for(int n = 0; n < size; n++){
-		CORDIC -> WDATA = in[n];
+		CORDIC -> WDATA = angle[n];
 		cos_out[n] = CORDIC -> RDATA;
 		sin_out[n] = CORDIC -> RDATA;
 	}
