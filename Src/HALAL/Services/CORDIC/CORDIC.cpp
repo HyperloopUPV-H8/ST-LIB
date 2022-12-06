@@ -45,13 +45,13 @@ void RotationComputer::cos_and_sin(int32_t *in, int32_t *cos_out, int32_t *sin_o
 		RotationComputer::mode = SINE_COSINE;
 		MODIFY_REG(CORDIC -> CSR,
 					0x007F07FF,
-					0x00100050
+					0x00080050
 		);
 	}
 	for(int n = 0; n < size; n++){
 		CORDIC -> WDATA = in[n];
-		cos_out[n] = READ_REG(CORDIC -> RDATA);
-		sin_out[n] = READ_REG(CORDIC -> RDATA);
+		cos_out[n] = CORDIC -> RDATA;
+		sin_out[n] = CORDIC -> RDATA;
 	}
 }
 
@@ -65,7 +65,7 @@ void RotationComputer::configurate(Operation_Computation operation_mode) {
 	 Scale : 0x00000700 (0 = 0, 1 = 1 ... means that the in has been shifted to the right and the output needs to be shifted to the left)
 	 Interrupt enabled : 0x00010000 (0.disabled 1.enabled)
 	 DMA read and write : 0x00020000 0x00040000 (respectively)
-	 In and out arguments: 0x00080000 0x00100000 (respectively) (0.1argument 1.2arguments)
+	 In and out arguments: 0x00100000 0x00080000 (respectively) (0.1argument 1.2arguments)
 	 Width input and output: 0x00200000 0x00400000 (respectively) (0.32bytes 1.16bytes)
 	 Ready flag : 0x80000000
 
