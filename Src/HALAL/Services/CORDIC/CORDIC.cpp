@@ -101,6 +101,20 @@ void RotationComputer::phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_
 		}
 }
 
+//TODO
+void RotationComputer::arctg(int32_t *tg, int32_t *angle_out, int size){
+	if(RotationComputer::mode != ARCTANGENT){
+		RotationComputer::mode = ARCTANGENT;
+		MODIFY_REG(CORDIC -> CSR,
+					0x007F07FF,
+					0x00000054
+		);
+	}
+	for(int n = 0; n < size; n++){
+		CORDIC -> WDATA = tg[n];
+		angle_out[n] = CORDIC -> RDATA;
+	}
+}
 
 /*In CSR you can directly configurate CORDIC. The masks for the variables are defined as follow
 	 Functions : 0x0000000F (0.COSINE 1.SINE 2.PHASE 3.MODULUS 4.ARCTANGENT 5.HCOSINE 6.HSINE 7.HARCTANGENT 8.NATLOG 9.SQRT)
