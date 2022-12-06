@@ -42,7 +42,7 @@ optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
 	if (not available_instances_negated.contains(pin)) {
 		return nullopt; //TODO: error handlerr
 	} 	
-	Pin::inscribe(pin, ALTERNATIVE);
+	Pin::inscribe(pin, PWM_MODE);
 	uint8_t id = id_manager.front();
 	active_instances[id] = available_instances_negated[pin];
 	id_manager.pop_front();
@@ -56,8 +56,8 @@ optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 	if (not available_instances_dual.contains({pin, pin_negated})) {
 		return nullopt; //TODO: error handlerr
 	} 	
-	Pin::inscribe(pin, ALTERNATIVE);
-	Pin::inscribe(pin_negated, ALTERNATIVE);
+	Pin::inscribe(pin, PWM_MODE);
+	Pin::inscribe(pin_negated, PWM_MODE);
 	uint8_t id = PWMservice::id_manager.front();
 	active_instances[id] = available_instances_dual[{pin, pin_negated}];
 	id_manager.pop_front();
