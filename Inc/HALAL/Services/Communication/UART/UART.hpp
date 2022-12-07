@@ -36,7 +36,7 @@ private:
         uint32_t baud_rate;
         uint32_t word_length;
         bool receive_ready = false; /**< Receive value is ready to use pin. */
-        bool initialized = false;;
+        bool initialized = false;
 
     };
 

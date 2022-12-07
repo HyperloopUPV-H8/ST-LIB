@@ -71,11 +71,13 @@ bool UART::receive_next_packet(uint8_t id, RawPacket& packet){
 
     *packet.get_data() = 0;
 
+
     if (HAL_UART_Receive_DMA(uart->huart, packet.get_data(), packet.get_size()) != HAL_OK) {
         return false; //TODO: Warning, Error during receive
     }
 
     uart->receive_ready = false;
+
     return true;
 }
 
@@ -85,7 +87,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef * huart){
     if (result != UART::registered_uart.end()) {
         (*result).second->receive_ready = true;
     }else{
-        //TODO: Warning: Data receive form an unknown UART
+        __NOP();//TODO: Warning: Data received form an unknown UART
     }
 }
 
