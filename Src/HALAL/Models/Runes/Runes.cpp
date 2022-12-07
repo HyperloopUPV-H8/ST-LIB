@@ -14,8 +14,8 @@
 
 extern TIM_HandleTypeDef htim8;
 
-map<pair<Pin, Pin>, TIM_HandleTypeDef*> Encoder::pin_timer_map = {
-		{{PC6, PC7}, {&htim8}},
+map<pair<Pin, Pin>, pair<TIM_HandleTypeDef*, TIM_TypeDef*>> Encoder::pin_timer_map = {
+		{{PC6, PC7}, {&htim8, TIM3}},
 };
 
 #endif
