@@ -40,23 +40,10 @@ optional<uint8_t> SPI::inscribe(SPI::Peripheral& spi){
     return id;
 }
 
-optional<uint8_t> SPI::inscribe(SPI::Peripheral& spi, uint32_t data_size){
-
-	optional<uint8_t> id = SPI::inscribe(spi);
-
-	if (id.has_value()) {
-		SPI::Instance* spi = SPI::registered_spi[id.value()];
-
-		spi->data_size = data_size;
-	}
-
-	return id.value();
-}
-
 void SPI::start(){
-	for_each(SPI::registered_spi.begin(), SPI::registered_spi.end(),
-			[](pair<uint8_t, SPI::Instance*> iter) { SPI::init(iter.second); }
-	);
+	for(auto iter: SPI::registered_spi){
+		SPI::init(iter.second);
+	}
 }
 
 
