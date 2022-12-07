@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <set>
 #include <stdint.h>
 #include <tuple>

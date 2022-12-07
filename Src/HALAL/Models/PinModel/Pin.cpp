@@ -7,9 +7,94 @@
 
 #include "PinModel/Pin.hpp"
 
+#if SIL == 0
 Pin::Pin(){}
 
 Pin::Pin(GPIO_Port port, GPIO_Pin gpio_pin) : port((GPIO_TypeDef*)port), gpio_pin(gpio_pin){}
+
+void Pin::inscribe(Pin& pin, Operation_Mode mode){
+	if(pin.mode != Operation_Mode::NOT_USED){
+		return;
+	}
+	pin.mode = mode;
+}
+
+void Pin::start(){
+	GPIO_InitTypeDef GPIO_InitStruct;
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_GPIOD_CLK_ENABLE();
+	__HAL_RCC_GPIOE_CLK_ENABLE();
+	__HAL_RCC_GPIOF_CLK_ENABLE();
+	__HAL_RCC_GPIOG_CLK_ENABLE();
+
+	for(Pin& pin : Pin::pinVector){
+		GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = pin.gpio_pin;
+		switch(pin.mode){
+
+		case Operation_Mode::NOT_USED:
+			GPIO_InitStruct.Mode =  GPIO_MODE_INPUT;
+			GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
+			break;
+
+		case Operation_Mode::OUTPUT:
+			GPIO_InitStruct.Mode =  GPIO_MODE_OUTPUT_PP;
+			GPIO_InitStruct.Pull = GPIO_NOPULL;
+			GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
+			break;
+
+		case Operation_Mode::INPUT:
+			GPIO_InitStruct.Mode =  GPIO_MODE_INPUT;
+			GPIO_InitStruct.Pull = GPIO_NOPULL;
+			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
+			break;
+
+		case Operation_Mode::ANALOG:
+			GPIO_InitStruct.Mode =  GPIO_MODE_ANALOG;
+			GPIO_InitStruct.Pull = GPIO_NOPULL;
+			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
+			break;
+		case Operation_Mode::EXTERNAL_INTERRUPT:
+			  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
+			  break;
+
+		default:
+			break;
+		}
+	}
+}
+#else
+map<GPIO_Pin,string> Pin::gpio_pin_to_string = {{PIN_0,"0"}, {PIN_1,"1"}, {PIN_2,"2"}, {PIN_3,"3"}, {PIN_4,"4"}, {PIN_5,"5"}, {PIN_6,"6"}, {PIN_7,"7"}, {PIN_8,"8"}, {PIN_9,"9"}, {PIN_10,"10"}, {PIN_11,"11"}, {PIN_12,"12"}, {PIN_13,"13"}, {PIN_14,"14"}, {PIN_15,"15"},{PIN_ALL,"ALL"}};
+map<GPIO_Port,string> Pin::port_to_string = {{PORT_A,"A"}, {PORT_B,"B"}, {PORT_C,"C"}, {PORT_D,"D"}, {PORT_E,"E"}, {PORT_F,"F"}, {PORT_G,"G"}, {PORT_H,"H"}};
+map<Operation_Mode,string> Pin::mode_to_string = {{NOT_USED,"NOT_USED"},{INPUT,"INPUT"},{OUTPUT,"OUTPUT"},{ANALOG,"ANALOG"},{EXTERNAL_INTERRUPT,"EXTERNAL_INTERRUPT"},{ALTERNATIVE,"ALTERNATIVE"}};
+string Pin::file_name = "SIL/Pin.txt";
+
+Pin::Pin(){}
+Pin::Pin(GPIO_Port port, GPIO_Pin gpio_pin) : port(port), gpio_pin(gpio_pin), name(port_to_string[port]+gpio_pin_to_string[gpio_pin]){}
+
+void Pin::inscribe(Pin& pin, Operation_Mode mode){
+	if(pin.mode != Operation_Mode::NOT_USED){
+		return;
+	}
+	pin.mode = mode;
+}
+
+void Pin::start(){
+	ofstream file_descriptor(file_name);
+	cout << "Pin started" << endl;
+	for(Pin& pin : pinVector){
+		file_descriptor << pin.name << " " << mode_to_string[pin.mode] << endl;
+		file_descriptor.flush();
+	}
+	file_descriptor.close();
+}
+#endif
 
 Pin PE2(GPIO_Port::PORT_E,GPIO_Pin::PIN_2);
 Pin PE3(GPIO_Port::PORT_E,GPIO_Pin::PIN_3);
@@ -130,63 +215,7 @@ PE4,PE5,PE6,PE7,PE8,PE9,PF0,PF1,PF10,PF11,PF12,PF13,PF14,PF15,PF2,PF3,PF4,PF5,PF
 PF8,PF9,PG0,PG1,PG10,PG11,PG12,PG13,PG14,PG15,PG2,PG3,PG4,PG5,PG6,PG7,PG8,PG9,PH0,PH1,
 PA2,PA3,PA4,PA5,PA6,PA7,PA8};
 
-void Pin::inscribe(Pin& pin, Operation_Mode mode){
-	if(pin.mode != Operation_Mode::NOT_USED){
-		return;
-	}
-	pin.mode = mode;
-}
 
-void Pin::start(){
-	GPIO_InitTypeDef GPIO_InitStruct;
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-	__HAL_RCC_GPIOD_CLK_ENABLE();
-	__HAL_RCC_GPIOE_CLK_ENABLE();
-	__HAL_RCC_GPIOF_CLK_ENABLE();
-	__HAL_RCC_GPIOG_CLK_ENABLE();
-
-	for(Pin& pin : Pin::pinVector){
-		GPIO_InitStruct = {0};
-		GPIO_InitStruct.Pin = pin.gpio_pin;
-		switch(pin.mode){
-
-		case Operation_Mode::NOT_USED:
-			GPIO_InitStruct.Mode =  GPIO_MODE_INPUT;
-			GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
-			break;
-
-		case Operation_Mode::OUTPUT:
-			GPIO_InitStruct.Mode =  GPIO_MODE_OUTPUT_PP;
-			GPIO_InitStruct.Pull = GPIO_NOPULL;
-			GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
-			break;
-
-		case Operation_Mode::INPUT:
-			GPIO_InitStruct.Mode =  GPIO_MODE_INPUT;
-			GPIO_InitStruct.Pull = GPIO_NOPULL;
-			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
-			break;
-
-		case Operation_Mode::ANALOG:
-			GPIO_InitStruct.Mode =  GPIO_MODE_ANALOG;
-			GPIO_InitStruct.Pull = GPIO_NOPULL;
-			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
-			break;
-		case Operation_Mode::EXTERNAL_INTERRUPT:
-			  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-			  HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
-			  break;
-
-		default:
-			break;
-		}
-	}
-}
 
 
 

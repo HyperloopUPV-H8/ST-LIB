@@ -6,6 +6,7 @@
  */
 #pragma once
 #include "C++Utilities/CppUtils.hpp"
+#include "stm32h7xx_hal.h"
 
 #define GPIOA_PORT (((0x40000000UL) + 0x18020000UL) + 0x0000UL)
 #define GPIOB_PORT (((0x40000000UL) + 0x18020000UL) + 0x0400UL)
@@ -16,7 +17,6 @@
 #define GPIOG_PORT (((0x40000000UL) + 0x18020000UL) + 0x1800UL)
 #define GPIOH_PORT (((0x40000000UL) + 0x18020000UL) + 0x1C00UL)
 
-#include "stm32h7xx_hal.h"
 enum GPIO_Pin{
 	PIN_0 = ((uint16_t)0x0001),
 	PIN_1 = ((uint16_t)0x0002),
@@ -84,7 +84,6 @@ public:
 		return port < other.port;
 	}
 };
-
 extern Pin PA0;
 extern Pin PA1;
 extern Pin PA10;

@@ -23,5 +23,5 @@ optional<PinState> DigitalInput::read_pin_state(uint8_t id){
 		return nullopt;
 
 	Pin pin = DigitalInput::service_ids[id];
-	return (PinState)HAL_GPIO_ReadPin(pin.port, pin.gpio_pin);
+	return (PinState)HAL_GPIO_ReadPin((GPIO_TypeDef*)pin.port, pin.gpio_pin);
 }
