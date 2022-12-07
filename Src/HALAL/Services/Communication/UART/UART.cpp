@@ -9,7 +9,7 @@
 #ifdef HAL_UART_MODULE_ENABLED
 
 UART::Instance UART::instance3 = { .TX = PC10, .RX = PB2, .huart = &huart3,
-								   .instance = USART3,
+								   .instance = USART3, .baud_rate = 115200, .word_length = UART_WORDLENGTH_8B,
                                };
 UART::Peripheral UART::uart3 = UART::Peripheral::peripheral3;
 
@@ -33,13 +33,15 @@ optional<uint8_t> UART::inscribe(UART::Peripheral& uart){
 
     uint8_t id = UART::id_counter++;
 
+    UART::registered_uart[id] = uart_instance;
+
     return id;
 }
 
 void UART::start(){
-		for_each(UART::registered_uart.begin(), UART::registered_uart.end(),
-				[](pair<uint8_t, UART::Instance*> iter) { UART::init(iter.second); }
-		);
+		for(auto iter: UART::registered_uart){
+			UART::init(iter.second);
+		}
 }
 
 bool UART::transmit_next_packet(uint8_t id, RawPacket& packet){
