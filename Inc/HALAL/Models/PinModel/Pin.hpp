@@ -81,13 +81,14 @@ class Pin {
 public:
 	GPIO_TypeDef * port;
 	GPIOPin gpio_pin;
+	AlternativeFunction alternative_function;
 	OperationMode mode = OperationMode::NOT_USED;
 	static vector<reference_wrapper<Pin>> pinVector;
 
 	Pin();
 	Pin(GPIOPort port, GPIOPin pin);
+	Pin(GPIOPort port, GPIOPin pin, AlternativeFunction alternative_function);
 	static void inscribe(Pin& pin, OperationMode mode);
-	static void inscribe(Pin& pin, OperationMode mode, AlternativeFunction alternative_function);
 	static void start();
 
 	bool operator== (const Pin &other) const {
