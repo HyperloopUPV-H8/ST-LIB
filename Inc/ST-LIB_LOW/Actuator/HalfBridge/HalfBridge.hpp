@@ -8,14 +8,14 @@
 #pragma once
 
 #include "Time/Time.hpp"
-#include "Actuator/PWM/PWM.hpp"
-#include "Actuator/DigitalOutput/DigitalOutput.hpp"
+#include "DigitalOutputservice/DigitalOutputservice.hpp"
+#include "PWMservice/PWMservice.hpp"
 
 class HalfBridge {
 public:
 	HalfBridge() = default;
-	HalfBridge(Pin& positive_voltage_pwm_pin, Pin& negative_voltage_pwm_pin, Pin& enable_pin);
-	HalfBridge(Pin& positive_voltage_pwm_pin, Pin& positive_voltage_pwm_negated_pin, Pin& negative_voltage_pwm_pin, Pin& negative_voltage_pwm_negated_pin,
+	HalfBridge(Pin& positive_pwm_pin, Pin& negative_pwm_pin, Pin& enable_pin);
+	HalfBridge(Pin& positive_pwm_pin, Pin& positive_pwm_negated_pin, Pin& negative_pwm_pin, Pin& negative_pwm_negated_pin,
 			Pin& enable_pin);
 
 	void turn_on();
@@ -23,7 +23,7 @@ public:
 	void set_duty_cycle(int8_t duty_cycle);
 
 private:
-	PWM positive_voltage_pwm;
-	PWM negative_voltage_pwm;
-	DigitalOutput enable;
+	uint8_t positive_pwm;
+	uint8_t negative_pwm;
+	uint8_t enable;
 };
