@@ -181,7 +181,7 @@ void Pin::start(){
 			GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 			HAL_GPIO_Init(pin.port, &GPIO_InitStruct);
 			break;
-		case OperationMode::ALTERNATIVE:
+		case OperationMode::ALTERNATE_FUNCTION:
 			GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 			GPIO_InitStruct.Pull = GPIO_NOPULL;
 			GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

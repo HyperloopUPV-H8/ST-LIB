@@ -29,7 +29,7 @@ optional<uint8_t> InputCapture::inscribe(Pin& pin){
  		return nullopt;
  	}
 
-	Pin::inscribe(pin, ALTERNATIVE);
+	Pin::inscribe(pin, ALTERNATE_FUNCTION);
 
  	Instance data = available_instances[pin];
 	active_instances[id_counter] = data;

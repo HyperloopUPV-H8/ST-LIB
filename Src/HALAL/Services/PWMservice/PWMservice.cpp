@@ -17,7 +17,7 @@ optional<uint8_t> PWMservice::inscribe(Pin& pin){
 		return nullopt; //TODO: error handler
 	}
 
-	Pin::inscribe(pin, ALTERNATIVE);
+	Pin::inscribe(pin, ALTERNATE_FUNCTION);
 	active_instances[id_counter] = available_instances[pin];
 
 	TimerPeripheral::InitData& init_data = active_instances[id_counter].peripheral->init_data;
@@ -29,7 +29,7 @@ optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
 	if (not available_instances_negated.contains(pin)) {
 		return nullopt; //TODO: error handler
 	} 	
-	Pin::inscribe(pin, ALTERNATIVE);
+	Pin::inscribe(pin, ALTERNATE_FUNCTION);
 	active_instances[id_counter] = available_instances_negated[pin];
 
 	TimerPeripheral::InitData& init_data = active_instances[id_counter].peripheral->init_data;
@@ -41,8 +41,8 @@ optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 	if (not available_instances_dual.contains({pin, pin_negated})) {
 		return nullopt; //TODO: error handler
 	} 	
-	Pin::inscribe(pin, ALTERNATIVE);
-	Pin::inscribe(pin_negated, ALTERNATIVE);
+	Pin::inscribe(pin, ALTERNATE_FUNCTION);
+	Pin::inscribe(pin_negated, ALTERNATE_FUNCTION);
 	active_instances[id_counter] = available_instances_dual[{pin, pin_negated}];
 
 	TimerPeripheral::InitData& init_data = active_instances[id_counter].peripheral->init_data;
