@@ -38,7 +38,7 @@ public:
 	static map<pair<Pin, Pin>, Instance> available_instances_dual;
 	static TimerPeripheral timer_peripherals[H723_TIMERS];
 
-	static forward_list<uint8_t> id_manager;
+    static uint16_t id_counter;
 
 	static optional<uint8_t> inscribe(Pin& pin);
 	static optional<uint8_t> inscribe_negated(Pin& pin);
