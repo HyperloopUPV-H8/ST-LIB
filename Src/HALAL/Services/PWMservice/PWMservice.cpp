@@ -16,22 +16,22 @@ PWMservice::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PW
 
 optional<uint8_t> PWMservice::inscribe(Pin& pin){
 	if (not available_instances.contains(pin)) {
-		return nullopt; //TODO: error handlerr
+		return nullopt; //TODO: error handler
 	}
 
-	Pin::inscribe(pin, PWM_MODE);
+	Pin::inscribe(pin, ALTERNATIVE);
 	uint8_t id = id_manager.front();
 	active_instances[id] = available_instances[pin];
 	id_manager.pop_front();
 
 	TimerPeripheral::InitData& init_data = active_instances[id].peripheral->init_data;
-	init_data.channels.push_back(active_instances[id].channel);
+	init_data.pwm_channels.push_back(active_instances[id].channel);
 	return id;
 }
 
 optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
 	if (not available_instances_negated.contains(pin)) {
-		return nullopt; //TODO: error handlerr
+		return nullopt; //TODO: error handler
 	} 	
 	Pin::inscribe(pin, ALTERNATIVE);
 	uint8_t id = id_manager.front();
@@ -39,13 +39,13 @@ optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
 	id_manager.pop_front();
 
 	TimerPeripheral::InitData& init_data = active_instances[id].peripheral->init_data;
-	init_data.channels.push_back(active_instances[id].channel);
+	init_data.pwm_channels.push_back(active_instances[id].channel);
  	return id;
 }
 
 optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 	if (not available_instances_dual.contains({pin, pin_negated})) {
-		return nullopt; //TODO: error handlerr
+		return nullopt; //TODO: error handler
 	} 	
 	Pin::inscribe(pin, ALTERNATIVE);
 	Pin::inscribe(pin_negated, ALTERNATIVE);
@@ -54,7 +54,7 @@ optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 	id_manager.pop_front();
 
 	TimerPeripheral::InitData& init_data = active_instances[id].peripheral->init_data;
-	init_data.channels.push_back(active_instances[id].channel);
+	init_data.pwm_channels.push_back(active_instances[id].channel);
 	return id;
 }
 
@@ -67,7 +67,7 @@ void PWMservice::start() {
 }
 void PWMservice::turn_on(uint8_t id) {
 	if (not instance_exists(id)) {
-		//TODO: error handlerr
+		//TODO: error handler
 	}
 
 	Instance& instance = get_instance(id);
@@ -122,60 +122,6 @@ void PWMservice::set_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	Instance& instance = get_instance(id);
 	uint16_t raw_duty = round(__HAL_TIM_GET_AUTORELOAD(instance.peripheral->handle) / 100.0 * duty_cycle);
 	__HAL_TIM_SET_COMPARE(instance.peripheral->handle, instance.channel, raw_duty);
-}
-
-void PWMservice::init(TimerPeripheral& peripheral) {
-	TIM_MasterConfigTypeDef sMasterConfig = {0};
-	TIM_OC_InitTypeDef sConfigOC = {0};
-	TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
-
-	TIM_HandleTypeDef& tim_handle = *peripheral.handle;
-	TimerPeripheral::InitData init_data = peripheral.init_data;
-
-
-	tim_handle.Instance = init_data.timer;
-	tim_handle.Init.Prescaler = init_data.prescaler;
-	tim_handle.Init.CounterMode = TIM_COUNTERMODE_UP;
-	tim_handle.Init.Period = init_data.period;
-	tim_handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-	tim_handle.Init.RepetitionCounter = 0;
-	tim_handle.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-	if (HAL_TIM_PWM_Init(&tim_handle) != HAL_OK) {
-		//TODO: error handler
-	}
-	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-	sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
-	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-	if (HAL_TIMEx_MasterConfigSynchronization(&tim_handle, &sMasterConfig) != HAL_OK) {
-		//TODO: error handler
-	}
-	sConfigOC.OCMode = TIM_OCMODE_PWM1;
-	sConfigOC.Pulse = 0;
-	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-	sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-	sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-	sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-
-	for (uint32_t channel : init_data.channels) {
-		if (HAL_TIM_PWM_ConfigChannel(&tim_handle, &sConfigOC, channel) != HAL_OK) {
-			//TODO: Error handler
-		}
-	}
-	sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
-	sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
-	sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-	sBreakDeadTimeConfig.DeadTime = init_data.deadtime;
-	sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
-	sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
-	sBreakDeadTimeConfig.BreakFilter = 0;
-	sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
-	sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
-	sBreakDeadTimeConfig.Break2Filter = 0;
-	sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
-	if (HAL_TIMEx_ConfigBreakDeadTime(&tim_handle, &sBreakDeadTimeConfig) != HAL_OK) {
-		//TODO: Error Handler
-	}
 }
 
 bool PWMservice::instance_exists(uint8_t id) {

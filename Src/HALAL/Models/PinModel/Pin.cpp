@@ -10,6 +10,7 @@
 Pin::Pin(){}
 
 Pin::Pin(GPIOPort port, GPIOPin gpio_pin) : port((GPIO_TypeDef*)port), gpio_pin(gpio_pin){}
+
 Pin::Pin(GPIOPort port, GPIOPin gpio_pin, AlternativeFunction alternative_function) :
 		port((GPIO_TypeDef*)port),
 		gpio_pin(gpio_pin),
