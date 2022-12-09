@@ -113,7 +113,7 @@ void RotationComputer::phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_
 	 Ready flag : 0x80000000
 
 	 */
-float RotationComputer::radian_q31_to_f32(uint32_t in){
+float RotationComputer::q31_to_radian_f32(uint32_t in){
 	return M_PI*ldexp((int32_t) in, -31);
 }
 
