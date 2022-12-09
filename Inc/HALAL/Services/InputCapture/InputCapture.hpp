@@ -27,7 +27,7 @@ public:
 
 	static map<uint8_t, InputCapture::Instance> active_instances;
 	static map<Pin, InputCapture::Instance> available_instances;
-	static forward_list<uint8_t> id_manager;
+	static uint8_t id_counter;
 
 	static optional<uint8_t> inscribe(Pin& pin);
 	static void turn_on(uint8_t id);
