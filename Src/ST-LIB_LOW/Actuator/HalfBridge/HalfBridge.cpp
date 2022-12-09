@@ -8,17 +8,45 @@
 #include "Actuator/HalfBridge/HalfBridge.hpp"
 
 HalfBridge::HalfBridge(Pin& positive_pwm_pin, Pin& negative_pwm_pin, Pin& enable_pin){
-	HalfBridge::positive_pwm = PWMservice::inscribe(positive_pwm_pin);
-	HalfBridge::positive_pwm = PWMservice::inscribe(negative_pwm_pin);
-	HalfBridge::enable = DigitalOutputservice::inscribe(enable_pin);
+	optional<uint8_t> positive_pwm_id = PWMservice::inscribe(positive_pwm_pin);
+	if (not positive_pwm_id) {
+		//TODO: Error Handler
+	}
+	HalfBridge::positive_pwm = positive_pwm_id.value();
+
+	optional<uint8_t> negative_pwm_id = PWMservice::inscribe(negative_pwm_pin);
+	if (not negative_pwm_id) {
+		//TODO: Error Handler
+	}
+	HalfBridge::negative_pwm = negative_pwm_id.value();
+
+	optional<uint8_t> enable_id = DigitalOutputservice::inscribe(enable_pin);
+	if (not enable_id) {
+		//TODO: Error Handler
+	}
+	HalfBridge::enable = enable_id.value();
 
 }
 
 HalfBridge::HalfBridge(Pin& positive_pwm_pin, Pin& positive_pwm_negated_pin,
 		Pin& negative_pwm_pin, Pin& negative_pwm_negated_pin, Pin& enable_pin) {
-	HalfBridge::positive_pwm = PWMservice::inscribe_dual(positive_pwm_pin, positive_pwm_negated_pin);
-	HalfBridge::negative_pwm = PWMservice::inscribe_dual(negative_pwm_pin, negative_pwm_negated_pin);
-	HalfBridge::enable = DigitalOutputservice::inscribe(enable_pin);
+	optional<uint8_t> positive_pwm_id = PWMservice::inscribe_dual(positive_pwm_pin, positive_pwm_negated_pin);
+	if (not positive_pwm_id) {
+		//TODO: Error Handler
+	}
+	HalfBridge::positive_pwm = positive_pwm_id.value();
+
+	optional<uint8_t> negative_pwm_id = PWMservice::inscribe_dual(negative_pwm_pin, negative_pwm_negated_pin);
+	if (not negative_pwm_id) {
+		//TODO: Error Handler
+	}
+	HalfBridge::negative_pwm = negative_pwm_id.value();
+
+	optional<uint8_t> enable_id = DigitalOutputservice::inscribe(enable_pin);
+	if (not enable_id) {
+		//TODO: Error Handler
+	}
+	HalfBridge::enable = enable_id.value();
 }
 
 void HalfBridge::turn_on() {
