@@ -8,7 +8,7 @@
 #pragma once
 
 #include "PinModel/Pin.hpp"
-//#ifdef HAL_CORDIC_MODULE_ENABLED
+#ifdef HAL_CORDIC_MODULE_ENABLED
 
 	enum Operation_Computation{
 		COSINE,
@@ -42,4 +42,4 @@ public:
 	static int32_t radian_f32_to_q31(double in);
 };
 
-//#endif
+#endif
