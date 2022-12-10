@@ -6,25 +6,19 @@
 
 void State::update() {
 	for (function<void()> action : on_update_actions) {
-		if (action) {
-			action();
-		}
+		action();
 	}
 }
 
 void State::enter() {
 	for (function<void()> action : on_enter_actions) {
-		if (action) {
-			action();
-		}
+		action();
 	}
 }
 
 void State::exit() {
 	for (function<void()> action : on_exit_actions) {
-		if (action) {
-			action();
-		}
+		action();
 	}
 }
 

@@ -43,5 +43,5 @@ public:
 
 private:
 	unordered_map<uint8_t, State> states;
-	unordered_map<uint8_t, map<uint8_t, function<bool()>>> transitions;
+	unordered_map<uint8_t, unordered_map<uint8_t, function<bool()>>> transitions;
 };
