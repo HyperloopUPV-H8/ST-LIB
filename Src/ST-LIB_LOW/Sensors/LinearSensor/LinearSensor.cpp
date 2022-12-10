@@ -4,11 +4,12 @@
 LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 : slope(slope), offset(offset), value(value){
 	optional<uint8_t> identification = ADC::inscribe(pin);
-	if(identification){
-		id = identification.value();
-	}else{
+	if(not identification){
 		//TODO: add Error handler for register here (register returns empty optional)
+		return;
 	}
+	id = identification.value();
+
 }
 
 void LinearSensor::start(){
@@ -17,11 +18,11 @@ void LinearSensor::start(){
 
 void LinearSensor::read(){
 	optional<float> val = ADC::get_value(id);
-	if(val){
-		*value = slope * (double) val.value() + offset;
-	}else{
+	if(not val){
 		//TODO: add Error handler for read here (read returns empty optional)
+		return;
 	}
+	*value = slope * (double) val.value() + offset;
 }
 
 uint8_t LinearSensor::get_id(){

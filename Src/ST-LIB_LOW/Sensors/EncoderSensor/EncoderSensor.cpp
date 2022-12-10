@@ -5,11 +5,11 @@
 EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed, double *acceleration)
 : position(position), speed(speed), acceleration(acceleration){
 	optional<uint8_t> identification = Encoder::inscribe(pin1,pin2);
-	if(identification){
-		id = identification.value();
-	}else{
+	if(not identification){
 		//TODO: add Error handler for register here (register returns empty optional)
+		return;
 	}
+	id = identification.value();
 }
 
 void EncoderSensor::start(){
@@ -23,7 +23,6 @@ void EncoderSensor::start(){
 	}
 	time = 0.0;
 	last_clock_time = clock_time;
-	clock_frequency = HAL_RCC_GetPCLK1Freq()*2; //TODO: Abstract this out of the HAL (HALAL method needed)
 }
 
 void EncoderSensor::read(){
@@ -31,27 +30,29 @@ void EncoderSensor::read(){
 	optional<bool> direction = Encoder::get_direction(id);
 	uint64_t clock_time = Time::get_global_tick();
 	
-	if(optional_counter && direction){
-		long int delta_clock = clock_time - last_clock_time;
-		if(clock_time < last_clock_time){ //overflow handle
-			delta_clock = clock_time + CLOCK_MAX_VALUE * NANO_SECOND / clock_frequency - last_clock_time;
-		}
-		time = time + delta_clock / NANO_SECOND;
-		last_clock_time = clock_time;
-
-		*position= ((int) optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE_IN_METERS;
-		double delta_time = time - times[0];
-		double delta_position = *position - positions[0];
-
-		*speed = abs(delta_position) / (delta_time);
-		double delta_speed = *speed - speeds[0];
-
-		*acceleration = (delta_speed) / (delta_time);
-
-		if(time - times[N_FRAMES-1] >= FRAME_SIZE_IN_SECONDS){EncoderSensor::update_arrays();}
-	}
-	else{
+	if(not optional_counter or not direction){
 		//TODO: add Error handler for read here (read returns empty optional)
+		return;
+	}
+
+	long int delta_clock = clock_time - last_clock_time;
+	if(clock_time < last_clock_time){ //overflow handle
+		delta_clock = clock_time + CLOCK_MAX_VALUE * NANO_SECOND / HAL_RCC_GetPCLK1Freq()*2 - last_clock_time;
+	}
+	time = time + delta_clock / NANO_SECOND;
+	last_clock_time = clock_time;
+
+	*position= ((int) optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE_IN_METERS;
+	double delta_time = time - times[0];
+	double delta_position = *position - positions[0];
+
+	*speed = abs(delta_position) / (delta_time);
+	double delta_speed = *speed - speeds[0];
+
+	*acceleration = (delta_speed) / (delta_time);
+
+	if(time - times[N_FRAMES-1] >= FRAME_SIZE_IN_SECONDS){
+		EncoderSensor::update_arrays();
 	}
 }
 
@@ -60,22 +61,11 @@ uint8_t EncoderSensor::get_id(){
 }
 
 
-void EncoderSensor::get_arrays(double ret[][N_FRAMES]){
-	for(int n = 0; n < 3; n++){
-		for(int i = 0; i < N_FRAMES; i++){
-			switch(n){
-				case 0:
-					ret[n][i] = positions[i];
-					break;
-				case 1:
-					ret[n][i] = times[i];
-					break;
-				case 2:
-					ret[n][i] = speeds[i];
-					break;
-			
-			}
-		}
+void EncoderSensor::get_arrays(double ret[3][N_FRAMES]){
+	for(int i = 0; i < N_FRAMES; i++) {
+		ret[0][i] = positions[i];
+		ret[1][i] = times[i];
+		ret[2][i] = speeds[i];
 	}
 }
 
