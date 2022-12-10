@@ -12,7 +12,7 @@ Operation_Computation RotationComputer::mode = NONE;
 
 
 
-void RotationComputer::cos(int32_t *angle, int32_t *out, int size){
+void RotationComputer::cos(int32_t *angle, int32_t *out, int32_t size){
 	if(RotationComputer::mode != COSINE){
 		RotationComputer::mode = COSINE;
 		MODIFY_REG(CORDIC -> CSR,
@@ -26,7 +26,7 @@ void RotationComputer::cos(int32_t *angle, int32_t *out, int size){
 	}
 }
 
-void RotationComputer::sin(int32_t *angle, int32_t *out, int size){
+void RotationComputer::sin(int32_t *angle, int32_t *out, int32_t size){
 	if(RotationComputer::mode != SINE){
 		RotationComputer::mode = SINE;
 		MODIFY_REG(CORDIC -> CSR,
@@ -40,7 +40,7 @@ void RotationComputer::sin(int32_t *angle, int32_t *out, int size){
 	}
 }
 
-void RotationComputer::cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *sin_out, int size){
+void RotationComputer::cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *sin_out, int32_t size){
 	if(RotationComputer::mode != SINE_COSINE){
 		RotationComputer::mode = SINE_COSINE;
 		MODIFY_REG(CORDIC -> CSR,
@@ -55,7 +55,7 @@ void RotationComputer::cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *si
 	}
 }
 
-void RotationComputer::phase(int32_t *x, int32_t *y, int32_t *angle_out, int size){
+void RotationComputer::phase(int32_t *x, int32_t *y, int32_t *angle_out, int32_t size){
 	if(RotationComputer::mode != PHASE){
 		RotationComputer::mode = PHASE;
 		MODIFY_REG(CORDIC -> CSR,
@@ -70,7 +70,7 @@ void RotationComputer::phase(int32_t *x, int32_t *y, int32_t *angle_out, int siz
 	}
 }
 
-void RotationComputer::modulus(int32_t *x, int32_t *y, int32_t *out, int size){
+void RotationComputer::modulus(int32_t *x, int32_t *y, int32_t *out, int32_t size){
 	if(RotationComputer::mode != MODULUS){
 		RotationComputer::mode = MODULUS;
 		MODIFY_REG(CORDIC -> CSR,
@@ -85,7 +85,7 @@ void RotationComputer::modulus(int32_t *x, int32_t *y, int32_t *out, int size){
 	}
 }
 
-void RotationComputer::phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int size){
+void RotationComputer::phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int32_t size){
 	if(RotationComputer::mode != PHASE_MODULUS){
 		RotationComputer::mode = PHASE_MODULUS;
 		MODIFY_REG(CORDIC -> CSR,
