@@ -29,8 +29,8 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim15;
 extern TIM_HandleTypeDef htim23;
 
-PWMservice::TimerInitData init_data_timer1 = PWMservice::TimerInitData(TIM1, GPIOE, 2750, 1000);
-PWMservice::TimerInitData init_data_timer15 = PWMservice::TimerInitData(TIM15, GPIOE, 0, 65535);
+PWMservice::TimerInitData init_data_timer1 = PWMservice::TimerInitData(TIM1, 2750, 1000);
+PWMservice::TimerInitData init_data_timer15 = PWMservice::TimerInitData(TIM15, 0, 65535);
 
 
 PWMservice::TimerPeripheral PWMservice::timer_peripherals[H723_TIMERS] = {
@@ -43,7 +43,8 @@ map<Pin, PWMservice::Instance> PWMservice::available_instances = {
 map<Pin, PWMservice::Instance> PWMservice::available_instances_negated = {};
 
 map<pair<Pin, Pin>, PWMservice::Instance> PWMservice::available_instances_dual = {
-		{{PE4, PE5}, PWMservice::Instance(&timer_peripherals[1], TIM_CHANNEL_1, DUAL)}
+		{{PE9, PE8}, PWMservice::Instance(&timer_peripherals[0], TIM_CHANNEL_1, DUAL)},
+		{{PE11, PE10}, PWMservice::Instance(&timer_peripherals[0], TIM_CHANNEL_2, DUAL)},
 };
 
 #endif
