@@ -87,18 +87,18 @@ void RotationComputer::modulus(int32_t *x, int32_t *y, int32_t *out, int size){
 
 void RotationComputer::phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int size){
 	if(RotationComputer::mode != PHASE_MODULUS){
-			RotationComputer::mode = PHASE_MODULUS;
-			MODIFY_REG(CORDIC -> CSR,
-						0x007F07FF,
-						0x00180052
-			);
-		}
-		for(int n = 0; n < size; n++){
-			CORDIC -> WDATA = x[n];
-			CORDIC -> WDATA = y[n];
-			angle_out[n] = CORDIC -> RDATA;
-			mod_out[n] = CORDIC -> RDATA;
-		}
+		RotationComputer::mode = PHASE_MODULUS;
+		MODIFY_REG(CORDIC -> CSR,
+					0x007F07FF,
+					0x00180052
+		);
+	}
+	for(int n = 0; n < size; n++){
+		CORDIC -> WDATA = x[n];
+		CORDIC -> WDATA = y[n];
+		angle_out[n] = CORDIC -> RDATA;
+		mod_out[n] = CORDIC -> RDATA;
+	}
 }
 
 
