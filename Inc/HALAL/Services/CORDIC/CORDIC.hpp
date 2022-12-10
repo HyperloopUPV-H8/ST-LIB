@@ -10,16 +10,15 @@
 #include "PinModel/Pin.hpp"
 #ifdef HAL_CORDIC_MODULE_ENABLED
 
-	enum Operation_Computation{
-		COSINE,
-		SINE,
-		SINE_COSINE,
-		PHASE,
-		MODULUS,
-		PHASE_MODULUS,
-		ARCTANGENT,
-		NONE
-
+enum Operation_Computation{
+	COSINE,
+	SINE,
+	SINE_COSINE,
+	PHASE,
+	MODULUS,
+	PHASE_MODULUS,
+	ARCTANGENT,
+	NONE
 	};
 
 //Angles go in the range of [-pi, pi] radians for ints and [0,2*pi] for uints
