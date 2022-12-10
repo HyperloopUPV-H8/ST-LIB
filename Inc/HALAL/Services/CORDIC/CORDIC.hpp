@@ -26,6 +26,8 @@ enum Operation_Computation{
 
 class RotationComputer{
 public:
+	static Operation_Computation mode;
+	
 	//a 180º angle is 2147483647.
 	static void cos(int32_t *angle,int32_t *out,int size);
 	static void sin(int32_t *angle,int32_t *out,int size);
@@ -36,7 +38,6 @@ public:
 	//cannot give a value higher than 2147483392
 	static void modulus(int32_t *x, int32_t *y, int32_t *out, int size);
 	static void phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int size);
-	static Operation_Computation mode;
 	static float q31_to_radian_f32(uint32_t in);
 	static int32_t radian_f32_to_q31(double in);
 };
