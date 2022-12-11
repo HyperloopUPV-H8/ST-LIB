@@ -71,6 +71,7 @@ public:
 	uint16_t buffer_size = sizeof(id);
 	uint16_t ptr_loc = sizeof(id);
 	bool has_been_built = false;
+	bool has_container_values = false;
 };
 
 #if __cpp_deduction_guides >= 201606
@@ -119,6 +120,10 @@ void Packet<Type, Types...>::calculate_sizes() {
 	}
 	else if constexpr (I < number_of_values) {
 		auto elem = get<I>();
+		using cast_type = remove_reference<decltype(elem)>::type::value_type;
+		if constexpr (is_container<cast_type>::value) {
+			has_container_values = true;
+		}
 		buffer_size += (uint16_t)elem.size();
 		calculate_sizes<I + 1>();
 	}
@@ -131,8 +136,14 @@ void Packet<Type, Types...>::fill_buffer() {
 	}
 	else if constexpr (I < number_of_values) {
 		auto elem = get<I>();
-		auto data = elem.convert();
-		memcpy(buffer + ptr_loc, &data, elem.size());
+		using cast_type = remove_reference<decltype(elem)>::type::value_type;
+		if constexpr (is_container<cast_type>::value) {
+			memcpy(buffer + ptr_loc, elem.convert(), elem.size());
+		}
+		else {
+			auto data = elem.convert();
+			memcpy(buffer + ptr_loc, &data, elem.size());
+		}
 		ptr_loc += (uint16_t)elem.size();
 		fill_buffer<I + 1>();
 	}
@@ -140,8 +151,11 @@ void Packet<Type, Types...>::fill_buffer() {
 
 template<class Type, class... Types>
 uint8_t* Packet<Type, Types...>::build() {
-	if (!has_been_built) {
+	if (!has_been_built || has_container_values) {
 		calculate_sizes();
+		if(buffer != nullptr){
+			free(buffer);
+		}
 		buffer = (uint8_t*)malloc(buffer_size);
 		memcpy(buffer, &id, sizeof(id));
 	}
@@ -160,7 +174,12 @@ void Packet<Type, Types...>::load_data(uint8_t* new_data) {
         auto elem = get<I>();
         using cast_type = remove_reference<decltype(elem)>::type::value_type;
         cast_type* new_value = (cast_type*)(new_data+ptr_loc);
-        elem.load(*new_value);
+        if constexpr (is_container<cast_type>::value) {
+            elem.load(new_value);
+        }
+		else {
+            elem.load(*new_value);
+        }
         ptr_loc += (uint16_t)elem.size();
         load_data<I + 1>(new_data);
     }
@@ -188,3 +207,6 @@ template<class Type, class... Types>
 decltype(Packet<Type,Types...>::id) Packet<Type, Types...>::get_id() {
     return this->id;
 }
+
+map<decltype(Packet<>::id), function<void(uint8_t*)>> Packet<>::save_by_id = {};
+map<decltype(Packet<>::id), void(*)()> Packet<>::on_received = {};
