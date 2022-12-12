@@ -19,8 +19,6 @@ extern SPI_HandleTypeDef hspi3;
  * 
  */
 class SPI{
-public:
-
 private:
     /**
      * @brief Struct wich defines all data refering to SPI peripherals. It is 
