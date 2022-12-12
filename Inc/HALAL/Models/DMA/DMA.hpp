@@ -31,9 +31,11 @@ public:
 		DMA2Stream7 = 70,
 	};
 
+	static void inscribe_stream();
 	static void inscribe_stream(Stream dma_stream);
 	static void start();
 
 private:
+	static vector<Stream> available_streams;
 	static vector<Stream> inscribed_streams;
 };
