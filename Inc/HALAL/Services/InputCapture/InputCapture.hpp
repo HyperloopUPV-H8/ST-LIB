@@ -7,22 +7,24 @@
 
 #pragma once
 #include "PinModel/Pin.hpp"
+#include "TimerPeripheral/TimerPeripheral.hpp"
 
 #ifdef HAL_TIM_MODULE_ENABLED
+
 class InputCapture {
 public:
 	class Instance {
 	public:
 		uint8_t id;
 		Pin pin;
-		TIM_HandleTypeDef* timer;
+		TimerPeripheral* peripheral;
 		uint32_t channel_rising;
 		uint32_t channel_falling;
 		uint32_t frequency;
 		uint8_t duty_cycle;
 
 		Instance() = default;
-		Instance(Pin pin, TIM_HandleTypeDef* timer, uint32_t channel_rising, uint32_t channel_falling);
+		Instance(Pin pin, TimerPeripheral* peripheral, uint32_t channel_rising, uint32_t channel_falling);
 	};
 
 	static map<uint8_t, InputCapture::Instance> active_instances;

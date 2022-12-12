@@ -17,9 +17,9 @@ static map<uint32_t, uint32_t> channel_dict = {
 	{HAL_TIM_ACTIVE_CHANNEL_6, TIM_CHANNEL_6}
 };
 
-InputCapture::Instance::Instance(Pin pin, TIM_HandleTypeDef* timer, uint32_t channel_rising, uint32_t channel_falling) :
+InputCapture::Instance::Instance(Pin pin, TimerPeripheral* peripheral, uint32_t channel_rising, uint32_t channel_falling) :
 	pin(pin),
-	timer(timer),
+	peripheral(peripheral),
 	channel_rising(channel_rising),
 	channel_falling(channel_falling)
 	{ }
@@ -29,11 +29,16 @@ optional<uint8_t> InputCapture::inscribe(Pin& pin){
  		return nullopt;
  	}
 
-	Pin::inscribe(pin, ALTERNATE_FUNCTION);
+	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
 
  	Instance data = available_instances[pin];
 	active_instances[id_counter] = data;
 	active_instances[id_counter].id = id_counter;
+
+	vector<pair<uint32_t, uint32_t>>& channels = active_instances[id_counter].peripheral->init_data.input_capture_channels;
+	uint32_t channel_rising = active_instances[id_counter].channel_rising;
+	uint32_t channel_falling = active_instances[id_counter].channel_falling;
+	channels.push_back({channel_rising, channel_falling});
 	return id_counter++;
 }
 
@@ -42,8 +47,8 @@ void InputCapture::turn_on(uint8_t id){
 		return; //TODO: Error Handler
 	}
 	Instance instance = active_instances[id];
-	HAL_TIM_IC_Start_IT(instance.timer, instance.channel_rising);
-	HAL_TIM_IC_Start(instance.timer, instance.channel_falling);
+	HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising);
+	HAL_TIM_IC_Start(instance.peripheral->handle, instance.channel_falling);
 }
 
 void InputCapture::turn_off(uint8_t id){
@@ -51,8 +56,8 @@ void InputCapture::turn_off(uint8_t id){
 		return; //TODO: Error Handler
 	}
 	Instance instance = active_instances[id];
-	HAL_TIM_IC_Stop_IT(instance.timer, instance.channel_rising);
-	HAL_TIM_IC_Stop(instance.timer, instance.channel_falling);
+	HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_rising);
+	HAL_TIM_IC_Stop(instance.peripheral->handle, instance.channel_falling);
 }
 
 optional<uint32_t> InputCapture::read_frequency(uint8_t id) {
@@ -89,7 +94,7 @@ void HAL_TIM_InputCapture_CaptureCallback(TIM_HandleTypeDef *htim)
 
 	uint32_t rising_value = HAL_TIM_ReadCapturedValue(htim, instance.channel_rising);
 	if (rising_value != 0) {
-		float ref_clock = HAL_RCC_GetPCLK1Freq()*2 / (instance.timer->Init.Prescaler+1);
+		float ref_clock = HAL_RCC_GetPCLK1Freq()*2 / (instance.peripheral->handle->Init.Prescaler+1);
 		float falling_value = HAL_TIM_ReadCapturedValue(htim, instance.channel_falling);
 
 		InputCapture::active_instances[instance.id].frequency = round(ref_clock / rising_value);

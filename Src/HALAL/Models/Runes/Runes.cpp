@@ -29,10 +29,10 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim15;
 extern TIM_HandleTypeDef htim23;
 
-TimerPeripheral::InitData init_data_timer1 = TimerPeripheral::InitData(TIM1);
-TimerPeripheral::InitData init_data_timer2 = TimerPeripheral::InitData(TIM2);
-TimerPeripheral::InitData init_data_timer15 = TimerPeripheral::InitData(TIM15);
-TimerPeripheral::InitData init_data_timer23 = TimerPeripheral::InitData(TIM23);
+TimerPeripheral::InitData init_data_timer1(TIM1);
+TimerPeripheral::InitData init_data_timer2(TIM2);
+TimerPeripheral::InitData init_data_timer15(TIM15);
+TimerPeripheral::InitData init_data_timer23(TIM23);
 
 TimerPeripheral timer1(&htim1, init_data_timer1);
 TimerPeripheral timer2(&htim2, init_data_timer2);
@@ -73,7 +73,7 @@ map<pair<Pin, Pin>, PWMservice::Instance> PWMservice::available_instances_dual =
 extern TIM_HandleTypeDef htim2;
 
 map<Pin, InputCapture::Instance> InputCapture::available_instances = {
-		{PA0, InputCapture::Instance(PA0, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2)}
+		{PA0, InputCapture::Instance(PA0, &timer2, TIM_CHANNEL_1, TIM_CHANNEL_2)}
 };
 
 #endif

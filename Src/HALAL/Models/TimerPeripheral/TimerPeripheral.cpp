@@ -73,11 +73,16 @@ void TimerPeripheral::init() {
 		}
 
 		sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-		sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
 		sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
 		sConfigIC.ICFilter = 0;
-		for (uint32_t channel : init_data.input_capture_channels) {
-			if (HAL_TIM_IC_ConfigChannel(handle, &sConfigIC, channel) != HAL_OK) {
+		for (pair<uint32_t, uint32_t> channels_rising_falling : init_data.input_capture_channels) {
+			sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+			if (HAL_TIM_IC_ConfigChannel(handle, &sConfigIC, channels_rising_falling.first) != HAL_OK) {
+				//TODO: Error handler
+			}
+
+			sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+			if (HAL_TIM_IC_ConfigChannel(handle, &sConfigIC, channels_rising_falling.second) != HAL_OK) {
 				//TODO: Error handler
 			}
 		}
