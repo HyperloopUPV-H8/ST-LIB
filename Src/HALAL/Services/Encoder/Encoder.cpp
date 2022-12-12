@@ -44,12 +44,12 @@ void Encoder::turn_on(uint8_t id){
 	TIM_HandleTypeDef* timer = pin_timer_map[registered_encoder[id]].first;
 
 	if (HAL_TIM_Encoder_GetState(timer) == HAL_TIM_STATE_RESET) {
-		//TODO: Exception handle, Error (Encoder not initialized)
-		return;
+		return; //TODO: Exception handle, Error (Encoder not initialized)
+
 	}
 
 	if (HAL_TIM_Encoder_Start(timer, TIM_CHANNEL_ALL) != HAL_OK) {
-		//TODO: Exception handle, Warning (Error starting encoder)
+		return; //TODO: Exception handle, Warning (Error starting encoder)
 	}
 }
 
