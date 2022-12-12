@@ -152,6 +152,7 @@ void Packet<Type, Types...>::fill_buffer() {
 template<class Type, class... Types>
 uint8_t* Packet<Type, Types...>::build() {
 	if (!has_been_built || has_container_values) {
+		buffer_size = sizeof(id);
 		calculate_sizes();
 		if(buffer != nullptr){
 			free(buffer);
