@@ -74,6 +74,7 @@ void PWMservice::turn_on(uint8_t id) {
 	}
 
 	else if(instance.mode == DUAL) {
+		HAL_TIM_PWM_Start(instance.peripheral->handle, instance.channel);
 		HAL_TIMEx_PWMN_Start(instance.peripheral->handle, instance.channel);
 	}
 }
