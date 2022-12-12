@@ -6,12 +6,11 @@ DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInp
 
 void DigitalSensor::exti_interruption(std::function<auto> action){
 	optional<uint8_t> identification = ExternalInterrupt::inscribe(pin, action);
-	if(identification){
-		ExternalInterrupt::turn_on(identification.value());
-	}else{
+	if (not identification) {
 		//TODO: add Error handler for register here (register returns empty optional)
+		return;
 	}
-
+	ExternalInterrupt::turn_on(identification.value());
 }
 
 void DigitalSensor::start(){
@@ -20,12 +19,11 @@ void DigitalSensor::start(){
 
 void DigitalSensor::read(){
 	optional<PinState> val = DigitalInput::read_pin_state(id);
-	if(val){
-		*value = val.value();
-	}else{
+	if(not val){
 		//TODO: add Error handler for read here (read returns empty optional)
+		return;
 	}
-
+	*value = val.value();
 }
 
 uint8_t DigitalSensor::get_id(){
