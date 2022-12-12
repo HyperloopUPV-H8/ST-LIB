@@ -72,7 +72,7 @@ void Encoder::reset(uint8_t id){
 
 	TIM_HandleTypeDef* timer =  pin_timer_map[registered_encoder[id]].first;
 
-	timer->Instance->CNT = 0;
+	timer->Instance->CNT = UINT16_MAX / 2;
 }
 
 optional<uint32_t> Encoder::get_counter(uint8_t id){
