@@ -4,12 +4,13 @@
  *  Created on: 28 nov. 2022
  *      Author: Pablo
  */
-
 #pragma once
 
 #include "ST-LIB.hpp"
 #include "C++Utilities/CppUtils.hpp"
 #include "Packets/RawPacket.hpp"
+
+#ifdef HAL_UART_MODULE_ENABLED
 
 extern UART_HandleTypeDef huart3;
 
@@ -31,7 +32,12 @@ private:
         Pin TX; /**< Clock pin. */
         Pin RX; /**< MOSI pin. */
         UART_HandleTypeDef* huart;  /**< HAL UART struct. */
+        USART_TypeDef* instance;
+        uint32_t baud_rate;
+        uint32_t word_length;
         bool receive_ready = false; /**< Receive value is ready to use pin. */
+        bool initialized = false;
+
     };
 
     /**
@@ -43,7 +49,7 @@ private:
     };
 
 public:
-    static forward_list<uint8_t> id_manager;
+    static uint16_t id_counter;
     
     static unordered_map<uint8_t, UART::Instance* > registered_uart;
 
@@ -67,7 +73,14 @@ public:
      * @param uart UART peripheral to register.
      * @return uint8_t Id of the service.
      */
-    static uint8_t inscribe(UART::Peripheral& uart);
+    static optional<uint8_t> inscribe(UART::Peripheral& uart);
+
+    /**
+     * @brief This method initializes all registered UARTs. The peripherals
+     * 		  must be enrolled before calling this method.
+     * 
+     */
+    static void start();
 
     /**@brief	Transmits 1 RawPacket of any size by DMA and
      *          interrupts. Handles the packet size automatically. To
@@ -114,4 +127,14 @@ public:
      * @return bool Return true if the UART transmit operation is busy and false if not.
      */
     static bool is_busy(uint8_t id);
+
+    private:
+    /**
+     * @brief This method initializes the UART peripheral that is passed to it as a parameter.
+     * 
+     * @param uart Peripheral instance to be initialized.
+     */
+    static void init(UART::Instance* uart);
 };
+
+#endif
