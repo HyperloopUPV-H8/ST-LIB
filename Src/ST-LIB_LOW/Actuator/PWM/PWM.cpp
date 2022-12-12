@@ -13,7 +13,7 @@ PWM::PWM(Pin& pin) : pin(pin) {
 		//TODO: error handler
 	}
 
-	this.id = try_id.value();
+	id = try_id.value();
 }
 PWM::PWM(Pin& pin, Pin& pin_negated) : pin(pin), pin_negated(pin_negated) {
 	optional<uint8_t> try_id = PWMservice::inscribe_dual(pin, pin_negated);
@@ -21,7 +21,7 @@ PWM::PWM(Pin& pin, Pin& pin_negated) : pin(pin), pin_negated(pin_negated) {
 		//TODO: error handler
 	}
 
-	this.id = try_id.value();
+	id = try_id.value();
 }
 
 void PWM::turn_on() {
