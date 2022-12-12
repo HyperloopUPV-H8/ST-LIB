@@ -99,9 +99,6 @@ void Encoder::init(pair<TIM_HandleTypeDef*, TIM_TypeDef*> encoder){
 	  TIM_Encoder_InitTypeDef sConfig = {0};
 	  TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-	  /* USER CODE BEGIN TIM3_Init 1 */
-
-	  /* USER CODE END TIM3_Init 1 */
 	  encoder.first->Instance = encoder.second;
 	  encoder.first->Init.Prescaler = 0;
 	  encoder.first->Init.CounterMode = TIM_COUNTERMODE_UP;
