@@ -21,6 +21,18 @@ private:
     RawPacket(){};
 
 public:
+
+    /**
+     * @brief Construct a new Raw Packet object. The constructor will create an empty packet
+     *        of the specified size. This constructor is intended for receive packets.
+     * 
+     * @param size Size in bytes of the packet data.
+     */
+    RawPacket(uint32_t size) {
+		this->size = size;
+		this->data = (uint8_t*)malloc(this->size);
+    }
+
     /**
      * @brief Constructs a new RawPacket object. The constructor will handle automatically
      *           the data type and size.
