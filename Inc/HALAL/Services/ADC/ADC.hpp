@@ -66,8 +66,7 @@ private:
 	static Peripheral peripherals[3];
 	static map<Pin, Instance> available_instances;
 	static map<uint8_t, Instance> active_instances;
-	static forward_list<uint8_t> id_manager;
-
+	static uint8_t id_counter;
 	static void init(Peripheral& peripheral);
 };
 
