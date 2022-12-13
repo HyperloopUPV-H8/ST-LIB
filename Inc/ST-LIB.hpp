@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DMA/DMA.hpp"
 #include "DigitalOutputservice/DigitalOutputservice.hpp"
 #include "DigitalInput/DigitalInput.hpp"
 #include "Flash/Flash.hpp"
