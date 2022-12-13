@@ -33,7 +33,7 @@ void Vehicle::to_sleep() {
 	state_machine.force_change_state(SLEEP);
 }
 
-uint8_t Vehicle::add_cyclic_action(uint8_t milliseconds, function<void()> action) {
+uint8_t Vehicle::add_cyclic_action(uint16_t milliseconds, function<void()> action) {
 	optional<uint8_t> optional_id = Time::register_low_precision_alarm(milliseconds, [action](){
 		if (state_machine.current_state == ON){
 			action();

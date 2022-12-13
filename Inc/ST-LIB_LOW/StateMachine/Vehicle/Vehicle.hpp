@@ -25,7 +25,7 @@ public:
 	static void turn_off();
 	static void to_sleep();
 
-	static uint8_t add_cyclic_action(uint8_t milliseconds, function<void()> action);
+	static uint8_t add_cyclic_action(uint16_t milliseconds, function<void()> action);
 	static uint8_t add_cyclic_sleep_action(uint8_t milliseconds, function<void()> action);
 	static void remove_cyclic_action(uint8_t id);
 
