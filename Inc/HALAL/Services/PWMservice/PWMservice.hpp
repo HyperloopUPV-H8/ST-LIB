@@ -48,7 +48,6 @@ public:
 	static void turn_off(uint8_t id);
 	static void set_duty_cycle(uint8_t id, uint8_t duty_cicle);
 private:
-	static void init(TimerPeripheral& peripheral);
 	static bool instance_exists(uint8_t id);
 	static Instance& get_instance(uint8_t id);
 };
