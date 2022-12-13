@@ -30,7 +30,7 @@
  * They work with vectors so you can ask for multiple values so it skips the small overhead after the first.
  *
  *
- * the CORDIC configuration work as follows
+ * The CORDIC configuration work as follows
  * In the CSR CORDIC register you can directly configurate the CORDIC by writting on it.
  * The masks for each variable that you can configurate are:
  * Functions : 0x0000000F (0.COSINE 1.SINE 2.PHASE 3.MODULUS 4.ARCTANGENT 5.HCOSINE 6.HSINE 7.HARCTANGENT 8.NATLOG 9.SQRT)
@@ -57,14 +57,14 @@ enum Operation_Computation{
 class RotationComputer{
 public:
 	/*
-	 * @brief cosine function. Receives size angles and output size results
-	 * @param angle the pointer to the angle array with size "size". input
-	 * @param out the pointer to the array where the results are saved, with size "size". output
-	 * @param size the size of both pointers in indexes.
+	 * @brief Cosine function. Receives size angles and output size results
+	 * @param Angle the pointer to the angle array with size "size". input
+	 * @param Out the pointer to the array where the results are saved, with size "size". output
+	 * @param Size the size of both pointers in indexes.
 	 *
 	 * The cosine queries on single shot each of the values on the angle array until size index
-	 * if the angle or the out parameter has less size than the size parameter, it will throw an exception
-	 * if one or both angle and out parameters have more size than size, it will just calculate until size and leave the rest as it is
+	 * If the angle or the out parameter has less size than the size parameter, it will throw an exception
+	 * If one or both angle and out parameters have more size than size, it will just calculate until size and leave the rest as it is
 	 */
 	static void cos(int32_t *angle,int32_t *out,int size);
 
@@ -76,11 +76,11 @@ public:
 
 
 	/*
-	 * @brief cosine and sine function. Does both while only needing the time that one takes
-	 * @param angle the pointer to the angle array with size "size". input
-	 * @param cos_out the pointer to the array where the cosine results are saved, with size "size". output
-	 * @param sin:out the pointer to the array where the sine results are saved, with size "size". output
-	 * @param size the size of both pointers in indexes.
+	 * @brief Cosine and sine function. Does both while only needing the time that one takes
+	 * @param Angle the pointer to the angle array with size "size". input
+	 * @param Cos_out the pointer to the array where the cosine results are saved, with size "size". output
+	 * @param Sin:out the pointer to the array where the sine results are saved, with size "size". output
+	 * @param Size the size of both pointers in indexes.
 	 *
 	 * Uses a cosine query but configurating the CORDIC to save the residual results
 	 * The residual results are values that appear when calculating any function, which are not the return of the function itself
@@ -93,7 +93,7 @@ public:
 
 
 	/*
-	 * @brief phase function. Calculates the angle between a vector from (0,0) to (x,y) and the vector (1,0)
+	 * @brief Phase function. Calculates the angle between a vector from (0,0) to (x,y) and the vector (1,0)
 	 * @param x. The array of values x of each vector with size "size". input.
 	 * @param y. The array of values y of each vector with size "size". input.
 	 * @param angle_out. The array where the functions puts its output, which is an angle. output.
@@ -107,7 +107,7 @@ public:
 	 * @param y. The array of values y of each vector with size "size". input.
 	 * @param out. The array where the functions puts its output, cannot be higher than 2147483392. output.
 	 *
-	 * the modulus function is a bit more fragile than the other functions.
+	 * The modulus function is a bit more fragile than the other functions.
 	 * If it were to give a value higher than 2147483392, the value that it would return would be absurd.
 	 * Avoiding to get near the limits of the euclidean space described (no more than 70% on both of the axis) is advised.
 	 */
@@ -120,23 +120,23 @@ public:
 	 * @param angle_out. The array of results of the phase, given as an angle. output.
 	 * @param mod_out. The array of results of the modulus, with same sepcifications. output.
 	 *
-	 * this function uses the same trick as the cosine and sine function, as the residual result of the phase is the modulus.
-	 * the modulus returned by this function shares weaknesses with the modulus function.
+	 * This function uses the same trick as the cosine and sine function, as the residual result of the phase is the modulus.
+	 * The modulus returned by this function shares weaknesses with the modulus function.
 	 * Avoiding getting near the 70% of the maximun (~ 1518500000) on both x and y at the same time is advised, unless modulus is handled.
 	 */
 	static void phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int size);
 	/*
-	 * @brief testing function that translates the angle to a float in radians, to make reading easier. Its slow, not intended to use on continous calculations
+	 * @brief Testing function that translates the angle to a float in radians, to make reading easier. Its slow, not intended to use on continous calculations
 	 */
 	static float q31_to_radian_f32(uint32_t in);
 	/*
-	 * @brief testing function that translates radians to an angle on int format, to make writting easier. Its slow, not intended to use on continous calculations
+	 * @brief Testing function that translates radians to an angle on int format, to make writting easier. Its slow, not intended to use on continous calculations
 	 */
 	static int32_t radian_f32_to_q31(double in);
 
 private:
 	/*
-	 * @brief the mode that the cordic is configurated at this instant. Used to skip configuration if possible
+	 * @brief The mode that the cordic is configurated at this instant. Used to skip configuration if possible
 	 */
 	static Operation_Computation mode;
 };
