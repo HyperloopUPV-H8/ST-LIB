@@ -1,5 +1,5 @@
 /*
- * maps.hpp
+ * runes.hpp
  *
  *  Created on: Nov 21, 2022
  *      Author: alejandro
@@ -19,25 +19,48 @@ map<pair<Pin, Pin>, TIM_HandleTypeDef*> Encoder::pin_timer_map = {
 };
 
 #endif
-
 /************************************************
- *                     PWM
+ *                     Timer
  ***********************************************/
 #ifdef HAL_TIM_MODULE_ENABLED
 
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim15;
 extern TIM_HandleTypeDef htim23;
 
-map<Pin, TimerChannel> PWM::pin_timer_map = {
-		{PE6, {&htim15, TIM_CHANNEL_2}},
-		{PF1, {&htim23, TIM_CHANNEL_2}}
+TimerPeripheral::InitData init_data_timer1(TIM1);
+TimerPeripheral::InitData init_data_timer2(TIM2);
+TimerPeripheral::InitData init_data_timer15(TIM15);
+TimerPeripheral::InitData init_data_timer23(TIM23);
+
+TimerPeripheral timer1(&htim1, init_data_timer1);
+TimerPeripheral timer2(&htim2, init_data_timer2);
+TimerPeripheral timer15(&htim15, init_data_timer15);
+TimerPeripheral timer23(&htim23, init_data_timer23);
+
+vector<reference_wrapper<TimerPeripheral>> TimerPeripheral::timers = {
+		timer1,
+		timer2,
+		timer15,
+		timer23
 };
 
-map<Pin, TimerChannel> PWM::pin_timer_map_negated = {};
 
-map<pair<Pin, Pin>, TimerChannel> PWM::pin_timer_map_dual = {
-		{{PE4, PE5}, {&htim15, TIM_CHANNEL_1}}
+#endif
+/************************************************
+ *                     PWMService
+ ***********************************************/
+#ifdef HAL_TIM_MODULE_ENABLED
+
+map<Pin, PWMservice::Instance> PWMservice::available_instances = {
+		{PE14, PWMservice::Instance(&timer1, TIM_CHANNEL_4, NORMAL)}
+};
+
+map<Pin, PWMservice::Instance> PWMservice::available_instances_negated = {};
+
+map<pair<Pin, Pin>, PWMservice::Instance> PWMservice::available_instances_dual = {
+		{{PE4, PE5}, PWMservice::Instance(&timer15, TIM_CHANNEL_1, DUAL)}
 };
 
 #endif
@@ -49,8 +72,8 @@ map<pair<Pin, Pin>, TimerChannel> PWM::pin_timer_map_dual = {
 
 extern TIM_HandleTypeDef htim2;
 
-map<Pin, InputCapture::Instance> InputCapture::instances_data = {
-		{PA0, InputCapture::Instance(PA0, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2)}
+map<Pin, InputCapture::Instance> InputCapture::available_instances = {
+		{PA0, InputCapture::Instance(PA0, &timer2, TIM_CHANNEL_1, TIM_CHANNEL_2)}
 };
 
 #endif
@@ -59,7 +82,7 @@ map<Pin, InputCapture::Instance> InputCapture::instances_data = {
 /************************************************
  *					   ADC
  ***********************************************/
-#ifdef HAL_ADC_MODULE_ENABLED
+#if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
 
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
@@ -125,7 +148,7 @@ uint32_t ADC::ranks[16] = {
 #ifdef HAL_EXTI_MODULE_ENABLED
 
 map<uint16_t, ExternalInterrupt::Instance> ExternalInterrupt::instances = {
-	{PE7.gpio_pin, Instance()}
+	{PE0.gpio_pin, Instance(EXTI0_IRQn)}
 };
 
 #endif
