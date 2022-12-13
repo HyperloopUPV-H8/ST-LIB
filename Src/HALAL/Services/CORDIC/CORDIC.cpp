@@ -16,8 +16,8 @@ void RotationComputer::cos(int32_t *angle, int32_t *out, int32_t size){
 	if(RotationComputer::mode != COSINE){
 		RotationComputer::mode = COSINE;
 		MODIFY_REG(CORDIC -> CSR,
-					0x007F07FF,
-					0x00000050
+					RESET_MASK,
+					COSINE_CONFIG
 		);
 	}
 	for(int n = 0; n < size; n++){
@@ -30,8 +30,8 @@ void RotationComputer::sin(int32_t *angle, int32_t *out, int32_t size){
 	if(RotationComputer::mode != SINE){
 		RotationComputer::mode = SINE;
 		MODIFY_REG(CORDIC -> CSR,
-					0x007F07FF,
-					0x00000051
+					RESET_MASK,
+					SINE_CONFIG
 		);
 	}
 	for(int n = 0; n < size; n++){
@@ -44,8 +44,8 @@ void RotationComputer::cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *si
 	if(RotationComputer::mode != SINE_COSINE){
 		RotationComputer::mode = SINE_COSINE;
 		MODIFY_REG(CORDIC -> CSR,
-					0x007F07FF,
-					0x00080050
+					RESET_MASK,
+					SINE_COSINE_CONFIG
 		);
 	}
 	for(int n = 0; n < size; n++){
@@ -59,8 +59,8 @@ void RotationComputer::phase(int32_t *x, int32_t *y, int32_t *angle_out, int32_t
 	if(RotationComputer::mode != PHASE){
 		RotationComputer::mode = PHASE;
 		MODIFY_REG(CORDIC -> CSR,
-					0x007F07FF,
-					0x00100052
+					RESET_MASK,
+					PHASE_CONFIG
 		);
 	}
 	for(int n = 0; n < size; n++){
@@ -74,8 +74,8 @@ void RotationComputer::modulus(int32_t *x, int32_t *y, int32_t *out, int32_t siz
 	if(RotationComputer::mode != MODULUS){
 		RotationComputer::mode = MODULUS;
 		MODIFY_REG(CORDIC -> CSR,
-					0x007F07FF,
-					0x00100053
+					RESET_MASK,
+					MODULUS_CONFIG
 		);
 	}
 	for(int n = 0; n < size; n++){
@@ -89,8 +89,8 @@ void RotationComputer::phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_
 	if(RotationComputer::mode != PHASE_MODULUS){
 		RotationComputer::mode = PHASE_MODULUS;
 		MODIFY_REG(CORDIC -> CSR,
-					0x007F07FF,
-					0x00180052
+					RESET_MASK,
+					PHASE_MODULUS_CONFIG
 		);
 	}
 	for(int n = 0; n < size; n++){
@@ -102,17 +102,6 @@ void RotationComputer::phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_
 }
 
 
-/*In CSR you can directly configurate CORDIC. The masks for the variables are defined as follow
-	 Functions : 0x0000000F (0.COSINE 1.SINE 2.PHASE 3.MODULUS 4.ARCTANGENT 5.HCOSINE 6.HSINE 7.HARCTANGENT 8.NATLOG 9.SQRT)
-	 Precision : 0x000000F0 (0.1_cycle 1.2_cycles 2.3_cycles ...)
-	 Scale : 0x00000700 (0 = 0, 1 = 1 ... means that the in has been shifted to the right and the output needs to be shifted to the left)
-	 Interrupt enabled : 0x00010000 (0.disabled 1.enabled)
-	 DMA read and write : 0x00020000 0x00040000 (respectively)
-	 In and out arguments: 0x00100000 0x00080000 (respectively) (0.1argument 1.2arguments)
-	 Width input and output: 0x00200000 0x00400000 (respectively) (0.32bytes 1.16bytes)
-	 Ready flag : 0x80000000
-
-	 */
 float RotationComputer::q31_to_radian_f32(uint32_t in){
 	return M_PI*ldexp((int32_t) in, -31);
 }
