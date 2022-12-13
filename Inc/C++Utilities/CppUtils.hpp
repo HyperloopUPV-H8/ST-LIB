@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <set>
+#include <stdint.h>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
