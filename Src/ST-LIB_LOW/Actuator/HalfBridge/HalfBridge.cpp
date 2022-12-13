@@ -20,7 +20,7 @@ HalfBridge::HalfBridge(Pin& positive_pwm_pin, Pin& negative_pwm_pin, Pin& enable
 	}
 	HalfBridge::negative_pwm = negative_pwm_id.value();
 
-	optional<uint8_t> enable_id = DigitalOutputservice::inscribe(enable_pin);
+	optional<uint8_t> enable_id = DigitalOutputService::inscribe(enable_pin);
 	if (not enable_id) {
 		//TODO: Error Handler
 	}
@@ -42,7 +42,7 @@ HalfBridge::HalfBridge(Pin& positive_pwm_pin, Pin& positive_pwm_negated_pin,
 	}
 	HalfBridge::negative_pwm = negative_pwm_id.value();
 
-	optional<uint8_t> enable_id = DigitalOutputservice::inscribe(enable_pin);
+	optional<uint8_t> enable_id = DigitalOutputService::inscribe(enable_pin);
 	if (not enable_id) {
 		//TODO: Error Handler
 	}
@@ -52,11 +52,11 @@ HalfBridge::HalfBridge(Pin& positive_pwm_pin, Pin& positive_pwm_negated_pin,
 void HalfBridge::turn_on() {
 	PWMservice::turn_on(positive_pwm);
 	PWMservice::turn_on(negative_pwm);
-	DigitalOutputservice::turn_on(enable); // enable al final para evitar ruido
+	DigitalOutputService::turn_on(enable); // enable al final para evitar ruido
 }
 
 void HalfBridge::turn_off() {
-	DigitalOutputservice::turn_off(enable); // enable al principio para evitar ruido
+	DigitalOutputService::turn_off(enable); // enable al principio para evitar ruido
 	PWMservice::turn_off(positive_pwm);
 	PWMservice::turn_off(negative_pwm);
 }

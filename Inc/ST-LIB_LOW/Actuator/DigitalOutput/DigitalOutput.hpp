@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "DigitalOutputservice/DigitalOutputservice.hpp"
+#include "DigitalOutputService/DigitalOutputService.hpp"
 
 class DigitalOutput {
 public:
