@@ -18,6 +18,8 @@ public:
 		SLEEP = 2
 	};
 
+	static StateMachine state_machine;
+
 	static void initialize();
 	static void turn_on();
 	static void turn_off();
@@ -28,7 +30,4 @@ public:
 	static void remove_cyclic_action(uint8_t id);
 
 	static void add_transition(States old_state, States new_state, function<bool()> transition);
-
-private:
-	static StateMachine state_machine;
 };
