@@ -50,14 +50,6 @@ optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 	return id_counter++;
 }
 
-void PWMservice::start() {
-	for(TimerPeripheral peripheral : timer_peripherals) {
-		if (peripheral.is_registered()) {
-			PWMservice::init(peripheral);
-		}
-	}
-}
-
 void PWMservice::turn_on(uint8_t id) {
 	if (not instance_exists(id)) {
 		//TODO: error handler
