@@ -13,12 +13,12 @@ void Vehicle::initialize() {
 	Vehicle::state_machine.add_state(ON);
 	Vehicle::state_machine.add_state(SLEEP);
 
-//	optional<uint8_t> optional_id = Time::register_high_precision_alarm(500, []() {
-//		Vehicle::state_machine.check_transitions();
-//	});
-//	if (not optional_id) {
-//		//TODO: Error Handler
-//	}
+	optional<uint8_t> optional_id = Time::register_high_precision_alarm(500, []() {
+		Vehicle::state_machine.check_transitions();
+	});
+	if (not optional_id) {
+		//TODO: Error Handler
+	}
 }
 
 void Vehicle::turn_off() {
