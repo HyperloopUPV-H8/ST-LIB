@@ -6,38 +6,46 @@
  */
 #include "Communication/SPI/SPI.hpp"
 
-SPI::Instance SPI::instance3 = { .SCK = PC10, .MOSI = PB2, .MISO = PC11, .SS = PA4,
-                                 .hspi = &hspi3
-                               };
+#ifdef HAL_SPI_MODULE_ENABLED
 
+SPI::Instance SPI::instance3 = { .SCK = PC10, .MOSI = PB2, .MISO = PC11, .SS = PA4,
+                                 .hspi = &hspi3, .instance = SPI3,
+								 .baud_rate_prescaler = SPI_BAUDRATEPRESCALER_256,
+                               };
 SPI::Peripheral SPI::spi3 = SPI::Peripheral::peripheral3;
 
-forward_list<uint8_t> SPI::id_manager = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255 };
-
 unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi;
+unordered_map<SPI::Peripheral, SPI::Instance*> SPI::available_spi = {
+	{SPI::spi3, &SPI::instance3}
+};
 
-uint8_t SPI::inscribe(SPI::Peripheral& spi){
-    SPI::Instance* spi_instance;
+uint16_t SPI::id_counter = 0;
 
-    switch(spi){
-        case SPI::Peripheral::peripheral3:
-        spi_instance = &SPI::instance3;
-        break;
-    }
+optional<uint8_t> SPI::inscribe(SPI::Peripheral& spi){
+	if ( !SPI::available_spi.contains(spi)){
+		return nullopt; //TODO: Error handler or throw the exception
+	}
+
+	SPI::Instance* spi_instance = SPI::available_spi[spi];
 
     Pin::inscribe(spi_instance->SCK, ALTERNATIVE);
     Pin::inscribe(spi_instance->MOSI, ALTERNATIVE);
     Pin::inscribe(spi_instance->MISO, ALTERNATIVE);
     Pin::inscribe(spi_instance->SS, ALTERNATIVE);
 
-    uint8_t id = SPI::id_manager.front();
+    uint8_t id = SPI::id_counter++;
 
     SPI::registered_spi[id] = spi_instance;
 
-    SPI::id_manager.pop_front();
-
     return id;
 }
+
+void SPI::start(){
+	for(auto iter: SPI::registered_spi){
+		SPI::init(iter.second);
+	}
+}
+
 
 bool SPI::transmit_next_packet(uint8_t id, RawPacket& packet){
     if (!SPI::registered_spi.contains(id))
@@ -110,3 +118,49 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
     //TODO: Fault, SPI error
     return;
 }
+
+void SPI::init(SPI::Instance* spi){
+	if (spi->initialized) {
+		return;
+	}
+
+    SPI_InitTypeDef init_data = spi->hspi->Init;
+
+	spi->hspi->Instance = spi->instance;
+	init_data.Mode = spi->mode;
+	init_data.Direction = SPI_DIRECTION_2LINES;
+	init_data.DataSize = spi->data_size;
+	init_data.CLKPolarity = spi->clock_polarity;
+	init_data.CLKPhase = spi->clock_phase;
+
+	if (spi->mode == SPI_MODE_MASTER) {
+		init_data.NSS = SPI_NSS_HARD_OUTPUT;
+		init_data.BaudRatePrescaler = spi->baud_rate_prescaler;
+	}else{
+		init_data.NSS = SPI_NSS_HARD_INPUT;
+	}
+
+	init_data.FirstBit = spi->first_bit;
+	init_data.TIMode = SPI_TIMODE_DISABLE;
+	init_data.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+	init_data.CRCPolynomial = 0x0;
+	init_data.NSSPMode = SPI_NSS_PULSE_ENABLE;
+	init_data.NSSPolarity = spi->nss_polarity;
+	init_data.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
+	init_data.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+	init_data.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+	init_data.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
+	init_data.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
+	init_data.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
+	init_data.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
+	init_data.IOSwap = SPI_IO_SWAP_DISABLE;
+
+
+	if (HAL_SPI_Init(&hspi3) != HAL_OK){
+		//TODO: Error handler
+	}
+
+	spi->initialized = true;
+}
+#endif
+
