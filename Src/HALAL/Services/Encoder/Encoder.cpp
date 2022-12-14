@@ -7,8 +7,11 @@
 
 #include "Encoder/Encoder.hpp"
 
-forward_list<uint8_t> Encoder::id_manager = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
-map<uint8_t, pair<Pin, Pin>> Encoder::service_ids = {};
+#ifdef HAL_TIM_MODULE_ENABLED
+
+map<uint8_t, pair<Pin, Pin>> Encoder::registered_encoder = {};
+
+uint8_t Encoder::id_counter = 0;
 
 optional<uint8_t> Encoder::inscribe(Pin& pin1, Pin& pin2){
 	pair<Pin, Pin> doublepin = {pin1, pin2};
@@ -19,69 +22,105 @@ optional<uint8_t> Encoder::inscribe(Pin& pin1, Pin& pin2){
 	Pin::inscribe(pin1, ALTERNATIVE);
 	Pin::inscribe(pin2, ALTERNATIVE);
 
-	uint8_t id = Encoder::id_manager.front();
-	Encoder::service_ids[id] = doublepin;
+	uint8_t id = Encoder::id_counter++;
+	Encoder::registered_encoder[id] = doublepin;
 
-	Encoder::id_manager.pop_front();
 	return id;
 }
 
+void Encoder::start(){
+	for (pair<uint8_t, pair<Pin, Pin>> instance : registered_encoder) {
+			init(Encoder::pin_timer_map[instance.second]);
+	}
+}
 
 void Encoder::turn_on(uint8_t id){
-	if (not Encoder::service_ids.contains(id)) {
+	if (not Encoder::registered_encoder.contains(id)) {
 		return; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer = pin_timer_map[service_ids[id]];
+	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
 
-	if (HAL_TIM_Encoder_GetState(timer) == HAL_TIM_STATE_RESET) {
-		//TODO: Exception handle, Error (Encoder not initialized)
-		return;
+	if (HAL_TIM_Encoder_GetState(timer->handle) == HAL_TIM_STATE_RESET) {
+		return; //TODO: Exception handle, Error (Encoder not initialized)
+
 	}
 
-	if (HAL_TIM_Encoder_Start(timer, TIM_CHANNEL_ALL) != HAL_OK) {
-		//TODO: Exception handle, Warning (Error starting encoder)
+	if (HAL_TIM_Encoder_Start(timer->handle, TIM_CHANNEL_ALL) != HAL_OK) {
+		return; //TODO: Exception handle, Warning (Error starting encoder)
 	}
 }
 
 void Encoder::turn_off(uint8_t id){
-	if (not Encoder::service_ids.contains(id)) {
+	if (not Encoder::registered_encoder.contains(id)) {
 		return; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer = pin_timer_map[service_ids[id]];
+	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
 
-	if (HAL_TIM_Encoder_Stop(timer, TIM_CHANNEL_ALL) != HAL_OK) {
+	if (HAL_TIM_Encoder_Stop(timer->handle, TIM_CHANNEL_ALL) != HAL_OK) {
 		//TODO: Exception handle, Warning (Error stopping encoder)
 	}
 }
 
 void Encoder::reset(uint8_t id){
-	if (not Encoder::service_ids.contains(id)) {
+	if (not Encoder::registered_encoder.contains(id)) {
 		return; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer =  pin_timer_map[service_ids[id]];
+	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];
 
-	timer->Instance->CNT = 0;
+	timer->handle->Instance->CNT = UINT16_MAX / 2;
 }
 
 optional<uint32_t> Encoder::get_counter(uint8_t id){
-	if (not Encoder::service_ids.contains(id)) {
+	if (not Encoder::registered_encoder.contains(id)) {
 		return nullopt; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer = pin_timer_map[service_ids[id]];
+	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
 
-	return timer->Instance->CNT;
+	return timer->handle->Instance->CNT;
 }
 
 optional<bool> Encoder::get_direction(uint8_t id){
-	if (not Encoder::service_ids.contains(id)) {
+	if (not Encoder::registered_encoder.contains(id)) {
 		return nullopt; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer =  pin_timer_map[service_ids[id]];
+	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];
 
-	return ((timer->Instance->CR1 & 0b10000) >> 4);
+	return ((timer->handle->Instance->CR1 & 0b10000) >> 4);
 }
+
+void Encoder::init(TimerPeripheral* encoder){
+	  TIM_Encoder_InitTypeDef sConfig = {0};
+	  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+	  encoder->handle->Instance = encoder->init_data.timer;
+	  encoder->handle->Init.Prescaler = encoder->init_data.prescaler;
+	  encoder->handle->Init.CounterMode = TIM_COUNTERMODE_UP;
+	  encoder->handle->Init.Period = encoder->init_data.period;
+	  encoder->handle->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	  encoder->handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
+	  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+	  sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
+	  sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
+	  sConfig.IC1Filter = 0;
+	  sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
+	  sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
+	  sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
+	  sConfig.IC2Filter = 0;
+	  if (HAL_TIM_Encoder_Init(encoder->handle, &sConfig) != HAL_OK){
+		  //TODO: Error handler
+	  }
+	  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+	  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+	  if (HAL_TIMEx_MasterConfigSynchronization(encoder->handle, &sMasterConfig) != HAL_OK){
+		  //TODO: Error handler
+	  }
+}
+
+#endif
+
