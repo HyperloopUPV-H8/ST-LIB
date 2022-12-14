@@ -1,11 +1,52 @@
-/*
- * runes.hpp
- *
- *  Created on: Nov 21, 2022
- *      Author: alejandro
- */
+#pragma once
 
 #include "ST-LIB.hpp"
+
+/************************************************
+ *              Communication-SPI
+ ***********************************************/
+extern SPI_HandleTypeDef hspi3;
+
+
+SPI::Instance SPI::instance3 = { .SCK = PC10, .MOSI = PC12, .MISO = PC11,
+                                 .hspi = &hspi3, .instance = SPI3,
+								 .baud_rate_prescaler = SPI_BAUDRATEPRESCALER_256,
+                               };
+
+SPI::Peripheral SPI::spi3 = SPI::Peripheral::peripheral3;
+
+unordered_map<SPI::Peripheral, SPI::Instance*> SPI::available_spi = {
+	{SPI::spi3, &SPI::instance3}
+};
+
+/************************************************
+ *              Communication-UART
+ ***********************************************/
+extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
+
+UART::Instance UART::instance1 = { .TX = PA9, .RX = PA10, .huart = &huart1,
+								   .instance = USART1, .baud_rate = 115200, .word_length = UART_WORDLENGTH_8B,
+                               };
+
+
+UART::Instance UART::instance2 = { .TX = PD5, .RX = PD6, .huart = &huart2,
+								   .instance = USART2, .baud_rate = 115200, .word_length = UART_WORDLENGTH_8B,
+                               };
+
+
+UART::Peripheral UART::uart1 = UART::Peripheral::peripheral1;
+UART::Peripheral UART::uart2 = UART::Peripheral::peripheral2;
+
+unordered_map<UART::Peripheral, UART::Instance*> UART::available_uarts = {
+	{UART::uart1, &UART::instance1},
+	{UART::uart2, &UART::instance2}
+};
+
+
+/************************************************
+ *              Communication-I2C
+ ***********************************************/
 
 /************************************************
  *                 	  Encoder
@@ -14,7 +55,7 @@
 
 extern TIM_HandleTypeDef htim8;
 
-TimerPeripheral encoder_timer = TimerPeripheral(&htim8, {TIM8, 0 ,65535});
+TimerPeripheral encoder_timer = TimerPeripheral(&htim8, {TIM8, 0, 65535});
 
 map<pair<Pin, Pin>, TimerPeripheral*> Encoder::pin_timer_map = {
 		{{PC6, PC7}, &encoder_timer}

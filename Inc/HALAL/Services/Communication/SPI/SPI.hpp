@@ -12,7 +12,7 @@
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
-extern SPI_HandleTypeDef hspi3;
+//TODO: Hay que hacer el Chip select funcione a traves de un GPIO en vez de a traves del periferico.
 
 /**
  * @brief SPI service class. Abstracts the use of the SPI service of the HAL library.
@@ -52,8 +52,13 @@ private:
      *
      */
     enum Peripheral{
+     	peripheral1 = 0,
+     	peripheral2 = 1,
         peripheral3 = 2,
-    };
+ 		peripheral4 = 3,
+ 		peripheral5 = 4,
+ 		peripheral6 = 5,
+     };
 
 public:
     static uint16_t id_counter;
@@ -66,13 +71,23 @@ public:
      * @brief SPI 3 wrapper enum of the STM32H723.
      *
      */
+    static SPI::Peripheral spi1;
+    static SPI::Peripheral spi2;
     static SPI::Peripheral spi3;
+    static SPI::Peripheral spi4;
+    static SPI::Peripheral spi5;
+    static SPI::Peripheral spi6;
 
     /**
      * @brief SPI 3 instance of the STM32H723.
      *
      */
-    static SPI::Instance instance3;
+    static SPI::Instance instance1;
+	static SPI::Instance instance2;
+	static SPI::Instance instance3;
+	static SPI::Instance instance4;
+	static SPI::Instance instance5;
+	static SPI::Instance instance6;
 
     /**
      * @brief Registers a new SPI.
