@@ -66,13 +66,13 @@ public:
 	 * If the angle or the out parameter has less size than the size parameter, it will throw an exception
 	 * If one or both angle and out parameters have more size than size, it will just calculate until size and leave the rest as it is
 	 */
-	static void cos(int32_t *angle,int32_t *out,int size);
+	static void cos(int32_t *angle,int32_t *out,int32_t size);
 
 
 	/*
 	 * @brief sine function. virtually the same as the cosine function
 	 */
-	static void sin(int32_t *angle,int32_t *out,int size);
+	static void sin(int32_t *angle,int32_t *out,int32_t size);
 
 
 	/*
@@ -89,7 +89,7 @@ public:
 	 * The exact time it takes is around 4 cycles more than the cos function, which is around 30-40. So 10% more as it needs to read one more register.
 	 * The reads are protected to give the correct result, thats why it needs 4 cycles for the read (on average) and not just one
 	 */
-	static void cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *sin_out, int size);
+	static void cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *sin_out, int32_t size);
 
 
 	/*
@@ -98,7 +98,7 @@ public:
 	 * @param y. The array of values y of each vector with size "size". input.
 	 * @param angle_out. The array where the functions puts its output, which is an angle. output.
 	 */
-	static void phase(int32_t *x, int32_t *y, int32_t *angle_out, int size);
+	static void phase(int32_t *x, int32_t *y, int32_t *angle_out, int32_t size);
 
 
 	/*
@@ -111,7 +111,7 @@ public:
 	 * If it were to give a value higher than 2147483392, the value that it would return would be absurd.
 	 * Avoiding to get near the limits of the euclidean space described (no more than 70% on both of the axis) is advised.
 	 */
-	static void modulus(int32_t *x, int32_t *y, int32_t *out, int size);
+	static void modulus(int32_t *x, int32_t *y, int32_t *out, int32_t size);
 
 	/*
 	 * @brief modulus and phase function. Does both while only needing the time that one takes
@@ -124,7 +124,7 @@ public:
 	 * The modulus returned by this function shares weaknesses with the modulus function.
 	 * Avoiding getting near the 70% of the maximun (~ 1518500000) on both x and y at the same time is advised, unless modulus is handled.
 	 */
-	static void phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int size);
+	static void phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int32_t size);
 	/*
 	 * @brief Testing function that translates the angle to a float in radians, to make reading easier. Its slow, not intended to use on continous calculations
 	 */
