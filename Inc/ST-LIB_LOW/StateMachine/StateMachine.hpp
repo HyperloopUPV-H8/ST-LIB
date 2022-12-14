@@ -6,14 +6,18 @@
 #include <C++Utilities/CppUtils.hpp>
 #include "Time/Time.hpp"
 
-class Action {
+class TimedAction {
+public:
 	function<void()> action;
-	uint16_t time_in_;
+	uint32_t microseconds;
+
+	TimedAction() = default;
+	TimedAction(function<void()> action, uint32_t microseconds, bool high_precision);
 };
 
 class State {
 public:
-	vector<function<void()>> on_update_actions = {};
+	vector<TimedAction> cyclic_actions = {};
 	vector<function<void()>> on_enter_actions = {};
 	vector<function<void()>> on_exit_actions = {};
 	void enter();
@@ -32,11 +36,11 @@ public:
 	void add_state(uint8_t state);
 	void add_transition(uint8_t old_state, uint8_t new_state, function<bool()> transition);
 
-	void add_cyclic_action_in_microseconds(function<void()> action, uint8_t microseconds);
-	void add_cyclic_action_in_microseconds(function<void()> action, uint8_t state, uint8_t microseconds);
+	void add_cyclic_action_in_microseconds(function<void()> action, uint32_t microseconds);
+	void add_cyclic_action_in_microseconds(function<void()> action, uint32_t microseconds, uint8_t state);
 
-	void add_cyclic_action_in_milliseconds(function<void()> action, uint8_t microseconds);
-	void add_cyclic_action_in_milliseconds(function<void()> action, uint8_t state, uint8_t microseconds);
+	void add_cyclic_action_in_milliseconds(function<void()> action, uint32_t milliseconds);
+	void add_cyclic_action_in_milliseconds(function<void()> action, uint32_t milliseconds, uint8_t state);
 
 	void add_enter_action(function<void()> action);
 	void add_enter_action(function<void()> action, uint8_t state);
@@ -44,13 +48,13 @@ public:
 	void add_exit_action(function<void()> action);
 	void add_exit_action(function<void()> action, uint8_t state);
 
-	void update();
-	void check_transitions();
 	void force_change_state(uint8_t new_state);
+	void check_transitions();
 
 private:
 	unordered_map<uint8_t, State> states;
 	unordered_map<uint8_t, unordered_map<uint8_t, function<bool()>>> transitions;
 
-	vector<uint8_t> actions;
+	vector<uint8_t> current_state_timed_actions_in_milliseconds;
+	vector<uint8_t> current_state_timed_actions_in_microseconds;
 };

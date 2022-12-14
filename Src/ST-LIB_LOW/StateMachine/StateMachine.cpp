@@ -4,6 +4,9 @@
 
 #include "StateMachine/StateMachine.hpp"
 
+TimedAction::TimedAction(function<void()> action, uint32_t microseconds, bool high_precision) :
+	action(action), microseconds(microseconds) {}
+
 void State::enter() {
 	for (function<void()> action : on_enter_actions) {
 		action();
@@ -33,17 +36,58 @@ void StateMachine::add_state(uint8_t state) {
 	states[state] = State();
 }
 
-void StateMachine::add_update_action(function<void()> action) {
+void StateMachine::add_cyclic_action_in_milliseconds(function<void()> func, uint32_t milliseconds) {
 	if (not current_state) {
 		return; //TODO: Error handler
 	}
-	states[current_state].on_update_actions.push_back(action);
+
+	TimedAction action = TimedAction(func, milliseconds*1000, false);
+	states[current_state].cyclic_actions.push_back(action);
+	current_state_timed_actions_in_milliseconds.push_back(Time::register_low_precision_alarm(milliseconds, func));
 }
-void StateMachine::add_update_action(function<void()> action, uint8_t state) {
+
+void StateMachine::add_cyclic_action_in_milliseconds(function<void()> func,uint32_t milliseconds, uint8_t state) {
 	if (not states.contains(state)) {
 		return; //TODO: Error handler
 	}
-	states[state].on_update_actions.push_back(action);
+
+	TimedAction action = TimedAction(func, milliseconds*1000, false);
+	states[state].cyclic_actions.push_back(action);
+	if (state == current_state) {
+		current_state_timed_actions_in_milliseconds.push_back(Time::register_low_precision_alarm(milliseconds, func));
+	}
+}
+
+void StateMachine::add_cyclic_action_in_microseconds(function<void()> func, uint32_t microseconds) {
+	if (not current_state) {
+		return; //TODO: Error handler
+	}
+
+	TimedAction action = TimedAction(func, microseconds, true);
+	states[current_state].cyclic_actions.push_back(action);
+
+	optional<uint8_t> optional_id = Time::register_high_precision_alarm(microseconds, func);
+	if (not optional_id) {
+		return; //TODO: Error handler
+	}
+	current_state_timed_actions_in_microseconds.push_back(optional_id.value());
+}
+
+void StateMachine::add_cyclic_action_in_microseconds(function<void()> func, uint32_t microseconds, uint8_t state) {
+	if (not state) {
+		return; //TODO: Error handler
+	}
+
+	TimedAction action = TimedAction(func, microseconds, true);
+	states[state].cyclic_actions.push_back(action);
+
+	if (state == current_state) {
+		optional<uint8_t> optional_id = Time::register_high_precision_alarm(microseconds, func);
+		if (not optional_id) {
+			return; //TODO: Error handler
+		}
+		current_state_timed_actions_in_microseconds.push_back(optional_id.value());
+	}
 }
 
 void StateMachine::add_enter_action(function<void()> action) {
@@ -80,11 +124,6 @@ void StateMachine::add_transition(uint8_t old_state, uint8_t new_state,
 	transitions[old_state][new_state] = transition;
 }
 
-void StateMachine::update() {
-	states[current_state].update();
-	check_transitions();
-}
-
 void StateMachine::check_transitions() {
 	for (auto const state_transition : transitions[current_state]) {
 		if (state_transition.second()) {
@@ -97,7 +136,32 @@ void StateMachine::force_change_state(uint8_t new_state) {
 	if (not states.contains(new_state)) {
 		return; //TODO: Error handler
 	}
+
+	for (uint8_t timed_action : current_state_timed_actions_in_microseconds) {
+		Time::unregister_high_precision_alarm(timed_action);
+	}
+	for (uint8_t timed_action : current_state_timed_actions_in_milliseconds) {
+		Time::unregister_low_precision_alarm(timed_action);
+	}
 	states[current_state].exit();
+
 	current_state = new_state;
+
 	states[current_state].enter();
+	for (TimedAction timed_action : states[current_state].cyclic_actions) {
+		if (timed_action.microseconds % 1000 == 0) {
+			optional<uint8_t> optional_id = Time::register_low_precision_alarm(timed_action.microseconds/1000, timed_action.action);
+			if (not optional_id) {
+				//TODO: Error Handler
+			}
+			current_state_timed_actions_in_milliseconds.push_back(optional_id.value());
+
+		} else {
+			optional<uint8_t> optional_id = Time::register_high_precision_alarm(timed_action.microseconds, timed_action.action);
+			if (not optional_id) {
+				//TODO: Error Handler
+			}
+			current_state_timed_actions_in_microseconds.push_back(optional_id.value());
+		}
+	}
 }
