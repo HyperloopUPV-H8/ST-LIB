@@ -20,6 +20,17 @@ int32_t Math::cos(int32_t angle){
 }
 
 int32_t Math::tg(int32_t angle){
+	if((angle & Q31_MASK) >= HALF_MARGIN){
+		if((angle & Q31_MASK) >= SHALF_MARGIN){
+			angle = angle - MAX_INT;
+		}else{
+			if(angle > 0){
+				return MAX_INT;
+			}else{
+				return -MAX_INT-1;
+			}
+		}
+	}
 	*pointer1 = angle;
 	RotationComputer::cos_and_sin(pointer1,pointer2,pointer3,1);
 	return *pointer3 / (*pointer2 >> TG_DECIMAL_BITS);
@@ -33,12 +44,28 @@ int32_t Math::phase(int32_t x, int32_t y){
 }
 
 int32_t Math::modulus(int32_t x, int32_t y){
-	if(x + y > INT_MAX){
+	if(x + y > MAX_MOD_MARGIN){
 		//TODO: calculate efficiently in case the CORDIC is estimated to fail
-		return INT_MAX;
+		return MAX_INT;
 	}
 	*pointer1 = x;
 	*pointer2 = y;
 	RotationComputer::modulus(pointer1, pointer2, pointer3, 1);
 	return *pointer3;
 }
+
+int32_t Math::atg(int32_t in){
+	*pointer1 = 1 << TG_DECIMAL_BITS;
+	*pointer2 = in;
+	RotationComputer::phase(pointer1, pointer2, pointer3, 1);
+	return *pointer3;
+}
+
+int32_t Math::tg_to_unitary(int32_t tg_in){
+	return tg_in >> TG_DECIMAL_BITS;
+}
+
+int32_t Math::unitary_to_tg(int32_t in){
+	return in << TG_DECIMAL_BITS;
+}
+
