@@ -12,7 +12,7 @@ public:
 	uint32_t microseconds;
 
 	TimedAction() = default;
-	TimedAction(function<void()> action, uint32_t microseconds, bool high_precision);
+	TimedAction(function<void()> action, uint32_t microseconds);
 };
 
 class State {
@@ -36,11 +36,10 @@ public:
 	void add_state(uint8_t state);
 	void add_transition(uint8_t old_state, uint8_t new_state, function<bool()> transition);
 
-	void add_cyclic_action_in_microseconds(function<void()> action, uint32_t microseconds);
-	void add_cyclic_action_in_microseconds(function<void()> action, uint32_t microseconds, uint8_t state);
-
-	void add_cyclic_action_in_milliseconds(function<void()> action, uint32_t milliseconds);
-	void add_cyclic_action_in_milliseconds(function<void()> action, uint32_t milliseconds, uint8_t state);
+	template<class TimeUnit>
+	void add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
+	template<class TimeUnit>
+	void add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, uint8_t state);
 
 	void add_enter_action(function<void()> action);
 	void add_enter_action(function<void()> action, uint8_t state);

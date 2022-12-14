@@ -4,7 +4,7 @@
 
 #include "StateMachine/StateMachine.hpp"
 
-TimedAction::TimedAction(function<void()> action, uint32_t microseconds, bool high_precision) :
+TimedAction::TimedAction(function<void()> action, uint32_t microseconds) :
 	action(action), microseconds(microseconds) {}
 
 void State::enter() {
@@ -36,57 +36,33 @@ void StateMachine::add_state(uint8_t state) {
 	states[state] = State();
 }
 
-void StateMachine::add_cyclic_action_in_milliseconds(function<void()> func, uint32_t milliseconds) {
-	if (not current_state) {
-		return; //TODO: Error handler
-	}
-
-	TimedAction action = TimedAction(func, milliseconds*1000, false);
-	states[current_state].cyclic_actions.push_back(action);
-	current_state_timed_actions_in_milliseconds.push_back(Time::register_low_precision_alarm(milliseconds, func));
+template<class TimeUnit>
+void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
+	add_cyclic_action(action, period, current_state);
 }
 
-void StateMachine::add_cyclic_action_in_milliseconds(function<void()> func,uint32_t milliseconds, uint8_t state) {
-	if (not states.contains(state)) {
-		return; //TODO: Error handler
-	}
-
-	TimedAction action = TimedAction(func, milliseconds*1000, false);
-	states[state].cyclic_actions.push_back(action);
-	if (state == current_state) {
-		current_state_timed_actions_in_milliseconds.push_back(Time::register_low_precision_alarm(milliseconds, func));
-	}
-}
-
-void StateMachine::add_cyclic_action_in_microseconds(function<void()> func, uint32_t microseconds) {
-	if (not current_state) {
-		return; //TODO: Error handler
-	}
-
-	TimedAction action = TimedAction(func, microseconds, true);
-	states[current_state].cyclic_actions.push_back(action);
-
-	optional<uint8_t> optional_id = Time::register_high_precision_alarm(microseconds, func);
-	if (not optional_id) {
-		return; //TODO: Error handler
-	}
-	current_state_timed_actions_in_microseconds.push_back(optional_id.value());
-}
-
-void StateMachine::add_cyclic_action_in_microseconds(function<void()> func, uint32_t microseconds, uint8_t state) {
+template<class TimeUnit>
+void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, uint8_t state) {
 	if (not state) {
 		return; //TODO: Error handler
 	}
 
-	TimedAction action = TimedAction(func, microseconds, true);
-	states[state].cyclic_actions.push_back(action);
+	uint32_t microseconds = (uint32_t)chrono::duration_cast<chrono::microseconds>(period).count();
+	TimedAction timed_action(action, microseconds);
+	states[state].cyclic_actions.push_back(timed_action);
 
 	if (state == current_state) {
-		optional<uint8_t> optional_id = Time::register_high_precision_alarm(microseconds, func);
-		if (not optional_id) {
-			return; //TODO: Error handler
+		if (microseconds % 1000) {
+			optional<uint8_t> optional_id = Time::register_high_precision_alarm(microseconds, action);
+			if (not optional_id) {
+				return; //TODO: Error handler
+			}
+			current_state_timed_actions_in_microseconds.push_back(optional_id.value());
 		}
-		current_state_timed_actions_in_microseconds.push_back(optional_id.value());
+		else {
+			uint8_t id = Time::register_low_precision_alarm(microseconds, action);
+			current_state_timed_actions_in_milliseconds.push_back(id);
+		}
 	}
 }
 
