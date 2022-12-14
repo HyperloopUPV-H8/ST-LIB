@@ -13,20 +13,22 @@
 class Vehicle {
 public:
 	enum States : uint8_t {
-		OFF = 0,
-		ON = 1,
-		SLEEP = 2
+		OPERATIONAL = 0,
+		SLEEP = 1,
+		FAULT = 2
+	};
+
+	enum TimeUnit : uint8_t {
+		SECONDS = 0,
+		MILLISECONDS = 1,
+		MICROSECONDS = 2
 	};
 
 	static StateMachine state_machine;
 
-	static void initialize();
-	static void turn_on();
-	static void turn_off();
-	static void to_sleep();
+	static void initialize(uint16_t transition_check_time_in_milliseconds = 500);
 
-	static uint8_t add_cyclic_action(uint16_t milliseconds, function<void()> action);
-	static uint8_t add_cyclic_sleep_action(uint8_t milliseconds, function<void()> action);
+	static uint8_t add_cyclic_action(uint16_t milliseconds, function<void()> action, States state = OPERATIONAL, TimeUnit time_unit = MILLISECONDS);
 	static void remove_cyclic_action(uint8_t id);
 
 	static void add_transition(States old_state, States new_state, function<bool()> transition);
