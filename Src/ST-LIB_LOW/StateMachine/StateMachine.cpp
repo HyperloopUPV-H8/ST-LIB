@@ -2,13 +2,7 @@
  * Created by Alejandro
  */
 
-#include <StateMachine/StateMachine.hpp>
-
-void State::update() {
-	for (function<void()> action : on_update_actions) {
-		action();
-	}
-}
+#include "StateMachine/StateMachine.hpp"
 
 void State::enter() {
 	for (function<void()> action : on_enter_actions) {

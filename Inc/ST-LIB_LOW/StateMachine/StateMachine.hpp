@@ -4,14 +4,18 @@
 
 #pragma once
 #include <C++Utilities/CppUtils.hpp>
+#include "Time/Time.hpp"
 
+class Action {
+	function<void()> action;
+	uint16_t time_in_;
+};
 
 class State {
 public:
 	vector<function<void()>> on_update_actions = {};
 	vector<function<void()>> on_enter_actions = {};
 	vector<function<void()>> on_exit_actions = {};
-	void update();
 	void enter();
 	void exit();
 };
@@ -28,8 +32,11 @@ public:
 	void add_state(uint8_t state);
 	void add_transition(uint8_t old_state, uint8_t new_state, function<bool()> transition);
 
-	void add_update_action(function<void()> action);
-	void add_update_action(function<void()> action, uint8_t state);
+	void add_cyclic_action_in_microseconds(function<void()> action, uint8_t microseconds);
+	void add_cyclic_action_in_microseconds(function<void()> action, uint8_t state, uint8_t microseconds);
+
+	void add_cyclic_action_in_milliseconds(function<void()> action, uint8_t microseconds);
+	void add_cyclic_action_in_milliseconds(function<void()> action, uint8_t state, uint8_t microseconds);
 
 	void add_enter_action(function<void()> action);
 	void add_enter_action(function<void()> action, uint8_t state);
@@ -44,4 +51,6 @@ public:
 private:
 	unordered_map<uint8_t, State> states;
 	unordered_map<uint8_t, unordered_map<uint8_t, function<bool()>>> transitions;
+
+	vector<uint8_t> actions;
 };
