@@ -41,14 +41,14 @@ void Encoder::turn_on(uint8_t id){
 		return; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer = pin_timer_map[registered_encoder[id]].first;
+	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
 
-	if (HAL_TIM_Encoder_GetState(timer) == HAL_TIM_STATE_RESET) {
+	if (HAL_TIM_Encoder_GetState(timer->handle) == HAL_TIM_STATE_RESET) {
 		return; //TODO: Exception handle, Error (Encoder not initialized)
 
 	}
 
-	if (HAL_TIM_Encoder_Start(timer, TIM_CHANNEL_ALL) != HAL_OK) {
+	if (HAL_TIM_Encoder_Start(timer->handle, TIM_CHANNEL_ALL) != HAL_OK) {
 		return; //TODO: Exception handle, Warning (Error starting encoder)
 	}
 }
@@ -58,9 +58,9 @@ void Encoder::turn_off(uint8_t id){
 		return; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer = pin_timer_map[registered_encoder[id]].first;
+	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
 
-	if (HAL_TIM_Encoder_Stop(timer, TIM_CHANNEL_ALL) != HAL_OK) {
+	if (HAL_TIM_Encoder_Stop(timer->handle, TIM_CHANNEL_ALL) != HAL_OK) {
 		//TODO: Exception handle, Warning (Error stopping encoder)
 	}
 }
@@ -70,9 +70,9 @@ void Encoder::reset(uint8_t id){
 		return; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer =  pin_timer_map[registered_encoder[id]].first;
+	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];
 
-	timer->Instance->CNT = UINT16_MAX / 2;
+	timer->handle->Instance->CNT = UINT16_MAX / 2;
 }
 
 optional<uint32_t> Encoder::get_counter(uint8_t id){
@@ -80,9 +80,9 @@ optional<uint32_t> Encoder::get_counter(uint8_t id){
 		return nullopt; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer = pin_timer_map[registered_encoder[id]].first;
+	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
 
-	return timer->Instance->CNT;
+	return timer->handle->Instance->CNT;
 }
 
 optional<bool> Encoder::get_direction(uint8_t id){
@@ -90,21 +90,21 @@ optional<bool> Encoder::get_direction(uint8_t id){
 		return nullopt; //TODO: error handler
 	}
 
-	TIM_HandleTypeDef* timer =  pin_timer_map[registered_encoder[id]].first;
+	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];
 
-	return ((timer->Instance->CR1 & 0b10000) >> 4);
+	return ((timer->handle->Instance->CR1 & 0b10000) >> 4);
 }
 
-void Encoder::init(pair<TIM_HandleTypeDef*, TIM_TypeDef*> encoder){
+void Encoder::init(TimerPeripheral* encoder){
 	  TIM_Encoder_InitTypeDef sConfig = {0};
 	  TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-	  encoder.first->Instance = encoder.second;
-	  encoder.first->Init.Prescaler = 0;
-	  encoder.first->Init.CounterMode = TIM_COUNTERMODE_UP;
-	  encoder.first->Init.Period = 65535;
-	  encoder.first->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-	  encoder.first->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	  encoder->handle->Instance = encoder->init_data.timer;
+	  encoder->handle->Init.Prescaler = encoder->init_data.prescaler;
+	  encoder->handle->Init.CounterMode = TIM_COUNTERMODE_UP;
+	  encoder->handle->Init.Period = encoder->init_data.period;
+	  encoder->handle->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	  encoder->handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 	  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
 	  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
 	  sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
@@ -114,12 +114,12 @@ void Encoder::init(pair<TIM_HandleTypeDef*, TIM_TypeDef*> encoder){
 	  sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
 	  sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
 	  sConfig.IC2Filter = 0;
-	  if (HAL_TIM_Encoder_Init(encoder.first, &sConfig) != HAL_OK){
+	  if (HAL_TIM_Encoder_Init(encoder->handle, &sConfig) != HAL_OK){
 		  //TODO: Error handler
 	  }
 	  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
 	  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-	  if (HAL_TIMEx_MasterConfigSynchronization(encoder.first, &sMasterConfig) != HAL_OK){
+	  if (HAL_TIMEx_MasterConfigSynchronization(encoder->handle, &sMasterConfig) != HAL_OK){
 		  //TODO: Error handler
 	  }
 }

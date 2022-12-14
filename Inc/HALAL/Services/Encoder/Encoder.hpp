@@ -7,7 +7,11 @@
 
 #pragma once
 
+
 #include "PinModel/Pin.hpp"
+#include "TimerPeripheral/TimerPeripheral.hpp"
+#include "C++Utilities/CppUtils.hpp"
+
 
 #ifdef HAL_TIM_MODULE_ENABLED
 /**
@@ -17,7 +21,7 @@
 class Encoder {
 public:
 	static uint8_t id_counter;
-	static map<pair<Pin, Pin>, pair<TIM_HandleTypeDef*, TIM_TypeDef*>> pin_timer_map;
+	static map<pair<Pin, Pin>, TimerPeripheral*> pin_timer_map;
 	static map<uint8_t, pair<Pin, Pin>> registered_encoder;
 
 	/**
@@ -69,6 +73,6 @@ public:
 	 */
 	static optional<bool> get_direction(uint8_t id);
 
-	static void init(pair<TIM_HandleTypeDef*, TIM_TypeDef*> encoder);
+	static void init(TimerPeripheral* encoder);
 };
 #endif
