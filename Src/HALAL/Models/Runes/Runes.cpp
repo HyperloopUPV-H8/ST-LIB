@@ -1,5 +1,5 @@
 /*
- * maps.hpp
+ * runes.hpp
  *
  *  Created on: Nov 21, 2022
  *      Author: alejandro
@@ -19,31 +19,48 @@ map<pair<Pin, Pin>, pair<TIM_HandleTypeDef*, TIM_TypeDef*>> Encoder::pin_timer_m
 };
 
 #endif
-
 /************************************************
- *                     PWMservice
+ *                     Timer
  ***********************************************/
 #ifdef HAL_TIM_MODULE_ENABLED
 
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim15;
 extern TIM_HandleTypeDef htim23;
 
-PWMservice::TimerInitData init_data_timer1 = PWMservice::TimerInitData(TIM1, 2750, 1000);
-PWMservice::TimerInitData init_data_timer15 = PWMservice::TimerInitData(TIM15, 0, 65535);
+TimerPeripheral::InitData init_data_timer1(TIM1);
+TimerPeripheral::InitData init_data_timer2(TIM2);
+TimerPeripheral::InitData init_data_timer15(TIM15);
+TimerPeripheral::InitData init_data_timer23(TIM23);
+
+TimerPeripheral timer1(&htim1, init_data_timer1);
+TimerPeripheral timer2(&htim2, init_data_timer2);
+TimerPeripheral timer15(&htim15, init_data_timer15);
+TimerPeripheral timer23(&htim23, init_data_timer23);
+
+vector<reference_wrapper<TimerPeripheral>> TimerPeripheral::timers = {
+		timer1,
+		timer2,
+		timer15,
+		timer23
+};
 
 
-PWMservice::TimerPeripheral PWMservice::timer_peripherals[H723_TIMERS] = {
-		TimerPeripheral(&htim1, init_data_timer1),
-		TimerPeripheral(&htim15, init_data_timer15)};
+#endif
+/************************************************
+ *                     PWMService
+ ***********************************************/
+#ifdef HAL_TIM_MODULE_ENABLED
+
 map<Pin, PWMservice::Instance> PWMservice::available_instances = {
-		{PE14, PWMservice::Instance(&timer_peripherals[0], TIM_CHANNEL_4, NORMAL)}
+		{PE14, PWMservice::Instance(&timer1, TIM_CHANNEL_4, NORMAL)}
 };
 
 map<Pin, PWMservice::Instance> PWMservice::available_instances_negated = {};
 
 map<pair<Pin, Pin>, PWMservice::Instance> PWMservice::available_instances_dual = {
-		{{PE4, PE5}, PWMservice::Instance(&timer_peripherals[1], TIM_CHANNEL_1, DUAL)}
+		{{PE4, PE5}, PWMservice::Instance(&timer15, TIM_CHANNEL_1, DUAL)}
 };
 
 #endif
@@ -55,8 +72,8 @@ map<pair<Pin, Pin>, PWMservice::Instance> PWMservice::available_instances_dual =
 
 extern TIM_HandleTypeDef htim2;
 
-map<Pin, InputCapture::Instance> InputCapture::instances_data = {
-		{PA0, InputCapture::Instance(PA0, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2)}
+map<Pin, InputCapture::Instance> InputCapture::available_instances = {
+		{PA0, InputCapture::Instance(PA0, &timer2, TIM_CHANNEL_1, TIM_CHANNEL_2)}
 };
 
 #endif

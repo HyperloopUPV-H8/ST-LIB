@@ -8,6 +8,7 @@
 #pragma once
 
 #include "PinModel/Pin.hpp"
+#include "TimerPeripheral/TimerPeripheral.hpp"
 
 #ifdef HAL_TIM_MODULE_ENABLED
 
@@ -15,31 +16,10 @@
 
 class PWMservice {
 public:
-
 	enum Mode {
 		NORMAL = 0,
 		NEGATED = 1,
 		DUAL = 2
-	};
-	struct TimerInitData {
-		TIM_TypeDef* timer;
-		uint32_t prescaler;
-		uint32_t period;
-		uint32_t deadtime;
-		vector<uint32_t> channels;
-		TimerInitData() = default;
-		TimerInitData(TIM_TypeDef* timer, uint32_t prescaler = 275, uint32_t period = 1000, uint32_t deadtime = 0);
-	};
-
-	class TimerPeripheral {
-	public:
-		TIM_HandleTypeDef* handle;
-		TimerInitData init_data;
-
-		TimerPeripheral() = default;
-		TimerPeripheral(TIM_HandleTypeDef* handle, TimerInitData init_data);
-
-		bool is_registered();
 	};
 
 	class Instance {
@@ -58,7 +38,7 @@ public:
 	static map<pair<Pin, Pin>, Instance> available_instances_dual;
 	static TimerPeripheral timer_peripherals[H723_TIMERS];
 
-	static forward_list<uint8_t> id_manager;
+    static uint8_t id_counter;
 
 	static optional<uint8_t> inscribe(Pin& pin);
 	static optional<uint8_t> inscribe_negated(Pin& pin);

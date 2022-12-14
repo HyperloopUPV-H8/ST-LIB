@@ -7,9 +7,6 @@
 #ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/UDP/DatagramSocket.hpp"
 
-map<decltype(Packet<>::id), function<void(uint8_t*)>> Packet<>::save_by_id = {};
-map<decltype(Packet<>::id), void(*)()> Packet<>::on_received = {};
-
 DatagramSocket::DatagramSocket() = default;
 
 DatagramSocket::DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port): local_ip(local_ip), local_port(local_port), remote_ip(remote_ip), remote_port(remote_port){
