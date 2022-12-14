@@ -41,11 +41,11 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/BSP/Components}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.663100493" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -65,13 +65,13 @@
 									<listOptionValue builtIn="false" value="../Drivers/STM32H7xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/BSP/Components}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1475030527" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -92,8 +92,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Models}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/HALAL/Services}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_LOW}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/system}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/netif/ppp}&quot;"/>
@@ -112,6 +110,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/BSP/Components}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
 								</option>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard.1092333469" name="Language standard" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard.value.gnupp20" valueType="enumerated"/>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.2042651219" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
@@ -214,6 +213,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/BSP/Components}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1583550009" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -238,6 +238,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/BSP/Components}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.640356923" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -272,6 +273,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Drivers/BSP/Components}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
 								</option>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard.619270748" name="Language standard" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.languagestandard.value.gnupp20" valueType="enumerated"/>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1603283963" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
