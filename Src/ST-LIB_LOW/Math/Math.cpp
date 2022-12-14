@@ -43,10 +43,14 @@ int32_t Math::phase(int32_t x, int32_t y){
 	return *pointer3;
 }
 
-int32_t Math::modulus(int32_t x, int32_t y){
-	if(x + y > MAX_MOD_MARGIN){
-		//TODO: calculate efficiently in case the CORDIC is estimated to fail
-		return MAX_INT;
+uint32_t Math::modulus(int32_t x, int32_t y){
+	if(((uint32_t) x + y) > MAX_MOD_MARGIN){
+		*pointer1 = (x >> 1);
+		*pointer2 = (y >> 1);
+		RotationComputer::modulus(pointer1, pointer2, pointer3, 1);
+		uint32_t mod= *pointer3;
+		mod = (mod << 1);
+		return mod;
 	}
 	*pointer1 = x;
 	*pointer2 = y;
@@ -61,11 +65,34 @@ int32_t Math::atg(int32_t in){
 	return *pointer3;
 }
 
+
+int32_t Math::sqrt(int32_t sq_in){
+	int32_t sol = 0;
+	int32_t temp = 0;
+	int32_t over = sq_in >> SQ_DECIMAL_BITS;
+	for(int32_t i = 0x8000 >> (SQ_DECIMAL_BITS >> 1); i >= 1; i = i >> 1){
+		temp = (sol + i);
+		if(((temp*temp)) <= over){
+			sol = sol + i;
+		}
+	}
+
+	return sol<<SQ_DECIMAL_BITS;
+}
+
+int32_t Math::sq_to_unitary(int32_t sq_in){
+	return sq_in << (32 - SQ_DECIMAL_BITS);
+}
+
+int32_t Math::unitary_to_sq(int32_t in){
+	return in >> (32 - SQ_DECIMAL_BITS);
+}
+
 int32_t Math::tg_to_unitary(int32_t tg_in){
-	return tg_in >> TG_DECIMAL_BITS;
+	return tg_in << (32 - TG_DECIMAL_BITS);
 }
 
 int32_t Math::unitary_to_tg(int32_t in){
-	return in << TG_DECIMAL_BITS;
+	return in >> (32 - TG_DECIMAL_BITS);
 }
 
