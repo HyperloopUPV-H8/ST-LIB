@@ -29,11 +29,9 @@ optional<uint8_t> Encoder::inscribe(Pin& pin1, Pin& pin2){
 }
 
 void Encoder::start(){
-	for_each(Encoder::registered_encoder.begin(), Encoder::registered_encoder.end(),
-			[](pair<uint8_t, pair<Pin, Pin>> iter) {
-				Encoder::init(Encoder::pin_timer_map[iter.second]);
-			}
-	);
+	for (pair<uint8_t, pair<Pin, Pin>> instance : registered_encoder) {
+			init(Encoder::pin_timer_map[instance.second]);
+	}
 }
 
 void Encoder::turn_on(uint8_t id){
