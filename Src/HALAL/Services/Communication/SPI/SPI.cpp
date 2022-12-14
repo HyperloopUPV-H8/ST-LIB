@@ -8,16 +8,8 @@
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
-SPI::Instance SPI::instance3 = { .SCK = PC10, .MOSI = PB2, .MISO = PC11, .SS = PA4,
-                                 .hspi = &hspi3, .instance = SPI3,
-								 .baud_rate_prescaler = SPI_BAUDRATEPRESCALER_256,
-                               };
-SPI::Peripheral SPI::spi3 = SPI::Peripheral::peripheral3;
 
 unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi;
-unordered_map<SPI::Peripheral, SPI::Instance*> SPI::available_spi = {
-	{SPI::spi3, &SPI::instance3}
-};
 
 uint16_t SPI::id_counter = 0;
 
@@ -134,10 +126,10 @@ void SPI::init(SPI::Instance* spi){
 	init_data.CLKPhase = spi->clock_phase;
 
 	if (spi->mode == SPI_MODE_MASTER) {
-		init_data.NSS = SPI_NSS_HARD_OUTPUT;
+		init_data.NSS = SPI_NSS_SOFT;
 		init_data.BaudRatePrescaler = spi->baud_rate_prescaler;
 	}else{
-		init_data.NSS = SPI_NSS_HARD_INPUT;
+		init_data.NSS = SPI_NSS_SOFT;
 	}
 
 	init_data.FirstBit = spi->first_bit;
@@ -156,7 +148,7 @@ void SPI::init(SPI::Instance* spi){
 	init_data.IOSwap = SPI_IO_SWAP_DISABLE;
 
 
-	if (HAL_SPI_Init(&hspi3) != HAL_OK){
+	if (HAL_SPI_Init(spi->hspi) != HAL_OK){
 		//TODO: Error handler
 	}
 

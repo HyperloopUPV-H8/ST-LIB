@@ -12,8 +12,6 @@
 
 #ifdef HAL_UART_MODULE_ENABLED
 
-extern UART_HandleTypeDef huart3;
-
 #define TXBUSYMASK 0b1
 #define RXBUSYMASK 0b10
 /**
@@ -45,7 +43,16 @@ private:
      *
      */
     enum Peripheral{
+    	peripheral1 = 0,
+    	peripheral2 = 1,
         peripheral3 = 2,
+		peripheral4 = 3,
+		peripheral5 = 4,
+		peripheral6 = 5,
+		peripheral7 = 6,
+		peripheral8 = 7,
+		peripheral9 = 8,
+		peripheral10 = 9
     };
 
 public:
@@ -56,16 +63,35 @@ public:
     static unordered_map<UART::Peripheral, UART::Instance*> available_uarts;
 
     /**
-     * @brief UART 3 wrapper enum of the STM32H723.
-     *
-     */
+	* @brief UART  wrapper enum of the STM32H723.
+	*
+	*/
+    static UART::Peripheral uart1;
+    static UART::Peripheral uart2;
     static UART::Peripheral uart3;
+    static UART::Peripheral uart4;
+    static UART::Peripheral uart5;
+    static UART::Peripheral uart6;
+    static UART::Peripheral uart7;
+    static UART::Peripheral uart8;
+    static UART::Peripheral uart9;
+    static UART::Peripheral uart10;
+
 
     /**
-     * @brief UART 3 instance of the STM32H723.
+     * @brief UART instances of the STM32H723.
      *
      */
+    static UART::Instance instance1;
+    static UART::Instance instance2;
     static UART::Instance instance3;
+    static UART::Instance instance4;
+    static UART::Instance instance5;
+    static UART::Instance instance6;
+    static UART::Instance instance7;
+    static UART::Instance instance8;
+    static UART::Instance instance9;
+    static UART::Instance instance10;
 
     /**
      * @brief Registers a new UART.
