@@ -28,10 +28,10 @@ private:
      *           
      */
     struct Instance{
-        Pin SCK; /**< Clock pin. */
-        Pin MOSI; /**< MOSI pin. */
-        Pin MISO; /**< MISO pin. */
-        Pin SS; /**< Slave select pin. */
+        Pin* SCK; /**< Clock pin. */
+        Pin* MOSI; /**< MOSI pin. */
+        Pin* MISO; /**< MISO pin. */
+        Pin* SS; /**< Slave select pin. */
 
         SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
         SPI_TypeDef* instance; /**< HAL spi instance. */
