@@ -23,7 +23,11 @@ optional<uint8_t> SPI::inscribe(SPI::Peripheral& spi){
     Pin::inscribe(spi_instance->SCK, ALTERNATIVE);
     Pin::inscribe(spi_instance->MOSI, ALTERNATIVE);
     Pin::inscribe(spi_instance->MISO, ALTERNATIVE);
-    Pin::inscribe(spi_instance->SS, ALTERNATIVE);
+
+    uint8_t res = DigitalOutputService::inscribe(spi_instance->SS);
+    spi_instance->digital_output_ss = res;
+    Pin::start();
+    DigitalOutputService::turn_on(spi_instance->digital_output_ss);
 
     uint8_t id = SPI::id_counter++;
 
@@ -45,13 +49,11 @@ bool SPI::transmit_next_packet(uint8_t id, RawPacket& packet){
 
     SPI::Instance* spi = SPI::registered_spi[id];
 
-    if(spi->hspi->State == HAL_SPI_STATE_BUSY_TX)
-       return false;
-
-
-    if (HAL_SPI_Transmit_IT(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK){
+    DigitalOutputService::turn_off(spi->digital_output_ss);
+    if (HAL_SPI_Transmit(spi->hspi, packet.get_data(), packet.get_size(), 10) != HAL_OK){
         return false; //TODO: Warning, Error during transmision
     }
+    DigitalOutputService::turn_on(spi->digital_output_ss);
 
     return true;
 }
@@ -62,48 +64,16 @@ bool SPI::receive_next_packet(uint8_t id, RawPacket& packet){
 
     SPI::Instance* spi = SPI::registered_spi[id];
 
-    if(spi->hspi->State == HAL_SPI_STATE_BUSY_RX)
-       return false;
-
     *packet.get_data() = 0;
 
-    if (HAL_SPI_Receive_DMA(spi->hspi, packet.get_data(), packet.get_size()) != HAL_OK) {
+    DigitalOutputService::turn_off(spi->digital_output_ss);
+    if (HAL_SPI_Receive(spi->hspi, packet.get_data(), packet.get_size(), 10) != HAL_OK) {
         return false; //TODO: Warning, Error during receive
     }
+    DigitalOutputService::turn_on(spi->digital_output_ss);
 
     spi->receive_ready = false;
     return true;
-}
-
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef * hspi){
-    auto result = find_if(SPI::registered_spi.begin(), SPI::registered_spi.end(), [&](auto spi){return spi.second->hspi == hspi;});
-
-    if (result != SPI::registered_spi.end()) {
-        (*result).second->receive_ready = true;
-    }else{
-        //TODO: Warning: Data receive form an unknown SPI
-    }
-}
-
-bool SPI::has_next_packet(uint8_t id){
-    if (!SPI::registered_spi.contains(id))
-        return false; //TODO: Error handler
-
-    auto* spi = SPI::registered_spi[id];
-
-    return spi->receive_ready;
-}
-
-bool SPI::is_busy(uint8_t id){
-    if (!SPI::registered_spi.contains(id))
-        return false; //TODO: Error handler
-
-    SPI::Instance* spi = SPI::registered_spi[id];
-
-    if(spi->hspi->State == HAL_SPI_STATE_BUSY_TX)
-       return true;
-
-    return false;
 }
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
@@ -149,7 +119,7 @@ void SPI::init(SPI::Instance* spi){
 
 
 	if (HAL_SPI_Init(spi->hspi) != HAL_OK){
-		//TODO: Error handler
+		return;//TODO: Error handler
 	}
 
 	spi->initialized = true;
