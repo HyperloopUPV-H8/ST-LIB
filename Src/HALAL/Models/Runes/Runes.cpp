@@ -195,7 +195,26 @@ ADC::Peripheral ADC::peripherals[3] = {
 
 map<Pin, ADC::Instance> ADC::available_instances = {
 		{PF11, Instance(&peripherals[0], ADC_CHANNEL_2)},
-		{PA6, Instance(&peripherals[0], ADC_CHANNEL_3)}
+		{PF12, Instance(&peripherals[0], ADC_CHANNEL_6)},
+		{PF13, Instance(&peripherals[1], ADC_CHANNEL_2)},
+		{PF14, Instance(&peripherals[1], ADC_CHANNEL_6)},
+		{PF5, Instance(&peripherals[2], ADC_CHANNEL_4)},
+		{PF6, Instance(&peripherals[2], ADC_CHANNEL_8)},
+		{PF7, Instance(&peripherals[2], ADC_CHANNEL_3)},
+		{PF8, Instance(&peripherals[2], ADC_CHANNEL_7)},
+		{PF9, Instance(&peripherals[2], ADC_CHANNEL_2)},
+		{PF10, Instance(&peripherals[2], ADC_CHANNEL_6)},
+		{PC2, Instance(&peripherals[2], ADC_CHANNEL_0)},
+		{PC3, Instance(&peripherals[2], ADC_CHANNEL_1)},
+		{PF10, Instance(&peripherals[2], ADC_CHANNEL_6)},
+		{PC0, Instance(&peripherals[0], ADC_CHANNEL_10)},
+		{PA0, Instance(&peripherals[0], ADC_CHANNEL_16)},
+		{PA3, Instance(&peripherals[0], ADC_CHANNEL_15)},
+		{PA4, Instance(&peripherals[0], ADC_CHANNEL_18)},
+		{PA5, Instance(&peripherals[0], ADC_CHANNEL_19)},
+		{PA6, Instance(&peripherals[0], ADC_CHANNEL_3)},
+		{PB0, Instance(&peripherals[0], ADC_CHANNEL_9)},
+		{PB1, Instance(&peripherals[0], ADC_CHANNEL_5)}
 };
 
 uint32_t ADC::ranks[16] = {
