@@ -21,21 +21,8 @@ void Protection::add_protection(ProtectionType protection_type, double boundary)
     boundaries.push_back(boundary);
 }
 
-template<class... AdditionalProtections>
-void Protection::add_protection(double upper_boundary, ProtectionType protection, AdditionalProtections... protections) {
-    boundaries.push_back(upper_boundary);
-    boundaries.push_back(upper_boundary);
-    add_protection(protection, protections...);
-}
-
 void Protection::add_protection(double last_boundary) {
     boundaries.push_back(last_boundary);
-}
-
-template<class... AdditionalProtections>
-void Protection::add_protection(ProtectionType protection_type, double boundary,AdditionalProtections... protections) {
-    add_protection(protection_type, boundary);
-    add_protection(protections...);
 }
 
 bool Protection::check_state() {
@@ -46,35 +33,35 @@ bool Protection::check_state() {
         switch (protection) {
         case BELOW:
             if (*src < boundaries[boundary_counter++]) {
-                jumped_potection = protection;
+                jumped_protection = protection;
                 return false;
             }
             break;
         case ABOVE:
             if (*src > boundaries[boundary_counter++]) {
-                jumped_potection = protection;
+                jumped_protection = protection;
                 return false;
             }
             break;
         case OUT_OF_RANGE:
             if (*src < boundaries[boundary_counter++]) {
-                jumped_potection = protection;
+                jumped_protection = protection;
                 return false;
             }
             if (*src > boundaries[boundary_counter++]) {
-                jumped_potection = protection;
+                jumped_protection = protection;
                 return false;
             }
             break;
         case EQUALS:
             if (*src == boundaries[boundary_counter++]) {
-                jumped_potection = protection;
+                jumped_protection = protection;
                 return false;
             }
             break;
         case NOT_EQUALS:
             if (*src != boundaries[boundary_counter++]) {
-                jumped_potection = protection;
+                jumped_protection = protection;
                 return false;
             }
             break;

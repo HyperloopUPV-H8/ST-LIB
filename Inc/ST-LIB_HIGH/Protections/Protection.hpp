@@ -21,7 +21,7 @@ public:
     vector<ProtectionType> protections;
     vector<double> boundaries;
     uint8_t boundary_counter = 0;
-    ProtectionType jumped_potection = (ProtectionType)0;
+    ProtectionType jumped_protection = (ProtectionType)0;
     static map<ProtectionType, string> protection_type_name;
 
     Protection(double* src);
@@ -38,3 +38,14 @@ public:
     bool check_state();
 };
 
+template<class... AdditionalProtections>
+void Protection::add_protection(double upper_boundary, ProtectionType protection, AdditionalProtections... protections) {
+    boundaries.push_back(upper_boundary);
+    add_protection(protection, protections...);
+}
+
+template<class... AdditionalProtections>
+void Protection::add_protection(ProtectionType protection_type, double boundary,AdditionalProtections... protections) {
+    add_protection(protection_type, boundary);
+    add_protection(protections...);
+}
