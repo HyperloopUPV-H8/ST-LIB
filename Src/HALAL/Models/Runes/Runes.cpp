@@ -1,5 +1,3 @@
-#pragma once
-
 #include "ST-LIB.hpp"
 
 /************************************************
@@ -228,9 +226,8 @@ uint32_t ADC::ranks[16] = {
 #ifdef HAL_EXTI_MODULE_ENABLED
 
 map<uint16_t, ExternalInterrupt::Instance> ExternalInterrupt::instances = {
-	{PE0.gpio_pin, Instance(EXTI0_IRQn),
-	{PE1.gpio_pin, Instance(EXTI1_IRQn)}}
+	{PE0.gpio_pin, Instance(EXTI0_IRQn)},
+	{PE1.gpio_pin, Instance(EXTI1_IRQn)}
 };
 
 #endif
-

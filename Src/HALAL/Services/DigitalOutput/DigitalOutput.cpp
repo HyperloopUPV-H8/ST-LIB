@@ -5,7 +5,7 @@
  *      Author: stefan
  */
 
-#include "DigitalOutputService/DigitalOutputService.hpp"
+#include "DigitalOutput/DigitalOutput.hpp"
 
 uint8_t DigitalOutputService::id_counter = 0;
 map<uint8_t,Pin> DigitalOutputService::service_ids = {};
