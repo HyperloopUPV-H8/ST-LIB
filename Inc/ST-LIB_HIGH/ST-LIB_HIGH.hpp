@@ -6,3 +6,6 @@
  */
 
 #pragma once
+
+#include "Protections/Protection.hpp"
+#include "Protections/ProtectionManager.hpp"
