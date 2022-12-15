@@ -1,10 +1,10 @@
 #pragma once
 
-#include "DigitalOutput/DigitalOutput.hpp"
-#include "DigitalInput/DigitalInput.hpp"
+#include "DigitalOutputService/DigitalOutputService.hpp"
+#include "DigitalInputService/DigitalInputService.hpp"
 #include "Flash/Flash.hpp"
 #include "ADC/ADC.hpp"
-#include "PWMservice/PWMservice.hpp"
+#include "PWMService/PWMService.hpp"
 #include "Communication/Ethernet/UDP/DatagramSocket.hpp"
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "Communication/SPI/SPI.hpp"
