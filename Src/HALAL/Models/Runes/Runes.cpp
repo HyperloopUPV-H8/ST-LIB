@@ -1,11 +1,53 @@
-/*
- * runes.hpp
- *
- *  Created on: Nov 21, 2022
- *      Author: alejandro
- */
 
 #include "ST-LIB.hpp"
+
+/************************************************
+ *              Communication-SPI
+ ***********************************************/
+#ifdef HAL_SPI_MODULE_ENABLED
+extern SPI_HandleTypeDef hspi3;
+
+
+SPI::Instance SPI::instance3 = { .SCK = &PC10, .MOSI = &PC12, .MISO = &PC11, .SS = &PD0,
+                                 .hspi = &hspi3, .instance = SPI3,
+								 .baud_rate_prescaler = SPI_BAUDRATEPRESCALER_256,
+                               };
+
+SPI::Peripheral SPI::spi3 = SPI::Peripheral::peripheral3;
+
+unordered_map<SPI::Peripheral, SPI::Instance*> SPI::available_spi = {
+	{SPI::spi3, &SPI::instance3}
+};
+#endif
+/************************************************
+ *              Communication-UART
+ ***********************************************/
+#ifdef HAL_SPI_MODULE_ENABLED
+extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
+
+UART::Instance UART::instance1 = { .TX = PA9, .RX = PA10, .huart = &huart1,
+								   .instance = USART1, .baud_rate = 115200, .word_length = UART_WORDLENGTH_8B,
+                               };
+
+
+UART::Instance UART::instance2 = { .TX = PD5, .RX = PD6, .huart = &huart2,
+								   .instance = USART2, .baud_rate = 115200, .word_length = UART_WORDLENGTH_8B,
+                               };
+
+
+UART::Peripheral UART::uart1 = UART::Peripheral::peripheral1;
+UART::Peripheral UART::uart2 = UART::Peripheral::peripheral2;
+
+unordered_map<UART::Peripheral, UART::Instance*> UART::available_uarts = {
+	{UART::uart1, &UART::instance1},
+	{UART::uart2, &UART::instance2}
+};
+
+#endif
+/************************************************
+ *              Communication-I2C
+ ***********************************************/
 
 /************************************************
  *                 	  Encoder
@@ -14,7 +56,7 @@
 
 extern TIM_HandleTypeDef htim8;
 
-TimerPeripheral encoder_timer = TimerPeripheral(&htim8, {TIM8, 0 ,65535});
+TimerPeripheral encoder_timer = TimerPeripheral(&htim8, {TIM8, 0, 65535});
 
 map<pair<Pin, Pin>, TimerPeripheral*> Encoder::pin_timer_map = {
 		{{PC6, PC7}, &encoder_timer}
@@ -155,7 +197,26 @@ ADC::Peripheral ADC::peripherals[3] = {
 
 map<Pin, ADC::Instance> ADC::available_instances = {
 		{PF11, Instance(&peripherals[0], ADC_CHANNEL_2)},
-		{PA6, Instance(&peripherals[0], ADC_CHANNEL_3)}
+		{PF12, Instance(&peripherals[0], ADC_CHANNEL_6)},
+		{PF13, Instance(&peripherals[1], ADC_CHANNEL_2)},
+		{PF14, Instance(&peripherals[1], ADC_CHANNEL_6)},
+		{PF5, Instance(&peripherals[2], ADC_CHANNEL_4)},
+		{PF6, Instance(&peripherals[2], ADC_CHANNEL_8)},
+		{PF7, Instance(&peripherals[2], ADC_CHANNEL_3)},
+		{PF8, Instance(&peripherals[2], ADC_CHANNEL_7)},
+		{PF9, Instance(&peripherals[2], ADC_CHANNEL_2)},
+		{PF10, Instance(&peripherals[2], ADC_CHANNEL_6)},
+		{PC2, Instance(&peripherals[2], ADC_CHANNEL_0)},
+		{PC3, Instance(&peripherals[2], ADC_CHANNEL_1)},
+		{PF10, Instance(&peripherals[2], ADC_CHANNEL_6)},
+		{PC0, Instance(&peripherals[0], ADC_CHANNEL_10)},
+		{PA0, Instance(&peripherals[0], ADC_CHANNEL_16)},
+		{PA3, Instance(&peripherals[0], ADC_CHANNEL_15)},
+		{PA4, Instance(&peripherals[0], ADC_CHANNEL_18)},
+		{PA5, Instance(&peripherals[0], ADC_CHANNEL_19)},
+		{PA6, Instance(&peripherals[0], ADC_CHANNEL_3)},
+		{PB0, Instance(&peripherals[0], ADC_CHANNEL_9)},
+		{PB1, Instance(&peripherals[0], ADC_CHANNEL_5)}
 };
 
 uint32_t ADC::ranks[16] = {
@@ -187,8 +248,8 @@ uint32_t ADC::ranks[16] = {
 #ifdef HAL_EXTI_MODULE_ENABLED
 
 map<uint16_t, ExternalInterrupt::Instance> ExternalInterrupt::instances = {
-	{PE0.gpio_pin, Instance(EXTI0_IRQn)}
+	{PE0.gpio_pin, Instance(EXTI0_IRQn)},
+	{PE1.gpio_pin, Instance(EXTI1_IRQn)}
 };
 
 #endif
-

@@ -5,7 +5,7 @@
  *      Author: alejandro
  */
 
-#include "PWMservice/PWMservice.hpp"
+#include "PWMService/PWMService.hpp"
 
 uint8_t PWMservice::id_counter = 0;
 map<uint8_t, PWMservice::Instance> PWMservice::active_instances = {};
