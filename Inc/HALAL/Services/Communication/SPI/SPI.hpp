@@ -9,6 +9,7 @@
 
 #include "PinModel/Pin.hpp"
 #include "Packets/RawPacket.hpp"
+#include "DigitalOutputService/DigitalOutputService.hpp"
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
@@ -27,10 +28,10 @@ private:
      *           
      */
     struct Instance{
-        Pin SCK; /**< Clock pin. */
-        Pin MOSI; /**< MOSI pin. */
-        Pin MISO; /**< MISO pin. */
-        Pin SS; /**< Slave select pin. */
+        Pin* SCK; /**< Clock pin. */
+        Pin* MOSI; /**< MOSI pin. */
+        Pin* MISO; /**< MISO pin. */
+        Pin* SS; /**< Slave select pin. */
 
         SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
         SPI_TypeDef* instance; /**< HAL spi instance. */
@@ -43,7 +44,6 @@ private:
         uint32_t clock_phase = SPI_PHASE_1EDGE; /**< SPI clock phase. */
         uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
        
-        bool receive_ready = false; /**< Receive value is ready to use pin. */
         bool initialized = false; /**< Peripheral has already been initialized */
     };
 
@@ -98,56 +98,34 @@ public:
     static optional<uint8_t> inscribe(SPI::Peripheral& spi);
 
     /**
-     * @brief Metodo que incializa todos los perifericos SPI inscritos
-     *        al servicio. Los perifericos que se quieran usar
-     *        deben estar inscritos antes de inicializarlos.
-     * 
+     * @brief Method that initializes all enrolled SPI peripherals
+     *        service. The peripherals that you want to use
+     *  	  must be enrolled before initializing.
      */
     static void start();
 
-    /**@brief	Transmits 1 SPIPacket of any size by DMA and
-     *          interrupts. Handles the packet size automatically. To
-     *          to send various packets in a row you must check if the spi is busy
-     *          using is_busy().
+    /**@brief	Transmits 1 SPIPacket of any size by polling.
+     * 			Handles the packet size automatically.
      * 
      * @param id Id of the SPI
      * @param packet Pakcet to be send
      * @return bool Returns true if the request to send the packet has been done
-     *            successfully. Returns false if the SPI is busy or a problem
+     *            successfully. Returns false if a problem
      *            has occurred.
      */
     static bool transmit_next_packet(uint8_t id, RawPacket& packet);
 
     /**						
      * @brief This method request the receive of a new SPIPacket of any size
-     *        by DMA and interrupts. Thus the packet should not be used until
-     *        you have checked that the value is already available using the 
-     *        method has_next_paclet().
-     * @see   SPI::has_next_packet()
+     *        by polling.
      * 
      * @param id Id of the SPI
      * @param packet SPIPacket in which the data will be stored
      * @return bool Return true if the order to receive a new packet has been
-     *            processed correctly. Return false if the SPI is busy or a
-     *            problem has occurred.
+     *            processed correctly. Return false if a problem has occurred.
      */
     static bool receive_next_packet(uint8_t id, RawPacket& packet);
 
-    /**
-     * @brief This method is used to check if the SPI receive operation has finished and data is ready.
-     * 
-     * @param id Id of the SPI
-     * @return bool Return true if the packet is ready to use and false if not.
-     */
-    static bool has_next_packet(uint8_t id);
-
-    /**
-     * @brief This method is used to check if the SPI transmit operations busy.
-     * 
-     * @param id Id of the SPI
-     * @return bool Return true if the SPI transmit operation is busy and false if not.
-     */
-    static bool is_busy(uint8_t id);
 
 private:
     /**
