@@ -38,8 +38,6 @@ void SPI::start(){
 	    HAL_GPIO_WritePin(iter.second->SS->port, iter.second->SS->gpio_pin, (GPIO_PinState)PinState::ON);
 	}
 }
-#define SPI3_CSS_Pin GPIO_PIN_0
-#define SPI3_CSS_GPI	O_Port GPIOD
 
 bool SPI::transmit_next_packet(uint8_t id, RawPacket& packet){
     if (!SPI::registered_spi.contains(id))
@@ -72,7 +70,6 @@ bool SPI::receive_next_packet(uint8_t id, RawPacket& packet){
     }
     HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
 
-    spi->receive_ready = false;
     return true;
 }
 

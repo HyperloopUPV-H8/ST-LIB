@@ -44,8 +44,6 @@ private:
         uint32_t clock_phase = SPI_PHASE_1EDGE; /**< SPI clock phase. */
         uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
        
-        uint8_t digital_output_ss; /**< ID of digital output service pin. */
-        bool receive_ready = false; /**< Receive value is ready to use pin. */
         bool initialized = false; /**< Peripheral has already been initialized */
     };
 
