@@ -8,16 +8,7 @@
 
 #ifdef HAL_UART_MODULE_ENABLED
 
-UART::Instance UART::instance3 = { .TX = PC10, .RX = PB2, .huart = &huart3,
-								   .instance = USART3, .baud_rate = 115200, .word_length = UART_WORDLENGTH_8B,
-                               };
-UART::Peripheral UART::uart3 = UART::Peripheral::peripheral3;
-
-
 unordered_map<uint8_t, UART::Instance* > UART::registered_uart;
-unordered_map<UART::Peripheral, UART::Instance*> UART::available_uarts = {
-	{UART::uart3, &UART::instance3}
-};
 
 uint16_t UART::id_counter = 0;
 
