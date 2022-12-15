@@ -36,36 +36,6 @@ void StateMachine::add_state(uint8_t state) {
 	states[state] = State();
 }
 
-template<class TimeUnit>
-void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
-	add_cyclic_action(action, period, current_state);
-}
-
-template<class TimeUnit>
-void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, uint8_t state) {
-	if (not state) {
-		return; //TODO: Error handler
-	}
-
-	uint32_t microseconds = (uint32_t)chrono::duration_cast<chrono::microseconds>(period).count();
-	TimedAction timed_action(action, microseconds);
-	states[state].cyclic_actions.push_back(timed_action);
-
-	if (state == current_state) {
-		if (microseconds % 1000) {
-			optional<uint8_t> optional_id = Time::register_high_precision_alarm(microseconds, action);
-			if (not optional_id) {
-				return; //TODO: Error handler
-			}
-			current_state_timed_actions_in_microseconds.push_back(optional_id.value());
-		}
-		else {
-			uint8_t id = Time::register_low_precision_alarm(microseconds, action);
-			current_state_timed_actions_in_milliseconds.push_back(id);
-		}
-	}
-}
-
 void StateMachine::add_enter_action(function<void()> action) {
 	if (not current_state) {
 		return; //TODO: Error handler
