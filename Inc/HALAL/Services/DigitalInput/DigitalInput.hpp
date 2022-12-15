@@ -11,7 +11,7 @@
 class DigitalInput{
 public:
 	static map<uint8_t,Pin> service_ids;
-	static forward_list<uint8_t> id_manager;
+	static uint8_t id_counter;
 
 	static uint8_t inscribe(Pin& pin);
 	static optional<PinState> read_pin_state(uint8_t id);
