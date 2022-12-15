@@ -1,5 +1,5 @@
 #include "ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.hpp"
-#include "DigitalInput/DigitalInput.hpp"
+#include "DigitalInputService/DigitalInputService.hpp"
 #include "EXTI/EXTI.hpp"
 
 DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInput::inscribe(pin)), value(value){}

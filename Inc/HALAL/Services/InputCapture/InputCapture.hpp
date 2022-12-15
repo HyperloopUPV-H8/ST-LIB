@@ -38,4 +38,5 @@ public:
 	static optional<uint8_t> read_duty_cycle(uint8_t id);
 	static Instance find_instance_by_channel(uint32_t channel);
 };
+
 #endif
