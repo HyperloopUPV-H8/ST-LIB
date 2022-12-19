@@ -5,8 +5,8 @@
  *      Author: Dani
  */
 
-#include <ST-LIB_LOW/Clocks/Stopwatch.hpp>
-#include "HALAL/Services/Time/Time.hpp"
+#include <Clocks/Stopwatch.hpp>
+#include "Time/Time.hpp"
 
 
 void Stopwatch::start(const string id){
