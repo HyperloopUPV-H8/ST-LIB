@@ -1,6 +1,18 @@
 #pragma once
 
-#include "HALAL/HALAL.hpp" // Erase this when ST-LIB_LOW is finished.
-#include "ST-LIB_LOW.hpp"  // Erase this when ST-LIB_HIGH is finished
-#include "ST-LIB_HIGH.hpp" // Highest layer up to the moment
-
+#include "DigitalOutputservice/DigitalOutputservice.hpp"
+#include "DigitalInput/DigitalInput.hpp"
+#include "Flash/Flash.hpp"
+#include "Flash/FlashTests/Flash_Test.hpp"
+#include "ADC/ADC.hpp"
+#include "PWMservice/PWMservice.hpp"
+#include "Communication/Ethernet/UDP/DatagramSocket.hpp"
+#include "Communication/Ethernet/TCP/ServerSocket.hpp"
+#include "Communication/SPI/SPI.hpp"
+#include "Communication/UART/UART.hpp"
+#include "Time/Time.hpp"
+#include "Clocks/Counter.hpp"
+#include "Clocks/Stopwatch.hpp"
+#include "InputCapture/InputCapture.hpp"
+#include "Encoder/Encoder.hpp"
+#include "EXTI/EXTI.hpp"

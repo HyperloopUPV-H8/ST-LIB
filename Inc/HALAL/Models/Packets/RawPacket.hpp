@@ -41,11 +41,11 @@ public:
      * @param data Data to be stored in the packet.
      */
     template<typename Type>
-    RawPacket(Type data) {
+    RawPacket(Type* data) {
         this->size = sizeof(Type);
         this->data = (uint8_t*)malloc(this->size);
 
-        memcpy(this->data, &data, this->size);
+        memcpy(this->data, data, this->size);
     }
 
     /**
