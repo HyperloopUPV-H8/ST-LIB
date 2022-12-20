@@ -10,6 +10,7 @@
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "Communication/SPI/SPI.hpp"
 #include "Communication/UART/UART.hpp"
+#include "Communication/I2C/I2C.hpp"
 #include "Time/Time.hpp"
 #include "Clocks/Counter.hpp"
 #include "Clocks/Stopwatch.hpp"
