@@ -35,7 +35,7 @@ void UART::start(){
 		}
 }
 
-bool UART::transmit_next_packet(uint8_t id, RawPacket& packet){
+bool UART::transmit_next_packet(uint8_t id, uint8_t data){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -44,14 +44,62 @@ bool UART::transmit_next_packet(uint8_t id, RawPacket& packet){
     if((uart->huart->ErrorCode & TXBUSYMASK) == 1)
        return false;
 
-    if (HAL_UART_Transmit_DMA(uart->huart, packet.get_data(), packet.get_size()) != HAL_OK){
+    if (HAL_UART_Transmit_DMA(uart->huart, &data, 1) != HAL_OK){
         return false; //TODO: Warning, Error during transmision
     }
 
     return true;
 }
 
-bool UART::receive_next_packet(uint8_t id, RawPacket& packet){
+bool UART::transmit_next_packet(uint8_t id, uint8_t* data, int16_t size){
+    if (not UART::registered_uart.contains(id))
+        return false; //TODO: Error handler
+
+    UART::Instance* uart = UART::registered_uart[id];
+
+    if((uart->huart->ErrorCode & TXBUSYMASK) == 1)
+       return false;
+
+    if (HAL_UART_Transmit_DMA(uart->huart, data, size) != HAL_OK){
+        return false; //TODO: Warning, Error during transmision
+    }
+
+    return true;
+}
+
+bool UART::transmit_next_packet_polling(uint8_t id, uint8_t data){
+    if (not UART::registered_uart.contains(id))
+        return false; //TODO: Error handler
+
+    UART::Instance* uart = UART::registered_uart[id];
+
+    if((uart->huart->ErrorCode & TXBUSYMASK) == 1)
+       return false;
+
+    if (HAL_UART_Transmit(uart->huart, &data, 1, 10) != HAL_OK){
+        return false; //TODO: Warning, Error during transmision
+    }
+
+    return true;
+}
+
+bool UART::transmit_next_packet_polling(uint8_t id, uint8_t* data, int16_t size){
+    if (not UART::registered_uart.contains(id))
+        return false; //TODO: Error handler
+
+    UART::Instance* uart = UART::registered_uart[id];
+
+    if((uart->huart->ErrorCode & TXBUSYMASK) == 1)
+       return false;
+
+    if (HAL_UART_Transmit(uart->huart, data, size, 10) != HAL_OK){
+        return false; //TODO: Warning, Error during transmision
+    }
+
+    return true;
+}
+
+bool UART::receive_next_packet(uint8_t id, uint8_t* data, uint16_t size){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -60,14 +108,29 @@ bool UART::receive_next_packet(uint8_t id, RawPacket& packet){
     if(((uart->huart->RxState & RXBUSYMASK) >> 1) == 1)
        return false;
 
-    *packet.get_data() = 0;
 
-
-    if (HAL_UART_Receive_DMA(uart->huart, packet.get_data(), packet.get_size()) != HAL_OK) {
+    if (HAL_UART_Receive_DMA(uart->huart, data, size) != HAL_OK) {
         return false; //TODO: Warning, Error during receive
     }
 
     uart->receive_ready = false;
+
+    return true;
+}
+
+bool UART::receive_next_packet_polling(uint8_t id, uint8_t* data, uint16_t size){
+    if (not UART::registered_uart.contains(id))
+        return false; //TODO: Error handler
+
+    UART::Instance* uart = UART::registered_uart[id];
+
+    if(((uart->huart->RxState & RXBUSYMASK) >> 1) == 1)
+       return false;
+
+
+    if (HAL_UART_Receive(uart->huart, data, size, 10) != HAL_OK) {
+        return false; //TODO: Warning, Error during receive
+    }
 
     return true;
 }
@@ -102,6 +165,34 @@ bool UART::is_busy(uint8_t id){
 
     return false;
 }
+
+bool UART::set_up_printf(UART::Peripheral& uart){
+		if (printf_ready) {
+			return false;
+		}
+
+		optional<uint8_t> id = UART::inscribe(uart);
+
+		if(!id.has_value()){
+			return false; //TODO: Error handler, no se ha podido inscribir el uart
+		}
+		UART::printf_uart = id.value();
+		setvbuf(stdout, NULL, _IONBF, 0);
+		setvbuf(stderr, NULL, _IONBF, 0);
+
+		UART::printf_ready = true;
+
+		return UART::printf_ready;
+	}
+
+void UART::print_by_uart(char *ptr, int len){
+		if (!UART::printf_ready) {
+			return;
+		}
+
+		UART::transmit_next_packet_polling(UART::printf_uart, (uint8_t*)ptr, static_cast<uint16_t>(len));
+}
+
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *uart){
     //TODO: Fault, UART error
@@ -144,5 +235,18 @@ void UART::init(UART::Instance* uart){
 
 	uart->initialized = true;
 }
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int _write(int file, char *ptr, int len){
+    UART::print_by_uart(ptr, len);
+    return len;
+}
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
