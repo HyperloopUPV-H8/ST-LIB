@@ -104,27 +104,65 @@ public:
      */
     static void start();
 
-    /**@brief	Transmits 1 SPIPacket of any size by polling.
-     * 			Handles the packet size automatically.
+    /**@brief	Transmits 1 byte by SPI.
      * 
      * @param id Id of the SPI
-     * @param packet Pakcet to be send
-     * @return bool Returns true if the request to send the packet has been done
-     *            successfully. Returns false if a problem
-     *            has occurred.
+     * @param data Data to be send
+     * @return bool Returns true if the data has been send successfully.
+     * 			    Returns false if a problem has occurred.
      */
-    static bool transmit_next_packet(uint8_t id, RawPacket& packet);
+    static bool transmit(uint8_t id, uint8_t data);
+
+    /**@brief	Transmits size bytes by SPI.
+	 *
+	 * @param id Id of the SPI
+	 * @param data Data to be send
+	 * @param size Size in bytes to be send
+	 * @return bool Returns true if the data has been send successfully.
+	 * 			    Returns false if a problem has occurred.
+	 */
+    static bool transmit(uint8_t id, uint8_t* data, uint16_t size);
 
     /**						
-     * @brief This method request the receive of a new SPIPacket of any size
-     *        by polling.
+     * @brief This method request the receive of a size bytes of data. The data
+     * 		  will be stored in data parameter. You must make sure you have
+     * 		  enough space
      * 
      * @param id Id of the SPI
-     * @param packet SPIPacket in which the data will be stored
-     * @return bool Return true if the order to receive a new packet has been
-     *            processed correctly. Return false if a problem has occurred.
+     * @param data Pointer where data will be stored
+     * @param size Size in bytes to receive.
+     * @return bool Return true if the data have been read successfully.
+     * 			    Return false if a problem has occurred.
      */
-    static bool receive_next_packet(uint8_t id, RawPacket& packet);
+    static bool receive(uint8_t id, uint8_t* data, uint16_t size);
+
+    /**
+	 * @brief This method rtransmit one order of command_size bytes and
+	 * 		  then store the data received after that order.
+	 *
+	 * @param id Id of the SPI
+	 * @param command_data Command
+	 * @param command_size Command size in bytes to receive
+	 * @param receive_data Pointer where data will be stored
+	 * @param receive_size Number of bytes to read
+	 * @return bool Return true if the data have been read successfully.
+	 * 			    Return false if a problem has occurred.
+	 */
+    static bool command_and_receive(uint8_t id, uint8_t* command_data, uint16_t command_size, uint8_t* receive_data, uint16_t receive_size);
+
+    /**
+     * @brief This method set chip select to high level.
+     *
+     * @param spi Id of the SPI
+     */
+    static void chip_select_on(uint8_t id);
+
+    /**
+	 * @brief This method set chip select to low level.
+	 *
+	 * @param spi Id of the SPI
+	 */
+    static void chip_select_off(uint8_t id);
 
 
 private:

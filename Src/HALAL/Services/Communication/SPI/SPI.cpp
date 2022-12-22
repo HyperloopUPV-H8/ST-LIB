@@ -39,14 +39,14 @@ void SPI::start(){
 	}
 }
 
-bool SPI::transmit_next_packet(uint8_t id, RawPacket& packet){
+bool SPI::transmit(uint8_t id, uint8_t data){
     if (!SPI::registered_spi.contains(id))
         return false; //TODO: Error handler
 
     SPI::Instance* spi = SPI::registered_spi[id];
 
     HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
-    if (HAL_SPI_Transmit(spi->hspi, packet.get_data(), packet.get_size(), 10) != HAL_OK){
+    if (HAL_SPI_Transmit(spi->hspi, &data, 1, 10) != HAL_OK){
     	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
         return false; //TODO: Warning, Error during transmision
     }
@@ -55,16 +55,30 @@ bool SPI::transmit_next_packet(uint8_t id, RawPacket& packet){
     return true;
 }
 
-bool SPI::receive_next_packet(uint8_t id, RawPacket& packet){
+bool SPI::transmit(uint8_t id, uint8_t* data, uint16_t size){
     if (!SPI::registered_spi.contains(id))
         return false; //TODO: Error handler
 
     SPI::Instance* spi = SPI::registered_spi[id];
 
-    *packet.get_data() = 0;
+    HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
+    if (HAL_SPI_Transmit(spi->hspi, data, size, 10) != HAL_OK){
+    	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
+        return false; //TODO: Warning, Error during transmision
+    }
+    HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
+
+    return true;
+}
+
+bool SPI::receive(uint8_t id, uint8_t* data, uint16_t size){
+    if (!SPI::registered_spi.contains(id))
+        return false; //TODO: Error handler
+
+    SPI::Instance* spi = SPI::registered_spi[id];
 
     HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
-    if (HAL_SPI_Receive(spi->hspi, packet.get_data(), packet.get_size(), 10) != HAL_OK) {
+    if (HAL_SPI_Receive(spi->hspi, data, size, 10) != HAL_OK) {
     	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
         return false; //TODO: Warning, Error during receive
     }
@@ -72,6 +86,46 @@ bool SPI::receive_next_packet(uint8_t id, RawPacket& packet){
 
     return true;
 }
+
+bool SPI::command_and_receive(uint8_t id, uint8_t* command_data, uint16_t command_size, uint8_t* receive_data, uint16_t receive_size){
+	 if (!SPI::registered_spi.contains(id))
+	        return false; //TODO: Error handler
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+
+	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
+	if (HAL_SPI_Transmit(spi->hspi, command_data, command_size, 10) != HAL_OK){
+		HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
+		return false; //TODO: Warning, Error during transmision
+	}
+
+	if (HAL_SPI_Receive(spi->hspi, receive_data, receive_size, 10) != HAL_OK) {
+		HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
+		return false; //TODO: Warning, Error during receive
+	}
+	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
+
+	return true;
+}
+
+void SPI::chip_select_on(uint8_t id){
+	if (!SPI::registered_spi.contains(id))
+		return; //TODO: Error handler
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+
+	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
+}
+
+void SPI::chip_select_off(uint8_t id){
+	if (!SPI::registered_spi.contains(id))
+		return; //TODO: Error handler
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+
+	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
+}
+
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
     //TODO: Fault, SPI error
@@ -119,5 +173,5 @@ void SPI::init(SPI::Instance* spi){
 
 	spi->initialized = true;
 }
-#endif
 
+#endif
