@@ -35,7 +35,7 @@ void UART::start(){
 		}
 }
 
-bool UART::transmit_next_packet(uint8_t id, uint8_t data){
+bool UART::transmit(uint8_t id, uint8_t data){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -51,7 +51,7 @@ bool UART::transmit_next_packet(uint8_t id, uint8_t data){
     return true;
 }
 
-bool UART::transmit_next_packet(uint8_t id, uint8_t* data, int16_t size){
+bool UART::transmit(uint8_t id, uint8_t* data, int16_t size){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -67,7 +67,7 @@ bool UART::transmit_next_packet(uint8_t id, uint8_t* data, int16_t size){
     return true;
 }
 
-bool UART::transmit_next_packet_polling(uint8_t id, uint8_t data){
+bool UART::transmit_polling(uint8_t id, uint8_t data){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -83,7 +83,7 @@ bool UART::transmit_next_packet_polling(uint8_t id, uint8_t data){
     return true;
 }
 
-bool UART::transmit_next_packet_polling(uint8_t id, uint8_t* data, int16_t size){
+bool UART::transmit_polling(uint8_t id, uint8_t* data, int16_t size){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -99,7 +99,7 @@ bool UART::transmit_next_packet_polling(uint8_t id, uint8_t* data, int16_t size)
     return true;
 }
 
-bool UART::receive_next_packet(uint8_t id, uint8_t* data, uint16_t size){
+bool UART::receive(uint8_t id, uint8_t* data, uint16_t size){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -118,7 +118,7 @@ bool UART::receive_next_packet(uint8_t id, uint8_t* data, uint16_t size){
     return true;
 }
 
-bool UART::receive_next_packet_polling(uint8_t id, uint8_t* data, uint16_t size){
+bool UART::receive_polling(uint8_t id, uint8_t* data, uint16_t size){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -190,7 +190,7 @@ void UART::print_by_uart(char *ptr, int len){
 			return;
 		}
 
-		UART::transmit_next_packet_polling(UART::printf_uart, (uint8_t*)ptr, static_cast<uint16_t>(len));
+		UART::transmit_polling(UART::printf_uart, (uint8_t*)ptr, static_cast<uint16_t>(len));
 }
 
 

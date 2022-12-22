@@ -126,7 +126,7 @@ public:
      *            successfully. Returns false if the UART is busy or a problem
      *            has occurred.
      */
-    static bool transmit_next_packet(uint8_t id, uint8_t data);
+    static bool transmit(uint8_t id, uint8_t data);
 
     /**@brief	Transmits size number of bytes by DMA and interrupts.
 	 *          To send various packets in a row you must check if the UART is busy
@@ -140,7 +140,7 @@ public:
 	 *            successfully. Returns false if the UART is busy or a problem
 	 *            has occurred.
 	 */
-    static bool transmit_next_packet(uint8_t id, uint8_t* data, int16_t size);
+    static bool transmit(uint8_t id, uint8_t* data, int16_t size);
 
     /**@brief	Transmits 1 byte by polling.
 	 *
@@ -151,7 +151,7 @@ public:
 	 *            successfully. Returns false if the UART is busy or a problem
 	 *            has occurred.
 	 */
-    static bool transmit_next_packet_polling(uint8_t id, uint8_t data);
+    static bool transmit_polling(uint8_t id, uint8_t data);
 
     /**@brief	Transmits size bytes by polling.
 	 *
@@ -161,7 +161,7 @@ public:
 	 * @return bool Returns true if the packet has been send successfully.
 	 * 			    Returns false if the UART is busy or a problem has occurred.
 	 */
-    static bool transmit_next_packet_polling(uint8_t id, uint8_t* data, int16_t size);
+    static bool transmit_polling(uint8_t id, uint8_t* data, int16_t size);
 
     /**						
      * @brief This method request the receive of size bytes
@@ -179,7 +179,7 @@ public:
      *            processed correctly. Return false if the UART is busy or a
      *            problem has occurred.
      */
-    static bool receive_next_packet(uint8_t id, uint8_t* data, uint16_t size);
+    static bool receive(uint8_t id, uint8_t* data, uint16_t size);
 
     /**
 	* @brief This method receive size number of bytes by polling.
@@ -192,7 +192,7 @@ public:
 	* @return bool Return true if the data has been read successfully.
 	* 			   Return false if the UART is busy or a problem has occurred.
 	*/
-    static bool receive_next_packet_polling(uint8_t id, uint8_t* data, uint16_t size);
+    static bool receive_polling(uint8_t id, uint8_t* data, uint16_t size);
 
     /**
      * @brief This method is used to check if the UART receive operation has finished and data is ready.
