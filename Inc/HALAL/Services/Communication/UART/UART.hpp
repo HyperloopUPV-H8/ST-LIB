@@ -57,13 +57,10 @@ private:
 		peripheral10 = 9
     };
 
-
-
 public:
     static uint16_t id_counter;
     
     static unordered_map<uint8_t, UART::Instance* > registered_uart;
-
     static unordered_map<UART::Peripheral, UART::Instance*> available_uarts;
 
     static uint8_t printf_uart;
