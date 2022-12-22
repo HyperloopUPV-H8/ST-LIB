@@ -24,8 +24,8 @@ extern TIM_HandleTypeDef htim6;		// Used for the low precision alarms (1mS)
 class Time {
 
 private :
-	static forward_list<uint8_t> high_precision_ids;
-	static forward_list<uint8_t> low_precision_ids;
+	static uint8_t high_precision_ids;
+	static uint8_t low_precision_ids;
 
 	struct Alarm {
 		uint32_t period;
