@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Time/Time.hpp"
-#include "DigitalOutputservice/DigitalOutputservice.hpp"
+#include "DigitalOutputService/DigitalOutputService.hpp"
 #include "PWMservice/PWMservice.hpp"
 
 class HalfBridge {

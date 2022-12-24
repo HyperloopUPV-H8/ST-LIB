@@ -31,5 +31,14 @@
 #include <forward_list>
 #include <ostream>
 #include <cstring>
+#include <stdarg.h>
+
+#define endl "\n\r"
 
 using namespace std;
+
+template<class Type>
+concept Integral = is_integral<Type>::value;
+
+template<class Type>
+concept NotIntegral = !is_integral<Type>::value;
