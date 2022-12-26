@@ -69,6 +69,7 @@ private:
 	static uint8_t id_counter;
 
 	static void init(Peripheral& peripheral);
+	static void load_init_data(Instance instance);
 };
 
 #endif

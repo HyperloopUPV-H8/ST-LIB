@@ -29,20 +29,17 @@ Socket::Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t 
 Socket::Socket(EthernetNode local_node, EthernetNode remote_node):Socket(local_node.ip, local_node.port, remote_node.ip, remote_node.port){}
 
 void Socket::close(){
-  tcp_arg(socket_control_block, nullptr);
-  tcp_sent(socket_control_block, nullptr);
-  tcp_recv(socket_control_block, nullptr);
-  tcp_err(socket_control_block, nullptr);
-  tcp_poll(socket_control_block, nullptr, 0);
+	close_all_callbacks();
 
-  if(tx_packet_buffer!=nullptr){
+	if(tx_packet_buffer!=nullptr){
 	  pbuf_free(tx_packet_buffer);
-  }
-  if(rx_packet_buffer!=nullptr){
-	  pbuf_free(rx_packet_buffer);
-  }
+	}
 
-  tcp_close(socket_control_block);
+	if(rx_packet_buffer!=nullptr){
+	  pbuf_free(rx_packet_buffer);
+	}
+
+	tcp_close(socket_control_block);
 }
 
 void Socket::reconnect(){
@@ -174,6 +171,14 @@ void Socket::error_callback(void *arg, err_t error){
 		socket->close();
 	}
 	//TODO: Error Handler
+}
+
+void Socket::clean_all_callbacks() {
+	tcp_arg(client_control_block, nullptr);
+	tcp_sent(client_control_block, nullptr);
+	tcp_recv(client_control_block, nullptr);
+	tcp_err(client_control_block, nullptr);
+	tcp_poll(client_control_block, nullptr, 0);
 }
 
 #endif
