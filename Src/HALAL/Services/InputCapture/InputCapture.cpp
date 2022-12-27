@@ -85,6 +85,9 @@ InputCapture::Instance InputCapture::find_instance_by_channel(uint32_t channel) 
 			return id_instance.second;
 		}
 	}
+
+	//TODO: Error handler
+	return Instance();
 }
 
 void HAL_TIM_InputCapture_CaptureCallback(TIM_HandleTypeDef *htim)
