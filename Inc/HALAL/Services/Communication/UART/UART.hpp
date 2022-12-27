@@ -57,10 +57,12 @@ private:
 		peripheral10 = 9
     };
 
+    static UART_HandleTypeDef* get_handle(uint8_t id);
+
 public:
     static uint16_t id_counter;
     
-    static unordered_map<uint8_t, UART::Instance* > registered_uart;
+    static unordered_map<uint8_t, UART::Instance*> registered_uart;
     static unordered_map<UART::Peripheral, UART::Instance*> available_uarts;
 
     static uint8_t printf_uart;
@@ -137,7 +139,9 @@ public:
 	 *            successfully. Returns false if the UART is busy or a problem
 	 *            has occurred.
 	 */
-    static bool transmit(uint8_t id, uint8_t* data, int16_t size);
+
+    template<size_t arr_size>
+    static bool transmit(uint8_t id, array<uint8_t, arr_size> arr);
 
     /**@brief	Transmits 1 byte by polling.
 	 *
@@ -224,7 +228,7 @@ public:
   	 * @param len Length of the message.
   	 * @return bool True if everything went well. False if something has gone wrong.
   	 */
-    static void print_by_uart(char *ptr, int len);
+    static void print_by_uart(string ptr, int len);
 
     private:
     /**
@@ -235,5 +239,22 @@ public:
     static void init(UART::Instance* uart);
 
 };
+
+template<size_t arr_size>
+bool UART::transmit(uint8_t id, array<uint8_t, arr_size> arr){
+    if (not UART::registered_uart.contains(id))
+        return false; //TODO: Error handler
+
+    UART_HandleTypeDef* handle = get_handle(id);
+
+    if((handle->ErrorCode & TXBUSYMASK) == 1)
+       return false;
+
+    if (HAL_UART_Transmit_DMA(handle, arr.data(), arr.size()) != HAL_OK){
+        return false; //TODO: Warning, Error during transmision
+    }
+
+    return true;
+}
 
 #endif

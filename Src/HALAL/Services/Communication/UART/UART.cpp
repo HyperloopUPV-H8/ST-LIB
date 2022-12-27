@@ -36,47 +36,20 @@ void UART::start(){
 }
 
 bool UART::transmit(uint8_t id, uint8_t data){
-    if (not UART::registered_uart.contains(id))
-        return false; //TODO: Error handler
-
-    UART::Instance* uart = UART::registered_uart[id];
-
-    if((uart->huart->ErrorCode & TXBUSYMASK) == 1)
-       return false;
-
-    if (HAL_UART_Transmit_DMA(uart->huart, &data, 1) != HAL_OK){
-        return false; //TODO: Warning, Error during transmision
-    }
-
-    return true;
-}
-
-bool UART::transmit(uint8_t id, uint8_t* data, int16_t size){
-    if (not UART::registered_uart.contains(id))
-        return false; //TODO: Error handler
-
-    UART::Instance* uart = UART::registered_uart[id];
-
-    if((uart->huart->ErrorCode & TXBUSYMASK) == 1)
-       return false;
-
-    if (HAL_UART_Transmit_DMA(uart->huart, data, size) != HAL_OK){
-        return false; //TODO: Warning, Error during transmision
-    }
-
-    return true;
+	array<uint8_t, 1> arr {data};
+    return transmit(id, arr);
 }
 
 bool UART::transmit_polling(uint8_t id, uint8_t data){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
-    UART::Instance* uart = UART::registered_uart[id];
+    UART_HandleTypeDef* handle = get_handle(id);
 
-    if((uart->huart->ErrorCode & TXBUSYMASK) == 1)
+    if((handle->ErrorCode & TXBUSYMASK) == 1)
        return false;
 
-    if (HAL_UART_Transmit(uart->huart, &data, 1, 10) != HAL_OK){
+    if (HAL_UART_Transmit(handle, &data, 1, 10) != HAL_OK){
         return false; //TODO: Warning, Error during transmision
     }
 
@@ -87,12 +60,12 @@ bool UART::transmit_polling(uint8_t id, uint8_t* data, int16_t size){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
-    UART::Instance* uart = UART::registered_uart[id];
+    UART_HandleTypeDef* handle = get_handle(id);
 
-    if((uart->huart->ErrorCode & TXBUSYMASK) == 1)
+    if((handle->ErrorCode & TXBUSYMASK) == 1)
        return false;
 
-    if (HAL_UART_Transmit(uart->huart, data, size, 10) != HAL_OK){
+    if (HAL_UART_Transmit(handle, data, size, 10) != HAL_OK){
         return false; //TODO: Warning, Error during transmision
     }
 
@@ -122,13 +95,13 @@ bool UART::receive_polling(uint8_t id, uint8_t* data, uint16_t size){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
-    UART::Instance* uart = UART::registered_uart[id];
+    UART_HandleTypeDef* handle = get_handle(id);
 
-    if(((uart->huart->RxState & RXBUSYMASK) >> 1) == 1)
+    if(((handle->RxState & RXBUSYMASK) >> 1) == 1)
        return false;
 
 
-    if (HAL_UART_Receive(uart->huart, data, size, 10) != HAL_OK) {
+    if (HAL_UART_Receive(handle, data, size, 10) != HAL_OK) {
         return false; //TODO: Warning, Error during receive
     }
 
@@ -158,9 +131,9 @@ bool UART::is_busy(uint8_t id){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
-    UART::Instance* uart = UART::registered_uart[id];
+    UART_HandleTypeDef* handle = get_handle(id);
 
-    if((uart->huart->ErrorCode & TXBUSYMASK) == 1)
+    if((handle->ErrorCode & TXBUSYMASK) == 1)
        return false;
 
     return false;
@@ -185,12 +158,14 @@ bool UART::set_up_printf(UART::Peripheral& uart){
 		return UART::printf_ready;
 	}
 
-void UART::print_by_uart(char *ptr, int len){
+void UART::print_by_uart(string str, int len) {
 		if (!UART::printf_ready) {
 			return;
 		}
 
-		UART::transmit_polling(UART::printf_uart, (uint8_t*)ptr, static_cast<uint16_t>(len));
+		vector<uint8_t> myVector(str.begin(), str.end());
+		uint8_t *ptr = &myVector[0];
+		UART::transmit_polling(UART::printf_uart, ptr, static_cast<uint16_t>(len));
 }
 
 
@@ -205,43 +180,49 @@ void UART::init(UART::Instance* uart){
 		return;
 	}
 
-	uart->huart->Instance = uart->instance;
-	uart->huart->Init.BaudRate = uart->baud_rate;
-	uart->huart->Init.WordLength = uart->word_length;
-	uart->huart->Init.StopBits = UART_STOPBITS_1;
-	uart->huart->Init.Parity = UART_PARITY_NONE;
-	uart->huart->Init.Mode = UART_MODE_TX_RX;
-	uart->huart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	uart->huart->Init.OverSampling = UART_OVERSAMPLING_16;
-	uart->huart->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-	uart->huart->Init.ClockPrescaler = UART_PRESCALER_DIV1;
-	uart->huart->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+	UART_HandleTypeDef* handle = uart->huart;
+	handle->Instance = uart->instance;
+	handle->Init.BaudRate = uart->baud_rate;
+	handle->Init.WordLength = uart->word_length;
+	handle->Init.StopBits = UART_STOPBITS_1;
+	handle->Init.Parity = UART_PARITY_NONE;
+	handle->Init.Mode = UART_MODE_TX_RX;
+	handle->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	handle->Init.OverSampling = UART_OVERSAMPLING_16;
+	handle->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+	handle->Init.ClockPrescaler = UART_PRESCALER_DIV1;
+	handle->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
 
-	if (HAL_UART_Init(uart->huart) != HAL_OK){
+	if (HAL_UART_Init(handle) != HAL_OK){
 		//TODO: Error Handler
 	}
 
-	if (HAL_UARTEx_SetTxFifoThreshold(uart->huart, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK){
+	if (HAL_UARTEx_SetTxFifoThreshold(handle, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK){
 		//TODO: Error Handler
 	}
 
-	if (HAL_UARTEx_SetRxFifoThreshold(uart->huart, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK){
+	if (HAL_UARTEx_SetRxFifoThreshold(handle, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK){
 		//TODO: Error Handler
 	}
 
-	if (HAL_UARTEx_DisableFifoMode(uart->huart) != HAL_OK){
+	if (HAL_UARTEx_DisableFifoMode(handle) != HAL_OK){
 		//TODO: Error Handler
 	}
 
 	uart->initialized = true;
 }
 
+UART_HandleTypeDef* UART::get_handle(uint8_t id) {
+	return registered_uart[id]->huart;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int _write(int file, char *ptr, int len){
-    UART::print_by_uart(ptr, len);
+int _write(int file, string str, int len) {
+
+    UART::print_by_uart(str, len);
     return len;
 }
 
