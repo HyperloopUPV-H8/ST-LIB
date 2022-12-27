@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "PWMservice/PWMservice.hpp"
+#include "PWMService/PWMService.hpp"
 
 class PWM {
 public:
