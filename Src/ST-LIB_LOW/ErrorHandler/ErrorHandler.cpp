@@ -13,7 +13,9 @@ template<Integral... Args>
 void ErrorHandlerModel::ErrorHandler(string format, Args... args){
 	 ErrorHandlerModel::error_triggered = 1.0;
 
-	// UART::
+	 if (!UART::printf_ready) {
+		return;
+	 }
 
 	 snprintf(description, 500 , format.c_str(), args...);
 
@@ -24,6 +26,9 @@ void ErrorHandlerModel::ErrorHandler(string format, Args... args){
 
 
 void ErrorHandlerModel::ErrorHandlerUpdate(){
+	if (!UART::printf_ready) {
+		return;
+	}
 
 	printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
 
