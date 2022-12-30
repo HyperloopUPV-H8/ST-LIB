@@ -6,6 +6,8 @@
 #include <C++Utilities/CppUtils.hpp>
 #include "Time/Time.hpp"
 
+#ifdef HAL_TIM_MODULE_ENABLED
+
 class TimedAction {
 public:
 	function<void()> action;
@@ -87,3 +89,5 @@ template<class TimeUnit>
 void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
 	add_cyclic_action(action, period, current_state);
 }
+
+#endif

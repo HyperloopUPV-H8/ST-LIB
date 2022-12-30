@@ -44,6 +44,9 @@ unordered_map<UART::Peripheral, UART::Instance*> UART::available_uarts = {
 	{UART::uart2, &UART::instance2}
 };
 
+uint8_t UART::printf_uart = 0;
+bool UART::printf_ready = false;
+
 #endif
 /************************************************
  *              Communication-I2C

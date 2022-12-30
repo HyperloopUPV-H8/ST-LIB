@@ -1,11 +1,11 @@
 #pragma once
 
 #include "DigitalOutputService/DigitalOutputService.hpp"
-#include "DigitalInput/DigitalInput.hpp"
+#include "DigitalInputService/DigitalInputService.hpp"
 #include "Flash/Flash.hpp"
 #include "Flash/FlashTests/Flash_Test.hpp"
 #include "ADC/ADC.hpp"
-#include "PWMservice/PWMservice.hpp"
+#include "PWMService/PWMService.hpp"
 #include "Time/Time.hpp"
 #include "InputCapture/InputCapture.hpp"
 #include "Encoder/Encoder.hpp"

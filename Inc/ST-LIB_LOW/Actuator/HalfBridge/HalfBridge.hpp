@@ -9,7 +9,7 @@
 
 #include "Time/Time.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
-#include "PWMservice/PWMservice.hpp"
+#include "PWMService/PWMService.hpp"
 
 class HalfBridge {
 public:
