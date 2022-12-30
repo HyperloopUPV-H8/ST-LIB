@@ -13,7 +13,7 @@ template<Integral... Args>
 void ErrorHandlerModel::ErrorHandler(string format, Args... args){
 	 ErrorHandlerModel::error_triggered = 1.0;
 
-	//TODO: set up uart prinf
+	// UART::
 
 	 snprintf(description, 500 , format.c_str(), args...);
 
@@ -26,6 +26,9 @@ void ErrorHandlerModel::ErrorHandler(string format, Args... args){
 void ErrorHandlerModel::ErrorHandlerUpdate(){
 
 	printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
+
+	//TODO:Enviar el mismo mensaje por ethernet.
+
 
 	//TODO: Parpadeo del led de fault.
 	//HAL_GPIO_TogglePin(GPIOx, GPIO_Pin);
