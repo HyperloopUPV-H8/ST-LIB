@@ -71,11 +71,11 @@ public:
         return &converted_value;
     }
 
-    void load(ConversionType* new_data){
+    inline void load(ConversionType* new_data) const {
         *src = static_cast<double>(*new_data / factor);
     }
 
-    size_t size(){
+    inline constexpr size_t size() const {
 	    return sizeof(ConversionType);
     }
 };
@@ -89,7 +89,7 @@ public:
     PacketValue() = default;
     PacketValue(BaseType* src) : src(src){}
 
-    BaseType* convert() {
+    inline BaseType* convert() const {
         return src;
     }
 
@@ -97,7 +97,7 @@ public:
         *src = *new_data;
     }
 
-    size_t size() {
+    inline constexpr size_t size() const {
         return sizeof(BaseType);
     }
 };
@@ -115,7 +115,7 @@ public:
         }
     }
 
-    auto* convert() {
+    inline auto* convert() const {
         return src->data();
     }
 
@@ -123,7 +123,7 @@ public:
         memcpy(src->data(), new_data, size());
     }
 
-    size_t size() {
+    inline constexpr size_t size() const {
         return src->size() * sizeof(typename remove_reference<decltype(*src)>::type::value_type) + is_string;
     }
 private:

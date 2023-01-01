@@ -65,6 +65,9 @@ public:
     void save_data(uint8_t* new_data);
 
 	template <class FunctionType>
+	void for_each(FunctionType& callback);
+
+	template <class FunctionType>
 	void for_each(FunctionType&& callback);
 
 public:
@@ -182,6 +185,20 @@ decltype(Packet<Type,Types...>::id) Packet<Type, Types...>::get_id() {
     return this->id;
 }
 
+template<class Type, class... Types> template<class FunctionType>
+void Packet<Type, Types...>::for_each(FunctionType& callback) {
+    if constexpr (number_of_values <= 0) {
+        return;
+    }
+    else if constexpr (number_of_values == 1) {
+        callback(this->value);
+        return;
+    }
+    else {
+        callback(this->value);
+        static_cast<base_type&>(*this). template for_each<FunctionType>(callback);
+    }
+}
 
 template<class Type, class... Types> template<class FunctionType>
 void Packet<Type,Types...>::for_each(FunctionType&& callback){
@@ -194,6 +211,6 @@ void Packet<Type,Types...>::for_each(FunctionType&& callback){
 	}
 	else{
 		invoke(callback,this->value);
-		static_cast<base_type&>(*this). template for_each<FunctionType>(forward<FunctionType>(callback));
+		static_cast<base_type&>(*this). template for_each<FunctionType>(callback);
 	}
 }
