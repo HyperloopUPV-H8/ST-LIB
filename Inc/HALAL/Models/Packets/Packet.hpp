@@ -52,20 +52,20 @@ public:
 
 	uint8_t* build();
 
-	template <size_t I = 0>
 	void calculate_sizes();
 
-	template <size_t I = 0>
 	void fill_buffer();
 
 	bool check_id(uint8_t* new_data);
 
     decltype(Packet<Type,Types...>::id) get_id();
 
-    template <size_t I = 0>
     void load_data(uint8_t* new_data);
 
     void save_data(uint8_t* new_data);
+
+	template <class FunctionType>
+	void for_each(FunctionType&& callback);
 
 public:
 	uint16_t buffer_size = sizeof(id);
@@ -113,40 +113,23 @@ auto& Packet<Type, Types...>::get(){
 	}
 }
 
-template<class Type, class... Types> template <size_t I = 0>
+template<class Type, class... Types>
 void Packet<Type, Types...>::calculate_sizes() {
-	if constexpr (I == number_of_values) {
-		return;
-	}
-	else if constexpr (I < number_of_values) {
-		auto elem = get<I>();
-		using cast_type = remove_reference<decltype(elem)>::type::value_type;
+	for_each([this](auto& packet_value) {
+		using cast_type = remove_reference<decltype(packet_value)>::type::value_type;
 		if constexpr (is_container<cast_type>::value) {
 			has_container_values = true;
 		}
-		buffer_size += (uint16_t)elem.size();
-		calculate_sizes<I + 1>();
-	}
+		buffer_size += (uint16_t)packet_value.size();
+	});
 }
 
-template<class Type, class... Types> template <size_t I = 0>
+template<class Type, class... Types>
 void Packet<Type, Types...>::fill_buffer() {
-	if constexpr (I == number_of_values) {
-		return;
-	}
-	else if constexpr (I < number_of_values) {
-		auto elem = get<I>();
-		using cast_type = remove_reference<decltype(elem)>::type::value_type;
-		if constexpr (is_container<cast_type>::value) {
-			memcpy(buffer + ptr_loc, elem.convert(), elem.size());
-		}
-		else {
-			auto data = elem.convert();
-			memcpy(buffer + ptr_loc, &data, elem.size());
-		}
-		ptr_loc += (uint16_t)elem.size();
-		fill_buffer<I + 1>();
-	}
+	for_each([this](auto& packet_value) {
+		memcpy(buffer + ptr_loc, packet_value.convert(), packet_value.size());
+		ptr_loc += (uint16_t)packet_value.size();
+	});
 }
 
 template<class Type, class... Types>
@@ -166,24 +149,14 @@ uint8_t* Packet<Type, Types...>::build() {
 	return this->buffer;
 }
 
-template<class Type, class... Types> template <size_t I = 0>
+template<class Type, class... Types>
 void Packet<Type, Types...>::load_data(uint8_t* new_data) {
-    if constexpr (I == number_of_values) {
-        return;
-    }
-    else if constexpr (I < number_of_values) {
-        auto elem = get<I>();
-        using cast_type = remove_reference<decltype(elem)>::type::value_type;
-        cast_type* new_value = (cast_type*)(new_data+ptr_loc);
-        if constexpr (is_container<cast_type>::value) {
-            elem.load(new_value);
-        }
-		else {
-            elem.load(*new_value);
-        }
-        ptr_loc += (uint16_t)elem.size();
-        load_data<I + 1>(new_data);
-    }
+	for_each([this,new_data](auto& packet_value) {
+		using cast_type = remove_reference<decltype(packet_value)>::type::value_type;
+		cast_type* new_value = (cast_type*)(new_data + ptr_loc);
+		packet_value.load(new_value);
+		ptr_loc += (uint16_t)packet_value.size();
+	});
 }
 
 template<class Type, class ... Types>
@@ -209,3 +182,18 @@ decltype(Packet<Type,Types...>::id) Packet<Type, Types...>::get_id() {
     return this->id;
 }
 
+
+template<class Type, class... Types> template<class FunctionType>
+void Packet<Type,Types...>::for_each(FunctionType&& callback){
+	if constexpr (number_of_values <= 0) {
+		return;
+	}
+	else if constexpr (number_of_values == 1) {
+		invoke(callback, this->value);
+		return;
+	}
+	else{
+		invoke(callback,this->value);
+		static_cast<base_type&>(*this). template for_each<FunctionType>(forward<FunctionType>(callback));
+	}
+}

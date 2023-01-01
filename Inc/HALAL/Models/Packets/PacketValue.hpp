@@ -61,16 +61,18 @@ public:
     using value_type = ConversionType;
     double* src;
     double factor;
+    ConversionType converted_value;
 
     PacketValue() = default;
     PacketValue(double* src, double factor):src(src),factor(factor !=0 ? factor : 1){}
 
-    ConversionType convert(){
-	    return static_cast<ConversionType>((*src) * factor);
+    ConversionType* convert(){
+	    converted_value = static_cast<ConversionType>((*src) * factor);
+        return &converted_value;
     }
 
-    void load(ConversionType new_data){
-        *src = static_cast<double>(new_data / factor);
+    void load(ConversionType* new_data){
+        *src = static_cast<double>(*new_data / factor);
     }
 
     size_t size(){
@@ -87,12 +89,12 @@ public:
     PacketValue() = default;
     PacketValue(BaseType* src) : src(src){}
 
-    BaseType convert() {
-        return *src;
+    BaseType* convert() {
+        return src;
     }
 
-    void load(BaseType new_data) {
-        *src = new_data;
+    void load(BaseType* new_data) {
+        *src = *new_data;
     }
 
     size_t size() {
