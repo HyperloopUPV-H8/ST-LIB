@@ -12,10 +12,10 @@
 
 #ifdef HAL_UART_MODULE_ENABLED
 
-extern UART_HandleTypeDef huart3;
-
 #define TXBUSYMASK 0b1
 #define RXBUSYMASK 0b10
+
+#define endl "\n\r"
 /**
  * @brief UART service class. Abstracts the use of the UART service of the HAL library.
  * 
@@ -45,27 +45,59 @@ private:
      *
      */
     enum Peripheral{
+    	peripheral1 = 0,
+    	peripheral2 = 1,
         peripheral3 = 2,
+		peripheral4 = 3,
+		peripheral5 = 4,
+		peripheral6 = 5,
+		peripheral7 = 6,
+		peripheral8 = 7,
+		peripheral9 = 8,
+		peripheral10 = 9
     };
+
+    static UART_HandleTypeDef* get_handle(uint8_t id);
 
 public:
     static uint16_t id_counter;
     
-    static unordered_map<uint8_t, UART::Instance* > registered_uart;
-
+    static unordered_map<uint8_t, UART::Instance*> registered_uart;
     static unordered_map<UART::Peripheral, UART::Instance*> available_uarts;
 
-    /**
-     * @brief UART 3 wrapper enum of the STM32H723.
-     *
-     */
-    static UART::Peripheral uart3;
+    static uint8_t printf_uart;
+    static bool printf_ready;
 
     /**
-     * @brief UART 3 instance of the STM32H723.
+	* @brief UART  wrapper enum of the STM32H723.
+	*
+	*/
+    static UART::Peripheral uart1;
+    static UART::Peripheral uart2;
+    static UART::Peripheral uart3;
+    static UART::Peripheral uart4;
+    static UART::Peripheral uart5;
+    static UART::Peripheral uart6;
+    static UART::Peripheral uart7;
+    static UART::Peripheral uart8;
+    static UART::Peripheral uart9;
+    static UART::Peripheral uart10;
+
+
+    /**
+     * @brief UART instances of the STM32H723.
      *
      */
+    static UART::Instance instance1;
+    static UART::Instance instance2;
     static UART::Instance instance3;
+    static UART::Instance instance4;
+    static UART::Instance instance5;
+    static UART::Instance instance6;
+    static UART::Instance instance7;
+    static UART::Instance instance8;
+    static UART::Instance instance9;
+    static UART::Instance instance10;
 
     /**
      * @brief Registers a new UART.
@@ -82,22 +114,59 @@ public:
      */
     static void start();
 
-    /**@brief	Transmits 1 RawPacket of any size by DMA and
-     *          interrupts. Handles the packet size automatically. To
-     *          to send various packets in a row you must check if the UART is busy
-     *          using is_busy().
+    /**@brief	Transmits 1 byte by DMA and interrupts.
+     *          To send various packets in a row you must check if the UART is busy
+     *          using is_busy(). All calls to this functions previous
+     *          the bus is ready be ignored.
      * 
      * @param id Id of the UART
-     * @param packet Packet to be send
+     * @param data data to be send
      * @return bool Returns true if the request to send the packet has been done
      *            successfully. Returns false if the UART is busy or a problem
      *            has occurred.
      */
-    static bool transmit_next_packet(uint8_t id, RawPacket& packet);
+    static bool transmit(uint8_t id, uint8_t data);
+
+    /**@brief	Transmits size number of bytes by DMA and interrupts.
+	 *          To send various packets in a row you must check if the UART is busy
+	 *          using is_busy(). All calls to this functions previous
+     *          the bus is ready be ignored.
+	 *
+	 * @param id Id of the UART
+	 * @param data Data to be sent.
+	 * @param size Size of the data
+	 * @return bool Returns true if the request to send the packet has been done
+	 *            successfully. Returns false if the UART is busy or a problem
+	 *            has occurred.
+	 */
+
+    template<size_t arr_size>
+    static bool transmit(uint8_t id, array<uint8_t, arr_size> arr);
+
+    /**@brief	Transmits 1 byte by polling.
+	 *
+	 * @param id Id of the UART
+	 * @param data Data to be sent.
+	 * @param size Size of the data
+	 * @return bool Returns true if the request to send the packet has been done
+	 *            successfully. Returns false if the UART is busy or a problem
+	 *            has occurred.
+	 */
+    static bool transmit_polling(uint8_t id, uint8_t data);
+
+    /**@brief	Transmits size bytes by polling.
+	 *
+	 * @param id Id of the UART
+	 * @param data Data to be sent.
+	 * @param size Size of the data
+	 * @return bool Returns true if the packet has been send successfully.
+	 * 			    Returns false if the UART is busy or a problem has occurred.
+	 */
+    static bool transmit_polling(uint8_t id, uint8_t* data, int16_t size);
 
     /**						
-     * @brief This method request the receive of a new RawPacket of any size
-     *        by DMA and interrupts. Thus the packet should not be used until
+     * @brief This method request the receive of size bytes
+     *        by DMA and interrupts. Thus the data should not be used until
      *        you have checked that the value is already available using the 
      *        method has_next_paclet(). All calls to this functions previous
      *        the last packet is ready will be ignored.
@@ -105,12 +174,26 @@ public:
      * @see   UART::has_next_packet()
      * 
      * @param id Id of the UART
-     * @param packet RawPacket in which the data will be stored
+     * @param data Where data will be stored
+     * @param size Number of bytes to read
      * @return bool Return true if the order to receive a new packet has been
      *            processed correctly. Return false if the UART is busy or a
      *            problem has occurred.
      */
-    static bool receive_next_packet(uint8_t id, RawPacket& packet);
+    static bool receive(uint8_t id, uint8_t* data, uint16_t size);
+
+    /**
+	* @brief This method receive size number of bytes by polling.
+	*
+	* @see   UART::has_next_packet()
+	*
+	* @param id Id of the UART
+	* @param data Where data will be stored
+	* @param size Number of bytes to read
+	* @return bool Return true if the data has been read successfully.
+	* 			   Return false if the UART is busy or a problem has occurred.
+	*/
+    static bool receive_polling(uint8_t id, uint8_t* data, uint16_t size);
 
     /**
      * @brief This method is used to check if the UART receive operation has finished and data is ready.
@@ -128,6 +211,25 @@ public:
      */
     static bool is_busy(uint8_t id);
 
+    /**
+	 * @brief This method is used to set up the printf. It's inscribe and configure the selected UART to work
+	 * 		  as standard and error output.
+	 *
+	 * @param uart Uart peripheral to be configured.
+	 * @return bool True if everything went well. False if something has gone wrong.
+	 */
+    static bool set_up_printf(UART::Peripheral& uart);
+
+    /**
+  	 * @brief This method is used to print a message through the uart configured for printf.
+  	 * 		  It only works if it has been configured correctly.
+  	 *
+  	 * @param ptr Pointer to the character string.
+  	 * @param len Length of the message.
+  	 * @return bool True if everything went well. False if something has gone wrong.
+  	 */
+    static void print_by_uart(string ptr, int len);
+
     private:
     /**
      * @brief This method initializes the UART peripheral that is passed to it as a parameter.
@@ -135,6 +237,24 @@ public:
      * @param uart Peripheral instance to be initialized.
      */
     static void init(UART::Instance* uart);
+
 };
+
+template<size_t arr_size>
+bool UART::transmit(uint8_t id, array<uint8_t, arr_size> arr){
+    if (not UART::registered_uart.contains(id))
+        return false; //TODO: Error handler
+
+    UART_HandleTypeDef* handle = get_handle(id);
+
+    if((handle->ErrorCode & TXBUSYMASK) == 1)
+       return false;
+
+    if (HAL_UART_Transmit_DMA(handle, arr.data(), arr.size()) != HAL_OK){
+        return false; //TODO: Warning, Error during transmision
+    }
+
+    return true;
+}
 
 #endif

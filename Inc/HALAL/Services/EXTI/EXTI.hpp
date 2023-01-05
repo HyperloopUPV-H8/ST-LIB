@@ -25,7 +25,7 @@ public:
 
 	static map<uint8_t, Pin> service_ids;
 	static map<uint16_t, Instance> instances;
-	static forward_list<uint8_t> id_manager;
+	static uint8_t id_counter;
 
 	static optional<uint8_t> inscribe(Pin& pin, function<void()>&& action);
 	static void start();

@@ -5,7 +5,7 @@
  *      Author: alejandro
  */
 
-#include "PWMservice/PWMservice.hpp"
+#include "PWMService/PWMService.hpp"
 
 uint8_t PWMservice::id_counter = 0;
 map<uint8_t, PWMservice::Instance> PWMservice::active_instances = {};
@@ -48,14 +48,6 @@ optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 	TimerPeripheral::InitData& init_data = active_instances[id_counter].peripheral->init_data;
 	init_data.pwm_channels.push_back(active_instances[id_counter].channel);
 	return id_counter++;
-}
-
-void PWMservice::start() {
-	for(TimerPeripheral peripheral : timer_peripherals) {
-		if (peripheral.is_registered()) {
-			PWMservice::init(peripheral);
-		}
-	}
 }
 
 void PWMservice::turn_on(uint8_t id) {

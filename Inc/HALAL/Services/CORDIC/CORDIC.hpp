@@ -56,7 +56,7 @@ enum Operation_Computation{
 
 class RotationComputer{
 public:
-	/*
+	/**
 	 * @brief Cosine function. Receives size angles and output size results
 	 * @param Angle the pointer to the angle array with size "size". input
 	 * @param Out the pointer to the array where the results are saved, with size "size". output
@@ -66,16 +66,16 @@ public:
 	 * If the angle or the out parameter has less size than the size parameter, it will throw an exception
 	 * If one or both angle and out parameters have more size than size, it will just calculate until size and leave the rest as it is
 	 */
-	static void cos(int32_t *angle,int32_t *out,int size);
+	static void cos(int32_t *angle,int32_t *out,int32_t size);
 
 
-	/*
+	/**
 	 * @brief sine function. virtually the same as the cosine function
 	 */
-	static void sin(int32_t *angle,int32_t *out,int size);
+	static void sin(int32_t *angle,int32_t *out,int32_t size);
 
 
-	/*
+	/**
 	 * @brief Cosine and sine function. Does both while only needing the time that one takes
 	 * @param Angle the pointer to the angle array with size "size". input
 	 * @param Cos_out the pointer to the array where the cosine results are saved, with size "size". output
@@ -89,19 +89,19 @@ public:
 	 * The exact time it takes is around 4 cycles more than the cos function, which is around 30-40. So 10% more as it needs to read one more register.
 	 * The reads are protected to give the correct result, thats why it needs 4 cycles for the read (on average) and not just one
 	 */
-	static void cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *sin_out, int size);
+	static void cos_and_sin(int32_t *angle, int32_t *cos_out, int32_t *sin_out, int32_t size);
 
 
-	/*
+	/**
 	 * @brief Phase function. Calculates the angle between a vector from (0,0) to (x,y) and the vector (1,0)
 	 * @param x. The array of values x of each vector with size "size". input.
 	 * @param y. The array of values y of each vector with size "size". input.
 	 * @param angle_out. The array where the functions puts its output, which is an angle. output.
 	 */
-	static void phase(int32_t *x, int32_t *y, int32_t *angle_out, int size);
+	static void phase(int32_t *x, int32_t *y, int32_t *angle_out, int32_t size);
 
 
-	/*
+	/**
 	 * @brief modulus function. Calculates the modulus of the vector from (0,0) to (x,y). If the modulus result where to be higher than 2147483392 (~0.995) it will give aberrant result instead
 	 * @param x. The array of values x of each vector with size "size". input.
 	 * @param y. The array of values y of each vector with size "size". input.
@@ -111,9 +111,9 @@ public:
 	 * If it were to give a value higher than 2147483392, the value that it would return would be absurd.
 	 * Avoiding to get near the limits of the euclidean space described (no more than 70% on both of the axis) is advised.
 	 */
-	static void modulus(int32_t *x, int32_t *y, int32_t *out, int size);
+	static void modulus(int32_t *x, int32_t *y, int32_t *out, int32_t size);
 
-	/*
+	/**
 	 * @brief modulus and phase function. Does both while only needing the time that one takes
 	 * @param x. The array of values x of each vector with size "size". input.
 	 * @param y. The array of values y of each vector with size "size". input.
@@ -124,18 +124,18 @@ public:
 	 * The modulus returned by this function shares weaknesses with the modulus function.
 	 * Avoiding getting near the 70% of the maximun (~ 1518500000) on both x and y at the same time is advised, unless modulus is handled.
 	 */
-	static void phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int size);
-	/*
+	static void phase_and_modulus(int32_t *x, int32_t *y, int32_t *angle_out, int32_t *mod_out, int32_t size);
+	/**
 	 * @brief Testing function that translates the angle to a float in radians, to make reading easier. Its slow, not intended to use on continous calculations
 	 */
 	static float q31_to_radian_f32(uint32_t in);
-	/*
+	/**
 	 * @brief Testing function that translates radians to an angle on int format, to make writting easier. Its slow, not intended to use on continous calculations
 	 */
 	static int32_t radian_f32_to_q31(double in);
 
 private:
-	/*
+	/**
 	 * @brief The mode that the cordic is configurated at this instant. Used to skip configuration if possible
 	 */
 	static Operation_Computation mode;
