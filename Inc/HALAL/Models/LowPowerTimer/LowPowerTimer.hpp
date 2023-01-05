@@ -13,7 +13,7 @@
 
 class LowPowerTimer {
 public:
-	LPTIM_TypeDef instance;
+	LPTIM_TypeDef& instance;
 	LPTIM_HandleTypeDef& handle;
 	uint16_t period;
 
