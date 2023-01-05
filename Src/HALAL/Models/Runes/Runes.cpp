@@ -180,9 +180,9 @@ uint16_t adc_buf1[ADC_BUF_LEN];
 uint16_t adc_buf2[ADC_BUF_LEN];
 uint16_t adc_buf3[ADC_BUF_LEN];
 
-LowPowerTimer lptim1 = LowPowerTimer(&hlptim1, LPTIM1_PERIOD);
-LowPowerTimer lptim2 = LowPowerTimer(&hlptim2, LPTIM2_PERIOD);
-LowPowerTimer lptim3 = LowPowerTimer(&hlptim3, LPTIM3_PERIOD);
+LowPowerTimer lptim1 = LowPowerTimer(hlptim1, LPTIM1_PERIOD);
+LowPowerTimer lptim2 = LowPowerTimer(hlptim2, LPTIM2_PERIOD);
+LowPowerTimer lptim3 = LowPowerTimer(hlptim3, LPTIM3_PERIOD);
 
 vector<uint32_t> channels1 = {};
 vector<uint32_t> channels2 = {};

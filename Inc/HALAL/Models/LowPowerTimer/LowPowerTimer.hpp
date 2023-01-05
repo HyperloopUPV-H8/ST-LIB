@@ -6,16 +6,21 @@
  */
 
 #pragma once
-#ifdef HAL_LPTIM_MODULE_ENABLED
 
+//#ifdef HAL_LPTIM_MODULE_ENABLED
 
-struct LowPowerTimer {
+#include "stm32h7xx_hal.h"
+
+class LowPowerTimer {
 public:
-	LPTIM_HandleTypeDef* handle;
+	LPTIM_TypeDef instance;
+	LPTIM_HandleTypeDef handle;
 	uint16_t period;
 
 	LowPowerTimer() = default;
-	LowPowerTimer(LPTIM_HandleTypeDef* handle, uint16_t period) : handle(handle), period(period) {};
+	LowPowerTimer(LPTIM_HandleTypeDef& handle, uint16_t period) : handle(handle), period(period) {};
+
+	void init();
 };
 
-#endif
+//#endif
