@@ -1,5 +1,6 @@
 #pragma once
 
+#include "HALconfig/HALconfig.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
 #include "DigitalInputService/DigitalInputService.hpp"
 #include "Flash/Flash.hpp"
@@ -16,3 +17,7 @@
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "Communication/Ethernet/TCP/Socket.hpp"
 #include "Communication/Ethernet/Ethernet.hpp"
+
+namespace HALAL {
+	void start();
+}

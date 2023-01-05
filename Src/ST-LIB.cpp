@@ -7,3 +7,9 @@
   * @brief    Default under dev library file.
   ******************************************************************************
 */
+
+#include "ST-LIB.hpp"
+
+void STLIB::start() {
+	HALAL::start();
+}
