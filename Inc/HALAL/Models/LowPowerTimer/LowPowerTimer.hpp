@@ -7,9 +7,9 @@
 
 #pragma once
 
-//#ifdef HAL_LPTIM_MODULE_ENABLED
-
 #include "stm32h7xx_hal.h"
+
+#ifdef HAL_LPTIM_MODULE_ENABLED
 
 class LowPowerTimer {
 public:
@@ -24,4 +24,4 @@ public:
 	void init();
 };
 
-//#endif
+#endif
