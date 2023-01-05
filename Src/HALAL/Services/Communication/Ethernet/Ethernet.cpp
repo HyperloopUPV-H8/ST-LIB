@@ -85,12 +85,12 @@ void Ethernet::update(){
 		sys_check_timeouts();
 		
 		if (HAL_GetTick() - EthernetLinkTimer >= 100){
-		EthernetLinkTimer = HAL_GetTick();
-		ethernet_link_check_state(&gnetif);
+			EthernetLinkTimer = HAL_GetTick();
+			ethernet_link_check_state(&gnetif);
 		}
 		
 		if(gnetif.flags == 15){
-		 netif_set_up(&gnetif);
+			netif_set_up(&gnetif);
 		}
 	}else{
 		//TODO: Error Handler;

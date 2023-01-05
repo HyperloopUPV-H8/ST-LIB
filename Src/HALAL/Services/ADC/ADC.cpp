@@ -33,9 +33,9 @@ optional<uint8_t> ADC::inscribe(Pin pin) {
 	Pin::inscribe(pin, ANALOG);
 	active_instances[id_counter] = available_instances[pin];
 
-	InitData& init_data = active_instances[id_counter].peripheral->init_data;
-	active_instances[id_counter].rank = init_data.channels.size();
-	init_data.channels.push_back(active_instances[id_counter].channel);
+	Instance& instance = active_instances[id_counter];
+	load_init_data(instance);
+
 	return id_counter++;
 }
 
@@ -66,6 +66,7 @@ void ADC::turn_on(uint8_t id){
 	if (HAL_LPTIM_TimeOut_Start_IT(timer.handle, timer.period, timer.period / 2) != HAL_OK) {
 		return; //TODO: Error handler
 	}
+
 	peripheral->is_on = true;
 }
 
@@ -85,6 +86,11 @@ optional<float> ADC::get_value(uint8_t id) {
 
 	return nullopt;
 }
+
+
+/************************************************
+ *              PRIVATE FUNCTIONS
+ ***********************************************/
 
 void ADC::init(Peripheral& peripheral) {
 	  ADC_MultiModeTypeDef multimode = {0};
@@ -131,4 +137,10 @@ void ADC::init(Peripheral& peripheral) {
 	  	  }
 	  	  counter++;
 	  }
+}
+
+void ADC::load_init_data(Instance instance) {
+	InitData& init_data = instance.peripheral->init_data;
+	instance.rank = init_data.channels.size();
+	init_data.channels.push_back(instance.channel);
 }

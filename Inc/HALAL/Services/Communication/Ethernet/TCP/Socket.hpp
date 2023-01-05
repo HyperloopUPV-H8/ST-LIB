@@ -52,6 +52,7 @@ public:
 	static err_t send_callback(void* arg, struct tcp_pcb* client_control_block, uint16_t length);
 	static void error_callback(void *arg, err_t error);
 
+	static void clean_all_callbacks();
 };
 
 template<class Type, class... Types>

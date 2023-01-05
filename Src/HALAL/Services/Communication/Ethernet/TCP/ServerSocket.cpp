@@ -38,12 +38,7 @@ ServerSocket::~ServerSocket(){
 }
 
 void ServerSocket::close(){
-	// Clean all callbacks
-	tcp_arg(client_control_block, nullptr);
-	tcp_sent(client_control_block, nullptr);
-	tcp_recv(client_control_block, nullptr);
-	tcp_err(client_control_block, nullptr);
-	tcp_poll(client_control_block, nullptr, 0);
+	clean_all_callbacks();
 
 	tcp_close(client_control_block);
 	while(pbuf_free(tx_packet_buffer) != 0);
@@ -67,6 +62,7 @@ void ServerSocket::process_data(){
 	if(Packet<>::on_received.contains(id)){
 		Packet<>::on_received[id]();
 	}
+
 	tcp_recved(client_control_block, rx_packet_buffer->tot_len);
 	pbuf_free(rx_packet_buffer);
 	rx_packet_buffer = rx_packet_buffer->next;
@@ -74,22 +70,24 @@ void ServerSocket::process_data(){
 
 void ServerSocket::send(){
 	pbuf* temporal_packet_buffer;
-	err_t error = ERR_OK;
-	while(error == ERR_OK && tx_packet_buffer != nullptr && tx_packet_buffer->len <= tcp_sndbuf(client_control_block)){
+	uint16_t& packet_length = tx_packet_buffer->len;
+	while(packet_length <= tcp_sndbuf(client_control_block)) {
+		if (tx_packet_buffer == nullptr) {
+			break;
+		}
+
 		temporal_packet_buffer = tx_packet_buffer;
 		error = tcp_write(client_control_block, tx_packet_buffer->payload, tx_packet_buffer->len, 0);
-		if(error == ERR_OK){
-			tcp_output(client_control_block);
-			tx_packet_buffer = tx_packet_buffer->next;
-			if(tx_packet_buffer != nullptr){
-				pbuf_ref(tx_packet_buffer);
-			}
-			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],temporal_packet_buffer);
-		}else if(error == ERR_MEM){			//Low on memory
-			tx_packet_buffer = temporal_packet_buffer;
-		}else{
-			//TODO: Error Handler
+		if (check_send_error(error, temporal_packet_buffer)) {
+			break;
 		}
+
+		tcp_output(client_control_block);
+		tx_packet_buffer = tx_packet_buffer->next;
+		if(tx_packet_buffer != nullptr){
+			pbuf_ref(tx_packet_buffer);
+		}
+		memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], temporal_packet_buffer);
 	}
 }
 
@@ -113,8 +111,9 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 		priority++;
 
 		return ERR_OK;
-	}else
+	}else {
 		return ERROR;
+	}
 }
 
 err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_block, struct pbuf* packet_buffer, err_t error){
@@ -164,37 +163,59 @@ err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_bloc
 	ServerSocket* server_socket = (ServerSocket*)arg;
 	server_socket->client_control_block = client_control_block;
 
-	if(server_socket != nullptr){
-		if(server_socket->tx_packet_buffer != nullptr){
-			server_socket->send();
-		}else{
-			if(server_socket->state == CLOSING){
-				server_socket->close();
-			}
-		}
-		return ERR_OK;
-	}
-	else{
+	if (server_socket == nullptr) {
 		tcp_abort(client_control_block);
 		return ERR_ABRT;
 	}
 
+	else if (server_socket->tx_packet_buffer != nullptr) {
+		server_socket->send();
+	}
+
+	else if(server_socket->state == CLOSING) {
+		server_socket->close();
+	}
+
+	return ERR_OK;
 }
 
 err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_block, u16_t len){
 	ServerSocket* server_socket = (ServerSocket*)arg;
 	server_socket->client_control_block = client_control_block;
+
 	if(server_socket->tx_packet_buffer != nullptr){
 		tcp_sent(client_control_block, send_callback);
 		server_socket->send();
 	}
-	else{
-		if(server_socket->state == CLOSING){
-			server_socket->close();
-		}
+
+	else if(server_socket->state == CLOSING){
+		server_socket->close();
 	}
+
 	return ERR_OK;
 }
 
+void ServerSocket::clean_all_callbacks() {
+	tcp_arg(client_control_block, nullptr);
+	tcp_sent(client_control_block, nullptr);
+	tcp_recv(client_control_block, nullptr);
+	tcp_err(client_control_block, nullptr);
+	tcp_poll(client_control_block, nullptr, 0);
+}
 
+void ServerSocket::check_send_error(int error, pbuf* temporal_packet_buffer) {
+	if(error == ERR_OK){
+		return false;
+	}
+
+	else if(error == ERR_MEM){ // Low on memory
+		tx_packet_buffer = temporal_packet_buffer;
+		return true;
+	}
+
+	else{
+		//TODO: Error Handler
+		return true;
+	}
+}
 #endif

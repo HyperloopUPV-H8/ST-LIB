@@ -56,6 +56,8 @@ private:
 	static err_t poll_callback(void *arg, struct tcp_pcb *client_control_block);
 	static err_t send_callback(void *arg, struct tcp_pcb *client_control_block, u16_t len);
 
+	static void clean_all_callbacks();
+	static void check_send_error(int error, pbuf* temporal_packet_buffer);
 };
 
 template<class Type, class...Types>
