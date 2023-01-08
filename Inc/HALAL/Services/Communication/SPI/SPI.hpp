@@ -60,6 +60,9 @@ private:
  		peripheral6 = 5,
      };
 
+    static void turn_on_chip_select(SPI::Instance* spi);
+    static void turn_off_chip_select(SPI::Instance* spi);
+
 public:
     static uint16_t id_counter;
     
@@ -121,44 +124,75 @@ public:
 	 * @return bool Returns true if the data has been send successfully.
 	 * 			    Returns false if a problem has occurred.
 	 */
-    static bool transmit(uint8_t id, uint8_t* data, uint16_t size);
+    template<size_t SIZE>
+    static bool transmit(uint8_t id, array<uint8_t, SIZE> data) {
+        if (!SPI::registered_spi.contains(id)) {
+            return false; //TODO: Error handler
+        }
+
+        SPI::Instance* spi = SPI::registered_spi[id];
+
+        turn_off_chip_select(spi);
+        if (HAL_SPI_Transmit(spi->hspi, data.data(), data.size(), 10) != HAL_OK){
+        	turn_on_chip_select(spi);
+        	return false; //TODO: Warning, Error during transmision
+        }
+    	turn_on_chip_select(spi);
+
+        return true;
+    }
 
     /**						
-     * @brief This method request the receive of a size bytes of data. The data
+     * @brief This method requests an array of data. The data
      * 		  will be stored in data parameter. You must make sure you have
      * 		  enough space
      * 
      * @param id Id of the SPI
      * @param data Pointer where data will be stored
      * @param size Size in bytes to receive.
-     * @return bool Return true if the data have been read successfully.
-     * 			    Return false if a problem has occurred.
+     * @return bool Returns true if the data have been read successfully.
+     * 			    Returns false if a problem has occurred.
      */
-    static bool receive(uint8_t id, uint8_t* data, uint16_t size);
+    template<size_t SIZE>
+    static bool receive(uint8_t id, array<uint8_t, SIZE> data) {
+        if (!SPI::registered_spi.contains(id))
+            return false; //TODO: Error handler
+
+        SPI::Instance* spi = SPI::registered_spi[id];
+
+    	turn_off_chip_select(spi);
+        if (HAL_SPI_Receive(spi->hspi, data.data(), data.size(), 10) != HAL_OK) {
+        	turn_on_chip_select(spi);
+            return false; //TODO: Warning, Error during receive
+        }
+    	turn_on_chip_select(spi);
+
+        return true;
+    };
 
     /**
-	 * @brief This method rtransmit one order of command_size bytes and
-	 * 		  then store the data received after that order.
+	 * @brief This method transmits one order of command_size bytes and
+	 * 		  then stores the data received after that order.
 	 *
 	 * @param id Id of the SPI
 	 * @param command_data Command
 	 * @param command_size Command size in bytes to receive
 	 * @param receive_data Pointer where data will be stored
 	 * @param receive_size Number of bytes to read
-	 * @return bool Return true if the data have been read successfully.
-	 * 			    Return false if a problem has occurred.
+	 * @return bool Returns true if the data have been read successfully.
+	 * 			    Returns false if a problem has occurred.
 	 */
     static bool command_and_receive(uint8_t id, uint8_t* command_data, uint16_t command_size, uint8_t* receive_data, uint16_t receive_size);
 
     /**
-     * @brief This method set chip select to high level.
+     * @brief This method sets chip select to high level.
      *
      * @param spi Id of the SPI
      */
     static void chip_select_on(uint8_t id);
 
     /**
-	 * @brief This method set chip select to low level.
+	 * @brief This method sets chip select to low level.
 	 *
 	 * @param spi Id of the SPI
 	 */
