@@ -22,9 +22,9 @@
 class SPI{
 private:
     /**
-     * @brief Struct wich defines all data refering to SPI peripherals. It is 
+     * @brief Struct which defines all data refering to SPI peripherals. It is
      *        declared private in order to prevent unwanted use. Only 
-     *        predefined instaces should be used. 
+     *        predefined instances should be used.
      *           
      */
     struct Instance{
@@ -48,7 +48,7 @@ private:
     };
 
     /**
-     * @brief Enum which abstracts the use of the Instance struct to facilitate the mocking of the HALAL.Struct
+     * @brief Enum that abstracts the use of the Instance struct to facilitate the mocking of the HALAL.
      *
      */
     enum Peripheral{
@@ -81,10 +81,6 @@ public:
     static SPI::Peripheral spi5;
     static SPI::Peripheral spi6;
 
-    /**
-     * @brief SPI 3 instance of the STM32H723.
-     *
-     */
     static SPI::Instance instance1;
 	static SPI::Instance instance2;
 	static SPI::Instance instance3;
