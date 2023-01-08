@@ -31,5 +31,7 @@
 #include <forward_list>
 #include <ostream>
 #include <cstring>
+#include <span>
+#include <ranges>
 
 using namespace std;
