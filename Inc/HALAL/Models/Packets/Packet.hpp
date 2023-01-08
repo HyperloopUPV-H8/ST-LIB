@@ -209,5 +209,3 @@ decltype(Packet<Type,Types...>::id) Packet<Type, Types...>::get_id() {
     return this->id;
 }
 
-map<decltype(Packet<>::id), function<void(uint8_t*)>> Packet<>::save_by_id = {};
-map<decltype(Packet<>::id), void(*)()> Packet<>::on_received = {};

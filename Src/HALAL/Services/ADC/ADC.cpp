@@ -8,6 +8,7 @@
 #include "ADC/ADC.hpp"
 
 extern ADC_HandleTypeDef hadc3;
+
 uint8_t ADC::id_counter = 0;
 map<uint8_t, ADC::Instance> ADC::active_instances = {};
 
@@ -81,12 +82,11 @@ optional<float> ADC::get_value(uint8_t id) {
 	else {
 		return raw / MAX_16BIT * MAX_VOLTAGE;
 	}
+
 	return nullopt;
 }
 
 void ADC::init(Peripheral& peripheral) {
-
-
 	  ADC_MultiModeTypeDef multimode = {0};
 	  ADC_ChannelConfTypeDef sConfig = {0};
 	  ADC_HandleTypeDef& adc_handle = *peripheral.handle;

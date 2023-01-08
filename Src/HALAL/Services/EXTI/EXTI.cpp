@@ -26,6 +26,7 @@ optional<uint8_t> ExternalInterrupt::inscribe(Pin& pin, function<void()>&& actio
 	}
 
 	Pin::inscribe(pin, EXTERNAL_INTERRUPT);
+
 	service_ids[id_counter] = pin;
 	instances[pin.gpio_pin].action = action;
 

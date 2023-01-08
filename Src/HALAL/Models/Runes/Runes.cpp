@@ -4,6 +4,7 @@
 /************************************************
  *              Communication-SPI
  ***********************************************/
+#ifdef HAL_SPI_MODULE_ENABLED
 extern SPI_HandleTypeDef hspi3;
 
 
@@ -17,10 +18,11 @@ SPI::Peripheral SPI::spi3 = SPI::Peripheral::peripheral3;
 unordered_map<SPI::Peripheral, SPI::Instance*> SPI::available_spi = {
 	{SPI::spi3, &SPI::instance3}
 };
-
+#endif
 /************************************************
  *              Communication-UART
  ***********************************************/
+#ifdef HAL_SPI_MODULE_ENABLED
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
@@ -42,7 +44,10 @@ unordered_map<UART::Peripheral, UART::Instance*> UART::available_uarts = {
 	{UART::uart2, &UART::instance2}
 };
 
+uint8_t UART::printf_uart = 0;
+bool UART::printf_ready = false;
 
+#endif
 /************************************************
  *              Communication-I2C
  ***********************************************/
