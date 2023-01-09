@@ -31,5 +31,22 @@
 #include <forward_list>
 #include <ostream>
 #include <cstring>
+#include <span>
+#include <ranges>
 
-using namespace std;
+namespace chrono = std::chrono;
+
+using std::map;
+using std::optional;
+using std::vector;
+using std::array;
+using std::span;
+using std::pair;
+using std::function;
+using std::string;
+using std::to_string;
+using std::reference_wrapper;
+using std::unordered_map;
+using std::set;
+using std::stack;
+using std::nullopt;
