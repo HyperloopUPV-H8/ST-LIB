@@ -15,7 +15,6 @@
 class LookupSensor : public AnalogSensor::AnalogSensor{
 public:
 	LookupSensor(Pin pin, double *table, int table_size, double *value);
-	void start();
 	void read();
 	uint8_t get_id();
 
