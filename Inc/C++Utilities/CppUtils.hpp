@@ -31,9 +31,9 @@
 #include <forward_list>
 #include <ostream>
 #include <cstring>
-#include <stdarg.h>
+#include <span>
+#include <ranges>
 
-#define endl "\n\r"
 
 using namespace std;
 
