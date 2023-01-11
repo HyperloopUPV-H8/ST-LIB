@@ -14,7 +14,6 @@
 class AnalogSensor : public Sensor<double>::Sensor{
 public:
 	virtual void read() = 0;
-	virtual void start() = 0;
 	virtual uint8_t get_id() = 0;
 
 protected:
