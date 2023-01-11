@@ -63,7 +63,7 @@ void ADC::turn_on(uint8_t id){
 	}
 
 	LowPowerTimer& timer = peripheral->timer;
-	if (HAL_LPTIM_TimeOut_Start_IT(timer.handle, timer.period, timer.period / 2) != HAL_OK) {
+	if (HAL_LPTIM_TimeOut_Start_IT(&timer.handle, timer.period, timer.period / 2) != HAL_OK) {
 		return; //TODO: Error handler
 	}
 	peripheral->is_on = true;
@@ -131,4 +131,6 @@ void ADC::init(Peripheral& peripheral) {
 	  	  }
 	  	  counter++;
 	  }
+
+	  peripheral.timer.init();
 }
