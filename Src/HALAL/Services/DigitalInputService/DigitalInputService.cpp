@@ -7,7 +7,7 @@
 
 #include "DigitalInputService/DigitalInputService.hpp"
 
-uint8_t id_counter = 0;
+uint8_t DigitalInput::id_counter = 0;
 map<uint8_t,Pin> DigitalInput::service_ids = {};
 
 uint8_t DigitalInput::inscribe(Pin& pin){
