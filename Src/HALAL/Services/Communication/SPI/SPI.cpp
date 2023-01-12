@@ -41,22 +41,55 @@ void SPI::start(){
 
 bool SPI::transmit(uint8_t id, uint8_t data){
 	array<uint8_t, 1> data_array = {data};
-	SPI::transmit(id, data_array);
+	return SPI::transmit(id, data_array);
 }
 
-bool SPI::command_and_receive(uint8_t id, uint8_t* command_data, uint16_t command_size, uint8_t* receive_data, uint16_t receive_size){
+bool SPI::transmit(uint8_t id, span<uint8_t> data) {
+    if (!SPI::registered_spi.contains(id)) {
+        return false; //TODO: Error handler
+    }
+
+    SPI::Instance* spi = SPI::registered_spi[id];
+
+    turn_off_chip_select(spi);
+    if (HAL_SPI_Transmit(spi->hspi, data.data(), data.size(), 10) != HAL_OK){
+    	turn_on_chip_select(spi);
+    	return false; //TODO: Warning, Error during transmision
+    }
+	turn_on_chip_select(spi);
+
+    return true;
+}
+
+bool SPI::receive(uint8_t id, span<uint8_t> data) {
+        if (!SPI::registered_spi.contains(id))
+            return false; //TODO: Error handler
+
+        SPI::Instance* spi = SPI::registered_spi[id];
+
+    	turn_off_chip_select(spi);
+        if (HAL_SPI_Receive(spi->hspi, data.data(), data.size(), 10) != HAL_OK) {
+        	turn_on_chip_select(spi);
+            return false; //TODO: Warning, Error during receive
+        }
+    	turn_on_chip_select(spi);
+
+        return true;
+    };
+
+bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data){
 	 if (!SPI::registered_spi.contains(id))
 	        return false; //TODO: Error handler
 
 	SPI::Instance* spi = SPI::registered_spi[id];
 
 	turn_off_chip_select(spi);
-	if (HAL_SPI_Transmit(spi->hspi, command_data, command_size, 10) != HAL_OK){
+	if (HAL_SPI_Transmit(spi->hspi, command_data.data(), command_data.size(), 10) != HAL_OK){
     	turn_on_chip_select(spi);
 		return false; //TODO: Warning, Error during transmision
 	}
 
-	if (HAL_SPI_Receive(spi->hspi, receive_data, receive_size, 10) != HAL_OK) {
+	if (HAL_SPI_Receive(spi->hspi, receive_data.data(), receive_data.size(), 10) != HAL_OK) {
     	turn_on_chip_select(spi);
 		return false; //TODO: Warning, Error during receive
 	}

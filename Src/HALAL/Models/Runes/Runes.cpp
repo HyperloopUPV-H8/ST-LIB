@@ -10,7 +10,7 @@ extern SPI_HandleTypeDef hspi3;
 
 SPI::Instance SPI::instance3 = { .SCK = &PC10, .MOSI = &PC12, .MISO = &PC11, .SS = &PD0,
                                  .hspi = &hspi3, .instance = SPI3,
-								 .baud_rate_prescaler = SPI_BAUDRATEPRESCALER_256,
+								 .baud_rate_prescaler = SPI_BAUDRATEPRESCALER_128,
                                };
 
 SPI::Peripheral SPI::spi3 = SPI::Peripheral::peripheral3;

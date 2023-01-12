@@ -120,23 +120,7 @@ public:
 	 * @return bool Returns true if the data has been send successfully.
 	 * 			    Returns false if a problem has occurred.
 	 */
-    template<size_t SIZE>
-    static bool transmit(uint8_t id, array<uint8_t, SIZE> data) {
-        if (!SPI::registered_spi.contains(id)) {
-            return false; //TODO: Error handler
-        }
-
-        SPI::Instance* spi = SPI::registered_spi[id];
-
-        turn_off_chip_select(spi);
-        if (HAL_SPI_Transmit(spi->hspi, data.data(), data.size(), 10) != HAL_OK){
-        	turn_on_chip_select(spi);
-        	return false; //TODO: Warning, Error during transmision
-        }
-    	turn_on_chip_select(spi);
-
-        return true;
-    }
+    static bool transmit(uint8_t id, span<uint8_t> data);
 
     /**						
      * @brief This method requests an array of data. The data
@@ -149,22 +133,7 @@ public:
      * @return bool Returns true if the data have been read successfully.
      * 			    Returns false if a problem has occurred.
      */
-    template<size_t SIZE>
-    static bool receive(uint8_t id, array<uint8_t, SIZE> data) {
-        if (!SPI::registered_spi.contains(id))
-            return false; //TODO: Error handler
-
-        SPI::Instance* spi = SPI::registered_spi[id];
-
-    	turn_off_chip_select(spi);
-        if (HAL_SPI_Receive(spi->hspi, data.data(), data.size(), 10) != HAL_OK) {
-        	turn_on_chip_select(spi);
-            return false; //TODO: Warning, Error during receive
-        }
-    	turn_on_chip_select(spi);
-
-        return true;
-    };
+    static bool receive(uint8_t id, span<uint8_t> data);
 
     /**
 	 * @brief This method transmits one order of command_size bytes and
@@ -178,7 +147,7 @@ public:
 	 * @return bool Returns true if the data have been read successfully.
 	 * 			    Returns false if a problem has occurred.
 	 */
-    static bool command_and_receive(uint8_t id, uint8_t* command_data, uint16_t command_size, uint8_t* receive_data, uint16_t receive_size);
+    static bool transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
 
     /**
      * @brief This method sets chip select to high level.
