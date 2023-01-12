@@ -134,7 +134,6 @@ public:
 	 *
 	 * @param id Id of the UART
 	 * @param data Data to be sent.
-	 * @param size Size of the data
 	 * @return bool Returns true if the request to send the packet has been done
 	 *            successfully. Returns false if the UART is busy or a problem
 	 *            has occurred.
@@ -146,7 +145,6 @@ public:
 	 *
 	 * @param id Id of the UART
 	 * @param data Data to be sent.
-	 * @param size Size of the data
 	 * @return bool Returns true if the request to send the packet has been done
 	 *            successfully. Returns false if the UART is busy or a problem
 	 *            has occurred.
@@ -157,7 +155,6 @@ public:
 	 *
 	 * @param id Id of the UART
 	 * @param data Data to be sent.
-	 * @param size Size of the data
 	 * @return bool Returns true if the packet has been send successfully.
 	 * 			    Returns false if the UART is busy or a problem has occurred.
 	 */
@@ -174,7 +171,6 @@ public:
      * 
      * @param id Id of the UART
      * @param data Where data will be stored
-     * @param size Number of bytes to read
      * @return bool Return true if the order to receive a new packet has been
      *            processed correctly. Return false if the UART is busy or a
      *            problem has occurred.
@@ -188,7 +184,6 @@ public:
 	*
 	* @param id Id of the UART
 	* @param data Where data will be stored
-	* @param size Number of bytes to read
 	* @return bool Return true if the data has been read successfully.
 	* 			   Return false if the UART is busy or a problem has occurred.
 	*/
@@ -224,7 +219,6 @@ public:
   	 * 		  It only works if it has been configured correctly.
   	 *
   	 * @param ptr Pointer to the character string.
-  	 * @param len Length of the message.
   	 * @return bool True if everything went well. False if something has gone wrong.
   	 */
     static void print_by_uart(char* ptr, int len);
