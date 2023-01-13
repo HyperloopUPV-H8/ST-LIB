@@ -20,20 +20,16 @@ int32_t Math::cos(int32_t angle){
 }
 
 int32_t Math::tg(int32_t angle){
-	if((angle & Q31_MASK) >= HALF_MARGIN){
-		if((angle & Q31_MASK) >= SHALF_MARGIN){
-			angle = angle - MAX_INT;
-		}else{
-			if(angle > 0){
-				return MAX_INT;
-			}else{
-				return -MAX_INT-1;
-			}
-		}
-	}
-	*pointer1 = angle;
-	RotationComputer::cos_and_sin(pointer1,pointer2,pointer3,1);
-	return *pointer3 / (*pointer2 >> TG_DECIMAL_BITS);
+    *pointer1 = angle;
+    RotationComputer::cos_and_sin(pointer1,pointer2,pointer3,1);
+    if(*pointer2 < MIN_COS_MARGIN_TG && *pointer2 > -MIN_COS_MARGIN_TG){
+        if((*pointer2 >= 0 && *pointer3 >= 0) || ((*pointer2 < 0 && *pointer3 < 0))){
+            return MAX_INT;
+        }else{
+            return -MAX_INT-1;
+        }
+    }
+    return *pointer3 / (*pointer2 >> TG_DECIMAL_BITS);
 }
 
 int32_t Math::phase(int32_t x, int32_t y){
@@ -44,7 +40,7 @@ int32_t Math::phase(int32_t x, int32_t y){
 }
 
 uint32_t Math::modulus(int32_t x, int32_t y){
-	if(((uint32_t) x + y) > MAX_MOD_MARGIN){
+	if(((uint32_t) x -4 + y) > MAX_MOD_MARGIN){
 		*pointer1 = (x >> 1);
 		*pointer2 = (y >> 1);
 		RotationComputer::modulus(pointer1, pointer2, pointer3, 1);
