@@ -1,64 +1,60 @@
 #include "ST-LIB_LOW/Math/Math.hpp"
 #include "CORDIC/CORDIC.hpp"
 
-int32_t Math::array[4] = {0,0,0,0};
-int32_t *Math::pointer1 = array;
-int32_t *Math::pointer2 = (int32_t *) array + 1;
-int32_t *Math::pointer3 = (int32_t *) array + 2;
-int32_t *Math::pointer4 = (int32_t *) array + 3;
+array<int32_t, 4> Math::pointers = {0,0,0,0};
 
 int32_t Math::sin(int32_t angle){
-	*pointer1 = angle;
-	RotationComputer::sin(pointer1,pointer2,1);
-	return *pointer2;
+	pointers[0] = angle;
+	RotationComputer::sin(&pointers[0],&pointers[1],1);
+	return pointers[1];
 }
 
 int32_t Math::cos(int32_t angle){
-	*pointer1 = angle;
-	RotationComputer::cos(pointer1,pointer2,1);
-	return *pointer2;
+	pointers[0] = angle;
+	RotationComputer::cos(&pointers[0],&pointers[1],1);
+	return pointers[1];
 }
 
 int32_t Math::tg(int32_t angle){
-    *pointer1 = angle;
-    RotationComputer::cos_and_sin(pointer1,pointer2,pointer3,1);
-    if(*pointer2 < MIN_COS_MARGIN_TG && *pointer2 > -MIN_COS_MARGIN_TG){
-        if((*pointer2 >= 0 && *pointer3 >= 0) || ((*pointer2 < 0 && *pointer3 < 0))){
+	pointers[0] = angle;
+    RotationComputer::cos_and_sin(&pointers[0],&pointers[1],&pointers[2],1);
+    if(pointers[1] < MIN_COS_MARGIN_TG && pointers[1] > -MIN_COS_MARGIN_TG){
+        if((pointers[1] >= 0 && pointers[2] >= 0) || ((pointers[1] < 0 && pointers[2] < 0))){
             return MAX_INT;
         }else{
             return -MAX_INT-1;
         }
     }
-    return *pointer3 / (*pointer2 >> TG_DECIMAL_BITS);
+    return pointers[2] / (pointers[1] >> TG_DECIMAL_BITS);
 }
 
 int32_t Math::phase(int32_t x, int32_t y){
-	*pointer1 = x;
-	*pointer2 = y;
-	RotationComputer::phase(pointer1, pointer2, pointer3, 1);
-	return *pointer3;
+	pointers[0] = x;
+	pointers[1] = y;
+	RotationComputer::phase(&pointers[0], &pointers[1], &pointers[2], 1);
+	return pointers[2];
 }
 
 uint32_t Math::modulus(int32_t x, int32_t y){
 	if(((uint32_t) x -4 + y) > MAX_MOD_MARGIN){
-		*pointer1 = (x >> 1);
-		*pointer2 = (y >> 1);
-		RotationComputer::modulus(pointer1, pointer2, pointer3, 1);
-		uint32_t mod= *pointer3;
+		pointers[0] = (x >> 1);
+		pointers[1] = (y >> 1);
+		RotationComputer::modulus(&pointers[0], &pointers[1], &pointers[2], 1);
+		uint32_t mod= pointers[2];
 		mod = (mod << 1);
 		return mod;
 	}
-	*pointer1 = x;
-	*pointer2 = y;
-	RotationComputer::modulus(pointer1, pointer2, pointer3, 1);
-	return *pointer3;
+	pointers[0] = x;
+	pointers[1] = y;
+	RotationComputer::modulus(&pointers[0], &pointers[1], &pointers[2], 1);
+	return pointers[2];
 }
 
 int32_t Math::atg(int32_t in){
-	*pointer1 = 1 << TG_DECIMAL_BITS;
-	*pointer2 = in;
-	RotationComputer::phase(pointer1, pointer2, pointer3, 1);
-	return *pointer3;
+	pointers[0] = 1 << TG_DECIMAL_BITS;
+	pointers[1] = in;
+	RotationComputer::phase(&pointers[0], &pointers[1], &pointers[2], 1);
+	return pointers[2];
 }
 
 

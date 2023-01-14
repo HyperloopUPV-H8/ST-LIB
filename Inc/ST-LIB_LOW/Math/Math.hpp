@@ -31,9 +31,5 @@ public:
     static inline int32_t tg_to_unitary(int32_t tg_in);
     static inline int32_t unitary_to_tg(int32_t in);
 private:
-    static int32_t array[4];
-    static int32_t *pointer1;
-    static int32_t *pointer2;
-    static int32_t *pointer3;
-    static int32_t *pointer4;
+    static array<int32_t,4> pointers;
 };
