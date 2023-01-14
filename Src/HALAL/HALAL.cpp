@@ -35,6 +35,10 @@ void HALAL::start() {
 	UART::start();
 #endif
 
+#ifdef HAL_ETH_MODULE_ENABLED
+	// Arreglar.
+	//Ethernet::start(local_ip, subnet_mask, gateway);
+#endif
 #ifdef HAL_TIM_MODULE_ENABLED
 	Encoder::start();
 	TimerPeripheral::start();
