@@ -50,6 +50,9 @@ void ErrorHandlerModel::ErrorHandler(string format, Args... args){
 	 std::snprintf(buffer.get(), size, format.c_str(), args...);
 
 	 description += std::string(buffer.get(), buffer.get() + size - 1);
+
+#ifdef HAL_TIM_MODULE_ENABLED
 	 description += " | TimeStamp: " + std::to_string(Time::get_global_tick());
+#endif
 }
 
