@@ -21,9 +21,20 @@ public:
 
 public:
 
+	 /**
+	 * @brief Triggers ErrorHandler and format the error message. The format works
+	 * 	      exactly like printf format.
+	 *
+	 * @param format String which will be formated.
+	 * @param args   Arguments specifying data to print
+	 * @return uint8_t Id of the service.
+	 */
 	template<class... Args>
 	static void ErrorHandler(string format, Args... args);
 
+	/**
+	 * @brief Transmit the error message.
+	 */
 	static void ErrorHandlerUpdate();
 
 };
@@ -39,6 +50,6 @@ void ErrorHandlerModel::ErrorHandler(string format, Args... args){
 	 std::snprintf(buffer.get(), size, format.c_str(), args...);
 
 	 description += std::string(buffer.get(), buffer.get() + size - 1);
-	 description += " | TimeStamp(nanoseconds): " + std::to_string(Time::get_global_tick());
+	 description += " | TimeStamp: " + std::to_string(Time::get_global_tick());
 }
 
