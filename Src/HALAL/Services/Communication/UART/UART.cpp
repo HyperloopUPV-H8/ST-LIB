@@ -161,7 +161,7 @@ bool UART::set_up_printf(UART::Peripheral& uart){
 		UART::printf_ready = true;
 
 		return UART::printf_ready;
-	}
+}
 
 void UART::print_by_uart(char* ptr, int len) {
 		if (!UART::printf_ready) {

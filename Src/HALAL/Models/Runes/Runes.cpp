@@ -22,7 +22,7 @@ unordered_map<SPI::Peripheral, SPI::Instance*> SPI::available_spi = {
 /************************************************
  *              Communication-UART
  ***********************************************/
-#ifdef HAL_SPI_MODULE_ENABLED
+#ifdef HAL_UART_MODULE_ENABLED
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 

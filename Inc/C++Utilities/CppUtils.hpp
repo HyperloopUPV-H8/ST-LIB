@@ -34,8 +34,6 @@
 #include <span>
 #include <ranges>
 
-namespace chrono = std::chrono;
-
 using std::map;
 using std::optional;
 using std::vector;
@@ -54,3 +52,9 @@ using std::is_integral;
 using std::is_same;
 using std::remove_reference;
 using std::integral_constant;
+
+template<class Type>
+concept Integral = is_integral<Type>::value;
+
+template<class Type>
+concept NotIntegral = !is_integral<Type>::value;
