@@ -10,7 +10,9 @@
 
 Operation_Computation RotationComputer::mode = NONE;
 
-
+void RotationComputer::start(){
+	__HAL_RCC_CORDIC_CLK_ENABLE();
+}
 
 void RotationComputer::cos(int32_t *angle, int32_t *out, int32_t size){
 	if(RotationComputer::mode != COSINE){
