@@ -1,7 +1,7 @@
 #include "ST-LIB_LOW/Math/Math.hpp"
 #include "CORDIC/CORDIC.hpp"
 
-array<int32_t, 4> Math::pointers = {0,0,0,0};
+array<int32_t, 4> Math::pointers = {0};
 
 int32_t Math::sin(int32_t angle){
 	pointers[0] = angle;
@@ -18,14 +18,13 @@ int32_t Math::cos(int32_t angle){
 int32_t Math::tg(int32_t angle){
 	pointers[0] = angle;
     RotationComputer::cos_and_sin(&pointers[0],&pointers[1],&pointers[2],1);
-    if(pointers[1] < MIN_COS_MARGIN_TG && pointers[1] > -MIN_COS_MARGIN_TG){
-        if((pointers[1] >= 0 && pointers[2] >= 0) || ((pointers[1] < 0 && pointers[2] < 0))){
-            return MAX_INT;
-        }else{
-            return -MAX_INT-1;
-        }
+    if(pointers[1] > MIN_COS_MARGIN_TG || pointers[1] < -MIN_COS_MARGIN_TG){
+    	return pointers[2] / (pointers[1] >> TG_DECIMAL_BITS);
     }
-    return pointers[2] / (pointers[1] >> TG_DECIMAL_BITS);
+    if((pointers[1] >= 0) == (pointers[2]>=0)){
+    	return MAX_INT;
+    }
+    return -MAX_INT-1;
 }
 
 int32_t Math::phase(int32_t x, int32_t y){
