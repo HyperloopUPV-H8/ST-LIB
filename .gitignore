@@ -5,3 +5,6 @@ Release/
 #Ignore test folder
 Pruebas/
 PRUEBAS/
+
+#Ignore ccls cache
+.ccls-cache/
