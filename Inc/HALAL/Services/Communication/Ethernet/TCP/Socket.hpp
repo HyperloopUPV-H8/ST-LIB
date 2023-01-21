@@ -5,7 +5,7 @@
  *      Author: stefa
  */
 #pragma once
-#ifdef HAL_ETH_MODULE_ENABLED
+#ifndef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"

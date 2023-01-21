@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#ifdef HAL_ETH_MODULE_ENABLED
+#ifndef HAL_ETH_MODULE_ENABLED
 #include "C++Utilities/CppUtils.hpp"
 #include "PinModel/Pin.hpp"
 #include "EthernetNode.hpp"

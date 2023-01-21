@@ -1,5 +1,4 @@
 #pragma once
-//#ifdef HAL_ETH_MODULE_ENABLED
 #include "stm32h7xx_hal.h"
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
@@ -22,4 +21,3 @@ public:
 	IPV4(string address);
 
 };
-//#endif

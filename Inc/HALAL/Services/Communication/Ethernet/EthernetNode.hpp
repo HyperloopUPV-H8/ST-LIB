@@ -1,5 +1,4 @@
 #pragma once
-//#ifdef HAL_ETH_MODULE_ENABLED
 #include "IPV4/IPV4.hpp"
 
 struct EthernetNode{
@@ -20,4 +19,3 @@ namespace std {
   };
 
 }
-//#endif
