@@ -7,28 +7,34 @@
 
 #include "ErrorHandler/ErrorHandler.hpp"
 
-string ErrorHandlerModel::description = "";
-string ErrorHandlerModel::line = "Error-No-Line";
-string ErrorHandlerModel::func = "Error-No-Line";
-string ErrorHandlerModel::file = "Error-No-File";
+string ErrorHandlerModel::description = "Error-No-Description-Found";
+string ErrorHandlerModel::line = "Error-No-Line-Found";
+string ErrorHandlerModel::func = "Error-No-Func-Found";
+string ErrorHandlerModel::file = "Error-No-File-Found";
 double ErrorHandlerModel::error_triggered = 0;
 
-void ErrorHandlerModel::GetMetaData(int line, const char * func, const char * file){
+void ErrorHandlerModel::SetMetaData(int line, const char * func, const char * file){
 		ErrorHandlerModel::line = to_string(line);
-		ErrorHandlerModel::func = std::string(func);
-		ErrorHandlerModel::file = std::string(file);
+		ErrorHandlerModel::func = string(func);
+		ErrorHandlerModel::file = string(file);
 }
 
 void ErrorHandlerModel::ErrorHandlerUpdate(){
+
+#ifdef HAL_UART_MODULE_ENABLED
 	if (!UART::printf_ready) {
 		return;
 	}
 
 	printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
+#endif
 
+#ifdef HAL_ETH_MODULE_ENABLED
 	//TODO:Enviar el mismo mensaje por ethernet.
+#endif
 
-	//TODO: Parpadeo del led de fault.
-	//HAL_GPIO_TogglePin(GPIOx, GPIO_Pin);
+#ifdef LED_FAULT
+	HAL_GPIO_TogglePin(LED_FAULT.gpio_pin, LED_FAULT.port);
+#endif
 }
 
