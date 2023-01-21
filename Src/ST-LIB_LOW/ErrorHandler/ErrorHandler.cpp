@@ -33,8 +33,5 @@ void ErrorHandlerModel::ErrorHandlerUpdate(){
 	//TODO:Enviar el mismo mensaje por ethernet.
 #endif
 
-#ifdef LED_FAULT
-	HAL_GPIO_TogglePin(LED_FAULT.gpio_pin, LED_FAULT.port);
-#endif
 }
 
