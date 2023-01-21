@@ -4,11 +4,10 @@
  *  Created on: 2 nov. 2022
  *      Author: stefa
  */
-#ifdef HAL_ETH_MODULE_ENABLED
+
 #include "Communication/Ethernet/UDP/DatagramSocket.hpp"
 
-map<decltype(Packet<>::id), function<void(uint8_t*)>> Packet<>::save_by_id = {};
-map<decltype(Packet<>::id), void(*)()> Packet<>::on_received = {};
+#ifdef HAL_ETH_MODULE_ENABLED
 
 DatagramSocket::DatagramSocket() = default;
 

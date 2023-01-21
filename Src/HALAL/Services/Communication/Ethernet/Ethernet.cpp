@@ -4,9 +4,9 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
-#ifdef HAL_ETH_MODULE_ENABLED
-#include "Communication/Ethernet/Ethernet.hpp"
 
+#include "Communication/Ethernet/Ethernet.hpp"
+#ifdef HAL_ETH_MODULE_ENABLED
 extern uint32_t EthernetLinkTimer;
 extern struct netif gnetif;
 extern ip4_addr_t ipaddr,netmask,gw;
