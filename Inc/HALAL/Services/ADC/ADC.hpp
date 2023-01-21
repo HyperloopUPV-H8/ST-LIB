@@ -60,6 +60,7 @@ public:
 	static void start();
 	static void turn_on(uint8_t id);
 	static optional<float> get_value(uint8_t id);
+	static optional<uint16_t> get_int_value(uint8_t id);
 
 private:
 	static uint32_t ranks[16];
