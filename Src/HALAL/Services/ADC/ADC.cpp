@@ -86,6 +86,21 @@ optional<float> ADC::get_value(uint8_t id) {
 	return nullopt;
 }
 
+optional<uint16_t> ADC::get_int_value(uint8_t id) {
+	if (not active_instances.contains(id)) {
+		return nullopt;
+	}
+
+	Instance& instance = active_instances[id];
+	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
+	if(instance.peripheral->handle == &hadc3) {
+		return raw << 4;
+	}
+	else {
+		return raw;
+	}
+}
+
 void ADC::init(Peripheral& peripheral) {
 	ADC_MultiModeTypeDef multimode = {0};
 	ADC_ChannelConfTypeDef sConfig = {0};
