@@ -22,7 +22,7 @@ unordered_map<SPI::Peripheral, SPI::Instance*> SPI::available_spi = {
 /************************************************
  *              Communication-UART
  ***********************************************/
-#ifdef HAL_SPI_MODULE_ENABLED
+#ifdef HAL_UART_MODULE_ENABLED
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
@@ -180,9 +180,9 @@ uint16_t adc_buf1[ADC_BUF_LEN];
 uint16_t adc_buf2[ADC_BUF_LEN];
 uint16_t adc_buf3[ADC_BUF_LEN];
 
-LowPowerTimer lptim1 = LowPowerTimer(&hlptim1, LPTIM1_PERIOD);
-LowPowerTimer lptim2 = LowPowerTimer(&hlptim2, LPTIM2_PERIOD);
-LowPowerTimer lptim3 = LowPowerTimer(&hlptim3, LPTIM3_PERIOD);
+LowPowerTimer lptim1 = LowPowerTimer(*LPTIM1, hlptim1, LPTIM1_PERIOD);
+LowPowerTimer lptim2 = LowPowerTimer(*LPTIM2, hlptim2, LPTIM2_PERIOD);
+LowPowerTimer lptim3 = LowPowerTimer(*LPTIM3, hlptim3, LPTIM3_PERIOD);
 
 vector<uint32_t> channels1 = {};
 vector<uint32_t> channels2 = {};

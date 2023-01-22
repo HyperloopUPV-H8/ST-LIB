@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/alejandro/projects/Hyperloop-H8/ST-LIB/build",
-  "command": "/usr/bin/c++  -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/st-lib -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/PUBLIC -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/Drivers/CMSIS/Device/ST/STM32H7xx/Include -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/Drivers/CMSIS/Include -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/Drivers/STM32H7xx_HAL_Driver/Inc -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/Inc -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/Inc/HALAL/Models -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/Inc/HALAL/Services -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/Inc/ST-LIB_LOW -I/home/alejandro/projects/Hyperloop-H8/ST-LIB/Inc/ST-LIB_HIGH -std=gnu++20 -o CMakeFiles/st-lib.dir/Src/ST-LIB.cpp.o -c /home/alejandro/projects/Hyperloop-H8/ST-LIB/Src/ST-LIB.cpp",
-  "file": "/home/alejandro/projects/Hyperloop-H8/ST-LIB/Src/ST-LIB.cpp"
-}
-]

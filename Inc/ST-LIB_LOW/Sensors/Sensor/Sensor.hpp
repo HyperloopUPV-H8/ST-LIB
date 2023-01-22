@@ -21,3 +21,11 @@ protected:
 	uint8_t id;
 	T *value;
 };
+
+class SensorStarter{
+public:
+	static void start();
+	static vector<uint8_t> adc_id_list;
+	static vector<uint8_t> EXTI_id_list;
+};
+

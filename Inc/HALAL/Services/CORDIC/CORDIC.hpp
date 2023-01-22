@@ -56,6 +56,7 @@ enum Operation_Computation{
 
 class RotationComputer{
 public:
+	static void start();
 	/**
 	 * @brief Cosine function. Receives size angles and output size results
 	 * @param Angle the pointer to the angle array with size "size". input

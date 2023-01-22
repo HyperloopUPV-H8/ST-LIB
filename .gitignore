@@ -2,6 +2,7 @@
 Debug/
 Release/
 build/
+compile_commands.json
 
 #Ignore test folder
 Pruebas/
