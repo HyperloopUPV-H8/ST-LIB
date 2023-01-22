@@ -10,7 +10,7 @@
 extern ADC_HandleTypeDef hadc3;
 
 uint8_t ADC::id_counter = 0;
-map<uint8_t, ADC::Instance> ADC::active_instances = {};
+unordered_map<uint8_t, ADC::Instance> ADC::active_instances = {};
 
 ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels) :
 		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels) {}

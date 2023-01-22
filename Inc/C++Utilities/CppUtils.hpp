@@ -58,6 +58,7 @@ using std::snprintf;
 using std::make_unique;
 using std::unique_ptr;
 using std::string;
+using std::hash;
 
 template<class Type>
 concept Integral = is_integral<Type>::value;
