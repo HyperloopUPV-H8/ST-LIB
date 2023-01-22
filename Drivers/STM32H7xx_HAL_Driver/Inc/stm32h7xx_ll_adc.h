@@ -3228,7 +3228,7 @@ __STATIC_INLINE void LL_ADC_SetChannelPreSelection(ADC_TypeDef *ADCx, uint32_t C
     if (ADCx != ADC3)
     {
       /* ADC channels preselection */
-      ADCx->PCSEL_RES0 |= (1UL << (__LL_ADC_CHANNEL_TO_DECIMAL_NB(Channel) & 0x1FUL));
+      ADCx->PCSEL_RES0 = ADCx->PCSEL_RES0 | (1UL << (__LL_ADC_CHANNEL_TO_DECIMAL_NB(Channel) & 0x1FUL));
     }
 #else
     /* ADC channels preselection */

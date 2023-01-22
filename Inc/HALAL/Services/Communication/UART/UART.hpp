@@ -134,20 +134,17 @@ public:
 	 *
 	 * @param id Id of the UART
 	 * @param data Data to be sent.
-	 * @param size Size of the data
 	 * @return bool Returns true if the request to send the packet has been done
 	 *            successfully. Returns false if the UART is busy or a problem
 	 *            has occurred.
 	 */
 
-    template<size_t arr_size>
-    static bool transmit(uint8_t id, array<uint8_t, arr_size> arr);
+    static bool transmit(uint8_t id, span<uint8_t> data);
 
     /**@brief	Transmits 1 byte by polling.
 	 *
 	 * @param id Id of the UART
 	 * @param data Data to be sent.
-	 * @param size Size of the data
 	 * @return bool Returns true if the request to send the packet has been done
 	 *            successfully. Returns false if the UART is busy or a problem
 	 *            has occurred.
@@ -158,11 +155,10 @@ public:
 	 *
 	 * @param id Id of the UART
 	 * @param data Data to be sent.
-	 * @param size Size of the data
 	 * @return bool Returns true if the packet has been send successfully.
 	 * 			    Returns false if the UART is busy or a problem has occurred.
 	 */
-    static bool transmit_polling(uint8_t id, uint8_t* data, int16_t size);
+    static bool transmit_polling(uint8_t id, span<uint8_t> data);
 
     /**						
      * @brief This method request the receive of size bytes
@@ -175,12 +171,11 @@ public:
      * 
      * @param id Id of the UART
      * @param data Where data will be stored
-     * @param size Number of bytes to read
      * @return bool Return true if the order to receive a new packet has been
      *            processed correctly. Return false if the UART is busy or a
      *            problem has occurred.
      */
-    static bool receive(uint8_t id, uint8_t* data, uint16_t size);
+    static bool receive(uint8_t id, span<uint8_t> data);
 
     /**
 	* @brief This method receive size number of bytes by polling.
@@ -189,11 +184,10 @@ public:
 	*
 	* @param id Id of the UART
 	* @param data Where data will be stored
-	* @param size Number of bytes to read
 	* @return bool Return true if the data has been read successfully.
 	* 			   Return false if the UART is busy or a problem has occurred.
 	*/
-    static bool receive_polling(uint8_t id, uint8_t* data, uint16_t size);
+    static bool receive_polling(uint8_t id, span<uint8_t> data);
 
     /**
      * @brief This method is used to check if the UART receive operation has finished and data is ready.
@@ -225,10 +219,9 @@ public:
   	 * 		  It only works if it has been configured correctly.
   	 *
   	 * @param ptr Pointer to the character string.
-  	 * @param len Length of the message.
   	 * @return bool True if everything went well. False if something has gone wrong.
   	 */
-    static void print_by_uart(string ptr, int len);
+    static void print_by_uart(char* ptr, int len);
 
     private:
     /**
@@ -239,22 +232,5 @@ public:
     static void init(UART::Instance* uart);
 
 };
-
-template<size_t arr_size>
-bool UART::transmit(uint8_t id, array<uint8_t, arr_size> arr){
-    if (not UART::registered_uart.contains(id))
-        return false; //TODO: Error handler
-
-    UART_HandleTypeDef* handle = get_handle(id);
-
-    if((handle->ErrorCode & TXBUSYMASK) == 1)
-       return false;
-
-    if (HAL_UART_Transmit_DMA(handle, arr.data(), arr.size()) != HAL_OK){
-        return false; //TODO: Warning, Error during transmision
-    }
-
-    return true;
-}
 
 #endif

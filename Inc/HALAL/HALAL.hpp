@@ -17,6 +17,7 @@
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "Communication/Ethernet/TCP/Socket.hpp"
 #include "Communication/Ethernet/Ethernet.hpp"
+#include "CORDIC/CORDIC.hpp"
 
 namespace HALAL {
 	void start();
