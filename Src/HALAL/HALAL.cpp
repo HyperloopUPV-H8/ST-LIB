@@ -10,6 +10,10 @@
 #include "HALAL/HALAL.hpp"
 
 void HALAL::start() {
+	#ifdef HAL_ETH_MODULE_ENABLED
+		Ethernet::inscribe();
+	#endif
+
 	HAL_Init();
 	HALconfig::system_clock();
 	HALconfig::peripheral_clock();
@@ -36,7 +40,6 @@ void HALAL::start() {
 #endif
 
 #ifdef HAL_ETH_MODULE_ENABLED
-	// Arreglar.
 	//Ethernet::start(local_ip, subnet_mask, gateway);
 #endif
 #ifdef HAL_TIM_MODULE_ENABLED
