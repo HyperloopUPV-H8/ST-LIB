@@ -1,5 +1,4 @@
 #include "ST-LIB_LOW/Sensors/LinearSensor/LinearSensor.hpp"
-#include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
 #include "ADC/ADC.hpp"
 
 LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
@@ -10,7 +9,7 @@ LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 		return;
 	}
 	id = identification.value();
-	SensorStarter::adc_id_list.insert(SensorStarter::adc_id_list.begin(),id);
+	Sensor::adc_id_list.insert(Sensor::adc_id_list.begin(),id);
 
 }
 

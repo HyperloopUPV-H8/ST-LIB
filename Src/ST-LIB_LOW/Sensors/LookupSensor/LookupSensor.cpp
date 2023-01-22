@@ -1,5 +1,4 @@
 #include "ST-LIB_LOW/Sensors/LookupSensor/LookupSensor.hpp"
-#include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
 #include "ADC/ADC.hpp"
 #include "C++Utilities/CppUtils.hpp"
 #include <iostream>
@@ -12,7 +11,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, int table_size, double *value
 		return;
 	}
 	id = identification.value();
-	SensorStarter::adc_id_list.insert(SensorStarter::adc_id_list.begin(),id);
+	Sensor::adc_id_list.insert(Sensor::adc_id_list.begin(),id);
 }
 
 void LookupSensor::read(){
