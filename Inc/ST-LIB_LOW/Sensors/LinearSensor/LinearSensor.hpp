@@ -13,7 +13,6 @@
 class LinearSensor : public AnalogSensor::AnalogSensor{
 public:
 	LinearSensor(Pin pin, double slope, double offset, double *value);
-	void start();
 	void read();
 	uint8_t get_id();
 
