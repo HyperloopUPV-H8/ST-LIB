@@ -4,17 +4,14 @@
 
 DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInput::inscribe(pin)), value(value){}
 
-void DigitalSensor::exti_interruption(std::function<auto> action){
-	optional<uint8_t> identification = ExternalInterrupt::inscribe(pin, action);
+void DigitalSensor::exti_interruption(std::function<void()> &&action){
+	optional<uint8_t> identification = ExternalInterrupt::inscribe(pin, std::move(action));
 	if (not identification) {
 		//TODO: add Error handler for register here (register returns empty optional)
 		return;
 	}
-	ExternalInterrupt::turn_on(identification.value());
-}
-
-void DigitalSensor::start(){
-	//TODO: discuss if it needs start for consistency or not (doesnt have a use for it)
+	exti_id = identification.value();
+	SensorStarter::EXTI_id_list.insert(SensorStarter::EXTI_id_list.begin(),exti_id);
 }
 
 void DigitalSensor::read(){
@@ -24,8 +21,4 @@ void DigitalSensor::read(){
 		return;
 	}
 	*value = val.value();
-}
-
-uint8_t DigitalSensor::get_id(){
-	return id;
 }

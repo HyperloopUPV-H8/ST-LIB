@@ -169,6 +169,7 @@ void UART::print_by_uart(char* ptr, int len) {
 		}
 
 		vector<uint8_t> data(ptr, ptr+len);
+
 		UART::transmit_polling(UART::printf_uart, data);
 }
 
@@ -225,7 +226,13 @@ extern "C" {
 
 int _write(int file, char* str, int len) {
 
-    UART::print_by_uart(str, len);
+	UART::print_by_uart(str , len);
+	if (*str == '\n') {
+		char retorno[1] = {'\r'};
+		UART::print_by_uart(retorno, 1);
+	}
+
+
     return len;
 }
 

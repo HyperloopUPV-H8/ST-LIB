@@ -54,7 +54,10 @@ using std::is_integral;
 using std::is_same;
 using std::remove_reference;
 using std::integral_constant;
+using std::snprintf;
+using std::make_unique;
 using std::unique_ptr;
+using std::string;
 
 template<class Type>
 concept Integral = is_integral<Type>::value;
