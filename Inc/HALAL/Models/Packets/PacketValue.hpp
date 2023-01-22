@@ -39,12 +39,6 @@ template<typename T>
 struct is_container : integral_constant<bool, has_const_iterator<T>::value&& has_begin_end<T>::beg_value&& has_begin_end<T>::end_value>{};
 
 template<class Type>
-concept Integral = is_integral<Type>::value;
-
-template<class Type>
-concept NotIntegral = !is_integral<Type>::value;
-
-template<class Type>
 concept Container = is_container<Type>::value;
 
 template<class Type>
