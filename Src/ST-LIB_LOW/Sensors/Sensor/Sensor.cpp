@@ -1,4 +1,4 @@
-#include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
+#include "Sensors/Sensor/Sensor.hpp"
 
 vector<uint8_t> Sensor::adc_id_list{};
 vector<uint8_t> Sensor::EXTI_id_list{};

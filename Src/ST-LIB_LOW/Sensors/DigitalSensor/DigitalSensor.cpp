@@ -1,4 +1,4 @@
-#include "ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.hpp"
+#include "Sensors/DigitalSensor/DigitalSensor.hpp"
 
 DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInput::inscribe(pin)), value(value){}
 
