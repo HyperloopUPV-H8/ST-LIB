@@ -1,5 +1,5 @@
-#ifdef HAL_ETH_MODULE_ENABLED
 #include "IPV4/IPV4.hpp"
+#ifdef HAL_ETH_MODULE_ENABLED
 
 IPV4::IPV4(string address) : string_address(address){
 	stringstream sstream(address);
