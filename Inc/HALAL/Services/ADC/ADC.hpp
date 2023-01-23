@@ -9,7 +9,7 @@
 #include "PinModel/Pin.hpp"
 #include "LowPowerTimer/LowPowerTimer.hpp"
 
-#ifdef HAL_ADC_MODULE_ENABLED
+#if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
 
 #define ADC_BUF_LEN 16
 #define LPTIM1_PERIOD 3000
