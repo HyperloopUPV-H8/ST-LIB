@@ -101,6 +101,18 @@ public:
 		return port < other.port;
 	}
 };
+namespace std {
+	template <>
+	struct hash<Pin> {
+		std::size_t operator()(const Pin& k) const {
+		    using std::size_t;
+		    using std::hash;
+		    using std::string;
+
+		    return ((hash<uint16_t>()(k.gpio_pin) ^ (hash<uint32_t>()((uint32_t)(k.port)) << 1)) >> 1);
+		}
+	  };
+}
 
 extern Pin PA0;
 extern Pin PA1;

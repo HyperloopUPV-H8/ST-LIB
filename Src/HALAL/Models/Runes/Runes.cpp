@@ -198,7 +198,7 @@ ADC::Peripheral ADC::peripherals[3] = {
 		ADC::Peripheral(&hadc3, adc_buf3, lptim3, init_data3)
 };
 
-map<Pin, ADC::Instance> ADC::available_instances = {
+unordered_map<Pin, ADC::Instance> ADC::available_instances = {
 		{PF11, Instance(&peripherals[0], ADC_CHANNEL_2)},
 		{PF12, Instance(&peripherals[0], ADC_CHANNEL_6)},
 		{PF13, Instance(&peripherals[1], ADC_CHANNEL_2)},
