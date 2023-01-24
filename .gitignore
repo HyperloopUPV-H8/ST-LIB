@@ -1,6 +1,7 @@
 #Ignore compiler output
 Debug/
 Release/
+.settings/
 build/
 compile_commands.json
 
