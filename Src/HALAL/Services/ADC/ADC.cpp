@@ -7,6 +7,8 @@
 
 #include "ADC/ADC.hpp"
 
+#if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
+
 extern ADC_HandleTypeDef hadc3;
 
 uint8_t ADC::id_counter = 0;
@@ -152,3 +154,5 @@ void ADC::init(Peripheral& peripheral) {
 
 	  peripheral.timer.init();
 }
+
+#endif
