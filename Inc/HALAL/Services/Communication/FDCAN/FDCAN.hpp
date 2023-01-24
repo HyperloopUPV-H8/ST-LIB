@@ -22,22 +22,23 @@ using std::queue;
 class FDCAN{
 public:
 	enum DLC{
-		bytes_0 = FDCAN_DLC_BYTES_0,
-		bytes_1 = FDCAN_DLC_BYTES_1,
-		bytes_2 = FDCAN_DLC_BYTES_2,
-		bytes_3 = FDCAN_DLC_BYTES_3,
-		bytes_4 = FDCAN_DLC_BYTES_4,
-		bytes_5 = FDCAN_DLC_BYTES_5,
-		bytes_6 = FDCAN_DLC_BYTES_6,
-		bytes_7 = FDCAN_DLC_BYTES_7,
-		bytes_8 = FDCAN_DLC_BYTES_8,
-		bytes_12 = FDCAN_DLC_BYTES_12,
-		bytes_16 = FDCAN_DLC_BYTES_16,
-		bytes_20 = FDCAN_DLC_BYTES_20,
-		bytes_24 = FDCAN_DLC_BYTES_24,
-		bytes_32 = FDCAN_DLC_BYTES_32,
-		bytes_48 = FDCAN_DLC_BYTES_48,
-		bytes_64 = FDCAN_DLC_BYTES_64,
+		BYTES_0 = FDCAN_DLC_BYTES_0,
+		BYTES_1 = FDCAN_DLC_BYTES_1,
+		BYTES_2 = FDCAN_DLC_BYTES_2,
+		BYTES_3 = FDCAN_DLC_BYTES_3,
+		BYTES_4 = FDCAN_DLC_BYTES_4,
+		BYTES_5 = FDCAN_DLC_BYTES_5,
+		BYTES_6 = FDCAN_DLC_BYTES_6,
+		BYTES_7 = FDCAN_DLC_BYTES_7,
+		BYTES_8 = FDCAN_DLC_BYTES_8,
+		BYTES_12 = FDCAN_DLC_BYTES_12,
+		BYTES_16 = FDCAN_DLC_BYTES_16,
+		BYTES_20 = FDCAN_DLC_BYTES_20,
+		BYTES_24 = FDCAN_DLC_BYTES_24,
+		BYTES_32 = FDCAN_DLC_BYTES_32,
+		BYTES_48 = FDCAN_DLC_BYTES_48,
+		BYTES_64 = FDCAN_DLC_BYTES_64,
+		DEFAULT = UINT32_MAX,
 	};
 
 	struct Packet{
@@ -102,7 +103,7 @@ public:
 
     static void start();
 
-    static bool transmit(uint8_t id, uint32_t message_id, span<uint8_t> data);
+    static bool transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN::DLC dlc = FDCAN::DLC::DEFAULT);
 
     static bool read(uint8_t id, FDCAN::Packet* data);
 
