@@ -6,9 +6,9 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
-
-
+#include "C++Utilities/CppUtils.hpp"
+#include "ADC/ADC.hpp"
+#include "EXTI/EXTI.hpp"
 
 //asi es como deberia funcionar con template y virtual
 class Sensor{

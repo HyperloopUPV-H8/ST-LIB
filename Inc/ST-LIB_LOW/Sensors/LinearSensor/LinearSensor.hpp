@@ -6,8 +6,7 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
-
+#include "ADC/ADC.hpp"
 
 class LinearSensor{
 public:

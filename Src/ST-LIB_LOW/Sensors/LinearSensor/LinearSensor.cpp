@@ -1,5 +1,5 @@
-#include "ST-LIB_LOW/Sensors/LinearSensor/LinearSensor.hpp"
-#include "ADC/ADC.hpp"
+#include "Sensors/LinearSensor/LinearSensor.hpp"
+#include "Sensors/Sensor/Sensor.hpp"
 
 LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 : slope(slope), offset(offset), value(value){

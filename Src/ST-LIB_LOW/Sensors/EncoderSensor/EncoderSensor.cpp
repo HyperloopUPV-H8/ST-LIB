@@ -1,6 +1,4 @@
-#include "ST-LIB_LOW/Sensors/EncoderSensor/EncoderSensor.hpp"
-#include "Encoder/Encoder.hpp"
-#include "Time/Time.hpp"
+#include "Sensors/EncoderSensor/EncoderSensor.hpp"
 
 EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed, double *acceleration)
 : position(position), speed(speed), acceleration(acceleration){

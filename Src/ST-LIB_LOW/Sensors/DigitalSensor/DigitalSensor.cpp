@@ -1,4 +1,5 @@
 #include "Sensors/DigitalSensor/DigitalSensor.hpp"
+#include "Sensors/Sensor/Sensor.hpp"
 
 DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInput::inscribe(pin)), value(value){}
 

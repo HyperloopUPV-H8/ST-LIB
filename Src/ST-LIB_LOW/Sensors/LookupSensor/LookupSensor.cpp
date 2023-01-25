@@ -1,7 +1,5 @@
-#include "ST-LIB_LOW/Sensors/LookupSensor/LookupSensor.hpp"
-#include "ADC/ADC.hpp"
-#include "C++Utilities/CppUtils.hpp"
-#include <iostream>
+#include "Sensors/LookupSensor/LookupSensor.hpp"
+#include "Sensors/Sensor/Sensor.hpp"
 
 
 LookupSensor::LookupSensor(Pin pin, double *table, int table_size, double *value) : table(table), table_size(table_size), value(value){

@@ -6,7 +6,8 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
+#include "ADC/ADC.hpp"
+#include "C++Utilities/CppUtils.hpp"
 
 #define REFERENCE_VOLTAGE 3.3
 

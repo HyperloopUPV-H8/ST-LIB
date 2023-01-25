@@ -7,7 +7,8 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
+#include "DigitalInputService/DigitalInputService.hpp"
+#include "EXTI/EXTI.hpp"
 
 
 class DigitalSensor{
