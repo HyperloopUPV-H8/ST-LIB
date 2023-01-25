@@ -64,6 +64,7 @@ private:
         FDCAN_TxHeaderTypeDef tx_header;
         uint32_t rx_location;
         queue<FDCAN::Packet> rx_queue;
+        uint8_t rx_queue_max_size = 64;
         vector<uint8_t> tx_data;
         uint8_t fdcan_number;
         bool start = false;
@@ -119,7 +120,7 @@ public:
 	 * @param id Id of the FDCAN
 	 * @return bool Return true if the data queue has any packet.
 	 */
-	static bool data_test(uint8_t id);
+	static bool received_test(uint8_t id);
 
 private:
 

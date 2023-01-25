@@ -4,9 +4,12 @@
  *  Created on: 5 nov. 2022
  *      Author: Pablo
  */
+
 #include "Communication/FDCAN/FDCAN.hpp"
 
 #ifdef HAL_FDCAN_MODULE_ENABLED
+
+uint16_t FDCAN::id_counter = 0;
 
 unordered_map<uint8_t, FDCAN::Instance*> FDCAN::registered_fdcan = {};
 
@@ -28,7 +31,6 @@ optional<uint8_t> FDCAN::inscribe(FDCAN::Peripheral& fdcan){
 	Pin::inscribe(fdcan_instance->RX, ALTERNATIVE);
 
 	uint8_t id = FDCAN::id_counter++;
-	fdcan_instance->fdcan_number = fdcan;
 
 	FDCAN::registered_fdcan[id] = fdcan_instance;
 
@@ -49,7 +51,7 @@ void FDCAN::start(){
 		header.IdType = FDCAN_STANDARD_ID;
 		header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 		header.MessageMarker = 0;
-		header.Identifier = 0;
+		header.Identifier = 0x0;
 
 		instance->tx_header = header;
 
@@ -90,7 +92,7 @@ bool FDCAN::transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN:
 	HAL_StatusTypeDef error = HAL_FDCAN_AddMessageToTxFifoQ(instance->hfdcan, &instance->tx_header, data.data());
 
 	if (error != HAL_OK) {
-		ErrorHandler("Error sending message with id: %d by FDCAN %d", message_id, instance->fdcan_number);
+		ErrorHandler("Error sending message with id: 0x%x by FDCAN %d", message_id, instance->fdcan_number);
 		return false;
 	}
 
@@ -109,7 +111,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 	FDCAN_RxHeaderTypeDef header_buffer = FDCAN_RxHeaderTypeDef();
 	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN::handle_to_fdcan[hfdcan]->rx_location, &header_buffer, data_buffer.data());
 
-
+	if (FDCAN::handle_to_fdcan[hfdcan]->rx_queue.size() >= FDCAN::handle_to_fdcan[hfdcan]->rx_queue_max_size) {
+		return; // TODO: WARNING RX_QUEUE FULL
+	}
 	FDCAN::Packet packet_buffer = {data_buffer, header_buffer.Identifier, (FDCAN::DLC)header_buffer.DataLength};
 	FDCAN::handle_to_fdcan[hfdcan]->rx_queue.push(packet_buffer);
 }
@@ -159,9 +163,8 @@ bool FDCAN::wait_and_read(uint8_t id, FDCAN::Packet* data){
 	return true;
 }
 
-bool FDCAN::data_test(uint8_t id){
+bool FDCAN::received_test(uint8_t id){
 	if (not FDCAN::registered_fdcan.contains(id)) {
-		ErrorHandler("There is no FDCAN registered with id: %d.", id);
 		return false;
 	}
 
@@ -175,33 +178,35 @@ bool FDCAN::data_test(uint8_t id){
 void FDCAN::init(FDCAN::Instance* fdcan){
 	FDCAN_HandleTypeDef* handle = fdcan->hfdcan;
 
+	handle->Instance = fdcan->instance;
 	handle->Init.FrameFormat = FDCAN_FRAME_FD_BRS;
 	handle->Init.Mode = FDCAN_MODE_NORMAL;
 	handle->Init.AutoRetransmission = ENABLE;
 	handle->Init.TransmitPause = DISABLE;
 	handle->Init.ProtocolException = DISABLE;
-	handle->Init.NominalPrescaler = 16;
-	handle->Init.NominalSyncJumpWidth = 0x10;
-	handle->Init.NominalTimeSeg1 = 0x3F;
-	handle->Init.NominalTimeSeg2 = 0x10;
+	handle->Init.NominalPrescaler = 1;
+	handle->Init.NominalSyncJumpWidth = 16;
+	handle->Init.NominalTimeSeg1 = 47;
+	handle->Init.NominalTimeSeg2 = 16;
 	handle->Init.DataPrescaler = 1;
-	handle->Init.DataSyncJumpWidth = 0x4;
-	handle->Init.DataTimeSeg1 = 0xF;
-	handle->Init.DataTimeSeg2 = 0x4;
+	handle->Init.DataSyncJumpWidth = 4;
+	handle->Init.DataTimeSeg1 = 11;
+	handle->Init.DataTimeSeg2 = 5;
 	handle->Init.MessageRAMOffset = 0;
 	handle->Init.StdFiltersNbr = 1;
 	handle->Init.ExtFiltersNbr = 0;
-	handle->Init.RxFifo0ElmtsNbr = 0;
-	handle->Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
+	handle->Init.RxFifo0ElmtsNbr = 16;
+	handle->Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_64;
 	handle->Init.RxFifo1ElmtsNbr = 0;
-	handle->Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
+	handle->Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_64;
 	handle->Init.RxBuffersNbr = 0;
-	handle->Init.RxBufferSize = FDCAN_DATA_BYTES_8;
+	handle->Init.RxBufferSize = FDCAN_DATA_BYTES_64;
 	handle->Init.TxEventsNbr = 0;
 	handle->Init.TxBuffersNbr = 0;
-	handle->Init.TxFifoQueueElmtsNbr = 0;
+	handle->Init.TxFifoQueueElmtsNbr = 16;
 	handle->Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-	handle->Init.TxElmtSize = FDCAN_DATA_BYTES_8;
+	handle->Init.TxElmtSize = FDCAN_DATA_BYTES_64;
+
 	if (HAL_FDCAN_Init(handle) != HAL_OK)
 	{
 		ErrorHandler("Error during FDCAN %d init.", fdcan->fdcan_number);
