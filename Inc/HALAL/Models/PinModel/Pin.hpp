@@ -84,12 +84,14 @@ public:
 	AlternativeFunction alternative_function;
 	OperationMode mode = OperationMode::NOT_USED;
 	static vector<reference_wrapper<Pin>> pinVector;
+	static map<Pin,string> map_to_string;
 
 	Pin();
 	Pin(GPIOPort port, GPIOPin pin);
 	Pin(GPIOPort port, GPIOPin pin, AlternativeFunction alternative_function);
 	static void inscribe(Pin& pin, OperationMode mode);
 	static void start();
+	static string to_string(Pin& pin);
 
 	bool operator== (const Pin &other) const {
 		return (gpio_pin == other.gpio_pin && port == other.port);
@@ -101,18 +103,6 @@ public:
 		return port < other.port;
 	}
 };
-namespace std {
-	template <>
-	struct hash<Pin> {
-		std::size_t operator()(const Pin& k) const {
-		    using std::size_t;
-		    using std::hash;
-		    using std::string;
-
-		    return ((hash<uint16_t>()(k.gpio_pin) ^ (hash<uint32_t>()((uint32_t)(k.port)) << 1)) >> 1);
-		}
-	  };
-}
 
 extern Pin PA0;
 extern Pin PA1;
