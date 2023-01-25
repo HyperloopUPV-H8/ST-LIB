@@ -1,4 +1,5 @@
 #pragma once
+
 #ifdef HAL_ETH_MODULE_ENABLED
 #include "stm32h7xx_hal.h"
 #include "lwip/pbuf.h"
@@ -12,6 +13,8 @@
 #include "timeouts.h"
 #include "C++Utilities/CppUtils.hpp"
 
+using std::stringstream;
+using std::getline;
 
 class IPV4{
 public:

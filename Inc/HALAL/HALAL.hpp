@@ -16,4 +16,5 @@
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "Communication/Ethernet/TCP/Socket.hpp"
 #include "Communication/Ethernet/Ethernet.hpp"
+#include "Communication/FDCAN/FDCAN.hpp"
 #include "CORDIC/CORDIC.hpp"
