@@ -59,6 +59,8 @@ using std::string;
 using std::unordered_map;
 using std::vector;
 using std::queue;
+using std::hash;
+
 
 template<class Type>
 concept Integral = is_integral<Type>::value;
