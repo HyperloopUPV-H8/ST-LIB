@@ -44,7 +44,8 @@ optional<uint8_t> InputCapture::inscribe(Pin& pin){
 
 void InputCapture::turn_on(uint8_t id){
 	if (not active_instances.contains(id)) {
-		return; //TODO: Error Handler
+		ErrorHandler("ID %d is not registered as an active_instance", id);
+		return;
 	}
 	Instance instance = active_instances[id];
 	HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising);
@@ -53,7 +54,8 @@ void InputCapture::turn_on(uint8_t id){
 
 void InputCapture::turn_off(uint8_t id){
 	if (not active_instances.contains(id)) {
-		return; //TODO: Error Handler
+		ErrorHandler("ID %d is not registered as an active_instance", id);
+		return;
 	}
 	Instance instance = active_instances[id];
 	HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_rising);
@@ -62,7 +64,8 @@ void InputCapture::turn_off(uint8_t id){
 
 optional<uint32_t> InputCapture::read_frequency(uint8_t id) {
 	if (not active_instances.contains(id)) {
-		return nullopt; //TODO: Error Handler
+		ErrorHandler("ID %d is not registered as an active_instance", id);
+		return nullopt;
 	}
 	Instance instance = active_instances[id];
 	return instance.frequency;
@@ -70,7 +73,8 @@ optional<uint32_t> InputCapture::read_frequency(uint8_t id) {
 
 optional<uint8_t> InputCapture::read_duty_cycle(uint8_t id) {
 	if (not active_instances.contains(id)) {
-		return nullopt; //TODO: Error Handler
+		ErrorHandler("ID %d is not registered as an active_instance", id);
+		return nullopt;
 	}
 	Instance instance = active_instances[id];
 	return instance.duty_cycle;
@@ -86,7 +90,7 @@ InputCapture::Instance InputCapture::find_instance_by_channel(uint32_t channel) 
 		}
 	}
 
-	//TODO: Error handler
+	ErrorHandler("Channel %d is not a registered channel", channel);
 	return Instance();
 }
 
