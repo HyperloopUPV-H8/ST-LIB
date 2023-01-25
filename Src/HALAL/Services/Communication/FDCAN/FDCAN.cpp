@@ -21,7 +21,6 @@ unordered_map<FDCAN::DLC, uint8_t> FDCAN::dlc_to_len = {{DLC::BYTES_0, 0}, {DLC:
 
 optional<uint8_t> FDCAN::inscribe(FDCAN::Peripheral& fdcan){
 	if (!FDCAN::available_fdcans.contains(fdcan)) {
-		ErrorHandler("FDCAN %d is not a valid FDCAN value.", fdcan);
 		return nullopt;
 	}
 
