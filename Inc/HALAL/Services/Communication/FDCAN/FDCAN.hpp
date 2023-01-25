@@ -92,12 +92,16 @@ public:
 	*
 	*/
     static FDCAN::Peripheral fdcan1;
+    static FDCAN::Peripheral fdcan2;
+    static FDCAN::Peripheral fdcan3;
 
     /**
      * @brief FDCAN instances of the STM32H723.
      *
      */
     static FDCAN::Instance instance1;
+    static FDCAN::Instance instance2;
+    static FDCAN::Instance instance3;
 
     static optional<uint8_t> inscribe(FDCAN::Peripheral& fdcan);
 

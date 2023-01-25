@@ -83,7 +83,7 @@ bool FDCAN::transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN:
 
 	instance->tx_header.Identifier = message_id;
 
-	if (dlc != FDCAN::DLC::NONE) {
+	if (dlc != FDCAN::DLC::DEFAULT) {
 		instance->tx_header.DataLength = dlc;
 	}
 
