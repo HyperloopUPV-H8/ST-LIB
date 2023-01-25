@@ -132,11 +132,13 @@ void ADC::init(Peripheral& peripheral) {
 	adc_handle.Init.OversamplingMode = DISABLE;
 	if (HAL_ADC_Init(&adc_handle) != HAL_OK) {
 		ErrorHandler("ADC %d did not start correctly", adc_handle);
+		return;
 	}
 
 	multimode.Mode = ADC_MODE_INDEPENDENT;
 	if (HAL_ADCEx_MultiModeConfigChannel(&adc_handle, &multimode) != HAL_OK) {
 		ErrorHandler("ADC MultiModeConfigChannel %d did not start correctly", adc_handle);
+		return;
 	}
 
 	uint8_t counter = 0;
