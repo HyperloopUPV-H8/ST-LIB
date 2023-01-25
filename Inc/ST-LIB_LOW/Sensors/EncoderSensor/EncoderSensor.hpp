@@ -9,6 +9,7 @@
 #pragma once
 #include "Encoder/Encoder.hpp"
 #include "Time/Time.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 #define COUNTER_DISTANCE_IN_METERS 0.025
 #define NANO_SECOND 1000000000.0
 #define N_FRAMES 5

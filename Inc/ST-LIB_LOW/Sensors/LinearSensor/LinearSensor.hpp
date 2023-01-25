@@ -7,6 +7,7 @@
 
 #pragma once
 #include "ADC/ADC.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 class LinearSensor{
 public:

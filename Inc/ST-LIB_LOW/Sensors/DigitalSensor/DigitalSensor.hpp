@@ -9,6 +9,7 @@
 #pragma once
 #include "DigitalInputService/DigitalInputService.hpp"
 #include "EXTI/EXTI.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 
 class DigitalSensor{

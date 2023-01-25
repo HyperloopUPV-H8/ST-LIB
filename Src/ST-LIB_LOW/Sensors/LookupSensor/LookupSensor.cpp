@@ -5,7 +5,7 @@
 LookupSensor::LookupSensor(Pin pin, double *table, int table_size, double *value) : table(table), table_size(table_size), value(value){
 	optional<uint8_t> identification = ADC::inscribe(pin);
 	if(not identification){
-		//TODO: add Error handler for register here (register returns empty optional)
+		ErrorHandler((string)" The pin is already used or isn t available for ADC usage" ,pin);
 		return;
 	}
 	id = identification.value();
@@ -15,7 +15,7 @@ LookupSensor::LookupSensor(Pin pin, double *table, int table_size, double *value
 void LookupSensor::read(){
 	optional<float> adc_voltage = ADC::get_value(id);
 	if(not adc_voltage){
-		//TODO: add Error handler for read here (read returns empty optional)
+		ErrorHandler((string)" Couldn t read the value of the ADC pin" ,pin);
 		return;
 	}
 

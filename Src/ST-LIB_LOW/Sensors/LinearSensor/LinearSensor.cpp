@@ -5,7 +5,7 @@ LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 : slope(slope), offset(offset), value(value){
 	optional<uint8_t> identification = ADC::inscribe(pin);
 	if(not identification){
-		//TODO: add Error handler for register here (register returns empty optional)
+		ErrorHandler((string)"  The pin is already used or isn t available for ADC usage" ,pin);
 		return;
 	}
 	id = identification.value();
@@ -16,7 +16,7 @@ LinearSensor::LinearSensor(Pin pin, double slope, double offset, double *value)
 void LinearSensor::read(){
 	optional<float> val = ADC::get_value(id);
 	if(not val){
-		//TODO: add Error handler for read here (read returns empty optional)
+		ErrorHandler((string)" Couldn t read the value of the ADC pin" ,pin);
 		return;
 	}
 	*value = slope * (double) val.value() + offset;

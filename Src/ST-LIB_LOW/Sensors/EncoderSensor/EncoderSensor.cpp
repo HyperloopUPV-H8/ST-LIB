@@ -4,7 +4,7 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed
 : position(position), speed(speed), acceleration(acceleration){
 	optional<uint8_t> identification = Encoder::inscribe(pin1,pin2);
 	if(not identification){
-		//TODO: add Error handler for register here (register returns empty optional)
+		ErrorHandler((string)" Those pins are already used or aren t configurated for encoder usage" ,pin1);
 		return;
 	}
 	id = identification.value();
@@ -29,7 +29,8 @@ void EncoderSensor::read(){
 	uint64_t clock_time = Time::get_global_tick();
 	
 	if(not optional_counter or not direction){
-		//TODO: add Error handler for read here (read returns empty optional)
+		if(not optional_counter){ErrorHandler((string)" Error at reading Encoder's counter value" ,pin1);}
+		else{ErrorHandler((string)" Error at reading Encoder's direction value" ,pin1);}
 		return;
 	}
 
