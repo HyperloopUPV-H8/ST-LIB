@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include "ST-LIB.hpp"
 #include "C++Utilities/CppUtils.hpp"
+#include "PinModel/Pin.hpp"
 #include "Packets/RawPacket.hpp"
 
 #ifdef HAL_UART_MODULE_ENABLED
