@@ -7,10 +7,9 @@
 
 #include "LowPowerTimer/LowPowerTimer.hpp"
 
-#include <cstring>
 using std::strcat;
 
-const map<reference_wrapper<LPTIM_TypeDef>, const char*> lptim_to_string = {
+const map<LPTIM_TypeDef*, const char*> lptim_to_string = {
         {LPTIM1, "LPTIM1"},
 	  {LPTIM2, "LPTIM2"},
 	  {LPTIM3, "LPTIM3"}
@@ -33,5 +32,5 @@ void LowPowerTimer::init() {
 }
 
 const char* LowPowerTimer::to_string() const {
-	return strcat(const_cast<char*>(lptim_to_string.at(instance)));
+	return lptim_to_string.at(&instance);
 }

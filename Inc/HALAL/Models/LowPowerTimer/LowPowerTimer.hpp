@@ -7,6 +7,8 @@
 
 #pragma once
 #include <map>
+#include <cstring>
+
 
 #include "stm32h7xx_hal.h"
 
@@ -26,7 +28,7 @@ public:
 		instance(instance), handle(handle), period(period) {};
 
 	const char* to_string() const;
-	static const map<reference_wrapper<LPTIM_TypeDef>, const char*> lptim_to_string;
+	static const map<LPTIM_TypeDef*, const char*> lptim_to_string;
 
 	void init();
 };
