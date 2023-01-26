@@ -6,6 +6,8 @@
  */
 
 #include "PWMService/PWMService.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
+
 
 uint8_t PWMservice::id_counter = 0;
 map<uint8_t, PWMservice::Instance> PWMservice::active_instances = {};
