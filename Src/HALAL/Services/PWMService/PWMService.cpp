@@ -14,7 +14,7 @@ PWMservice::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PW
 
 optional<uint8_t> PWMservice::inscribe(Pin& pin){
 	if (not available_instances.contains(pin)) {
-		ErrorHandler("Pin %d is not configured as a PWM in you configuration file", &pin);
+		ErrorHandler("Pin %s is not configured as a PWM in you configuration file", pin.to_string());
 		return nullopt;
 	}
 
@@ -29,7 +29,7 @@ optional<uint8_t> PWMservice::inscribe(Pin& pin){
 optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
 	if (not available_instances_negated.contains(pin)) {
 		return nullopt;
-		ErrorHandler("Pin %d is not configured as a PWM in you configuration file", &pin);
+		ErrorHandler("Pin %s is not configured as a PWM in you configuration file", pin.to_string());
 	} 	
 	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
 	active_instances[id_counter] = available_instances_negated[pin];
