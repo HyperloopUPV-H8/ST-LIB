@@ -140,7 +140,7 @@ const map<GPIOPin,const char*> Pin::gpio_pin_to_string = {{PIN_0,"0"}, {PIN_1,"1
 const map<GPIO_TypeDef*,const char*> Pin::port_to_string = {{(GPIO_TypeDef*)PORT_A,"PA"}, {(GPIO_TypeDef*)PORT_B,"PB"}, {(GPIO_TypeDef*)PORT_C,"PC"}, {(GPIO_TypeDef*)PORT_D,"PD"}, {(GPIO_TypeDef*)PORT_E,"PE"}, {(GPIO_TypeDef*)PORT_F,"PF"}, {(GPIO_TypeDef*)PORT_G,"PG"}, {(GPIO_TypeDef*)PORT_H,"PH"}};
 
 const char* Pin::to_string() const {
-	return strcat(const_cast<char*>(gpio_pin_to_string.at(gpio_pin)),const_cast<char*>(port_to_string.at(port)));
+	return strcat(const_cast<char*>(port_to_string.at(port)),const_cast<char*>(gpio_pin_to_string.at(gpio_pin)));
 }
 
 void Pin::inscribe(Pin& pin, OperationMode mode){
