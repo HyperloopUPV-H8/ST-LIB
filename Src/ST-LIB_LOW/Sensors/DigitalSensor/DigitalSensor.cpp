@@ -7,7 +7,7 @@ DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInp
 void DigitalSensor::exti_interruption(std::function<void()> &&action){
 	optional<uint8_t> identification = ExternalInterrupt::inscribe(pin, std::move(action));
 	if (not identification) {
-		ErrorHandler((string)" The pin is already used or isn t available for EXTI usage" ,pin);
+		ErrorHandler(" The pin %s is already used or isn t available for EXTI usage", pin.to_string());
 		return;
 	}
 	exti_id = identification.value();
@@ -17,7 +17,7 @@ void DigitalSensor::exti_interruption(std::function<void()> &&action){
 void DigitalSensor::read(){
 	optional<PinState> val = DigitalInput::read_pin_state(id);
 	if(not val){
-		ErrorHandler((string)" Couldn t read the state of the pin" ,pin);
+		ErrorHandler("Can not read the state of the pin %s", pin.to_string());
 		return;
 	}
 	*value = val.value();
