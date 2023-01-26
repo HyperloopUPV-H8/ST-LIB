@@ -54,6 +54,5 @@ void DigitalOutputService::toggle(uint8_t id){
 	}
 
 	Pin pin = DigitalOutputService::service_ids[id];
-	GPIO_PinState actual_state = HAL_GPIO_ReadPin(pin.port,pin.gpio_pin);
-	HAL_GPIO_WritePin(pin.port, pin.gpio_pin, (GPIO_PinState)!actual_state);
+	HAL_GPIO_TogglePin(pin.port, pin.gpio_pin);
 }
