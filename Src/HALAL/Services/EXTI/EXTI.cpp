@@ -6,6 +6,7 @@
  */
 
 #include "EXTI/EXTI.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 uint8_t ExternalInterrupt::id_counter = 0;
 map<uint8_t, Pin> ExternalInterrupt::service_ids = {};

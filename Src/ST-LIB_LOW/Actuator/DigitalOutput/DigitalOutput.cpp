@@ -27,3 +27,7 @@ void DigitalOutput::turn_off() {
 void DigitalOutput::set_pin_state(PinState state) {
 	DigitalOutputService::set_pin_state(id, state);
 }
+
+void DigitalOutput::toggle(){
+	DigitalOutputService::toggle(id);
+}

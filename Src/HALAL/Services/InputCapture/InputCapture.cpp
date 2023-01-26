@@ -5,6 +5,7 @@
  *      Author: alejandro
  */
 #include "InputCapture/InputCapture.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 uint8_t InputCapture::id_counter = 0;
 map<uint8_t, InputCapture::Instance> InputCapture::active_instances = {};
