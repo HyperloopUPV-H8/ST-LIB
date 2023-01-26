@@ -6,8 +6,10 @@
  */
 #include "InputCapture/InputCapture.hpp"
 
-uint8_t InputCapture::id_counter = 0;
 map<uint8_t, InputCapture::Instance> InputCapture::active_instances = {};
+map<Pin, InputCapture::Instance> InputCapture::available_instances = {};
+uint8_t InputCapture::id_counter = 0;
+
 static map<uint32_t, uint32_t> channel_dict = {
 	{HAL_TIM_ACTIVE_CHANNEL_1, TIM_CHANNEL_1},
 	{HAL_TIM_ACTIVE_CHANNEL_2, TIM_CHANNEL_2},

@@ -7,6 +7,8 @@
 
 #include "TimerPeripheral/TimerPeripheral.hpp"
 
+vector<reference_wrapper<TimerPeripheral>> TimerPeripheral::timers;
+
 TimerPeripheral::InitData::InitData(
 		TIM_TypeDef* timer, uint32_t prescaler, uint32_t period, uint32_t deadtime) :
 		timer(timer),

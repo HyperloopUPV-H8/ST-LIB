@@ -21,7 +21,7 @@
  * 
  */
 class UART{
-private:
+public:
     /**
      * @brief Struct which defines all data referring to UART peripherals. It is
      *        declared private in order to prevent unwanted use. Only 
@@ -57,9 +57,6 @@ private:
 		peripheral10 = 9
     };
 
-    static UART_HandleTypeDef* get_handle(uint8_t id);
-
-public:
     static uint16_t id_counter;
     
     static unordered_map<uint8_t, UART::Instance*> registered_uart;
@@ -82,7 +79,6 @@ public:
     static UART::Peripheral uart8;
     static UART::Peripheral uart9;
     static UART::Peripheral uart10;
-
 
     /**
      * @brief UART instances of the STM32H723.
@@ -223,13 +219,14 @@ public:
   	 */
     static void print_by_uart(char* ptr, int len);
 
-    private:
+private:
     /**
      * @brief This method initializes the UART peripheral that is passed to it as a parameter.
      * 
      * @param uart Peripheral instance to be initialized.
      */
     static void init(UART::Instance* uart);
+    static UART_HandleTypeDef* get_handle(uint8_t id);
 
 };
 

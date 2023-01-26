@@ -8,7 +8,11 @@
 #include "PWMService/PWMService.hpp"
 
 uint8_t PWMservice::id_counter = 0;
-map<uint8_t, PWMservice::Instance> PWMservice::active_instances = {};
+map<uint8_t, PWMservice::Instance> PWMservice::active_instances = { };
+map<Pin, PWMservice::Instance> PWMservice::available_instances = { };
+map<Pin, PWMservice::Instance> PWMservice::available_instances_negated = {};
+map<pair<Pin, Pin>, PWMservice::Instance> PWMservice::available_instances_dual = { };
+
 PWMservice::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PWMservice::Mode mode) :
 		peripheral(peripheral), channel(channel), mode(mode) {}
 

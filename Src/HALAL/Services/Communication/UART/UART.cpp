@@ -4,13 +4,43 @@
  *  Created on: 28 nov. 2022
  *      Author: Pablo
  */
+
 #include "Communication/UART/UART.hpp"
 
 #ifdef HAL_UART_MODULE_ENABLED
 
-unordered_map<uint8_t, UART::Instance* > UART::registered_uart;
+unordered_map<uint8_t, UART::Instance*> UART::registered_uart;
+unordered_map<UART::Peripheral, UART::Instance*> UART::available_uarts;
 
+/**
+* @brief UART  wrapper enum of the STM32H723.
+*
+*/
+UART::Peripheral UART::uart1;
+UART::Peripheral UART::uart2;
+UART::Peripheral UART::uart3;
+UART::Peripheral UART::uart4;
+UART::Peripheral UART::uart5;
+UART::Peripheral UART::uart6;
+UART::Peripheral UART::uart7;
+UART::Peripheral UART::uart8;
+UART::Peripheral UART::uart9;
+UART::Peripheral UART::uart10;
+
+UART::Instance UART::instance1;
+UART::Instance UART::instance2;
+UART::Instance UART::instance3;
+UART::Instance UART::instance4;
+UART::Instance UART::instance5;
+UART::Instance UART::instance6;
+UART::Instance UART::instance7;
+UART::Instance UART::instance8;
+UART::Instance UART::instance9;
+UART::Instance UART::instance10;
+
+bool UART::printf_ready = false;
 uint16_t UART::id_counter = 0;
+uint8_t UART::printf_uart = 0;
 
 optional<uint8_t> UART::inscribe(UART::Peripheral& uart){
 	if ( !UART::available_uarts.contains(uart)){

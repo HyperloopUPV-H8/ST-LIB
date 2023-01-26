@@ -5,7 +5,7 @@
  *      Author: stefa
  */
 #pragma once
-#ifdef HAL_ETH_MODULE_ENABLED
+//#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
@@ -83,4 +83,4 @@ bool ServerSocket::send_order(Order<Type,Types...>& order){
 	send();
 	return true;
 }
-#endif
+//#endif

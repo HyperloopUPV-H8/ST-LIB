@@ -20,7 +20,7 @@
  * 
  */
 class SPI{
-private:
+public:
     /**
      * @brief Struct which defines all data refering to SPI peripherals. It is
      *        declared private in order to prevent unwanted use. Only 
@@ -60,10 +60,6 @@ private:
  		peripheral6 = 5,
      };
 
-    static void turn_on_chip_select(SPI::Instance* spi);
-    static void turn_off_chip_select(SPI::Instance* spi);
-
-public:
     static uint16_t id_counter;
     
     static unordered_map<uint8_t, SPI::Instance* > registered_spi;
@@ -171,6 +167,9 @@ private:
      * @param spi Peripheral instance to be initialized.
      */
     static void init(SPI::Instance* spi);
+    static void turn_on_chip_select(SPI::Instance* spi);
+    static void turn_off_chip_select(SPI::Instance* spi);
+
 };
 
 #endif

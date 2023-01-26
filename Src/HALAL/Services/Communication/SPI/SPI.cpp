@@ -8,10 +8,21 @@
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
-
-unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi;
-
 uint16_t SPI::id_counter = 0;
+unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi;
+unordered_map<SPI::Peripheral, SPI::Instance*> SPI::available_spi;
+SPI::Peripheral SPI::spi1;
+SPI::Peripheral SPI::spi2;
+SPI::Peripheral SPI::spi3;
+SPI::Peripheral SPI::spi4;
+SPI::Peripheral SPI::spi5;
+SPI::Peripheral SPI::spi6;
+SPI::Instance SPI::instance1;
+SPI::Instance SPI::instance2;
+SPI::Instance SPI::instance3;
+SPI::Instance SPI::instance4;
+SPI::Instance SPI::instance5;
+SPI::Instance SPI::instance6;
 
 optional<uint8_t> SPI::inscribe(SPI::Peripheral& spi){
 	if ( !SPI::available_spi.contains(spi)){

@@ -4,7 +4,8 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
-#ifdef HAL_ETH_MODULE_ENABLED
+
+//#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 
 uint8_t ServerSocket::priority = 0;
@@ -197,4 +198,4 @@ err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_bloc
 }
 
 
-#endif
+//#endif

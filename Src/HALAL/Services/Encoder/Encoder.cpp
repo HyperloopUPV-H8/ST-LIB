@@ -9,9 +9,9 @@
 
 #ifdef HAL_TIM_MODULE_ENABLED
 
-map<uint8_t, pair<Pin, Pin>> Encoder::registered_encoder = {};
-
 uint8_t Encoder::id_counter = 0;
+map<pair<Pin, Pin>, TimerPeripheral*> Encoder::pin_timer_map;
+map<uint8_t, pair<Pin, Pin>> Encoder::registered_encoder;
 
 optional<uint8_t> Encoder::inscribe(Pin& pin1, Pin& pin2){
 	pair<Pin, Pin> doublepin = {pin1, pin2};

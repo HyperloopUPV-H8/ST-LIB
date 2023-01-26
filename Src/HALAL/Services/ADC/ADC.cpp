@@ -9,10 +9,15 @@
 
 #if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
 
+extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc2;
 extern ADC_HandleTypeDef hadc3;
 
 uint8_t ADC::id_counter = 0;
-unordered_map<uint8_t, ADC::Instance> ADC::active_instances = {};
+map<uint8_t, ADC::Instance> ADC::active_instances = { };
+map<Pin, ADC::Instance> ADC::available_instances = { };
+uint32_t ADC::ranks[16];
+ADC::Peripheral ADC::peripherals[3];
 
 ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels) :
 		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels) {}
@@ -64,8 +69,8 @@ void ADC::turn_on(uint8_t id){
 		return; //TODO: Error handler
 	}
 
-	LowPowerTimer& timer = peripheral->timer;
-	if (HAL_LPTIM_TimeOut_Start_IT(&timer.handle, timer.period, timer.period / 2) != HAL_OK) {
+	LowPowerTimer* timer = &peripheral->timer;
+	if (HAL_LPTIM_TimeOut_Start_IT(timer->handle, timer->period, timer->period / 2) != HAL_OK) {
 		return; //TODO: Error handler
 	}
 	peripheral->is_on = true;

@@ -5,7 +5,8 @@
  *      Author: stefa
  */
 #pragma once
-#ifdef HAL_ETH_MODULE_ENABLED
+
+//#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
@@ -13,7 +14,9 @@
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
 class Socket{
+
 public:
+
 	enum SocketState{
 		INACTIVE,
 		CONNECTED,
@@ -33,7 +36,6 @@ public:
 	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
 	Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port);
 	Socket(EthernetNode local_node, EthernetNode remote_node);
-
 
 	void close();
 
@@ -80,4 +82,4 @@ bool Socket::send_order(Order<Type,Types...>& order){
 	send();
 	return true;
 }
-#endif
+//#endif

@@ -7,7 +7,7 @@
 
 #include "Communication/Ethernet/UDP/DatagramSocket.hpp"
 
-#ifdef HAL_ETH_MODULE_ENABLED
+//#ifdef HAL_ETH_MODULE_ENABLED
 
 DatagramSocket::DatagramSocket() = default;
 
@@ -49,5 +49,5 @@ void DatagramSocket::receive_callback(void *args, struct udp_pcb *udp_control_bl
 
 	pbuf_free(packet_buffer);
 }
-#endif
+//#endif
 
