@@ -20,6 +20,9 @@ void ErrorHandlerModel::SetMetaData(int line, const char * func, const char * fi
 }
 
 void ErrorHandlerModel::ErrorHandlerUpdate(){
+	if (!ErrorHandlerModel::error_triggered) {
+		return;
+	}
 
 #ifdef HAL_UART_MODULE_ENABLED
 	if (!UART::printf_ready) {
