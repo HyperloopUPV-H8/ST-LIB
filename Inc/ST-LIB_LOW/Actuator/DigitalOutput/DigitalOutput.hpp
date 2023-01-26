@@ -16,6 +16,7 @@ public:
 
 	void turn_on();
 	void turn_off();
+	void toggle();
 	void set_pin_state(PinState state);
 private:
 	uint8_t id;
