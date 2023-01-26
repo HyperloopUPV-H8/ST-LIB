@@ -11,3 +11,4 @@ PRUEBAS/
 
 #Ignore ccls cache
 .ccls-cache/
+.settings
