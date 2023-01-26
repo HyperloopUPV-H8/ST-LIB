@@ -7,11 +7,12 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
-#include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
+#include "DigitalInputService/DigitalInputService.hpp"
+#include "EXTI/EXTI.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 
-class DigitalSensor : public Sensor<PinState>::Sensor{
+class DigitalSensor{
 public:
 	DigitalSensor(Pin pin, PinState *value);
 	void exti_interruption(std::function<void()> &&action);
