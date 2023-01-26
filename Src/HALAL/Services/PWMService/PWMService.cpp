@@ -14,7 +14,8 @@ PWMservice::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PW
 
 optional<uint8_t> PWMservice::inscribe(Pin& pin){
 	if (not available_instances.contains(pin)) {
-		return nullopt; //TODO: error handler
+		ErrorHandler("Pin %d is not configured as a PWM in you configuration file", &pin);
+		return nullopt;
 	}
 
 	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
@@ -27,7 +28,8 @@ optional<uint8_t> PWMservice::inscribe(Pin& pin){
 
 optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
 	if (not available_instances_negated.contains(pin)) {
-		return nullopt; //TODO: error handler
+		return nullopt;
+		ErrorHandler("Pin %d is not configured as a PWM in you configuration file", &pin);
 	} 	
 	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
 	active_instances[id_counter] = available_instances_negated[pin];
@@ -39,7 +41,8 @@ optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
 
 optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 	if (not available_instances_dual.contains({pin, pin_negated})) {
-		return nullopt; //TODO: error handler
+		return nullopt;
+		ErrorHandler("Pin %s and Pin %s are not configured as a dual PWM in you configuration file", pin.to_string(), pin_negated.to_string());
 	} 	
 	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
 	Pin::inscribe(pin_negated, TIMER_ALTERNATE_FUNCTION);
@@ -52,7 +55,8 @@ optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 
 void PWMservice::turn_on(uint8_t id) {
 	if (not instance_exists(id)) {
-		//TODO: error handler
+		Error_Handler("Instance with id %d does not exist", id);
+		return;
 	}
 
 	Instance& instance = get_instance(id);
@@ -73,7 +77,8 @@ void PWMservice::turn_on(uint8_t id) {
 
 void PWMservice::turn_off(uint8_t id){
 	if (not instance_exists(id)) {
-		//TODO: Error handler
+		Error_Handler("Instance with id %d does not exist", id);
+		return;
 	}
 
 	Instance& instance = get_instance(id);
@@ -91,17 +96,17 @@ void PWMservice::turn_off(uint8_t id){
 	}
 
 	else {
-		//TODO: Error handler
+		Error_Handler("This should never be activated");
 	}
 }
 
 void PWMservice::set_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	if (not (duty_cycle >= 0 && duty_cycle <= 100)) {
-		//TODO: error handlerr
+		Error_Handler("The duty cycle of value %d must be in the range [0, 100]", duty_cycle);
 		return;
 	}
 	if (not instance_exists(id)) {
-		//TODO: error handlerr
+		Error_Handler("Instance with id %d does not exist", id);
 		return;
 	}
 

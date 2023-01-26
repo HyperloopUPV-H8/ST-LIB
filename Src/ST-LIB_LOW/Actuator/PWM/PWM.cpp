@@ -10,7 +10,7 @@
 PWM::PWM(Pin& pin) : pin(pin) {
 	optional<uint8_t> try_id = PWMservice::inscribe(pin);
 	if (not try_id) {
-		//TODO: error handler
+		ErrorHandler("Pin %d is not configured as a PWM in you configuration file", &pin);
 	}
 
 	id = try_id.value();
@@ -18,7 +18,7 @@ PWM::PWM(Pin& pin) : pin(pin) {
 PWM::PWM(Pin& pin, Pin& pin_negated) : pin(pin), pin_negated(pin_negated) {
 	optional<uint8_t> try_id = PWMservice::inscribe_dual(pin, pin_negated);
 	if (not try_id) {
-		//TODO: error handler
+		ErrorHandler("Pin %d and Pin %d are not configured as a dual PWM in you configuration file", &pin, &pin);
 	}
 
 	id = try_id.value();
