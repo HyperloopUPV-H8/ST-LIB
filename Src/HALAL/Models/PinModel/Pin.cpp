@@ -6,6 +6,7 @@
  */
 
 #include "PinModel/Pin.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 Pin::Pin(){}
 
@@ -145,6 +146,7 @@ const char* Pin::to_string() const {
 
 void Pin::inscribe(Pin& pin, OperationMode mode){
 	if(pin.mode != OperationMode::NOT_USED){
+		ErrorHandler("Pin %s is already registered, cannot register twice", pin.to_string());
 		return;
 	}
 	pin.mode = mode;
