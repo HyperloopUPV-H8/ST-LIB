@@ -12,9 +12,9 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 #define COUNTER_DISTANCE_IN_METERS 0.025
 #define NANO_SECOND 1000000000.0
-#define N_FRAMES 5
+#define N_FRAMES 8
 #define FRAME_SIZE_IN_SECONDS 0.01
-#define START_COUNTER 32768
+#define START_COUNTER UINT16_MAX / 2
 #define CLOCK_MAX_VALUE 4294967295 //here goes the tim2 counter period
 
 
