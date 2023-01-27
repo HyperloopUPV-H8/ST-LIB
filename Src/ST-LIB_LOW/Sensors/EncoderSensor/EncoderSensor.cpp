@@ -17,7 +17,7 @@ void EncoderSensor::start(){
 	for(int i = 0; i < N_FRAMES; i++){
 		positions[i] = 0.0;
 
-		times[i] = i*FRAME_SIZE_IN_SECONDS - N_FRAMES*FRAME_SIZE_IN_SECONDS + (clock_time / NANO_SECOND);
+		times[i] = i * FRAME_SIZE_IN_SECONDS - N_FRAMES*FRAME_SIZE_IN_SECONDS + (clock_time / NANO_SECOND);
 
 		speeds[i] = 0.0;
 	}
@@ -46,7 +46,7 @@ void EncoderSensor::read(){
 	time = time + delta_clock / NANO_SECOND;
 	last_clock_time = clock_time;
 
-	*position= ( optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE_IN_METERS;
+	*position= (optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE_IN_METERS;
 	double delta_time = time - times[0];
 	double delta_position = *position - positions[0];
 
