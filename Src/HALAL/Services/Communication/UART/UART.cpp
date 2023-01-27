@@ -8,7 +8,7 @@
 
 #ifdef HAL_UART_MODULE_ENABLED
 
-unordered_map<uint8_t, UART::Instance* > UART::registered_uart;
+unordered_map<uint8_t, UART::Instance* > UART::registered_uart = {};
 
 uint16_t UART::id_counter = 0;
 
