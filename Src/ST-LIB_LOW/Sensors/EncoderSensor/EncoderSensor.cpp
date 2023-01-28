@@ -27,19 +27,19 @@ void EncoderSensor::start(){
 
 void EncoderSensor::read(){
 	optional<uint32_t> optional_counter = Encoder::get_counter(id);
-	optional<bool> direction = Encoder::get_direction(id);
+	optional<bool> optional_direction = Encoder::get_direction(id);
 	uint64_t clock_time = Time::get_global_tick();
 	
 	if(not optional_counter) {
 		ErrorHandler("Error at reading Encoder with id %d counter value", id);
 		return;
 	}
-	else if(not direction) {
+	else if(not optional_direction) {
 		ErrorHandler("Error at reading Encoder with id %d direction value", id);
 		return;
 	}
 
-	*direction = (double)direction.value();
+	*direction = (double)optional_direction.value();
 
 	int64_t delta_clock = clock_time - last_clock_time;
 	if(clock_time < last_clock_time){ //overflow handle
