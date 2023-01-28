@@ -6,13 +6,14 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
-#include "ST-LIB_LOW/Sensors/AnalogSensor/AnalogSensor.hpp"
+#include "ADC/ADC.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
+#include "C++Utilities/CppUtils.hpp"
 
 #define REFERENCE_VOLTAGE 3.3
 
 
-class LookupSensor : public AnalogSensor::AnalogSensor{
+class LookupSensor{
 public:
 	LookupSensor(Pin pin, double *table, int table_size, double *value);
 	void read();

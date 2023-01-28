@@ -6,11 +6,10 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
-#include "ST-LIB_LOW/Sensors/AnalogSensor/AnalogSensor.hpp"
+#include "ADC/ADC.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
-
-class LinearSensor : public AnalogSensor::AnalogSensor{
+class LinearSensor{
 public:
 	LinearSensor(Pin pin, double slope, double offset, double *value);
 	void read();

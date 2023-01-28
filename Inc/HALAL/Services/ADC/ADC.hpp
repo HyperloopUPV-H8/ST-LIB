@@ -9,7 +9,7 @@
 #include "PinModel/Pin.hpp"
 #include "LowPowerTimer/LowPowerTimer.hpp"
 
-#ifdef HAL_ADC_MODULE_ENABLED
+#if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
 
 #define ADC_BUF_LEN 16
 #define LPTIM1_PERIOD 3000
@@ -65,8 +65,8 @@ public:
 private:
 	static uint32_t ranks[16];
 	static Peripheral peripherals[3];
-	static map<Pin, Instance> available_instances;
-	static map<uint8_t, Instance> active_instances;
+	static unordered_map<Pin, Instance> available_instances;
+	static unordered_map<uint8_t, Instance> active_instances;
 	static uint8_t id_counter;
 
 	static void init(Peripheral& peripheral);

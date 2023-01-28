@@ -7,8 +7,9 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
-#include "Sensors/Sensor/Sensor.hpp"
+#include "Encoder/Encoder.hpp"
+#include "Time/Time.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 #define COUNTER_DISTANCE_IN_METERS 0.025
 #define NANO_SECOND 1000000000.0
 #define N_FRAMES 5
@@ -18,7 +19,7 @@
 
 
 
-class EncoderSensor : public Sensor<double>::Sensor{
+class EncoderSensor{
 public:
 	EncoderSensor(Pin pin1, Pin pin2, double* position, double* speed, double* acceleration);
 	void start();

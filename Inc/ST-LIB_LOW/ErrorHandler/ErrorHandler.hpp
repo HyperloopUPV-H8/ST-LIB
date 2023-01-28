@@ -53,15 +53,23 @@ public:
 
 template<class... Args>
 void ErrorHandlerModel::ErrorHandler( string format, Args... args){
-	 ErrorHandlerModel::error_triggered = 1.0;
+	if (ErrorHandlerModel::error_triggered) {
+		return;
+	}
 
-	 const int32_t size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
-	 const unique_ptr<char[]> buffer = make_unique<char[]>(size);
+	ErrorHandlerModel::error_triggered = 1.0;
 
-	 snprintf(buffer.get(), size, format.c_str(), args...);
+	if (format.length() != 0) {
+		description = "";
+	}
 
-	 description += string(buffer.get(), buffer.get() + size - 1) + " | Line: " + ErrorHandlerModel::line
-					            + " Function: \"" + ErrorHandlerModel::func + "\" File: " + ErrorHandlerModel::file ;
+	const int32_t size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
+	const unique_ptr<char[]> buffer = make_unique<char[]>(size);
+
+	snprintf(buffer.get(), size, format.c_str(), args...);
+
+	description += string(buffer.get(), buffer.get() + size - 1) + " | Line: " + ErrorHandlerModel::line
+							+ " Function: \"" + ErrorHandlerModel::func + "\" File: " + ErrorHandlerModel::file ;
 
 #ifdef HAL_TIM_MODULE_ENABLED
 	 description += " | TimeStamp: " + to_string(Time::get_global_tick());
