@@ -5,8 +5,6 @@
  *      Author: aleja
  */
 
-#pragma once
-
 #include "HALAL/HALAL.hpp"
 
 void HALAL::start() {
@@ -18,7 +16,9 @@ void HALAL::start() {
 	HALconfig::system_clock();
 	HALconfig::peripheral_clock();
 
+#ifdef HAL_GPIO_MODULE_ENABLED
 	Pin::start();
+#endif
 
 #ifdef HAL_CORDIC_MODULE_ENABLED
 	CORDIC_HandleTypeDef hcordic;
@@ -40,8 +40,9 @@ void HALAL::start() {
 #endif
 
 #ifdef HAL_ETH_MODULE_ENABLED
-	//Ethernet::start(local_ip, subnet_mask, gateway);
+	Ethernet::start();
 #endif
+
 #ifdef HAL_TIM_MODULE_ENABLED
 	Encoder::start();
 	TimerPeripheral::start();
