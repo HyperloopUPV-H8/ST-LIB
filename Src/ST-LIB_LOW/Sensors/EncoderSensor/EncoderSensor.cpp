@@ -1,7 +1,7 @@
 #include "Sensors/EncoderSensor/EncoderSensor.hpp"
 
-EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed, double *acceleration)
-: position(position), speed(speed), acceleration(acceleration){
+EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double* direction, double *speed, double *acceleration)
+: position(position), direction(direction), speed(speed), acceleration(acceleration){
 	optional<uint8_t> identification = Encoder::inscribe(pin1,pin2);
 	if(not identification){
 		ErrorHandler(" The pin %s and the pin %s are already used or aren't configurated for encoder usage", pin1.to_string(), pin2.to_string());
@@ -21,7 +21,7 @@ void EncoderSensor::start(){
 
 		speeds[i] = 0.0;
 	}
-	time = clock_time/NANO_SECOND;
+	time = clock_time / NANO_SECOND;
 	last_clock_time = clock_time;
 }
 
@@ -30,14 +30,16 @@ void EncoderSensor::read(){
 	optional<bool> direction = Encoder::get_direction(id);
 	uint64_t clock_time = Time::get_global_tick();
 	
-		if(not optional_counter) {
-			ErrorHandler("Error at reading Encoder with id %d counter value", id);
-			return;
-		}
-		else if(not direction) {
-			ErrorHandler("Error at reading Encoder with id %d direction value", id);
-			return;
-		}
+	if(not optional_counter) {
+		ErrorHandler("Error at reading Encoder with id %d counter value", id);
+		return;
+	}
+	else if(not direction) {
+		ErrorHandler("Error at reading Encoder with id %d direction value", id);
+		return;
+	}
+
+	*direction = (double)direction.value();
 
 	int64_t delta_clock = clock_time - last_clock_time;
 	if(clock_time < last_clock_time){ //overflow handle
@@ -46,7 +48,7 @@ void EncoderSensor::read(){
 	time = time + delta_clock / NANO_SECOND;
 	last_clock_time = clock_time;
 
-	*position= (optional_counter.value() - START_COUNTER) * COUNTER_DISTANCE_IN_METERS;
+	*position= ((int32_t)(optional_counter.value() - START_COUNTER)) * COUNTER_DISTANCE_IN_METERS;
 	double delta_time = time - times[0];
 	double delta_position = *position - positions[0];
 
