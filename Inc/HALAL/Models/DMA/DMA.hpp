@@ -11,7 +11,6 @@
 #include "stm32h7xx_hal.h"
 
 
-template <class HandleType>
 class DMA {
 public:
 	enum NVICnumber : uint8_t {
@@ -32,6 +31,7 @@ public:
 		DMA2Stream7 = 70,
 	};
 
+	template <class HandleType>
 	struct InitData {
 		DMA_Stream_TypeDef* instance;
 		NVICnumber nvic_number;
@@ -94,7 +94,6 @@ void DMA::activate_IT() {
 	      Error_Handler();
 	    }
 
-	    __HAL_LINKDMA(
-	    		i.linked_handle, i.handle_pointer, handle);
+	    __HAL_LINKDMA(i.linked_handle, i.handle_pointer, handle);
 	}
 }

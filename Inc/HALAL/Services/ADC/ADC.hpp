@@ -7,6 +7,7 @@
 
 #pragma once
 #include "PinModel/Pin.hpp"
+#include "DMA/DMA.hpp"
 #include "LowPowerTimer/LowPowerTimer.hpp"
 
 #if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
