@@ -1,12 +1,9 @@
-#include "ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.hpp"
-#include "ST-LIB_LOW/Sensors/LookupSensor/LookupSensor.hpp"
-#include "ST-LIB_LOW/Sensors/Sensor/Sensor.hpp"
-#include "ADC/ADC.hpp"
+#include "Sensors/Sensor/Sensor.hpp"
 
-vector<uint8_t> SensorStarter::adc_id_list{};
-vector<uint8_t> SensorStarter::EXTI_id_list{};
+vector<uint8_t> Sensor::adc_id_list{};
+vector<uint8_t> Sensor::EXTI_id_list{};
 
-void SensorStarter::start(){
+void Sensor::start(){
 	for(uint8_t adc_id : adc_id_list){
 		ADC::turn_on(adc_id);
 	}

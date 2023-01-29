@@ -38,7 +38,6 @@ namespace chrono = std::chrono;
 
 using std::map;
 using std::optional;
-using std::vector;
 using std::array;
 using std::span;
 using std::pair;
@@ -46,7 +45,6 @@ using std::function;
 using std::string;
 using std::to_string;
 using std::reference_wrapper;
-using std::unordered_map;
 using std::set;
 using std::stack;
 using std::nullopt;
@@ -58,7 +56,14 @@ using std::snprintf;
 using std::make_unique;
 using std::unique_ptr;
 using std::string;
+using std::unordered_map;
+using std::vector;
+using std::queue;
 using std::hash;
+using std::unordered_map;
+using std::vector;
+using std::queue;
+
 
 template<class Type>
 concept Integral = is_integral<Type>::value;

@@ -1,12 +1,10 @@
-#include "ST-LIB_LOW/Sensors/EncoderSensor/EncoderSensor.hpp"
-#include "Encoder/Encoder.hpp"
-#include "Time/Time.hpp"
+#include "Sensors/EncoderSensor/EncoderSensor.hpp"
 
 EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double *speed, double *acceleration)
 : position(position), speed(speed), acceleration(acceleration){
 	optional<uint8_t> identification = Encoder::inscribe(pin1,pin2);
 	if(not identification){
-		//TODO: add Error handler for register here (register returns empty optional)
+		ErrorHandler(" The pin %s and the pin %s are already used or aren't configurated for encoder usage", pin1.to_string(), pin2.to_string());
 		return;
 	}
 	id = identification.value();
@@ -30,10 +28,14 @@ void EncoderSensor::read(){
 	optional<bool> direction = Encoder::get_direction(id);
 	uint64_t clock_time = Time::get_global_tick();
 	
-	if(not optional_counter or not direction){
-		//TODO: add Error handler for read here (read returns empty optional)
-		return;
-	}
+		if(not optional_counter) {
+			ErrorHandler("Error at reading Encoder with id %d counter value", id);
+			return;
+		}
+		else if(not direction) {
+			ErrorHandler("Error at reading Encoder with id %d direction value", id);
+			return;
+		}
 
 	long int delta_clock = clock_time - last_clock_time;
 	if(clock_time < last_clock_time){ //overflow handle
