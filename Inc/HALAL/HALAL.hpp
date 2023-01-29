@@ -1,5 +1,6 @@
 #pragma once
 
+#include "HALconfig/HALconfig.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
 #include "DigitalInputService/DigitalInputService.hpp"
 #include "Flash/Flash.hpp"
@@ -14,3 +15,7 @@
 #include "Communication/UART/UART.hpp"
 #include "Communication/FDCAN/FDCAN.hpp"
 #include "CORDIC/CORDIC.hpp"
+
+namespace HALAL {
+	void start();
+}

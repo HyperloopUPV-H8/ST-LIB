@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#ifdef HAL_ETH_MODULE_ENABLED
+//#ifdef HAL_ETH_MODULE_ENABLED
 #include "C++Utilities/CppUtils.hpp"
 #include "PinModel/Pin.hpp"
 #include "EthernetNode.hpp"
@@ -21,11 +21,15 @@ public:
 	static bool is_running;
 
 	static void inscribe();
-	static void start(string local_ip, string subnet_mask, string gateway);
+	static void start();
 	static void start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway);
 	static void update();
+
+	static string board_ip;
+	static string subnet_mask;
+	static string gateway;
 
 private:
 	static void mpu_start();
 };
-#endif
+//#endif
