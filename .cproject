@@ -6,8 +6,6 @@
 				<externalSettings>
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/ST-LIB"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/ST-LIB/Debug"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="ST-LIB" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -46,6 +44,21 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/system}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/netif/ppp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip/apps}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip/priv}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip/prot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/netif}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat/posix/sys}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat/posix}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat/posix/net}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat/stdc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/system/arch}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.663100493" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -72,6 +85,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/system}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip/priv}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip/prot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/netif}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1475030527" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -215,6 +235,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/system}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip/priv}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip/prot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/netif}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1583550009" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -240,6 +267,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/App}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/LWIP/Target}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Inc/ST-LIB_HIGH}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/system}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip/priv}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/lwip/prot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/netif}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ST-LIB/Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.640356923" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>

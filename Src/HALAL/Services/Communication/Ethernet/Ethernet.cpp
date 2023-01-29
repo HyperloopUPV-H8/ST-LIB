@@ -9,6 +9,7 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_ETH_MODULE_ENABLED
+
 extern uint32_t EthernetLinkTimer;
 extern struct netif gnetif;
 extern ip4_addr_t ipaddr, netmask, gw;
@@ -110,4 +111,5 @@ void Ethernet::update(){
 		netif_set_up(&gnetif);
 	}
 }
+
 #endif

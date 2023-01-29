@@ -6,12 +6,14 @@
  */
 
 #pragma once
-#ifdef HAL_ETH_MODULE_ENABLED
+
 #include "C++Utilities/CppUtils.hpp"
 #include "PinModel/Pin.hpp"
 #include "EthernetNode.hpp"
 #include "lwip.h"
 #include "ethernetif.h"
+
+#ifdef HAL_ETH_MODULE_ENABLED
 
 #define ETHERNET_POOLS_BASE_ADDRESS 0x30000000
 
@@ -32,4 +34,5 @@ public:
 private:
 	static void mpu_start();
 };
+
 #endif
