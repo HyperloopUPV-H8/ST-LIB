@@ -12,4 +12,5 @@
 #include "EXTI/EXTI.hpp"
 #include "Communication/SPI/SPI.hpp"
 #include "Communication/UART/UART.hpp"
+#include "Communication/FDCAN/FDCAN.hpp"
 #include "CORDIC/CORDIC.hpp"
