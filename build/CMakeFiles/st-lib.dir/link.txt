@@ -1,0 +1,2 @@
+/usr/bin/ar qc libst-lib.a "CMakeFiles/st-lib.dir/Src/ST-LIB.cpp.o"
+/usr/bin/ranlib libst-lib.a

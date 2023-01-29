@@ -20,6 +20,10 @@ void HALAL::start() {
 	Pin::start();
 #endif
 
+#ifdef HAL_DMA_MODULE_ENABLED
+	DMA::start();
+#endif
+
 #ifdef HAL_CORDIC_MODULE_ENABLED
 	CORDIC_HandleTypeDef hcordic;
 	hcordic.Instance = CORDIC;

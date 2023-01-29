@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HALconfig/HALconfig.hpp"
+#include "DMA/DMA.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
 #include "DigitalInputService/DigitalInputService.hpp"
 #include "Flash/Flash.hpp"
