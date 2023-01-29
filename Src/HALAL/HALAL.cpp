@@ -8,7 +8,7 @@
 #include "HALAL/HALAL.hpp"
 
 void HALAL::start() {
-	#ifdef HAL_ETH_MODULE_ENABLEDD
+	#ifdef HAL_ETH_MODULE_ENABLED
 		Ethernet::inscribe();
 	#endif
 
@@ -43,7 +43,7 @@ void HALAL::start() {
 	UART::start();
 #endif
 
-#ifdef HAL_ETH_MODULE_ENABLEDD
+#ifdef HAL_ETH_MODULE_ENABLED
 	Ethernet::start();
 #endif
 
