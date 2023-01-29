@@ -8,7 +8,7 @@
 #include "HALAL/HALAL.hpp"
 
 void HALAL::start() {
-	#ifdef HAL_ETH_MODULE_ENABLED
+	#ifdef HAL_ETH_MODULE_ENABLEDD
 		Ethernet::inscribe();
 	#endif
 
@@ -18,6 +18,10 @@ void HALAL::start() {
 
 #ifdef HAL_GPIO_MODULE_ENABLED
 	Pin::start();
+#endif
+
+#ifdef HAL_DMA_MODULE_ENABLED
+	DMA::start();
 #endif
 
 #ifdef HAL_CORDIC_MODULE_ENABLED
@@ -39,7 +43,7 @@ void HALAL::start() {
 	UART::start();
 #endif
 
-#ifdef HAL_ETH_MODULE_ENABLED
+#ifdef HAL_ETH_MODULE_ENABLEDD
 	Ethernet::start();
 #endif
 
