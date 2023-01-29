@@ -24,7 +24,7 @@ void HALconfig::system_clock() {
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
 	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
 
-//#ifdef NUCLEO
+#ifdef NUCLEO
 
 	RCC_OscInitStruct.PLL.PLLM = 4;
 	RCC_OscInitStruct.PLL.PLLN = 275;
@@ -35,9 +35,9 @@ void HALconfig::system_clock() {
 	RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
 	RCC_OscInitStruct.PLL.PLLFRACN = 0;
 
-//#endif
+#endif
 
-//#ifdef BOARD
+#ifdef BOARD
 
 	RCC_OscInitStruct.PLL.PLLM = 2;
 	RCC_OscInitStruct.PLL.PLLN = 44;
@@ -48,10 +48,10 @@ void HALconfig::system_clock() {
 	RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
 	RCC_OscInitStruct.PLL.PLLFRACN = 0;
 
-//#endif
+#endif
 
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		ErrorHandler("The RCC Osc config did not start correctly");
+		ErrorHandler("The RCC Osc config did not start correctly", 0);
 	}
 
 	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -65,7 +65,7 @@ void HALconfig::system_clock() {
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
 	RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) {
-		ErrorHandler("The RCC clock config did not start correctly");
+		ErrorHandler("The RCC clock config did not start correctly", 0);
 	}
 }
 
@@ -73,7 +73,7 @@ void HALconfig::system_clock() {
 void HALconfig::peripheral_clock() {
 	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-//#ifdef NUCLEO
+#ifdef NUCLEO
 
 	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC;
 	PeriphClkInitStruct.PLL2.PLL2M = 1;
@@ -86,9 +86,9 @@ void HALconfig::peripheral_clock() {
 	PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
 	PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
 
-//#endif
+#endif
 
-//#ifdef BOARD
+#ifdef BOARD
 
 	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC|RCC_PERIPHCLK_FDCAN;
 	PeriphClkInitStruct.PLL2.PLL2M = 10;
@@ -102,9 +102,9 @@ void HALconfig::peripheral_clock() {
 	PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
 	PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
 
-//#endif
+#endif
 
 	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-		//TODO: error handler
+		ErrorHandler("The RCCEx peripheral clock did not start correctly", 0);
 	}
 }

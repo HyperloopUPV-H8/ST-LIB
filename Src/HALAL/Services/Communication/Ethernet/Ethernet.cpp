@@ -6,7 +6,9 @@
  */
 
 #include "Communication/Ethernet/Ethernet.hpp"
-//#ifdef HAL_ETH_MODULE_ENABLED
+#include "ErrorHandler/ErrorHandler.hpp"
+
+#ifdef HAL_ETH_MODULE_ENABLEDD
 extern uint32_t EthernetLinkTimer;
 extern struct netif gnetif;
 extern ip4_addr_t ipaddr, netmask, gw;
@@ -53,12 +55,12 @@ void Ethernet::start() {
 
 void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway) {
 	if (is_running) {
-		ErrorHandler("Ethernet is already running");
+		ErrorHandler("Ethernet is already running", 0);
 		return;
 	}
 
 	if (not is_ready) {
-		ErrorHandler("Ethernet is not ready");
+		ErrorHandler("Ethernet is not ready", 0);
 		return;
 	}
 
@@ -71,7 +73,7 @@ void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway) {
 
 void Ethernet::inscribe(){
 	if(is_ready){
-		ErrorHandler("Ethernet is already inscribed");
+		ErrorHandler("Ethernet is already inscribed", 0);
 		return;
 	}
 
@@ -92,7 +94,7 @@ void Ethernet::inscribe(){
 
 void Ethernet::update(){
 	if(not is_running) {
-		ErrorHandler("Ethernet is not running, check if its been inscribed");
+		ErrorHandler("Ethernet is not running, check if its been inscribed", 0);
 		return;
 	}
 
@@ -108,4 +110,4 @@ void Ethernet::update(){
 		netif_set_up(&gnetif);
 	}
 }
-//#endif
+#endif
