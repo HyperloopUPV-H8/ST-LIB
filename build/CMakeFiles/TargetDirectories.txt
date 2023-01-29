@@ -1,3 +1,0 @@
-/home/alejandro/projects/Hyperloop-H8/ST-LIB/build/CMakeFiles/st-lib.dir
-/home/alejandro/projects/Hyperloop-H8/ST-LIB/build/CMakeFiles/edit_cache.dir
-/home/alejandro/projects/Hyperloop-H8/ST-LIB/build/CMakeFiles/rebuild_cache.dir

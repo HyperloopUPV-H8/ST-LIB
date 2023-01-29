@@ -4,6 +4,7 @@ Release/
 .settings/
 cmake/build/
 compile_commands.json
+build
 
 #test folder
 Pruebas/
