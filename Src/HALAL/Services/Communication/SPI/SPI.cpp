@@ -9,7 +9,7 @@
 #ifdef HAL_SPI_MODULE_ENABLED
 
 
-unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi = {};
+unordered_map<uint8_t, SPI::Instance*> SPI::registered_spi = {};
 
 uint16_t SPI::id_counter = 0;
 

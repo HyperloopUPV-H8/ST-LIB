@@ -17,10 +17,6 @@ extern ip4_addr_t ipaddr, netmask, gw;
 bool Ethernet::is_ready = false;
 bool Ethernet::is_running = false;
 
-string Ethernet::board_ip = "192.168.21.0";
-string Ethernet::subnet_mask = "";
-string Ethernet::gateway = "";
-
 void Ethernet::mpu_start(){
 	  MPU_Region_InitTypeDef MPU_InitStruct = {0};
 
@@ -48,10 +44,6 @@ void Ethernet::mpu_start(){
 	  HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
 	  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
-}
-
-void Ethernet::start() {
-	start(IPV4(board_ip), IPV4(subnet_mask), IPV4(gateway));
 }
 
 void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway) {

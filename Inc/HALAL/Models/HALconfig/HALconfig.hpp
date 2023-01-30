@@ -11,8 +11,7 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 
 namespace HALconfig {
-
-void system_clock();
-void peripheral_clock();
+void system_clock(TARGET target);
+void peripheral_clock(TARGET target);
 
 }

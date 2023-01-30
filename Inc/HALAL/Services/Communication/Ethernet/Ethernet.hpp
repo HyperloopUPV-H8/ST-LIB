@@ -23,13 +23,8 @@ public:
 	static bool is_running;
 
 	static void inscribe();
-	static void start();
 	static void start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway);
 	static void update();
-
-	static string board_ip;
-	static string subnet_mask;
-	static string gateway;
 
 private:
 	static void mpu_start();

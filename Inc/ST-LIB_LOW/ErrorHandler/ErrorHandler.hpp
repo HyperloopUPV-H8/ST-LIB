@@ -11,7 +11,7 @@
 #include "Time/Time.hpp"
 #include "Communication/UART/UART.hpp"
 
-class ErrorHandlerModel{
+class ErrorHandlerModel {
 private:
 	static string description;
 	static string line;

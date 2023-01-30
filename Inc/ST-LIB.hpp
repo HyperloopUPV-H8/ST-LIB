@@ -4,7 +4,17 @@
 #include "ST-LIB_LOW.hpp"  // Erase this when ST-LIB_HIGH is finished
 #include "ST-LIB_HIGH.hpp" // Highest layer up to the moment
 
+enum TARGET {
+	Nucleo,
+	Board
+};
 
-namespace STLIB {
-	void start();
-}
+class STLIB {
+public:
+	static void start(
+			TARGET target = Board,
+			string ip = "192.168.21.0",
+			string subnet_mask = "",
+			string gateway = "",
+			optional<UART::Peripheral&> printf_peripheral = nullopt);
+};

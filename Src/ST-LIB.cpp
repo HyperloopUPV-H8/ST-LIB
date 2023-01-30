@@ -10,6 +10,6 @@
 
 #include "ST-LIB.hpp"
 
-void STLIB::start() {
-	HALAL::start();
+void STLIB::start(TARGET target, string ip, string subnet_mask, string gateway, optional<UART::Peripheral&> printf_peripheral) {
+	HALAL::start(target, ip, subnet_mask, gateway, printf_peripheral);
 }

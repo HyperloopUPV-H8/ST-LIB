@@ -7,7 +7,7 @@
 
 #include "HALconfig/HALconfig.hpp"
 
-void HALconfig::system_clock() {
+void HALconfig::system_clock(STLIB::Target target) {
 	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -24,31 +24,30 @@ void HALconfig::system_clock() {
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
 	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
 
-#ifdef NUCLEO
+	if (target == Board) {
 
-	RCC_OscInitStruct.PLL.PLLM = 4;
-	RCC_OscInitStruct.PLL.PLLN = 275;
-	RCC_OscInitStruct.PLL.PLLP = 1;
-	RCC_OscInitStruct.PLL.PLLQ = 4;
-	RCC_OscInitStruct.PLL.PLLR = 2;
-	RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
-	RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
-	RCC_OscInitStruct.PLL.PLLFRACN = 0;
+		RCC_OscInitStruct.PLL.PLLM = 4;
+		RCC_OscInitStruct.PLL.PLLN = 275;
+		RCC_OscInitStruct.PLL.PLLP = 1;
+		RCC_OscInitStruct.PLL.PLLQ = 4;
+		RCC_OscInitStruct.PLL.PLLR = 2;
+		RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
+		RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+		RCC_OscInitStruct.PLL.PLLFRACN = 0;
 
-#endif
+	}
 
-#ifdef BOARD
+	if (target == Nucleo) {
 
-	RCC_OscInitStruct.PLL.PLLM = 2;
-	RCC_OscInitStruct.PLL.PLLN = 44;
-	RCC_OscInitStruct.PLL.PLLP = 1;
-	RCC_OscInitStruct.PLL.PLLQ = 3;
-	RCC_OscInitStruct.PLL.PLLR = 2;
-	RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
-	RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
-	RCC_OscInitStruct.PLL.PLLFRACN = 0;
-
-#endif
+		RCC_OscInitStruct.PLL.PLLM = 2;
+		RCC_OscInitStruct.PLL.PLLN = 44;
+		RCC_OscInitStruct.PLL.PLLP = 1;
+		RCC_OscInitStruct.PLL.PLLQ = 3;
+		RCC_OscInitStruct.PLL.PLLR = 2;
+		RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
+		RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+		RCC_OscInitStruct.PLL.PLLFRACN = 0;
+	}
 
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
 		ErrorHandler("The RCC Osc config did not start correctly", 0);
@@ -73,36 +72,36 @@ void HALconfig::system_clock() {
 void HALconfig::peripheral_clock() {
 	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-#ifdef NUCLEO
+	if (target == Nucleo) {
 
-	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-	PeriphClkInitStruct.PLL2.PLL2M = 1;
-	PeriphClkInitStruct.PLL2.PLL2N = 24;
-	PeriphClkInitStruct.PLL2.PLL2P = 2;
-	PeriphClkInitStruct.PLL2.PLL2Q = 2;
-	PeriphClkInitStruct.PLL2.PLL2R = 2;
-	PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
-	PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
-	PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
-	PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
+		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+		PeriphClkInitStruct.PLL2.PLL2M = 1;
+		PeriphClkInitStruct.PLL2.PLL2N = 24;
+		PeriphClkInitStruct.PLL2.PLL2P = 2;
+		PeriphClkInitStruct.PLL2.PLL2Q = 2;
+		PeriphClkInitStruct.PLL2.PLL2R = 2;
+		PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+		PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+		PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+		PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
 
-#endif
+	}
 
-#ifdef BOARD
+	if (target == Board) {
 
-	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC|RCC_PERIPHCLK_FDCAN;
-	PeriphClkInitStruct.PLL2.PLL2M = 10;
-	PeriphClkInitStruct.PLL2.PLL2N = 120;
-	PeriphClkInitStruct.PLL2.PLL2P = 5;
-	PeriphClkInitStruct.PLL2.PLL2Q = 20;
-	PeriphClkInitStruct.PLL2.PLL2R = 2;
-	PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
-	PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
-	PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
-	PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
-	PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
+		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC|RCC_PERIPHCLK_FDCAN;
+		PeriphClkInitStruct.PLL2.PLL2M = 10;
+		PeriphClkInitStruct.PLL2.PLL2N = 120;
+		PeriphClkInitStruct.PLL2.PLL2P = 5;
+		PeriphClkInitStruct.PLL2.PLL2Q = 20;
+		PeriphClkInitStruct.PLL2.PLL2R = 2;
+		PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+		PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+		PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+		PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+		PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
 
-#endif
+	}
 
 	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
 		ErrorHandler("The RCCEx peripheral clock did not start correctly", 0);
