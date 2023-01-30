@@ -6,6 +6,7 @@
  */
 
 #include "Actuator/PWM/PWM.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 PWM::PWM(Pin& pin) : pin(pin) {
 	optional<uint8_t> try_id = PWMservice::inscribe(pin);
