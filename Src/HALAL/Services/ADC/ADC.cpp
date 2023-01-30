@@ -137,7 +137,7 @@ void ADC::init(Peripheral& peripheral) {
 	}
 
 	multimode.Mode = ADC_MODE_INDEPENDENT;
-	if(adc_handle.Instance != ADC3){
+	if(adc_handle.Instance == ADC1){
 		if (HAL_ADCEx_MultiModeConfigChannel(&adc_handle, &multimode) != HAL_OK) {
 			ErrorHandler("ADC MultiModeConfigChannel %d did not start correctly", adc_handle);
 			return;
