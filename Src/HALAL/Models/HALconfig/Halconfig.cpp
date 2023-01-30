@@ -7,7 +7,7 @@
 
 #include "HALconfig/HALconfig.hpp"
 
-void HALconfig::system_clock(STLIB::Target target) {
+void HALconfig::system_clock(TARGET target) {
 	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -69,7 +69,7 @@ void HALconfig::system_clock(STLIB::Target target) {
 }
 
 
-void HALconfig::peripheral_clock() {
+void HALconfig::peripheral_clock(TARGET target) {
 	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
 	if (target == Nucleo) {

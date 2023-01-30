@@ -10,6 +10,11 @@
 #include "stm32h7xx_hal.h"
 #include "ErrorHandler/ErrorHandler.hpp"
 
+enum TARGET {
+	Nucleo,
+	Board
+};
+
 namespace HALconfig {
 void system_clock(TARGET target);
 void peripheral_clock(TARGET target);

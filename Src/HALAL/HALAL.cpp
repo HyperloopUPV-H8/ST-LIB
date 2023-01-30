@@ -7,7 +7,7 @@
 
 #include "HALAL/HALAL.hpp"
 
-void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, optional<UART::Peripheral&> printf_peripheral) {
+void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
 
 #ifdef HAL_ETH_MODULE_ENABLED
 	Ethernet::inscribe();
@@ -42,10 +42,7 @@ void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, 
 
 #ifdef HAL_UART_MODULE_ENABLED
 	UART::start();
-
-	if (printf_peripheral) {
-		UART::set_up_printf(printf_peripheral.value());
-	}
+	UART::set_up_printf(printf_peripheral);
 #endif
 
 #ifdef HAL_FDCAN_MODULE_ENABLED
