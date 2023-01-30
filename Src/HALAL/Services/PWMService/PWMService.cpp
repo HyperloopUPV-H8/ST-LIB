@@ -57,7 +57,7 @@ optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 
 void PWMservice::turn_on(uint8_t id) {
 	if (not instance_exists(id)) {
-		Error_Handler("Instance with id %d does not exist", id);
+		ErrorHandler("Instance with id %d does not exist", id);
 		return;
 	}
 
@@ -79,7 +79,7 @@ void PWMservice::turn_on(uint8_t id) {
 
 void PWMservice::turn_off(uint8_t id){
 	if (not instance_exists(id)) {
-		Error_Handler("Instance with id %d does not exist", id);
+		ErrorHandler("Instance with id %d does not exist", id);
 		return;
 	}
 
@@ -98,17 +98,17 @@ void PWMservice::turn_off(uint8_t id){
 	}
 
 	else {
-		Error_Handler("This should never be activated");
+		ErrorHandler("This should never be activated", 0);
 	}
 }
 
 void PWMservice::set_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	if (not (duty_cycle >= 0 && duty_cycle <= 100)) {
-		Error_Handler("The duty cycle of value %d must be in the range [0, 100]", duty_cycle);
+		ErrorHandler("The duty cycle of value %d must be in the range [0, 100]", duty_cycle);
 		return;
 	}
 	if (not instance_exists(id)) {
-		Error_Handler("Instance with id %d does not exist", id);
+		ErrorHandler("Instance with id %d does not exist", id);
 		return;
 	}
 
