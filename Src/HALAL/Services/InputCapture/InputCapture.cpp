@@ -49,8 +49,14 @@ void InputCapture::turn_on(uint8_t id){
 		return;
 	}
 	Instance instance = active_instances[id];
-	HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising);
-	HAL_TIM_IC_Start(instance.peripheral->handle, instance.channel_falling);
+	if (HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising) != HAL_OK) {
+		ErrorHandler("Unable to start the %s Input Capture measurement in interrupt mode", instance.peripheral->name.c_str());
+	}
+
+	if (HAL_TIM_IC_Start(instance.peripheral->handle, instance.channel_falling) != HAL_OK) {
+		ErrorHandler("Unable to start the %s Input Capture measurement", instance.peripheral->name.c_str());
+	}
+
 }
 
 void InputCapture::turn_off(uint8_t id){
@@ -59,8 +65,14 @@ void InputCapture::turn_off(uint8_t id){
 		return;
 	}
 	Instance instance = active_instances[id];
-	HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_rising);
-	HAL_TIM_IC_Stop(instance.peripheral->handle, instance.channel_falling);
+	if (HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_rising) != HAL_OK) {
+		ErrorHandler("Unable to stop the %s Input Capture measurement in interrupt mode", instance.peripheral->name.c_str());
+	}
+
+	if (HAL_TIM_IC_Stop(instance.peripheral->handle, instance.channel_falling) != HAL_OK) {
+		ErrorHandler("Unable to stop the %s Input Capture measurement", instance.peripheral->name.c_str());
+	}
+
 }
 
 optional<uint32_t> InputCapture::read_frequency(uint8_t id) {

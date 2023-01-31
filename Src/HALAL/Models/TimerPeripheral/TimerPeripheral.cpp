@@ -17,9 +17,10 @@ TimerPeripheral::InitData::InitData(
 		input_capture_channels({}) {}
 
 TimerPeripheral::TimerPeripheral(
-		TIM_HandleTypeDef* handle, InitData init_data) :
+		TIM_HandleTypeDef* handle, InitData init_data, string name) :
 		handle(handle),
-		init_data(init_data) {}
+		init_data(init_data),
+		name(name){}
 
 void TimerPeripheral::init() {
 		TIM_MasterConfigTypeDef sMasterConfig = {0};
