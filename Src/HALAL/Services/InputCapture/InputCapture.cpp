@@ -18,12 +18,16 @@ static map<uint32_t, uint32_t> channel_dict = {
 	{HAL_TIM_ACTIVE_CHANNEL_6, TIM_CHANNEL_6}
 };
 
-InputCapture::Instance::Instance(Pin pin, TimerPeripheral* peripheral, uint32_t channel_rising, uint32_t channel_falling) :
+InputCapture::Instance::Instance(Pin& pin, TimerPeripheral* peripheral, uint32_t channel_rising, uint32_t channel_falling) :
 	pin(pin),
 	peripheral(peripheral),
 	channel_rising(channel_rising),
 	channel_falling(channel_falling)
-	{ }
+	{
+		frequency = 0;
+		duty_cycle = 0;
+
+	}
 
 optional<uint8_t> InputCapture::inscribe(Pin& pin){
  	if (not available_instances.contains(pin)) {
@@ -49,6 +53,7 @@ void InputCapture::turn_on(uint8_t id){
 		return;
 	}
 	Instance instance = active_instances[id];
+
 	if (HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising) != HAL_OK) {
 		ErrorHandler("Unable to start the %s Input Capture measurement in interrupt mode", instance.peripheral->name.c_str());
 	}
@@ -107,7 +112,7 @@ InputCapture::Instance InputCapture::find_instance_by_channel(uint32_t channel) 
 	return Instance();
 }
 
-void HAL_TIM_InputCapture_CaptureCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
 	uint32_t& active_channel = channel_dict[htim->Channel];
 	InputCapture::Instance instance = InputCapture::find_instance_by_channel(active_channel);

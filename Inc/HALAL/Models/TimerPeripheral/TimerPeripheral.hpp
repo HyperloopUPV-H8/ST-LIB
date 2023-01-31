@@ -11,6 +11,7 @@
 #ifdef HAL_TIM_MODULE_ENABLED
 
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 class TimerPeripheral {
 public:
@@ -19,8 +20,8 @@ public:
 		uint32_t prescaler;
 		uint32_t period;
 		uint32_t deadtime;
-		vector<uint32_t> pwm_channels;
-		vector<pair<uint32_t, uint32_t>> input_capture_channels;
+		vector<uint32_t> pwm_channels = {};
+		vector<pair<uint32_t, uint32_t>> input_capture_channels = {};
 		InitData() = default;
 		InitData(TIM_TypeDef* timer, uint32_t prescaler = 275,
 				uint32_t period = 1000, uint32_t deadtime = 0);
