@@ -15,8 +15,8 @@ extern ADC_HandleTypeDef hadc3;
 uint8_t ADC::id_counter = 0;
 unordered_map<uint8_t, ADC::Instance> ADC::active_instances = {};
 
-ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels) :
-		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels) {}
+ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream) :
+		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels), dma_stream(dma_stream) {}
 
 ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data) :
 	handle(handle), dma_stream(dma_stream), timer(timer), init_data(init_data) {}
@@ -37,6 +37,7 @@ optional<uint8_t> ADC::inscribe(Pin pin) {
 	active_instances[id_counter] = available_instances[pin];
 
 	InitData& init_data = active_instances[id_counter].peripheral->init_data;
+	DMA::inscribe_stream(init_data.dma_stream);
 	active_instances[id_counter].rank = init_data.channels.size();
 	init_data.channels.push_back(active_instances[id_counter].channel);
 	return id_counter++;
@@ -137,7 +138,7 @@ void ADC::init(Peripheral& peripheral) {
 	}
 
 	multimode.Mode = ADC_MODE_INDEPENDENT;
-	if(adc_handle.Instance != ADC3){
+	if(adc_handle.Instance == ADC1){
 		if (HAL_ADCEx_MultiModeConfigChannel(&adc_handle, &multimode) != HAL_OK) {
 			ErrorHandler("ADC MultiModeConfigChannel %d did not start correctly", adc_handle);
 			return;
