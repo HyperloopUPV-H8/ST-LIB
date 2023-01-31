@@ -54,6 +54,7 @@ void InputCapture::turn_on(uint8_t id){
 	}
 	Instance instance = active_instances[id];
 
+
 	if (HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising) != HAL_OK) {
 		ErrorHandler("Unable to start the %s Input Capture measurement in interrupt mode", instance.peripheral->name.c_str());
 	}
