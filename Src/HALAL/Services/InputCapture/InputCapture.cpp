@@ -114,6 +114,7 @@ InputCapture::Instance InputCapture::find_instance_by_channel(uint32_t channel) 
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
+	htim->Instance->CNT = 0;
 	uint32_t& active_channel = channel_dict[htim->Channel];
 	InputCapture::Instance instance = InputCapture::find_instance_by_channel(active_channel);
 
