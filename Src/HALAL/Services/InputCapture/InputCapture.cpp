@@ -125,6 +125,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 		InputCapture::active_instances[instance.id].frequency = round(ref_clock / rising_value);
 		InputCapture::active_instances[instance.id].duty_cycle = round((falling_value * 100) / rising_value);
 	}
+
 }
 
 

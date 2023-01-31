@@ -60,6 +60,7 @@ void TimerPeripheral::init() {
 				ErrorHandler("Unable to configure a IC channel on %d", name.c_str());
 			}
 
+			sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
 			sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
 			if (HAL_TIM_IC_ConfigChannel(handle, &sConfigIC, channels_rising_falling.second) != HAL_OK) {
 				ErrorHandler("Unable to configure a IC channel on %d", name.c_str());
