@@ -22,6 +22,7 @@ TimerPeripheral::TimerPeripheral(
 		name(name){}
 
 void TimerPeripheral::init() {
+		TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 		TIM_MasterConfigTypeDef sMasterConfig = {0};
 		TIM_IC_InitTypeDef sConfigIC = {0};
 		TIM_OC_InitTypeDef sConfigOC = {0};
@@ -34,6 +35,16 @@ void TimerPeripheral::init() {
 		handle->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 		handle->Init.RepetitionCounter = 0;
 		handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+//		if (HAL_TIM_Base_Init(handle) != HAL_OK)
+//		{
+//			ErrorHandler("Unable to init base clock on %d", name.c_str());
+//		}
+//		sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+//		if (HAL_TIM_ConfigClockSource(handle, &sClockSourceConfig) != HAL_OK)
+//		{
+//			ErrorHandler("Unable to config clock source on %d", name.c_str());
+//		}
+
 		if (!init_data.input_capture_channels.empty()) {
 			if (HAL_TIM_IC_Init(handle) != HAL_OK)
 			{
