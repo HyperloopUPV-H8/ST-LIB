@@ -46,10 +46,19 @@ void Ethernet::mpu_start(){
 	  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
 
-void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway) {
-	if (is_running) {
-		ErrorHandler("Ethernet is already running", 0);
-		return;
+void Ethernet::start(string local_ip, string subnet_mask, string gateway){
+	start(IPV4(local_ip), IPV4(subnet_mask), IPV4(gateway));
+}
+
+void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway){
+	if(!is_running && is_ready){
+		ipaddr = local_ip.address;
+		netmask = subnet_mask.address;
+		gw = gateway.address;
+		MX_LWIP_Init();
+		is_running = true;
+	}else{
+		ErrorHandler("Unable to start Ethernet!", "");
 	}
 
 	if (not is_ready) {
@@ -65,9 +74,22 @@ void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway) {
 }
 
 void Ethernet::inscribe(){
-	if(is_ready){
-		ErrorHandler("Ethernet is already inscribed", 0);
-		return;
+	if(!is_ready){
+		Pin::inscribe(PA1, ALTERNATIVE);
+		Pin::inscribe(PA2, ALTERNATIVE);
+		Pin::inscribe(PA7, ALTERNATIVE);
+		Pin::inscribe(PB13, ALTERNATIVE);
+		Pin::inscribe(PC1, ALTERNATIVE);
+		Pin::inscribe(PC4, ALTERNATIVE);
+		Pin::inscribe(PC5, ALTERNATIVE);
+		Pin::inscribe(PG11, ALTERNATIVE);
+		Pin::inscribe(PG13, ALTERNATIVE);
+		mpu_start();
+		SCB_EnableICache();
+		SCB_EnableDCache();
+		is_ready = true;
+	}else{
+		ErrorHandler("Unable to inscribe Ethernet because is not ready!", "");
 	}
 
 	Pin::inscribe(PA1, ALTERNATIVE);
@@ -97,10 +119,13 @@ void Ethernet::update(){
 	if (HAL_GetTick() - EthernetLinkTimer >= 100) {
 		EthernetLinkTimer = HAL_GetTick();
 		ethernet_link_check_state(&gnetif);
-	}
-
-	if(gnetif.flags == 15) {
-		netif_set_up(&gnetif);
+		}
+		
+		if(gnetif.flags == 15){
+		 netif_set_up(&gnetif);
+		}
+	}else{
+		ErrorHandler("Unable to update Ethernet because is not running!", "");
 	}
 }
 

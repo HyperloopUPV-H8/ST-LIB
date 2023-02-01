@@ -140,9 +140,10 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 }
 
 void Time::set_timeout(int milliseconds, function<void()> callback){
-	Time::register_low_precision_alarm(milliseconds, [&,low_precision_ids](){
+	uint8_t id = low_precision_ids;
+	Time::register_low_precision_alarm(milliseconds, [&,id](){
 		callback();
-		Time::unregister_low_precision_alarm(low_precision_ids-1);
+		Time::unregister_low_precision_alarm(id);
 	});
 }
 

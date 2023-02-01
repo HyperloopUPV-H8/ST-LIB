@@ -15,6 +15,8 @@
 #include "timeouts.h"
 #include "C++Utilities/CppUtils.hpp"
 
+#ifdef HAL_ETH_MODULE_ENABLED
+
 using std::stringstream;
 using std::getline;
 
