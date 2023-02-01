@@ -28,7 +28,9 @@ void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, 
 #ifdef HAL_CORDIC_MODULE_ENABLED
 	CORDIC_HandleTypeDef hcordic;
 	hcordic.Instance = CORDIC;
-	if (HAL_CORDIC_Init(&hcordic) != HAL_OK){}
+	if (HAL_CORDIC_Init(&hcordic) != HAL_OK){
+		ErrorHandler("Unable to init CORDIC");
+	}
 #endif
 
 #ifdef HAL_ADC_MODULE_ENABLED
