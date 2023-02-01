@@ -44,6 +44,7 @@ private :
 	static void stop_timer(TIM_HandleTypeDef* htim);
 	static void start_timer(TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
 	static void init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
+	static void ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us);
 
 public :
 	static TIM_HandleTypeDef* global_timer;
