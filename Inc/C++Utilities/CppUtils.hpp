@@ -33,6 +33,8 @@
 #include <cstring>
 #include <span>
 #include <ranges>
+#include <cstdarg>
+#include <stdarg.h>
 
 namespace chrono = std::chrono;
 

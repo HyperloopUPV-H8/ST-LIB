@@ -11,12 +11,13 @@
 
 class LinearSensor{
 public:
-	LinearSensor(Pin pin, double slope, double offset, double *value);
+	LinearSensor(Pin &pin, double slope, double offset, double *value);
+	LinearSensor(Pin &pin, double slope, double offset, double &value);
 	void read();
 	uint8_t get_id();
 
 protected:
-	Pin pin;
+	Pin &pin;
 	uint8_t id;
 	double slope;
 	double offset;
