@@ -17,6 +17,10 @@ void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, 
 	HALconfig::system_clock(target);
 	HALconfig::peripheral_clock(target);
 
+#ifdef HAL_UART_MODULE_ENABLED
+	UART::set_up_printf(printf_peripheral);
+#endif
+
 #ifdef HAL_GPIO_MODULE_ENABLED
 	Pin::start();
 #endif
@@ -44,7 +48,6 @@ void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, 
 
 #ifdef HAL_UART_MODULE_ENABLED
 	UART::start();
-	UART::set_up_printf(printf_peripheral);
 #endif
 
 #ifdef HAL_FDCAN_MODULE_ENABLED
