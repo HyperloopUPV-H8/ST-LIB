@@ -13,4 +13,5 @@ IPV4::IPV4(string address) : string_address(address){
 }
 
 IPV4::IPV4() = default;
+
 #endif

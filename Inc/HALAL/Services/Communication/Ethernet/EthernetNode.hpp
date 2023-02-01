@@ -22,4 +22,5 @@ namespace std {
   };
 
 }
+
 #endif

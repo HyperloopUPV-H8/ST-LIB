@@ -1,5 +1,4 @@
 #pragma once
-
 #include "stm32h7xx_hal.h"
 
 #include "lwip/pbuf.h"
@@ -15,6 +14,7 @@
 
 #ifdef HAL_ETH_MODULE_ENABLED
 
+
 using std::stringstream;
 using std::getline;
 
@@ -27,4 +27,5 @@ public:
 	IPV4(string address);
 
 };
+
 #endif

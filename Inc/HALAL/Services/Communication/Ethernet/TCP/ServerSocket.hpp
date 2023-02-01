@@ -10,6 +10,7 @@
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
+
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
 class ServerSocket{

@@ -13,6 +13,7 @@
 #include "lwip.h"
 #include "ethernetif.h"
 #ifdef HAL_ETH_MODULE_ENABLED
+
 #define ETHERNET_POOLS_BASE_ADDRESS 0x30000000
 
 class Ethernet{

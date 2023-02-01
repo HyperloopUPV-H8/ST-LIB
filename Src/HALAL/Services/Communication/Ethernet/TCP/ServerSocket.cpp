@@ -6,7 +6,6 @@
  */
 
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
-
 #ifdef HAL_ETH_MODULE_ENABLED
 
 uint8_t ServerSocket::priority = 0;
