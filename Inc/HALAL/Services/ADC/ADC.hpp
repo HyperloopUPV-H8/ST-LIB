@@ -8,6 +8,7 @@
 #pragma once
 #include "PinModel/Pin.hpp"
 #include "LowPowerTimer/LowPowerTimer.hpp"
+#include "DMA/DMA.hpp"
 
 #if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
 
@@ -28,8 +29,9 @@ public:
 		uint32_t resolution;
 		uint32_t external_trigger;
 		vector<uint32_t> channels;
+		DMA::Stream dma_stream;
 		InitData() = default;
-		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels);
+		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream);
 	};
 
 	class Peripheral {
@@ -65,7 +67,7 @@ public:
 private:
 	static uint32_t ranks[16];
 	static Peripheral peripherals[3];
-	static unordered_map<Pin, Instance> available_instances;
+	static map<Pin, Instance> available_instances;
 	static unordered_map<uint8_t, Instance> active_instances;
 	static uint8_t id_counter;
 
