@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef HAL_ETH_MODULE_ENABLED
+
 #include "stm32h7xx_hal.h"
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
@@ -12,6 +12,8 @@
 #include "netif/etharp.h"
 #include "timeouts.h"
 #include "C++Utilities/CppUtils.hpp"
+
+#ifdef HAL_ETH_MODULE_ENABLED
 
 using std::stringstream;
 using std::getline;

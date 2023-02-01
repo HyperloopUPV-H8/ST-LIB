@@ -4,8 +4,9 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
-#ifdef HAL_ETH_MODULE_ENABLED
+
 #include "Communication/Ethernet/TCP/Socket.hpp"
+#ifdef HAL_ETH_MODULE_ENABLED
 
 unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
 

@@ -6,7 +6,10 @@
  */
 
 #include "Communication/Ethernet/Ethernet.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
+
 #ifdef HAL_ETH_MODULE_ENABLED
+
 extern uint32_t EthernetLinkTimer;
 extern struct netif gnetif;
 extern ip4_addr_t ipaddr,netmask,gw;
@@ -55,7 +58,7 @@ void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway){
 		MX_LWIP_Init();
 		is_running = true;
 	}else{
-		//TODO: Error Handler
+		ErrorHandler("Unable to start Ethernet!", "");
 	}
 }
 
@@ -75,7 +78,7 @@ void Ethernet::inscribe(){
 		SCB_EnableDCache();
 		is_ready = true;
 	}else{
-		//TODO: Error Handler
+		ErrorHandler("Unable to inscribe Ethernet because is not ready!", "");
 	}
 }
 
@@ -93,7 +96,7 @@ void Ethernet::update(){
 		 netif_set_up(&gnetif);
 		}
 	}else{
-		//TODO: Error Handler;
+		ErrorHandler("Unable to update Ethernet because is not running!", "");
 	}
 }
 #endif
