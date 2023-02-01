@@ -8,6 +8,7 @@
 #pragma once
 #include <map>
 #include <cstring>
+#include <string>
 
 
 #include "stm32h7xx_hal.h"
@@ -16,19 +17,18 @@
 
 using std::reference_wrapper;
 using std::map;
+using std::string;
 
 class LowPowerTimer {
 public:
 	LPTIM_TypeDef& instance;
 	LPTIM_HandleTypeDef& handle;
 	uint16_t period;
+	string name;
 
 	LowPowerTimer() = default;
-	LowPowerTimer(LPTIM_TypeDef& instance, LPTIM_HandleTypeDef& handle, uint16_t period) :
-		instance(instance), handle(handle), period(period) {};
-
-	const char* to_string() const;
-	static const map<LPTIM_TypeDef*, const char*> lptim_to_string;
+	LowPowerTimer(LPTIM_TypeDef& instance, LPTIM_HandleTypeDef& handle, uint16_t period, string name) :
+		instance(instance), handle(handle), period(period), name(name) {};
 
 	void init();
 };

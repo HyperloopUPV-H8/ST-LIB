@@ -7,14 +7,6 @@
 
 #include "LowPowerTimer/LowPowerTimer.hpp"
 
-using std::strcat;
-
-const map<LPTIM_TypeDef*, const char*> lptim_to_string = {
-	{LPTIM1, "LPTIM1"},
-	{LPTIM2, "LPTIM2"},
-	{LPTIM3, "LPTIM3"}
-};
-
 void LowPowerTimer::init() {
 	handle.Instance = &instance;
 	handle.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
@@ -29,8 +21,4 @@ void LowPowerTimer::init() {
 	if (HAL_LPTIM_Init(&handle) != HAL_OK) {
 	  //TODO: Error Handler
 	}
-}
-
-const char* LowPowerTimer::to_string() const {
-	return lptim_to_string.at(&instance);
 }
