@@ -37,16 +37,6 @@ void TimerPeripheral::init() {
 		handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
 		if (!init_data.input_capture_channels.empty()) {
-			if (HAL_TIM_Base_Init(handle) != HAL_OK)
-			{
-				ErrorHandler("Unable to init base clock on %d", name.c_str());
-			}
-			sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-			if (HAL_TIM_ConfigClockSource(handle, &sClockSourceConfig) != HAL_OK)
-			{
-				ErrorHandler("Unable to config clock source on %d", name.c_str());
-			}
-
 			if (HAL_TIM_IC_Init(handle) != HAL_OK)
 			{
 				ErrorHandler("Unable to init input capture on %d", name.c_str());
