@@ -147,7 +147,7 @@ public:
 	 * @return bool Returns true if the data have been read successfully.
 	 * 			    Returns false if a problem has occurred.
 	 */
-    static bool command_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
+    static bool transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
 
     /**
      * @brief This method sets chip select to high level.

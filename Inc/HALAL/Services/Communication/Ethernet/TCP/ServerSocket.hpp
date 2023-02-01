@@ -5,6 +5,7 @@
  *      Author: stefa
  */
 #pragma once
+
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
@@ -74,12 +75,12 @@ bool ServerSocket::send_order(Order<Type,Types...>& order){
 	}
 
 	order.build();
-	if(order.bffr_size > tcp_sndbuf(client_control_block)){
+	if(order.buffer_size > tcp_sndbuf(client_control_block)){
 		return false;
 	}
 
-	tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.bffr_size, PBUF_POOL);
-	pbuf_take(tx_packet_buffer, order.bffr, order.bffr_size);
+	tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.buffer_size, PBUF_POOL);
+	pbuf_take(tx_packet_buffer, order.buffer, order.buffer_size);
 	send();
 	return true;
 }

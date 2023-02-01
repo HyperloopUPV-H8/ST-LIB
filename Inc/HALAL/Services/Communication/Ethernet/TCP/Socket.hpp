@@ -5,6 +5,7 @@
  *      Author: stefa
  */
 #pragma once
+
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"

@@ -6,6 +6,7 @@
  */
 
 #pragma once
+
 #include "C++Utilities/CppUtils.hpp"
 #include "PinModel/Pin.hpp"
 #include "EthernetNode.hpp"
@@ -28,4 +29,5 @@ public:
 private:
 	static void mpu_start();
 };
+
 #endif

@@ -40,6 +40,10 @@ private:
 
     };
 
+    static UART_HandleTypeDef* get_handle(uint8_t id);
+
+public:
+
     /**
      * @brief Enum which abstracts the use of the Instance struct to facilitate the mocking of the HALAL.Struct
      *
@@ -57,9 +61,6 @@ private:
 		peripheral10 = 9
     };
 
-    static UART_HandleTypeDef* get_handle(uint8_t id);
-
-public:
     static uint16_t id_counter;
     
     static unordered_map<uint8_t, UART::Instance*> registered_uart;

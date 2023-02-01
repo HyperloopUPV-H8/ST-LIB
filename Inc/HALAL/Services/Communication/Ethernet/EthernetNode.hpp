@@ -1,7 +1,9 @@
 #pragma once
 
 #include "IPV4/IPV4.hpp"
+
 #ifdef HAL_ETH_MODULE_ENABLED
+
 struct EthernetNode{
 	IPV4 ip;
 	uint32_t port;
