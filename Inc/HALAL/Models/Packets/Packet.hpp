@@ -25,7 +25,7 @@ public:
     void calculate_sizes(bool& has_container_values , size_t& bffr_size) {}
     void load_data(uint8_t* new_data, size_t& ptr_loc) {}
 
-    static decltype(id) get_id(uint8_t* new_data) {
+    static uint16_t get_id(uint8_t* new_data) {
         return *(decltype(id)*)new_data;
     }
 };
@@ -223,7 +223,7 @@ void Packet<Type, Types...>::save_data(uint8_t * new_data) {
 
 
 template<class Type, class... Types>
-decltype(Packet<Type, Types...>::id) Packet<Type, Types...>::get_id() {
+uint16_t Packet<Type, Types...>::get_id() {
     return this->id;
 }
 
