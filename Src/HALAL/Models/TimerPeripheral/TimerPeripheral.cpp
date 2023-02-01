@@ -12,9 +12,8 @@ TimerPeripheral::InitData::InitData(
 		timer(timer),
 		prescaler(prescaler),
 		period(period),
-		deadtime(deadtime),
-		pwm_channels({}),
-		input_capture_channels({}) {}
+		deadtime(deadtime)
+		{}
 
 TimerPeripheral::TimerPeripheral(
 		TIM_HandleTypeDef* handle, InitData init_data, string name) :
@@ -23,6 +22,7 @@ TimerPeripheral::TimerPeripheral(
 		name(name){}
 
 void TimerPeripheral::init() {
+		TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 		TIM_MasterConfigTypeDef sMasterConfig = {0};
 		TIM_IC_InitTypeDef sConfigIC = {0};
 		TIM_OC_InitTypeDef sConfigOC = {0};
@@ -35,15 +35,50 @@ void TimerPeripheral::init() {
 		handle->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 		handle->Init.RepetitionCounter = 0;
 		handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+
+		if (!init_data.input_capture_channels.empty()) {
+			if (HAL_TIM_Base_Init(handle) != HAL_OK)
+			{
+				ErrorHandler("Unable to init base clock on %d", name.c_str());
+			}
+			sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+			if (HAL_TIM_ConfigClockSource(handle, &sClockSourceConfig) != HAL_OK)
+			{
+				ErrorHandler("Unable to config clock source on %d", name.c_str());
+			}
+
+			if (HAL_TIM_IC_Init(handle) != HAL_OK)
+			{
+				ErrorHandler("Unable to init input capture on %d", name.c_str());
+			}
+		}
+
 		if (HAL_TIM_PWM_Init(handle) != HAL_OK) {
-			//TODO: error handler
+			ErrorHandler("Unable to init PWM on %d", name.c_str());
 		}
 		sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
 		sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
 		sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
 		if (HAL_TIMEx_MasterConfigSynchronization(handle, &sMasterConfig) != HAL_OK) {
-			//TODO: error handler
+			ErrorHandler("Unable to configure master synchronization on %d", name.c_str());
 		}
+
+		sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+		sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+		sConfigIC.ICFilter = 0;
+		for (pair<uint32_t, uint32_t> channels_rising_falling : init_data.input_capture_channels) {
+			sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+			if (HAL_TIM_IC_ConfigChannel(handle, &sConfigIC, channels_rising_falling.first) != HAL_OK) {
+				ErrorHandler("Unable to configure a IC channel on %d", name.c_str());
+			}
+
+			sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+			sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+			if (HAL_TIM_IC_ConfigChannel(handle, &sConfigIC, channels_rising_falling.second) != HAL_OK) {
+				ErrorHandler("Unable to configure a IC channel on %d", name.c_str());
+			}
+		}
+
 		sConfigOC.OCMode = TIM_OCMODE_PWM1;
 		sConfigOC.Pulse = 0;
 		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
@@ -54,7 +89,7 @@ void TimerPeripheral::init() {
 
 		for (uint32_t channel : init_data.pwm_channels) {
 			if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, channel) != HAL_OK) {
-				//TODO: Error handler
+				ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());
 			}
 		}
 
@@ -70,23 +105,10 @@ void TimerPeripheral::init() {
 		sBreakDeadTimeConfig.Break2Filter = 0;
 		sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
 		if (HAL_TIMEx_ConfigBreakDeadTime(handle, &sBreakDeadTimeConfig) != HAL_OK) {
-			//TODO: Error Handler
+			ErrorHandler("Unable to configure break dead time on %d", name.c_str());
 		}
 
-		sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-		sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-		sConfigIC.ICFilter = 0;
-		for (pair<uint32_t, uint32_t> channels_rising_falling : init_data.input_capture_channels) {
-			sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-			if (HAL_TIM_IC_ConfigChannel(handle, &sConfigIC, channels_rising_falling.first) != HAL_OK) {
-				//TODO: Error handler
-			}
 
-			sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-			if (HAL_TIM_IC_ConfigChannel(handle, &sConfigIC, channels_rising_falling.second) != HAL_OK) {
-				//TODO: Error handler
-			}
-		}
 }
 
 void TimerPeripheral::start() {
