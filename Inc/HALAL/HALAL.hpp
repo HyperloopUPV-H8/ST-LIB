@@ -1,5 +1,7 @@
 #pragma once
 
+#include "HALconfig/HALconfig.hpp"
+#include "DMA/DMA.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
 #include "DigitalInputService/DigitalInputService.hpp"
 #include "Flash/Flash.hpp"
@@ -18,3 +20,7 @@
 #include "Communication/Ethernet/Ethernet.hpp"
 #include "Communication/FDCAN/FDCAN.hpp"
 #include "CORDIC/CORDIC.hpp"
+
+namespace HALAL {
+	void start(TARGET target, string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral);
+}

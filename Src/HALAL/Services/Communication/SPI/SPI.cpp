@@ -9,7 +9,7 @@
 #ifdef HAL_SPI_MODULE_ENABLED
 
 
-unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi = {};
+unordered_map<uint8_t, SPI::Instance*> SPI::registered_spi = {};
 
 uint16_t SPI::id_counter = 0;
 
@@ -77,7 +77,7 @@ bool SPI::receive(uint8_t id, span<uint8_t> data) {
         return true;
     };
 
-bool SPI::command_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data){
+bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data){
 	 if (!SPI::registered_spi.contains(id))
 	        return false; //TODO: Error handler
 

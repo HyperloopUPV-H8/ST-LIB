@@ -15,3 +15,8 @@
 #include "Sensors/LinearSensor/LinearSensor.hpp"
 #include "Sensors/LookupSensor/LookupSensor.hpp"
 #include "Sensors/EncoderSensor/EncoderSensor.hpp"
+
+class STLIB_LOW {
+public:
+	static void start();
+};
