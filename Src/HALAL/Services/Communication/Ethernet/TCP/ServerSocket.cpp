@@ -4,8 +4,10 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
-#ifdef HAL_ETH_MODULE_ENABLED
+
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
+
+#ifdef HAL_ETH_MODULE_ENABLED
 
 uint8_t ServerSocket::priority = 0;
 unordered_map<uint32_t,ServerSocket*> ServerSocket::listening_sockets = {};
