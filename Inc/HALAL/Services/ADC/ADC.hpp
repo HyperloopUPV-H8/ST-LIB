@@ -6,11 +6,15 @@
  */
 
 #pragma once
+#include <string>
+
 #include "PinModel/Pin.hpp"
 #include "LowPowerTimer/LowPowerTimer.hpp"
 #include "DMA/DMA.hpp"
 
 #if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
+
+using std::string;
 
 #define ADC_BUF_LEN 16
 #define LPTIM1_PERIOD 3000
@@ -30,8 +34,10 @@ public:
 		uint32_t external_trigger;
 		vector<uint32_t> channels;
 		DMA::Stream dma_stream;
+		string name;
+
 		InitData() = default;
-		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream);
+		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream, string name);
 	};
 
 	class Peripheral {
