@@ -23,3 +23,7 @@ void SensorInterrupt::read(){
 		*value = OFF;
 	}
 }
+
+uint8_t SensorInterrupt::get_id(){
+	return id;
+}
