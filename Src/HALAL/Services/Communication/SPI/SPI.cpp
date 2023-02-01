@@ -9,7 +9,7 @@
 #ifdef HAL_SPI_MODULE_ENABLED
 
 
-unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi;
+unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi = {};
 
 uint16_t SPI::id_counter = 0;
 
@@ -39,39 +39,81 @@ void SPI::start(){
 	}
 }
 
-bool SPI::transmit_next_packet(uint8_t id, RawPacket& packet){
-    if (!SPI::registered_spi.contains(id))
+bool SPI::transmit(uint8_t id, uint8_t data){
+	array<uint8_t, 1> data_array = {data};
+	return SPI::transmit(id, data_array);
+}
+
+bool SPI::transmit(uint8_t id, span<uint8_t> data) {
+    if (!SPI::registered_spi.contains(id)) {
         return false; //TODO: Error handler
+    }
 
     SPI::Instance* spi = SPI::registered_spi[id];
 
-    HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
-    if (HAL_SPI_Transmit(spi->hspi, packet.get_data(), packet.get_size(), 10) != HAL_OK){
-    	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
-        return false; //TODO: Warning, Error during transmision
+    turn_off_chip_select(spi);
+    if (HAL_SPI_Transmit(spi->hspi, data.data(), data.size(), 10) != HAL_OK){
+    	turn_on_chip_select(spi);
+    	return false; //TODO: Warning, Error during transmision
     }
-    HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
+	turn_on_chip_select(spi);
 
     return true;
 }
 
-bool SPI::receive_next_packet(uint8_t id, RawPacket& packet){
-    if (!SPI::registered_spi.contains(id))
-        return false; //TODO: Error handler
+bool SPI::receive(uint8_t id, span<uint8_t> data) {
+        if (!SPI::registered_spi.contains(id))
+            return false; //TODO: Error handler
 
-    SPI::Instance* spi = SPI::registered_spi[id];
+        SPI::Instance* spi = SPI::registered_spi[id];
 
-    *packet.get_data() = 0;
+    	turn_off_chip_select(spi);
+        if (HAL_SPI_Receive(spi->hspi, data.data(), data.size(), 10) != HAL_OK) {
+        	turn_on_chip_select(spi);
+            return false; //TODO: Warning, Error during receive
+        }
+    	turn_on_chip_select(spi);
 
-    HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
-    if (HAL_SPI_Receive(spi->hspi, packet.get_data(), packet.get_size(), 10) != HAL_OK) {
-    	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
-        return false; //TODO: Warning, Error during receive
-    }
-    HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
+        return true;
+    };
 
-    return true;
+bool SPI::command_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data){
+	 if (!SPI::registered_spi.contains(id))
+	        return false; //TODO: Error handler
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+
+	turn_off_chip_select(spi);
+	if (HAL_SPI_Transmit(spi->hspi, command_data.data(), command_data.size(), 10) != HAL_OK){
+    	turn_on_chip_select(spi);
+		return false; //TODO: Warning, Error during transmision
+	}
+
+	if (HAL_SPI_Receive(spi->hspi, receive_data.data(), receive_data.size(), 10) != HAL_OK) {
+    	turn_on_chip_select(spi);
+		return false; //TODO: Warning, Error during receive
+	}
+	turn_on_chip_select(spi);
+
+	return true;
 }
+
+void SPI::chip_select_on(uint8_t id){
+	if (!SPI::registered_spi.contains(id))
+		return; //TODO: Error handler
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+	turn_on_chip_select(spi);
+}
+
+void SPI::chip_select_off(uint8_t id){
+	if (!SPI::registered_spi.contains(id))
+		return; //TODO: Error handler
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+	turn_off_chip_select(spi);
+}
+
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
     //TODO: Fault, SPI error
@@ -119,5 +161,14 @@ void SPI::init(SPI::Instance* spi){
 
 	spi->initialized = true;
 }
-#endif
 
+
+void SPI::turn_on_chip_select(SPI::Instance* spi) {
+	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
+}
+
+void SPI::turn_off_chip_select(SPI::Instance* spi) {
+	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
+}
+
+#endif

@@ -2248,7 +2248,7 @@ __STATIC_FORCEINLINE void SCB_EnableICache (void)
     SCB->ICIALLU = 0UL;                     /* invalidate I-Cache */
     __DSB();
     __ISB();
-    SCB->CCR |=  (uint32_t)SCB_CCR_IC_Msk;  /* enable I-Cache */
+    SCB->CCR = SCB->CCR |  (uint32_t)SCB_CCR_IC_Msk;  /* enable I-Cache */
     __DSB();
     __ISB();
   #endif
@@ -2264,7 +2264,7 @@ __STATIC_FORCEINLINE void SCB_DisableICache (void)
   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
     __DSB();
     __ISB();
-    SCB->CCR &= ~(uint32_t)SCB_CCR_IC_Msk;  /* disable I-Cache */
+    SCB->CCR = SCB->CCR & ~(uint32_t)SCB_CCR_IC_Msk;  /* disable I-Cache */
     SCB->ICIALLU = 0UL;                     /* invalidate I-Cache */
     __DSB();
     __ISB();
@@ -2350,7 +2350,7 @@ __STATIC_FORCEINLINE void SCB_EnableDCache (void)
     } while(sets-- != 0U);
     __DSB();
 
-    SCB->CCR |=  (uint32_t)SCB_CCR_DC_Msk;  /* enable D-Cache */
+    SCB->CCR = SCB->CCR |  (uint32_t)SCB_CCR_DC_Msk;  /* enable D-Cache */
 
     __DSB();
     __ISB();
@@ -2372,7 +2372,7 @@ __STATIC_FORCEINLINE void SCB_DisableDCache (void)
     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
     __DSB();
 
-    SCB->CCR &= ~(uint32_t)SCB_CCR_DC_Msk;  /* disable D-Cache */
+    SCB->CCR = SCB->CCR & ~(uint32_t)SCB_CCR_DC_Msk;  /* disable D-Cache */
     __DSB();
 
     ccsidr = SCB->CCSIDR;

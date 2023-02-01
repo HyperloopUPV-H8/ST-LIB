@@ -4,7 +4,10 @@
  *  Created on: 2 nov. 2022
  *      Author: stefa
  */
+
 #include "Communication/Ethernet/UDP/DatagramSocket.hpp"
+
+#ifdef HAL_ETH_MODULE_ENABLED
 
 DatagramSocket::DatagramSocket() = default;
 

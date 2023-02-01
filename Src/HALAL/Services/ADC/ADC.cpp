@@ -6,14 +6,17 @@
  */
 
 #include "ADC/ADC.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
+
+#if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
 
 extern ADC_HandleTypeDef hadc3;
 
 uint8_t ADC::id_counter = 0;
-map<uint8_t, ADC::Instance> ADC::active_instances = {};
+unordered_map<uint8_t, ADC::Instance> ADC::active_instances = {};
 
-ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels) :
-		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels) {}
+ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream) :
+		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels), dma_stream(dma_stream) {}
 
 ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data) :
 	handle(handle), dma_stream(dma_stream), timer(timer), init_data(init_data) {}
@@ -34,6 +37,7 @@ optional<uint8_t> ADC::inscribe(Pin pin) {
 	active_instances[id_counter] = available_instances[pin];
 
 	InitData& init_data = active_instances[id_counter].peripheral->init_data;
+	DMA::inscribe_stream(init_data.dma_stream);
 	active_instances[id_counter].rank = init_data.channels.size();
 	init_data.channels.push_back(active_instances[id_counter].channel);
 	return id_counter++;
@@ -59,12 +63,14 @@ void ADC::turn_on(uint8_t id){
 
 	uint32_t buffer_length = peripheral->init_data.channels.size();
 	if (HAL_ADC_Start_DMA(peripheral->handle, (uint32_t*) peripheral->dma_stream, buffer_length) != HAL_OK) {
-		return; //TODO: Error handler
+		ErrorHandler("DMA %d of ADC %d did not start correctly", peripheral->dma_stream, id);
+		return;
 	}
 
 	LowPowerTimer& timer = peripheral->timer;
-	if (HAL_LPTIM_TimeOut_Start_IT(timer.handle, timer.period, timer.period / 2) != HAL_OK) {
-		return; //TODO: Error handler
+	if (HAL_LPTIM_TimeOut_Start_IT(&timer.handle, timer.period, timer.period / 2) != HAL_OK) {
+		ErrorHandler("LPTIM %d of ADC %d did not start correctly", timer.instance, id);
+		return;
 	}
 	peripheral->is_on = true;
 }
@@ -86,49 +92,75 @@ optional<float> ADC::get_value(uint8_t id) {
 	return nullopt;
 }
 
-void ADC::init(Peripheral& peripheral) {
-	  ADC_MultiModeTypeDef multimode = {0};
-	  ADC_ChannelConfTypeDef sConfig = {0};
-	  ADC_HandleTypeDef& adc_handle = *peripheral.handle;
-	  InitData init_data = peripheral.init_data;
+optional<uint16_t> ADC::get_int_value(uint8_t id) {
+	if (not active_instances.contains(id)) {
+		return nullopt;
+	}
 
-	  adc_handle.Instance = init_data.adc;
-	  adc_handle.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-	  adc_handle.Init.Resolution = init_data.resolution;
-	  adc_handle.Init.ScanConvMode = ADC_SCAN_ENABLE;
-	  adc_handle.Init.EOCSelection = ADC_EOC_SEQ_CONV;
-	  adc_handle.Init.LowPowerAutoWait = DISABLE;
-	  adc_handle.Init.ContinuousConvMode = DISABLE;
-	  adc_handle.Init.NbrOfConversion = init_data.channels.size();
-	  adc_handle.Init.DiscontinuousConvMode = DISABLE;
-	  adc_handle.Init.ExternalTrigConv = init_data.external_trigger;
-	  adc_handle.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
-	  adc_handle.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR;
-	  adc_handle.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-	  adc_handle.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
-	  adc_handle.Init.OversamplingMode = DISABLE;
-	  if (HAL_ADC_Init(&adc_handle) != HAL_OK) {
-	    //TODO: Error handler
-	  }
-
-	  multimode.Mode = ADC_MODE_INDEPENDENT;
-	  if (HAL_ADCEx_MultiModeConfigChannel(&adc_handle, &multimode) != HAL_OK) {
-	    //TODO: Error handler
-	  }
-
-
-	  uint8_t counter = 0;
-	  for(uint32_t channel : peripheral.init_data.channels) {
-		  sConfig.Channel = channel;
-	  	  sConfig.Rank = ranks[counter];
-	  	  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-	  	  sConfig.SingleDiff = ADC_SINGLE_ENDED;
-	  	  sConfig.OffsetNumber = ADC_OFFSET_NONE;
-	  	  sConfig.Offset = 0;
-	  	  sConfig.OffsetSignedSaturation = DISABLE;
-	  	  if (HAL_ADC_ConfigChannel(&adc_handle, &sConfig) != HAL_OK) {
-	  		  //TODO: Error handler
-	  	  }
-	  	  counter++;
-	  }
+	Instance& instance = active_instances[id];
+	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
+	if(instance.peripheral->handle == &hadc3) {
+		return raw << 4;
+	}
+	else {
+		return raw;
+	}
 }
+
+void ADC::init(Peripheral& peripheral) {
+	ADC_MultiModeTypeDef multimode = {0};
+	ADC_ChannelConfTypeDef sConfig = {0};
+	ADC_HandleTypeDef& adc_handle = *peripheral.handle;
+	InitData init_data = peripheral.init_data;
+
+	adc_handle.Instance = init_data.adc;
+	adc_handle.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+	adc_handle.Init.Resolution = init_data.resolution;
+	adc_handle.Init.ScanConvMode = ADC_SCAN_ENABLE;
+	adc_handle.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+	adc_handle.Init.LowPowerAutoWait = DISABLE;
+	adc_handle.Init.ContinuousConvMode = DISABLE;
+	adc_handle.Init.NbrOfConversion = init_data.channels.size();
+	adc_handle.Init.DiscontinuousConvMode = DISABLE;
+	adc_handle.Init.ExternalTrigConv = init_data.external_trigger;
+	adc_handle.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
+	if (adc_handle.Instance == ADC3) {
+		adc_handle.Init.DMAContinuousRequests = ENABLE;
+	} else {
+		adc_handle.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR;
+	}
+	adc_handle.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+	adc_handle.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
+	adc_handle.Init.OversamplingMode = DISABLE;
+	if (HAL_ADC_Init(&adc_handle) != HAL_OK) {
+		ErrorHandler("ADC %d did not start correctly", adc_handle);
+		return;
+	}
+
+	multimode.Mode = ADC_MODE_INDEPENDENT;
+	if(adc_handle.Instance == ADC1){
+		if (HAL_ADCEx_MultiModeConfigChannel(&adc_handle, &multimode) != HAL_OK) {
+			ErrorHandler("ADC MultiModeConfigChannel %d did not start correctly", adc_handle);
+			return;
+		}
+	}
+
+	uint8_t counter = 0;
+	for(uint32_t channel : peripheral.init_data.channels) {
+	  sConfig.Channel = channel;
+	  sConfig.Rank = ranks[counter];
+	  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+	  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+	  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+	  sConfig.Offset = 0;
+	  sConfig.OffsetSignedSaturation = DISABLE;
+	  if (HAL_ADC_ConfigChannel(&adc_handle, &sConfig) != HAL_OK) {
+		ErrorHandler("ADC ConfigChannel %d did not start correctly", adc_handle);
+	  }
+	  counter++;
+	}
+
+	  peripheral.timer.init();
+}
+
+#endif

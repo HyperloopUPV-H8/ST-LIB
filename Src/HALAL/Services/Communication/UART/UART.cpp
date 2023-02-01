@@ -6,7 +6,9 @@
  */
 #include "Communication/UART/UART.hpp"
 
-unordered_map<uint8_t, UART::Instance* > UART::registered_uart;
+#ifdef HAL_UART_MODULE_ENABLED
+
+unordered_map<uint8_t, UART::Instance* > UART::registered_uart = {};
 
 uint16_t UART::id_counter = 0;
 
@@ -28,7 +30,7 @@ optional<uint8_t> UART::inscribe(UART::Peripheral& uart){
 }
 
 void UART::start(){
-		for(auto iter: UART::registered_uart){
+		for(auto iter : UART::registered_uart){
 			UART::init(iter.second);
 		}
 }
@@ -38,7 +40,28 @@ bool UART::transmit(uint8_t id, uint8_t data){
     return transmit(id, arr);
 }
 
+bool UART::transmit(uint8_t id, span<uint8_t> data){
+    if (not UART::registered_uart.contains(id))
+        return false; //TODO: Error handler
+
+    UART_HandleTypeDef* handle = get_handle(id);
+
+    if((handle->ErrorCode & TXBUSYMASK) == 1)
+       return false;
+
+    if (HAL_UART_Transmit_DMA(handle, data.data(), data.size()) != HAL_OK){
+        return false; //TODO: Warning, Error during transmision
+    }
+
+    return true;
+}
+
 bool UART::transmit_polling(uint8_t id, uint8_t data){
+	array<uint8_t, 1> arr {data};
+    return transmit_polling(id, arr);
+}
+
+bool UART::transmit_polling(uint8_t id, span<uint8_t> data){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -47,30 +70,14 @@ bool UART::transmit_polling(uint8_t id, uint8_t data){
     if((handle->ErrorCode & TXBUSYMASK) == 1)
        return false;
 
-    if (HAL_UART_Transmit(handle, &data, 1, 10) != HAL_OK){
+    if (HAL_UART_Transmit(handle, data.data(), data.size(), 10) != HAL_OK){
         return false; //TODO: Warning, Error during transmision
     }
 
     return true;
 }
 
-bool UART::transmit_polling(uint8_t id, uint8_t* data, int16_t size){
-    if (not UART::registered_uart.contains(id))
-        return false; //TODO: Error handler
-
-    UART_HandleTypeDef* handle = get_handle(id);
-
-    if((handle->ErrorCode & TXBUSYMASK) == 1)
-       return false;
-
-    if (HAL_UART_Transmit(handle, data, size, 10) != HAL_OK){
-        return false; //TODO: Warning, Error during transmision
-    }
-
-    return true;
-}
-
-bool UART::receive(uint8_t id, uint8_t* data, uint16_t size){
+bool UART::receive(uint8_t id, span<uint8_t> data){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -80,7 +87,7 @@ bool UART::receive(uint8_t id, uint8_t* data, uint16_t size){
        return false;
 
 
-    if (HAL_UART_Receive_DMA(uart->huart, data, size) != HAL_OK) {
+    if (HAL_UART_Receive_DMA(uart->huart, data.data(), data.size()) != HAL_OK) {
         return false; //TODO: Warning, Error during receive
     }
 
@@ -89,7 +96,7 @@ bool UART::receive(uint8_t id, uint8_t* data, uint16_t size){
     return true;
 }
 
-bool UART::receive_polling(uint8_t id, uint8_t* data, uint16_t size){
+bool UART::receive_polling(uint8_t id, span<uint8_t> data){
     if (not UART::registered_uart.contains(id))
         return false; //TODO: Error handler
 
@@ -99,7 +106,7 @@ bool UART::receive_polling(uint8_t id, uint8_t* data, uint16_t size){
        return false;
 
 
-    if (HAL_UART_Receive(handle, data, size, 10) != HAL_OK) {
+    if (HAL_UART_Receive(handle, data.data(), data.size(), 10) != HAL_OK) {
         return false; //TODO: Warning, Error during receive
     }
 
@@ -154,18 +161,17 @@ bool UART::set_up_printf(UART::Peripheral& uart){
 		UART::printf_ready = true;
 
 		return UART::printf_ready;
-	}
+}
 
-void UART::print_by_uart(string str, int len) {
+void UART::print_by_uart(char* ptr, int len) {
 		if (!UART::printf_ready) {
 			return;
 		}
 
-		vector<uint8_t> myVector(str.begin(), str.end());
-		uint8_t *ptr = &myVector[0];
-		UART::transmit_polling(UART::printf_uart, ptr, static_cast<uint16_t>(len));
-}
+		vector<uint8_t> data(ptr, ptr+len);
 
+		UART::transmit_polling(UART::printf_uart, data);
+}
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *uart){
     //TODO: Fault, UART error
@@ -218,9 +224,15 @@ UART_HandleTypeDef* UART::get_handle(uint8_t id) {
 extern "C" {
 #endif
 
-int _write(int file, string str, int len) {
+int _write(int file, char* str, int len) {
 
-    UART::print_by_uart(str, len);
+	UART::print_by_uart(str , len);
+	if (*str == '\n') {
+		char retorno[1] = {'\r'};
+		UART::print_by_uart(retorno, 1);
+	}
+
+
     return len;
 }
 

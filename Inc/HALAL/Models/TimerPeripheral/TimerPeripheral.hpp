@@ -28,10 +28,11 @@ public:
 
 	TIM_HandleTypeDef* handle;
 	InitData init_data;
+	string name;
 	static vector<reference_wrapper<TimerPeripheral>> timers;
 
 	TimerPeripheral() = default;
-	TimerPeripheral(TIM_HandleTypeDef* handle, InitData init_data);
+	TimerPeripheral(TIM_HandleTypeDef* handle, InitData init_data, string name);
 
 	static void start();
 
@@ -40,4 +41,4 @@ public:
 
 };
 
-#endif HAL_TIM_MODULE_ENABLED
+#endif

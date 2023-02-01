@@ -1,7 +1,14 @@
 #Ignore compiler output
 Debug/
 Release/
+.settings/
+build/
+compile_commands.json
 
 #Ignore test folder
 Pruebas/
 PRUEBAS/
+
+#Ignore ccls cache
+.ccls-cache/
+.settings

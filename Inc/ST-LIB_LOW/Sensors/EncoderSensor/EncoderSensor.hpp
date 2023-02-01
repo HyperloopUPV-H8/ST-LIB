@@ -7,20 +7,21 @@
  */
 
 #pragma once
-#include "ST-LIB.hpp"
-#include "Sensors/Sensor/Sensor.hpp"
+#include "Encoder/Encoder.hpp"
+#include "Time/Time.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 #define COUNTER_DISTANCE_IN_METERS 0.025
 #define NANO_SECOND 1000000000.0
-#define N_FRAMES 5
+#define N_FRAMES 8
 #define FRAME_SIZE_IN_SECONDS 0.01
-#define START_COUNTER 32768
+#define START_COUNTER UINT16_MAX / 2
 #define CLOCK_MAX_VALUE 4294967295 //here goes the tim2 counter period
 
 
 
-class EncoderSensor : public Sensor<double>::Sensor{
+class EncoderSensor{
 public:
-	EncoderSensor(Pin pin1, Pin pin2, double* position, double* speed, double* acceleration);
+	EncoderSensor(Pin pin1, Pin pin2, double* position, double* direction, double* speed, double* acceleration);
 	void start();
 	void read();
 	uint8_t get_id();
@@ -31,6 +32,7 @@ protected:
 	Pin pin2;
 	uint8_t id;
 	double* position;
+	double* direction;
 	double* speed;
 	double* acceleration;
 	double time;
