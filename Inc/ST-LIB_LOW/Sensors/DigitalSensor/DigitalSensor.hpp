@@ -14,16 +14,14 @@
 
 class DigitalSensor{
 public:
-	DigitalSensor(Pin pin, PinState *value);
-	void exti_interruption(std::function<void()> &&action);
-	void start();
+	DigitalSensor(Pin &pin, PinState *value);
+	DigitalSensor(Pin &pin, PinState &value);
 	void read();
 	uint8_t get_id();
 
 protected:
-	Pin pin;
+	Pin &pin;
 	uint8_t id;
-	uint8_t exti_id;
 	PinState *value;
 };
 

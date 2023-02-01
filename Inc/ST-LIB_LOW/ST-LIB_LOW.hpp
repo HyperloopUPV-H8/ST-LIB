@@ -11,6 +11,7 @@
 #include "Math/Math.hpp"
 #include "Sensors/Sensor/Sensor.hpp"
 #include "Sensors/DigitalSensor/DigitalSensor.hpp"
+#include "Sensors/SensorInterrupt/SensorInterrupt.hpp"
 #include "Sensors/LinearSensor/LinearSensor.hpp"
 #include "Sensors/LookupSensor/LookupSensor.hpp"
 #include "Sensors/EncoderSensor/EncoderSensor.hpp"
