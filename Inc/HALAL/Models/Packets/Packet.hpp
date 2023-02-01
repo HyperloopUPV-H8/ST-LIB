@@ -86,7 +86,6 @@ public:
     size_t ptr_loc = sizeof(id);
     bool has_been_built = false;
     bool has_container_values = false;
-    base_type* parent_packet;
 };
 
 #if __cpp_deduction_guides >= 201606
@@ -110,7 +109,7 @@ Packet<Type, Types...>::Packet(uint16_t id, PacketValue<Type> value, PacketValue
 }
 
 template<class Type, class... Types>
-Packet<Type, Types...>::Packet(PacketValue<Type> value, PacketValue<Types>... args) : Packet<Types...>(args...), value(value), parent_packet(static_cast<base_type*>(this)) {}
+Packet<Type, Types...>::Packet(PacketValue<Type> value, PacketValue<Types>... args) : Packet<Types...>(args...), value(value) {}
 
 template<class Type, class... Types> template<int I>
 const auto& Packet<Type, Types...>::get() const {
@@ -148,7 +147,7 @@ void Packet<Type, Types...>::calculate_sizes(bool& has_container_values, size_t&
             has_container_values = true;
         }
         buffer_size += this->value.size();
-        parent_packet->calculate_sizes(has_container_values, buffer_size);
+        static_cast<base_type*>(this)->calculate_sizes(has_container_values, buffer_size);
     }
 }
 
@@ -166,7 +165,7 @@ void Packet<Type, Types...>::fill_buffer(uint8_t* buffer,size_t& ptr_loc) {
         using cast_type = remove_reference<decltype(this->value)>::type::value_type;
         *((cast_type*)(buffer + ptr_loc)) = *(this->value).convert();
         ptr_loc += this->value.size();
-        parent_packet->fill_buffer(buffer, ptr_loc);
+        static_cast<base_type*>(this)->fill_buffer(buffer, ptr_loc);
     }
 }
 
@@ -201,7 +200,7 @@ void Packet<Type, Types...>::load_data(uint8_t * new_data, size_t& ptr_loc) {
         using cast_type = remove_reference<decltype(this->value)>::type::value_type;
         this->value.load((cast_type*)(new_data + ptr_loc));
         ptr_loc += this->value.size();
-        parent_packet->load_data(new_data,ptr_loc);
+        static_cast<base_type*>(this)->load_data(new_data,ptr_loc);
     }
 }
 
@@ -239,7 +238,7 @@ void Packet<Type, Types...>::for_each(FunctionType& callback) {
     }
     else {
         callback(this->value);
-        parent_packet->for_each(callback);
+        static_cast<base_type*>(this)->for_each(callback);
     }
 }
 
@@ -254,6 +253,6 @@ void Packet<Type, Types...>::for_each(FunctionType&& callback) {
     }
     else {
         invoke(callback, this->value);
-        parent_packet->for_each(callback);
+        static_cast<base_type*>(this)->for_each(callback);
     }
 }

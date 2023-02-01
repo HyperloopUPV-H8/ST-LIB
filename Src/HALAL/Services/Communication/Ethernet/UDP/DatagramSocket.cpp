@@ -50,3 +50,4 @@ void DatagramSocket::receive_callback(void *args, struct udp_pcb *udp_control_bl
 	pbuf_free(packet_buffer);
 }
 
+#endif
