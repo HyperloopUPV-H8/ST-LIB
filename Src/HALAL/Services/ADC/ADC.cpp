@@ -15,8 +15,8 @@ extern ADC_HandleTypeDef hadc3;
 uint8_t ADC::id_counter = 0;
 unordered_map<uint8_t, ADC::Instance> ADC::active_instances = {};
 
-ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream) :
-		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels), dma_stream(dma_stream) {}
+ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream, string name) :
+		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels), dma_stream(dma_stream), name(name) {}
 
 ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data) :
 	handle(handle), dma_stream(dma_stream), timer(timer), init_data(init_data) {}
@@ -133,14 +133,14 @@ void ADC::init(Peripheral& peripheral) {
 	adc_handle.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
 	adc_handle.Init.OversamplingMode = DISABLE;
 	if (HAL_ADC_Init(&adc_handle) != HAL_OK) {
-		ErrorHandler("ADC %d did not start correctly", adc_handle);
+		ErrorHandler("ADC  - %d - did not start correctly", init_data.name);
 		return;
 	}
 
 	multimode.Mode = ADC_MODE_INDEPENDENT;
 	if(adc_handle.Instance == ADC1){
 		if (HAL_ADCEx_MultiModeConfigChannel(&adc_handle, &multimode) != HAL_OK) {
-			ErrorHandler("ADC MultiModeConfigChannel %d did not start correctly", adc_handle);
+			ErrorHandler("ADC MultiModeConfigChannel - %d - did not start correctly", init_data.name);
 			return;
 		}
 	}
@@ -155,7 +155,7 @@ void ADC::init(Peripheral& peripheral) {
 	  sConfig.Offset = 0;
 	  sConfig.OffsetSignedSaturation = DISABLE;
 	  if (HAL_ADC_ConfigChannel(&adc_handle, &sConfig) != HAL_OK) {
-		ErrorHandler("ADC ConfigChannel %d did not start correctly", adc_handle);
+		ErrorHandler("ADC ConfigChannel - %d - did not start correctly", init_data.name);
 	  }
 	  counter++;
 	}
