@@ -119,12 +119,13 @@ void Ethernet::update(){
 	if (HAL_GetTick() - EthernetLinkTimer >= 100) {
 		EthernetLinkTimer = HAL_GetTick();
 		ethernet_link_check_state(&gnetif);
-		}
 		
 		if(gnetif.flags == 15){
-		 netif_set_up(&gnetif);
+			netif_set_up(&gnetif);
 		}
-	}else{
+	}
+
+	else {
 		ErrorHandler("Unable to update Ethernet because is not running!");
 	}
 }
