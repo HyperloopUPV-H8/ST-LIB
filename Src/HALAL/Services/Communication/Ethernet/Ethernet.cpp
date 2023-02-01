@@ -58,11 +58,11 @@ void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway){
 		MX_LWIP_Init();
 		is_running = true;
 	}else{
-		ErrorHandler("Unable to start Ethernet!", "");
+		ErrorHandler("Unable to start Ethernet!");
 	}
 
 	if (not is_ready) {
-		ErrorHandler("Ethernet is not ready", 0);
+		ErrorHandler("Ethernet is not ready");
 		return;
 	}
 
@@ -89,7 +89,7 @@ void Ethernet::inscribe(){
 		SCB_EnableDCache();
 		is_ready = true;
 	}else{
-		ErrorHandler("Unable to inscribe Ethernet because is not ready!", "");
+		ErrorHandler("Unable to inscribe Ethernet because is already ready!");
 	}
 
 	Pin::inscribe(PA1, ALTERNATIVE);
@@ -109,7 +109,7 @@ void Ethernet::inscribe(){
 
 void Ethernet::update(){
 	if(not is_running) {
-		ErrorHandler("Ethernet is not running, check if its been inscribed", 0);
+		ErrorHandler("Ethernet is not running, check if its been inscribed");
 		return;
 	}
 
@@ -125,7 +125,7 @@ void Ethernet::update(){
 		 netif_set_up(&gnetif);
 		}
 	}else{
-		ErrorHandler("Unable to update Ethernet because is not running!", "");
+		ErrorHandler("Unable to update Ethernet because is not running!");
 	}
 }
 
