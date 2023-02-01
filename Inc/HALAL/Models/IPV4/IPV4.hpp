@@ -1,7 +1,9 @@
 #pragma once
 
-#ifdef HAL_ETH_MODULE_ENABLED
 #include "stm32h7xx_hal.h"
+
+#ifdef HAL_ETH_MODULE_ENABLED
+
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
 #include "lwip/tcp.h"
