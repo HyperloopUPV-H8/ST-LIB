@@ -58,7 +58,7 @@ void Time::start(){
 	Time::init_timer(TIM2, &htim2, 0, HIGH_PRECISION_MAX_ARR, TIM2_IRQn);
 	Time::init_timer(TIM5, &htim5, 0, HIGH_PRECISION_MAX_ARR, TIM5_IRQn);
 	Time::init_timer(TIM24, &htim24, 0, HIGH_PRECISION_MAX_ARR, TIM24_IRQn);
-	Time::init_timer(TIM6, &htim6, 275, 1000, TIM6_IRQn);
+	Time::init_timer(TIM6, &htim6, 275, 1000, TIM6_DAC_IRQn);
 
 	HAL_TIM_Base_Start_IT(global_timer);
 	HAL_TIM_Base_Start_IT(low_precision_timer);
