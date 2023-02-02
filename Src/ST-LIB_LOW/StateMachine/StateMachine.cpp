@@ -3,6 +3,7 @@
  */
 
 #include "StateMachine/StateMachine.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 TimedAction::TimedAction(function<void()> action, uint32_t microseconds) :
 	action(action), microseconds(microseconds) {}
@@ -26,7 +27,8 @@ StateMachine::StateMachine(uint8_t initial_state) :
 
 void StateMachine::add_state(uint8_t state) {
 	if (states.contains(state)) {
-		return; //TODO: Error handler
+		ErrorHandler("The state %d is already added", state);
+		return;
 	}
 
 	if (states.empty()) {
@@ -38,35 +40,45 @@ void StateMachine::add_state(uint8_t state) {
 
 void StateMachine::add_enter_action(function<void()> action) {
 	if (not current_state) {
-		return; //TODO: Error handler
+		ErrorHandler("The state machine does not have a current state");
+		return;
 	}
 	states[current_state].on_enter_actions.push_back(action);
 }
 void StateMachine::add_enter_action(function<void()> action, uint8_t state) {
 	if (not states.contains(state)) {
-		return; //TODO: Error handler
+		ErrorHandler("The state %d is not added to the state machine", state);
+		return;
 	}
 	states[state].on_enter_actions.push_back(action);
 }
 
 void StateMachine::add_exit_action(function<void()> action) {
 	if (not current_state) {
-		return; //TODO: Error handler
+		ErrorHandler("The state machine does not have a current state");
+		return;
 	}
 	states[current_state].on_exit_actions.push_back(action);
 }
 void StateMachine::add_exit_action(function<void()> action, uint8_t state) {
 	if (not states.contains(state)) {
-		return; //TODO: Error handler
+		ErrorHandler("The state %d is not added to the state machine");
+		return;
 	}
 	states[state].on_exit_actions.push_back(action);
 }
 
 void StateMachine::add_transition(uint8_t old_state, uint8_t new_state,
 		function<bool()> transition) {
-	if (not states.contains(old_state) or not states.contains(new_state)) {
-		return; //TODO: Error handler
+	if (not states.contains(old_state)) {
+		ErrorHandler("The state %d is not added to the state machine", old_state);
 	}
+
+	if(not states.contains(new_state)) {
+		ErrorHandler("The state %d is not added to the state machine", new_state);
+		return;
+	}
+
 	transitions[old_state][new_state] = transition;
 }
 
@@ -80,7 +92,8 @@ void StateMachine::check_transitions() {
 
 void StateMachine::force_change_state(uint8_t new_state) {
 	if (not states.contains(new_state)) {
-		return; //TODO: Error handler
+		ErrorHandler("The state %d is not added to the state machine", new_state);
+		return;
 	}
 
 	for (uint8_t timed_action : current_state_timed_actions_in_microseconds) {
@@ -98,14 +111,14 @@ void StateMachine::force_change_state(uint8_t new_state) {
 		if (timed_action.microseconds % 1000 == 0) {
 			optional<uint8_t> optional_id = Time::register_low_precision_alarm(timed_action.microseconds/1000, timed_action.action);
 			if (not optional_id) {
-				//TODO: Error Handler
+				ErrorHandler("The timed action could not be registered");
 			}
 			current_state_timed_actions_in_milliseconds.push_back(optional_id.value());
 
 		} else {
 			optional<uint8_t> optional_id = Time::register_high_precision_alarm(timed_action.microseconds, timed_action.action);
 			if (not optional_id) {
-				//TODO: Error Handler
+				ErrorHandler("The timed action could not be registered");
 			}
 			current_state_timed_actions_in_microseconds.push_back(optional_id.value());
 		}

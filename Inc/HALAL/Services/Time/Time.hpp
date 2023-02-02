@@ -8,6 +8,7 @@
 #pragma once
 
 #include "stm32h7xx_hal.h"
+
 #ifdef HAL_TIM_MODULE_ENABLED
 
 #include "C++Utilities/CppUtils.hpp"
