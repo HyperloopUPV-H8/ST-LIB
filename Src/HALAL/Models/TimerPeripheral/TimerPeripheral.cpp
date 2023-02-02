@@ -37,6 +37,12 @@ void TimerPeripheral::init() {
 		handle->Init.RepetitionCounter = 0;
 		handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
+		if (init_data.is_base) {
+			if (HAL_TIM_Base_Init(handle) != HAL_OK){
+				ErrorHandler("Unable to init base timer on %d", name.c_str());
+			}
+		}
+
 		if (!init_data.input_capture_channels.empty()) {
 			if (HAL_TIM_IC_Init(handle) != HAL_OK)
 			{
@@ -44,15 +50,12 @@ void TimerPeripheral::init() {
 			}
 		}
 
-
-		if (init_data.is_base) {
-			if (HAL_TIM_Base_Init(handle) != HAL_OK){
-				ErrorHandler("Unable to init base timer on %d", name.c_str());
+		if (!init_data.pwm_channels.empty()) {
+			if (HAL_TIM_PWM_Init(handle) != HAL_OK) {
+				ErrorHandler("Unable to init PWM on %d", name.c_str());
 			}
 		}
-		if (HAL_TIM_PWM_Init(handle) != HAL_OK) {
-			ErrorHandler("Unable to init PWM on %d", name.c_str());
-		}
+
 		sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
 		sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
 		sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
