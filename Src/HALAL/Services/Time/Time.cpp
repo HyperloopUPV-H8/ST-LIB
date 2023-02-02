@@ -24,7 +24,7 @@ map<TIM_HandleTypeDef*, Time::Alarm> Time::high_precision_alarms_by_timer;
 uint64_t Time::global_tick = 0;
 uint64_t Time::low_precision_tick = 0;
 
-void Time::init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period, IRQn_Type interrupt_channel){
+void Time::init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period){
 	  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 	  TIM_MasterConfigTypeDef sMasterConfig = {0};
 
@@ -44,21 +44,13 @@ void Time::init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescal
 
 	  HAL_TIMEx_MasterConfigSynchronization(htim, &sMasterConfig);
 
-	  HAL_NVIC_SetPriority(interrupt_channel, 0, 0);
-	  HAL_NVIC_EnableIRQ(interrupt_channel);
-
 }
 
 void Time::start(){
-    __HAL_RCC_TIM2_CLK_ENABLE();
-    __HAL_RCC_TIM5_CLK_ENABLE();
-    __HAL_RCC_TIM6_CLK_ENABLE();
-    __HAL_RCC_TIM24_CLK_ENABLE();
-
-	Time::init_timer(TIM2, &htim2, 0, HIGH_PRECISION_MAX_ARR, TIM2_IRQn);
-	Time::init_timer(TIM5, &htim5, 0, HIGH_PRECISION_MAX_ARR, TIM5_IRQn);
-	Time::init_timer(TIM24, &htim24, 0, HIGH_PRECISION_MAX_ARR, TIM24_IRQn);
-	Time::init_timer(TIM6, &htim6, 275, 1000, TIM6_IRQn);
+	Time::init_timer(TIM2, &htim2, 0, HIGH_PRECISION_MAX_ARR);
+	Time::init_timer(TIM5, &htim5, 0, HIGH_PRECISION_MAX_ARR);
+	Time::init_timer(TIM24, &htim24, 0, HIGH_PRECISION_MAX_ARR);
+	Time::init_timer(TIM6, &htim6, 275, 1000);
 
 	HAL_TIM_Base_Start_IT(global_timer);
 	HAL_TIM_Base_Start_IT(low_precision_timer);
