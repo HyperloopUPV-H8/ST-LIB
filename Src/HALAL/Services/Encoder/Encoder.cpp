@@ -36,36 +36,41 @@ void Encoder::start(){
 
 void Encoder::turn_on(uint8_t id){
 	if (not Encoder::registered_encoder.contains(id)) {
-		return; //TODO: error handler
+		ErrorHandler("No encoder registered with id %u", id);
+		return;
 	}
 
 	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
 
 	if (HAL_TIM_Encoder_GetState(timer->handle) == HAL_TIM_STATE_RESET) {
-		return; //TODO: Exception handle, Error (Encoder not initialized)
+		ErrorHandler("Unable to get state from encoder in timer %s", timer->name.c_str());
+		return;
 
 	}
 
 	if (HAL_TIM_Encoder_Start(timer->handle, TIM_CHANNEL_ALL) != HAL_OK) {
-		return; //TODO: Exception handle, Warning (Error starting encoder)
+		ErrorHandler("Unable to start encoder in timer %s", timer->name.c_str());
+		return;
 	}
 }
 
 void Encoder::turn_off(uint8_t id){
 	if (not Encoder::registered_encoder.contains(id)) {
-		return; //TODO: error handler
+		ErrorHandler("No encoder registered with id %u", id);
+		return;
 	}
 
 	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
 
 	if (HAL_TIM_Encoder_Stop(timer->handle, TIM_CHANNEL_ALL) != HAL_OK) {
-		//TODO: Exception handle, Warning (Error stopping encoder)
+		ErrorHandler("Unable to stop encoder in timer %s", timer->name.c_str());
 	}
 }
 
 void Encoder::reset(uint8_t id){
 	if (not Encoder::registered_encoder.contains(id)) {
-		return; //TODO: error handler
+		ErrorHandler("No encoder registered with id %u", id);
+		return;
 	}
 
 	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];
@@ -75,7 +80,8 @@ void Encoder::reset(uint8_t id){
 
 optional<uint32_t> Encoder::get_counter(uint8_t id){
 	if (not Encoder::registered_encoder.contains(id)) {
-		return nullopt; //TODO: error handler
+		ErrorHandler("No encoder registered with id %u", id);
+		return nullopt;
 	}
 
 	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
@@ -85,7 +91,8 @@ optional<uint32_t> Encoder::get_counter(uint8_t id){
 
 optional<bool> Encoder::get_direction(uint8_t id){
 	if (not Encoder::registered_encoder.contains(id)) {
-		return nullopt; //TODO: error handler
+		ErrorHandler("No encoder registered with id %u", id);
+		return nullopt;
 	}
 
 	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];
@@ -113,12 +120,12 @@ void Encoder::init(TimerPeripheral* encoder){
 	  sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
 	  sConfig.IC2Filter = 0;
 	  if (HAL_TIM_Encoder_Init(encoder->handle, &sConfig) != HAL_OK){
-		  //TODO: Error handler
+		  ErrorHandler("Unable to init encoder in timer %s", encoder->name.c_str());
 	  }
 	  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
 	  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
 	  if (HAL_TIMEx_MasterConfigSynchronization(encoder->handle, &sMasterConfig) != HAL_OK){
-		  //TODO: Error handler
+		  ErrorHandler("Unable to config master synchronization in encoder in timer %s", encoder->name.c_str());
 	  }
 }
 
