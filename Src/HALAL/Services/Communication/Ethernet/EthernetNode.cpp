@@ -5,6 +5,7 @@
  *      Author: stefa
  */
 #include "Communication/Ethernet/EthernetNode.hpp"
+#ifdef HAL_ETH_MODULE_ENABLED
 
 EthernetNode::EthernetNode(IPV4 ip, uint32_t port):ip(ip), port(port){}
 
