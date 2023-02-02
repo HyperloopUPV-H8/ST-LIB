@@ -29,13 +29,13 @@ PA2,PA3,PA4,PA5,PA6,PA7,PA8};
 const map<GPIOPin,const string> Pin::gpio_pin_to_string = {{PIN_0,"0"}, {PIN_1,"1"}, {PIN_2,"2"}, {PIN_3,"3"}, {PIN_4,"4"}, {PIN_5,"5"}, {PIN_6,"6"}, {PIN_7,"7"}, {PIN_8,"8"}, {PIN_9,"9"}, {PIN_10,"10"}, {PIN_11,"11"}, {PIN_12,"12"}, {PIN_13,"13"}, {PIN_14,"14"}, {PIN_15,"15"},{PIN_ALL,"ALL"}};
 const map<GPIO_TypeDef*,const string> Pin::port_to_string = {{(GPIO_TypeDef*)PORT_A,"PA"}, {(GPIO_TypeDef*)PORT_B,"PB"}, {(GPIO_TypeDef*)PORT_C,"PC"}, {(GPIO_TypeDef*)PORT_D,"PD"}, {(GPIO_TypeDef*)PORT_E,"PE"}, {(GPIO_TypeDef*)PORT_F,"PF"}, {(GPIO_TypeDef*)PORT_G,"PG"}, {(GPIO_TypeDef*)PORT_H,"PH"}};
 
-const char* Pin::to_string() const {
-	return (port_to_string.at(port) + gpio_pin_to_string.at(gpio_pin)).c_str();
+const string Pin::to_string() const {
+	return (port_to_string.at(port) + gpio_pin_to_string.at(gpio_pin));
 }
 
 void Pin::inscribe(Pin& pin, OperationMode mode){
 	if(pin.mode != OperationMode::NOT_USED){
-		ErrorHandler("Pin %s is already registered, cannot register twice", pin.to_string());
+		ErrorHandler("Pin %s is already registered, cannot register twice", pin.to_string().c_str());
 		return;
 	}
 	pin.mode = mode;

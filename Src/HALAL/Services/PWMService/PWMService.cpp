@@ -16,7 +16,7 @@ PWMservice::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PW
 
 optional<uint8_t> PWMservice::inscribe(Pin& pin){
 	if (not available_instances.contains(pin)) {
-		ErrorHandler("Pin %s is not configured as a PWM in you configuration file", pin.to_string());
+		ErrorHandler("Pin %s is not configured as a PWM in you configuration file", pin.to_string().c_str());
 		return nullopt;
 	}
 
@@ -31,7 +31,7 @@ optional<uint8_t> PWMservice::inscribe(Pin& pin){
 optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
 	if (not available_instances_negated.contains(pin)) {
 		return nullopt;
-		ErrorHandler("Pin %s is not configured as a PWM in you configuration file", pin.to_string());
+		ErrorHandler("Pin %s is not configured as a PWM in you configuration file", pin.to_string().c_str());
 	} 	
 	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
 	active_instances[id_counter] = available_instances_negated[pin];
@@ -44,7 +44,7 @@ optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
 optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 	if (not available_instances_dual.contains({pin, pin_negated})) {
 		return nullopt;
-		ErrorHandler("Pin %s and Pin %s are not configured as a dual PWM in you configuration file", pin.to_string(), pin_negated.to_string());
+		ErrorHandler("Pin %s and Pin %s are not configured as a dual PWM in you configuration file", pin.to_string().c_str(), pin_negated.to_string().c_str());
 	} 	
 	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
 	Pin::inscribe(pin_negated, TIMER_ALTERNATE_FUNCTION);

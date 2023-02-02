@@ -89,7 +89,7 @@ public:
 	Pin();
 	Pin(GPIOPort port, GPIOPin pin);
 	Pin(GPIOPort port, GPIOPin pin, AlternativeFunction alternative_function);
-	const char* to_string() const;
+	const string to_string() const;
 	static void inscribe(Pin& pin, OperationMode mode);
 	static void start();
 

@@ -4,7 +4,7 @@
 SensorInterrupt::SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState *value) : pin(pin), value(value) {
 	optional<uint8_t> identification = ExternalInterrupt::inscribe(pin, std::forward<std::function<void()>>(action));
 	if (not identification) {
-		ErrorHandler(" The pin %s is already used or isn t available for EXTI usage", pin.to_string());
+		ErrorHandler(" The pin %s is already used or isn t available for EXTI usage", pin.to_string().c_str());
 		return;
 	}
 	id = identification.value();
@@ -16,7 +16,7 @@ SensorInterrupt::SensorInterrupt(Pin &pin, std::function<void()> &&action, PinSt
 void SensorInterrupt::read(){
 	optional<bool> optional_value = ExternalInterrupt::get_pin_value(id);
 	if(not optional_value){
-		ErrorHandler("Could not read state of EXTI pin %s", pin.to_string());
+		ErrorHandler("Could not read state of EXTI pin %s", pin.to_string().c_str());
 	}else if(optional_value.value()){
 		*value = ON;
 	}else{

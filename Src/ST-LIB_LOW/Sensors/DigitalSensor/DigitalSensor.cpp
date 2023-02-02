@@ -9,7 +9,7 @@ DigitalSensor::DigitalSensor(Pin &pin, PinState &value) : DigitalSensor::Digital
 void DigitalSensor::read(){
 	optional<PinState> val = DigitalInput::read_pin_state(id);
 	if(not val){
-		ErrorHandler("Can not read the state of the pin %s", pin.to_string());
+		ErrorHandler("Can not read the state of the pin %s", pin.to_string().c_str());
 		return;
 	}
 	*value = val.value();
