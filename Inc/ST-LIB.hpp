@@ -12,4 +12,6 @@ public:
 			string subnet_mask = "",
 			string gateway = "",
 			UART::Peripheral& printf_peripheral = UART::uart2);
+
+	static void update();
 };
