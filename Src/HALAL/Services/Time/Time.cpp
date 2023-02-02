@@ -6,6 +6,7 @@
  */
 
 #include <Time/Time.hpp>
+#include "ErrorHandler/ErrorHandler.hpp"
 
 TIM_HandleTypeDef* Time::global_timer = &htim2;
 TIM_HandleTypeDef* Time::low_precision_timer = &htim6;
@@ -83,6 +84,7 @@ void Time::stop_timer(TIM_HandleTypeDef* handle){
 
 optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, function<void()> func){
 	if(available_high_precision_timers.size() == 0) {
+		ErrorHandler("There are no available high precision timers left");
 		return nullopt;
 	}
 
@@ -92,14 +94,17 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 	Time::Alarm alarm = {
 			.period = period_in_us,
 			.tim = tim,
-			.alarm = func
+			.alarm = [&](){}
 	};
 	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
 
-	tim->Instance->PSC = 275;
-	tim->Instance->ARR = period_in_us;
-	HAL_TIM_Base_Start_IT(tim);
+
+	Time::ConfigTimer(tim, period_in_us);
+
+	alarm.alarm = func;
+	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
+	Time::high_precision_alarms_by_timer[tim] = alarm;
 
 	return high_precision_ids++;
 }
@@ -175,4 +180,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* tim){
 	else if(Time::high_precision_timers.contains(tim)) {
 			Time::high_precision_timer_callback(tim);
 	}
+}
+
+void Time::ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us){
+	__HAL_TIM_DISABLE_IT(tim,TIM_IT_UPDATE);
+	tim->Instance->CR1 &= ~(TIM_CR1_DIR|TIM_CR1_CMS);
+	tim->Instance->CR1 |= TIM_COUNTERMODE_UP;
+	tim->Instance->CR1 &= ~TIM_CR1_CKD;
+	tim->Instance->CR1 |= TIM_CLOCKDIVISION_DIV1;
+	tim->Instance->ARR = period_in_us;
+	tim->Instance->PSC = 275;
+	tim->Instance->EGR = TIM_EGR_UG;
+	tim->Instance->SMCR = 0;
+	tim->Instance->BDTR = 0;
+	tim->Instance->CR1 = TIM_CR1_CEN;
+	tim->Instance->CNT = 1;
+	tim->Instance->DIER = TIM_IT_UPDATE;
+
 }
