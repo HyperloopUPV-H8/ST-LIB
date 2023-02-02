@@ -5,7 +5,6 @@
  *      Author: stefa
  */
 #include "Communication/Ethernet/EthernetNode.hpp"
-#ifdef HAL_ETH_MODULE_ENABLED
 
 #ifdef HAL_ETH_MODULE_ENABLED
 
