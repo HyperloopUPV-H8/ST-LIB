@@ -164,6 +164,7 @@ bool FDCAN::wait_and_read(uint8_t id, FDCAN::Packet* data){
 
 bool FDCAN::received_test(uint8_t id){
 	if (not FDCAN::registered_fdcan.contains(id)) {
+		ErrorHandler("FDCAN with id %u not registered", id);
 		return false;
 	}
 
