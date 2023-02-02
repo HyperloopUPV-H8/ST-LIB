@@ -8,11 +8,12 @@
 #include "TimerPeripheral/TimerPeripheral.hpp"
 
 TimerPeripheral::InitData::InitData(
-		TIM_TypeDef* timer, uint32_t prescaler, uint32_t period, uint32_t deadtime) :
+		TIM_TypeDef* timer, bool is_base, uint32_t prescaler, uint32_t period, uint32_t deadtime) :
 		timer(timer),
 		prescaler(prescaler),
 		period(period),
-		deadtime(deadtime)
+		deadtime(deadtime),
+		is_base(is_base)
 		{}
 
 TimerPeripheral::TimerPeripheral(
@@ -43,6 +44,12 @@ void TimerPeripheral::init() {
 			}
 		}
 
+
+		if (init_data.is_base) {
+			if (HAL_TIM_Base_Init(handle) != HAL_OK){
+				ErrorHandler("Unable to init base timer on %d", name.c_str());
+			}
+		}
 		if (HAL_TIM_PWM_Init(handle) != HAL_OK) {
 			ErrorHandler("Unable to init PWM on %d", name.c_str());
 		}
