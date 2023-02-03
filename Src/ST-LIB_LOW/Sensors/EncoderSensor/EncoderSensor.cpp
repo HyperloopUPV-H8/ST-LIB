@@ -4,7 +4,7 @@ EncoderSensor::EncoderSensor(Pin pin1, Pin pin2, double *position, double* direc
 : position(position), direction(direction), speed(speed), acceleration(acceleration){
 	optional<uint8_t> identification = Encoder::inscribe(pin1,pin2);
 	if(not identification){
-		ErrorHandler(" The pin %s and the pin %s are already used or aren't configurated for encoder usage", pin1.to_string(), pin2.to_string());
+		ErrorHandler(" The pin %s and the pin %s are already used or aren't configurated for encoder usage", pin1.to_string().c_str(), pin2.to_string().c_str());
 		return;
 	}
 	id = identification.value();
