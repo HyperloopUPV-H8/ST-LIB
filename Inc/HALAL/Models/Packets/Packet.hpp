@@ -63,7 +63,9 @@ public:
 
     void fill_buffer();
 
-    void fill_buffer(uint8_t* buffer, size_t& ptr_loc);
+    void fill_buffer(uint8_t* buffer, size_t& ptr_loc) requires NotContainer<Type>;
+
+    void fill_buffer(uint8_t* buffer, size_t& ptr_loc) requires Container<Type>;
 
     bool check_id(uint8_t* new_data);
 
@@ -157,13 +159,25 @@ void Packet<Type, Types...>::fill_buffer() {
 }
 
 template<class Type, class... Types>
-void Packet<Type, Types...>::fill_buffer(uint8_t* buffer,size_t& ptr_loc) {
+void Packet<Type, Types...>::fill_buffer(uint8_t* buffer,size_t& ptr_loc) requires NotContainer<Type> {
     if constexpr (number_of_values <= 0) {
         return;
     }
     else {
         using cast_type = remove_reference<decltype(this->value)>::type::value_type;
         *((cast_type*)(buffer + ptr_loc)) = *(this->value).convert();
+        ptr_loc += this->value.size();
+        static_cast<base_type*>(this)->fill_buffer(buffer, ptr_loc);
+    }
+}
+
+template<class Type, class... Types>
+void Packet<Type, Types...>::fill_buffer(uint8_t* buffer, size_t& ptr_loc)  requires Container<Type>{
+    if constexpr (number_of_values <= 0) {
+        return;
+    }
+    else {
+        memcpy(buffer + ptr_loc, this->value.convert(), this->value.size());
         ptr_loc += this->value.size();
         static_cast<base_type*>(this)->fill_buffer(buffer, ptr_loc);
     }
