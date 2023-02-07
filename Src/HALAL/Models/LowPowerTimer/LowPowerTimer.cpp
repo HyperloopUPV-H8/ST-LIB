@@ -6,6 +6,7 @@
  */
 
 #include "LowPowerTimer/LowPowerTimer.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 void LowPowerTimer::init() {
 	handle.Instance = &instance;
@@ -19,6 +20,6 @@ void LowPowerTimer::init() {
 	handle.Init.Input2Source = LPTIM_INPUT2SOURCE_GPIO;
 
 	if (HAL_LPTIM_Init(&handle) != HAL_OK) {
-	  //TODO: Error Handler
+	  ErrorHandler("The LPTIM %s could not be registered", name);
 	}
 }
