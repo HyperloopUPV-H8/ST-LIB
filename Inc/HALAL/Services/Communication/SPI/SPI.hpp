@@ -10,6 +10,7 @@
 #include "PinModel/Pin.hpp"
 #include "Packets/RawPacket.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
@@ -45,6 +46,7 @@ private:
         uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
        
         bool initialized = false; /**< Peripheral has already been initialized */
+        string name;
     };
 
     /**
