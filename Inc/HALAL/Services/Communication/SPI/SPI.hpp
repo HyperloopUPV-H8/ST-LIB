@@ -10,6 +10,7 @@
 #include "PinModel/Pin.hpp"
 #include "Packets/RawPacket.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
@@ -22,9 +23,9 @@
 class SPI{
 private:
     /**
-     * @brief Struct wich defines all data refering to SPI peripherals. It is 
+     * @brief Struct which defines all data refering to SPI peripherals. It is
      *        declared private in order to prevent unwanted use. Only 
-     *        predefined instaces should be used. 
+     *        predefined instances should be used.
      *           
      */
     struct Instance{
@@ -45,10 +46,11 @@ private:
         uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
        
         bool initialized = false; /**< Peripheral has already been initialized */
+        string name;
     };
 
     /**
-     * @brief Enum which abstracts the use of the Instance struct to facilitate the mocking of the HALAL.Struct
+     * @brief Enum that abstracts the use of the Instance struct to facilitate the mocking of the HALAL.
      *
      */
     enum Peripheral{
@@ -59,6 +61,9 @@ private:
  		peripheral5 = 4,
  		peripheral6 = 5,
      };
+
+    static void turn_on_chip_select(SPI::Instance* spi);
+    static void turn_off_chip_select(SPI::Instance* spi);
 
 public:
     static uint16_t id_counter;
@@ -78,10 +83,6 @@ public:
     static SPI::Peripheral spi5;
     static SPI::Peripheral spi6;
 
-    /**
-     * @brief SPI 3 instance of the STM32H723.
-     *
-     */
     static SPI::Instance instance1;
 	static SPI::Instance instance2;
 	static SPI::Instance instance3;
@@ -104,27 +105,65 @@ public:
      */
     static void start();
 
-    /**@brief	Transmits 1 SPIPacket of any size by polling.
-     * 			Handles the packet size automatically.
+    /**@brief	Transmits 1 byte by SPI.
      * 
      * @param id Id of the SPI
-     * @param packet Pakcet to be send
-     * @return bool Returns true if the request to send the packet has been done
-     *            successfully. Returns false if a problem
-     *            has occurred.
+     * @param data Data to be send
+     * @return bool Returns true if the data has been send successfully.
+     * 			    Returns false if a problem has occurred.
      */
-    static bool transmit_next_packet(uint8_t id, RawPacket& packet);
+    static bool transmit(uint8_t id, uint8_t data);
+
+    /**@brief	Transmits size bytes by SPI.
+	 *
+	 * @param id Id of the SPI
+	 * @param data Data to be send
+	 * @param size Size in bytes to be send
+	 * @return bool Returns true if the data has been send successfully.
+	 * 			    Returns false if a problem has occurred.
+	 */
+    static bool transmit(uint8_t id, span<uint8_t> data);
 
     /**						
-     * @brief This method request the receive of a new SPIPacket of any size
-     *        by polling.
+     * @brief This method requests an array of data. The data
+     * 		  will be stored in data parameter. You must make sure you have
+     * 		  enough space
      * 
      * @param id Id of the SPI
-     * @param packet SPIPacket in which the data will be stored
-     * @return bool Return true if the order to receive a new packet has been
-     *            processed correctly. Return false if a problem has occurred.
+     * @param data Pointer where data will be stored
+     * @param size Size in bytes to receive.
+     * @return bool Returns true if the data have been read successfully.
+     * 			    Returns false if a problem has occurred.
      */
-    static bool receive_next_packet(uint8_t id, RawPacket& packet);
+    static bool receive(uint8_t id, span<uint8_t> data);
+
+    /**
+	 * @brief This method transmits one order of command_size bytes and
+	 * 		  then stores the data received after that order.
+	 *
+	 * @param id Id of the SPI
+	 * @param command_data Command
+	 * @param command_size Command size in bytes to receive
+	 * @param receive_data Pointer where data will be stored
+	 * @param receive_size Number of bytes to read
+	 * @return bool Returns true if the data have been read successfully.
+	 * 			    Returns false if a problem has occurred.
+	 */
+    static bool transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
+
+    /**
+     * @brief This method sets chip select to high level.
+     *
+     * @param spi Id of the SPI
+     */
+    static void chip_select_on(uint8_t id);
+
+    /**
+	 * @brief This method sets chip select to low level.
+	 *
+	 * @param spi Id of the SPI
+	 */
+    static void chip_select_off(uint8_t id);
 
 
 private:

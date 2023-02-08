@@ -1,19 +1,17 @@
 #pragma once
 
-#include "DigitalOutputservice/DigitalOutputservice.hpp"
-#include "DigitalInput/DigitalInput.hpp"
-#include "Flash/Flash.hpp"
-#include "Flash/FlashTests/Flash_Test.hpp"
-#include "ADC/ADC.hpp"
-#include "PWMservice/PWMservice.hpp"
-#include "Communication/Ethernet/UDP/DatagramSocket.hpp"
-#include "Communication/Ethernet/TCP/ServerSocket.hpp"
-#include "Communication/SPI/SPI.hpp"
-#include "Communication/UART/UART.hpp"
-#include "Communication/I2C/I2C.hpp"
-#include "Time/Time.hpp"
-#include "Clocks/Counter.hpp"
-#include "Clocks/Stopwatch.hpp"
-#include "InputCapture/InputCapture.hpp"
-#include "Encoder/Encoder.hpp"
-#include "EXTI/EXTI.hpp"
+#include "HALAL/HALAL.hpp" // Erase this when ST-LIB_LOW is finished.
+#include "ST-LIB_LOW.hpp"  // Erase this when ST-LIB_HIGH is finished
+#include "ST-LIB_HIGH.hpp" // Highest layer up to the moment
+
+class STLIB {
+public:
+	static void start(
+			TARGET target = Board,
+			string ip = "192.168.21.0",
+			string subnet_mask = "",
+			string gateway = "",
+			UART::Peripheral& printf_peripheral = UART::uart2);
+
+	static void update();
+};

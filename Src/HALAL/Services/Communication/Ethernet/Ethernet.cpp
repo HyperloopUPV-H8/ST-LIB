@@ -4,12 +4,15 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
-#ifdef HAL_ETH_MODULE_ENABLED
+
 #include "Communication/Ethernet/Ethernet.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
+
+#ifdef HAL_ETH_MODULE_ENABLED
 
 extern uint32_t EthernetLinkTimer;
 extern struct netif gnetif;
-extern ip4_addr_t ipaddr,netmask,gw;
+extern ip4_addr_t ipaddr, netmask, gw;
 
 bool Ethernet::is_ready = false;
 bool Ethernet::is_running = false;
@@ -55,8 +58,19 @@ void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway){
 		MX_LWIP_Init();
 		is_running = true;
 	}else{
-		//TODO: Error Handler
+		ErrorHandler("Unable to start Ethernet!");
 	}
+
+	if (not is_ready) {
+		ErrorHandler("Ethernet is not ready");
+		return;
+	}
+
+	ipaddr = local_ip.address;
+	netmask = subnet_mask.address;
+	gw = gateway.address;
+	MX_LWIP_Init();
+	is_running = true;
 }
 
 void Ethernet::inscribe(){
@@ -75,25 +89,45 @@ void Ethernet::inscribe(){
 		SCB_EnableDCache();
 		is_ready = true;
 	}else{
-		//TODO: Error Handler
+		ErrorHandler("Unable to inscribe Ethernet because is already ready!");
 	}
+
+	Pin::inscribe(PA1, ALTERNATIVE);
+	Pin::inscribe(PA2, ALTERNATIVE);
+	Pin::inscribe(PA7, ALTERNATIVE);
+	Pin::inscribe(PB13, ALTERNATIVE);
+	Pin::inscribe(PC1, ALTERNATIVE);
+	Pin::inscribe(PC4, ALTERNATIVE);
+	Pin::inscribe(PC5, ALTERNATIVE);
+	Pin::inscribe(PG11, ALTERNATIVE);
+	Pin::inscribe(PG13, ALTERNATIVE);
+	mpu_start();
+	SCB_EnableICache();
+	SCB_EnableDCache();
+	is_ready = true;
 }
 
 void Ethernet::update(){
-	if(is_running){
-		ethernetif_input(&gnetif);
-		sys_check_timeouts();
-		
-		if (HAL_GetTick() - EthernetLinkTimer >= 100){
+	if(not is_running) {
+		ErrorHandler("Ethernet is not running, check if its been inscribed");
+		return;
+	}
+
+	ethernetif_input(&gnetif);
+	sys_check_timeouts();
+
+	if (HAL_GetTick() - EthernetLinkTimer >= 100) {
 		EthernetLinkTimer = HAL_GetTick();
 		ethernet_link_check_state(&gnetif);
-		}
 		
 		if(gnetif.flags == 15){
-		 netif_set_up(&gnetif);
+			netif_set_up(&gnetif);
 		}
-	}else{
-		//TODO: Error Handler;
+	}
+
+	else {
+		ErrorHandler("Unable to update Ethernet because is not running!");
 	}
 }
+
 #endif

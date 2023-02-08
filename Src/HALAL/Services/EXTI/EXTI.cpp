@@ -6,6 +6,7 @@
  */
 
 #include "EXTI/EXTI.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 uint8_t ExternalInterrupt::id_counter = 0;
 map<uint8_t, Pin> ExternalInterrupt::service_ids = {};
@@ -43,7 +44,8 @@ void ExternalInterrupt::start() {
 
 void ExternalInterrupt::turn_on(uint8_t id) {
 	if (not service_ids.contains(id)) {
-		return; //TODO: error handler
+		ErrorHandler("ID %d is not registered as an active instance", id);
+		return;
 	}
 
 	Instance& instance = instances[service_ids[id].gpio_pin];
@@ -52,7 +54,8 @@ void ExternalInterrupt::turn_on(uint8_t id) {
 
 optional<bool> ExternalInterrupt::get_pin_value(uint8_t id) {
 	if (not service_ids.contains(id)) {
-		return nullopt; //TODO: error handler
+		ErrorHandler("ID %d is not registered as an active instance", id);
+		return nullopt;
 	}
 
 	Pin& pin = service_ids[id];

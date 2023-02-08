@@ -1,8 +1,8 @@
 #pragma once
-#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 
+#ifdef HAL_ETH_MODULE_ENABLED
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
 class DatagramSocket{
@@ -41,6 +41,6 @@ bool DatagramSocket::send(Packet<Type, Types...> & packet){
 
 	return true;
 }
+
+
 #endif
-
-

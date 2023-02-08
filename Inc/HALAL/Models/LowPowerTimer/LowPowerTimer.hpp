@@ -6,16 +6,31 @@
  */
 
 #pragma once
+#include <map>
+#include <cstring>
+#include <string>
+
+
+#include "stm32h7xx_hal.h"
+
 #ifdef HAL_LPTIM_MODULE_ENABLED
 
+using std::reference_wrapper;
+using std::map;
+using std::string;
 
-struct LowPowerTimer {
+class LowPowerTimer {
 public:
-	LPTIM_HandleTypeDef* handle;
+	LPTIM_TypeDef& instance;
+	LPTIM_HandleTypeDef& handle;
 	uint16_t period;
+	string name;
 
 	LowPowerTimer() = default;
-	LowPowerTimer(LPTIM_HandleTypeDef* handle, uint16_t period) : handle(handle), period(period) {};
+	LowPowerTimer(LPTIM_TypeDef& instance, LPTIM_HandleTypeDef& handle, uint16_t period, string name) :
+		instance(instance), handle(handle), period(period), name(name) {};
+
+	void init();
 };
 
 #endif

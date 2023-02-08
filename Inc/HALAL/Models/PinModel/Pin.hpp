@@ -83,11 +83,13 @@ public:
 	GPIOPin gpio_pin;
 	AlternativeFunction alternative_function;
 	OperationMode mode = OperationMode::NOT_USED;
-	static vector<reference_wrapper<Pin>> pinVector;
-
+	static const vector<reference_wrapper<Pin>> pinVector;
+	static const map<GPIO_TypeDef*,const string> port_to_string;
+	static const map<GPIOPin,const string> gpio_pin_to_string;
 	Pin();
 	Pin(GPIOPort port, GPIOPin pin);
 	Pin(GPIOPort port, GPIOPin pin, AlternativeFunction alternative_function);
+	const string to_string() const;
 	static void inscribe(Pin& pin, OperationMode mode);
 	static void start();
 
@@ -101,6 +103,19 @@ public:
 		return port < other.port;
 	}
 };
+
+namespace std {
+	template <>
+	struct hash<Pin> {
+		std::size_t operator()(const Pin& k) const {
+		    using std::size_t;
+		    using std::hash;
+		    using std::string;
+
+		    return ((hash<uint16_t>()(k.gpio_pin) ^ (hash<uint32_t>()((uint32_t)(k.port)) << 1)) >> 1);
+		}
+	  };
+}
 
 extern Pin PA0;
 extern Pin PA1;

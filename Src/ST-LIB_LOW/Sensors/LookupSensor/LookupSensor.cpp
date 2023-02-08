@@ -1,26 +1,23 @@
-#include "ST-LIB_LOW/Sensors/LookupSensor/LookupSensor.hpp"
-#include "ADC/ADC.hpp"
-#include "C++Utilities/CppUtils.hpp"
-#include <iostream>
+#include "Sensors/LookupSensor/LookupSensor.hpp"
+#include "Sensors/Sensor/Sensor.hpp"
 
 
-LookupSensor::LookupSensor(Pin pin, double *table, int table_size, double *value) : table(table), table_size(table_size), value(value){
+LookupSensor::LookupSensor(Pin &pin, double *table, int table_size, double *value) : pin(pin), table(table), table_size(table_size), value(value){
 	optional<uint8_t> identification = ADC::inscribe(pin);
 	if(not identification){
-		//TODO: add Error handler for register here (register returns empty optional)
+		ErrorHandler("Pin %s is already used or isn t available for ADC usage", pin.to_string().c_str());
 		return;
 	}
 	id = identification.value();
+	Sensor::adc_id_list.insert(Sensor::adc_id_list.begin(),id);
 }
 
-void LookupSensor::start(){
-	ADC::turn_on(id);
-}
+LookupSensor::LookupSensor(Pin &pin, double *table, int table_size, double &value) : LookupSensor::LookupSensor(pin,table,table_size,&value){}
 
 void LookupSensor::read(){
 	optional<float> adc_voltage = ADC::get_value(id);
 	if(not adc_voltage){
-		//TODO: add Error handler for read here (read returns empty optional)
+		ErrorHandler("Can not read ADC value of pin", pin.to_string().c_str());
 		return;
 	}
 

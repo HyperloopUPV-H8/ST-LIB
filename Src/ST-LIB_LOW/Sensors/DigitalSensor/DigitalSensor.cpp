@@ -1,26 +1,15 @@
-#include "ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.hpp"
-#include "DigitalInputService/DigitalInputService.hpp"
-#include "EXTI/EXTI.hpp"
+#include "Sensors/DigitalSensor/DigitalSensor.hpp"
+#include "Sensors/Sensor/Sensor.hpp"
 
-DigitalSensor::DigitalSensor(Pin pin, PinState *value) : pin(pin), id(DigitalInput::inscribe(pin)), value(value){}
 
-void DigitalSensor::exti_interruption(std::function<auto> action){
-	optional<uint8_t> identification = ExternalInterrupt::inscribe(pin, action);
-	if (not identification) {
-		//TODO: add Error handler for register here (register returns empty optional)
-		return;
-	}
-	ExternalInterrupt::turn_on(identification.value());
-}
+DigitalSensor::DigitalSensor(Pin &pin, PinState *value) : pin(pin), id(DigitalInput::inscribe(pin)), value(value){}
 
-void DigitalSensor::start(){
-	//TODO: discuss if it needs start for consistency or not (doesnt have a use for it)
-}
+DigitalSensor::DigitalSensor(Pin &pin, PinState &value) : DigitalSensor::DigitalSensor(pin,&value){}
 
 void DigitalSensor::read(){
 	optional<PinState> val = DigitalInput::read_pin_state(id);
 	if(not val){
-		//TODO: add Error handler for read here (read returns empty optional)
+		ErrorHandler("Can not read the state of the pin %s", pin.to_string().c_str());
 		return;
 	}
 	*value = val.value();

@@ -1,10 +1,13 @@
-/*
+	/*
  * Created by Alejandro
  */
 
 #pragma once
 #include <C++Utilities/CppUtils.hpp>
 #include "Time/Time.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
+
+#ifdef HAL_TIM_MODULE_ENABLED
 
 class TimedAction {
 public:
@@ -61,7 +64,8 @@ private:
 template<class TimeUnit>
 void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, uint8_t state) {
 	if (not state) {
-		return; //TODO: Error handler
+		ErrorHandler("The state %d is not added to the state machine", state);
+		return;
 	}
 
 	uint32_t microseconds = (uint32_t)chrono::duration_cast<chrono::microseconds>(period).count();
@@ -72,7 +76,8 @@ void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<i
 		if (microseconds % 1000) {
 			optional<uint8_t> optional_id = Time::register_high_precision_alarm(microseconds, action);
 			if (not optional_id) {
-				return; //TODO: Error handler
+				ErrorHandler("The high precision alarm could not be registered");
+				return;
 			}
 			current_state_timed_actions_in_microseconds.push_back(optional_id.value());
 		}
@@ -87,3 +92,5 @@ template<class TimeUnit>
 void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
 	add_cyclic_action(action, period, current_state);
 }
+
+#endif

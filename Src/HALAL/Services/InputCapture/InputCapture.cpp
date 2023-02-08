@@ -5,6 +5,7 @@
  *      Author: alejandro
  */
 #include "InputCapture/InputCapture.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 uint8_t InputCapture::id_counter = 0;
 map<uint8_t, InputCapture::Instance> InputCapture::active_instances = {};
@@ -17,12 +18,16 @@ static map<uint32_t, uint32_t> channel_dict = {
 	{HAL_TIM_ACTIVE_CHANNEL_6, TIM_CHANNEL_6}
 };
 
-InputCapture::Instance::Instance(Pin pin, TimerPeripheral* peripheral, uint32_t channel_rising, uint32_t channel_falling) :
+InputCapture::Instance::Instance(Pin& pin, TimerPeripheral* peripheral, uint32_t channel_rising, uint32_t channel_falling) :
 	pin(pin),
 	peripheral(peripheral),
 	channel_rising(channel_rising),
 	channel_falling(channel_falling)
-	{ }
+	{
+		frequency = 0;
+		duty_cycle = 0;
+
+	}
 
 optional<uint8_t> InputCapture::inscribe(Pin& pin){
  	if (not available_instances.contains(pin)) {
@@ -44,25 +49,42 @@ optional<uint8_t> InputCapture::inscribe(Pin& pin){
 
 void InputCapture::turn_on(uint8_t id){
 	if (not active_instances.contains(id)) {
-		return; //TODO: Error Handler
+		ErrorHandler("ID %d is not registered as an active_instance", id);
+		return;
 	}
 	Instance instance = active_instances[id];
-	HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising);
-	HAL_TIM_IC_Start(instance.peripheral->handle, instance.channel_falling);
+
+
+	if (HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising) != HAL_OK) {
+		ErrorHandler("Unable to start the %s Input Capture measurement in interrupt mode", instance.peripheral->name.c_str());
+	}
+
+	if (HAL_TIM_IC_Start(instance.peripheral->handle, instance.channel_falling) != HAL_OK) {
+		ErrorHandler("Unable to start the %s Input Capture measurement", instance.peripheral->name.c_str());
+	}
+
 }
 
 void InputCapture::turn_off(uint8_t id){
 	if (not active_instances.contains(id)) {
-		return; //TODO: Error Handler
+		ErrorHandler("ID %d is not registered as an active_instance", id);
+		return;
 	}
 	Instance instance = active_instances[id];
-	HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_rising);
-	HAL_TIM_IC_Stop(instance.peripheral->handle, instance.channel_falling);
+	if (HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_rising) != HAL_OK) {
+		ErrorHandler("Unable to stop the %s Input Capture measurement in interrupt mode", instance.peripheral->name.c_str());
+	}
+
+	if (HAL_TIM_IC_Stop(instance.peripheral->handle, instance.channel_falling) != HAL_OK) {
+		ErrorHandler("Unable to stop the %s Input Capture measurement", instance.peripheral->name.c_str());
+	}
+
 }
 
 optional<uint32_t> InputCapture::read_frequency(uint8_t id) {
 	if (not active_instances.contains(id)) {
-		return nullopt; //TODO: Error Handler
+		ErrorHandler("ID %d is not registered as an active_instance", id);
+		return nullopt;
 	}
 	Instance instance = active_instances[id];
 	return instance.frequency;
@@ -70,7 +92,8 @@ optional<uint32_t> InputCapture::read_frequency(uint8_t id) {
 
 optional<uint8_t> InputCapture::read_duty_cycle(uint8_t id) {
 	if (not active_instances.contains(id)) {
-		return nullopt; //TODO: Error Handler
+		ErrorHandler("ID %d is not registered as an active_instance", id);
+		return nullopt;
 	}
 	Instance instance = active_instances[id];
 	return instance.duty_cycle;
@@ -85,10 +108,14 @@ InputCapture::Instance InputCapture::find_instance_by_channel(uint32_t channel) 
 			return id_instance.second;
 		}
 	}
+
+	ErrorHandler("Channel %d is not a registered channel", channel);
+	return Instance();
 }
 
-void HAL_TIM_InputCapture_CaptureCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
+	htim->Instance->CNT = 0;
 	uint32_t& active_channel = channel_dict[htim->Channel];
 	InputCapture::Instance instance = InputCapture::find_instance_by_channel(active_channel);
 
@@ -100,6 +127,7 @@ void HAL_TIM_InputCapture_CaptureCallback(TIM_HandleTypeDef *htim)
 		InputCapture::active_instances[instance.id].frequency = round(ref_clock / rising_value);
 		InputCapture::active_instances[instance.id].duty_cycle = round((falling_value * 100) / rising_value);
 	}
+
 }
 
 

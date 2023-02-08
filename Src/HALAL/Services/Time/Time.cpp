@@ -6,12 +6,14 @@
  */
 
 #include <Time/Time.hpp>
+#include "ErrorHandler/ErrorHandler.hpp"
 
 TIM_HandleTypeDef* Time::global_timer = &htim2;
 TIM_HandleTypeDef* Time::low_precision_timer = &htim6;
 
-forward_list<uint8_t> Time::high_precision_ids = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
-forward_list<uint8_t> Time::low_precision_ids = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
+uint8_t Time::high_precision_ids = 0;
+uint8_t Time::low_precision_ids = 0;
+
 stack<TIM_HandleTypeDef*> Time::available_high_precision_timers;
 set<TIM_HandleTypeDef*> Time::high_precision_timers;
 
@@ -22,7 +24,7 @@ map<TIM_HandleTypeDef*, Time::Alarm> Time::high_precision_alarms_by_timer;
 uint64_t Time::global_tick = 0;
 uint64_t Time::low_precision_tick = 0;
 
-void Time::init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period){
+void Time::init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period, IRQn_Type interrupt_channel){
 	  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 	  TIM_MasterConfigTypeDef sMasterConfig = {0};
 
@@ -42,13 +44,21 @@ void Time::init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescal
 
 	  HAL_TIMEx_MasterConfigSynchronization(htim, &sMasterConfig);
 
+	  HAL_NVIC_SetPriority(interrupt_channel, 0, 0);
+	  HAL_NVIC_EnableIRQ(interrupt_channel);
+
 }
 
 void Time::start(){
-	Time::init_timer(TIM2, &htim2, 0, HIGH_PRECISION_MAX_ARR);
-	Time::init_timer(TIM5, &htim5, 0, HIGH_PRECISION_MAX_ARR);
-	Time::init_timer(TIM24, &htim24, 0, HIGH_PRECISION_MAX_ARR);
-	Time::init_timer(TIM6, &htim6, 275, 1000);
+    __HAL_RCC_TIM2_CLK_ENABLE();
+    __HAL_RCC_TIM5_CLK_ENABLE();
+    __HAL_RCC_TIM6_CLK_ENABLE();
+    __HAL_RCC_TIM24_CLK_ENABLE();
+
+	Time::init_timer(TIM2, &htim2, 0, HIGH_PRECISION_MAX_ARR, TIM2_IRQn);
+	Time::init_timer(TIM5, &htim5, 0, HIGH_PRECISION_MAX_ARR, TIM5_IRQn);
+	Time::init_timer(TIM24, &htim24, 0, HIGH_PRECISION_MAX_ARR, TIM24_IRQn);
+	Time::init_timer(TIM6, &htim6, 275, 1000, TIM6_DAC_IRQn);
 
 	HAL_TIM_Base_Start_IT(global_timer);
 	HAL_TIM_Base_Start_IT(low_precision_timer);
@@ -82,11 +92,9 @@ void Time::stop_timer(TIM_HandleTypeDef* handle){
 
 optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, function<void()> func){
 	if(available_high_precision_timers.size() == 0) {
+		ErrorHandler("There are no available high precision timers left");
 		return nullopt;
 	}
-
-	uint16_t id = Time::high_precision_ids.front();
-	Time::high_precision_ids.pop_front();
 
 	TIM_HandleTypeDef* tim = Time::available_high_precision_timers.top();
 	Time::available_high_precision_timers.pop();
@@ -94,16 +102,19 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 	Time::Alarm alarm = {
 			.period = period_in_us,
 			.tim = tim,
-			.alarm = func
+			.alarm = [&](){}
 	};
-	Time::high_precision_alarms_by_id[id] = alarm;
+	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
 
-	tim->Instance->PSC = 275;
-	tim->Instance->ARR = period_in_us;
-	HAL_TIM_Base_Start_IT(tim);
 
-	return id;
+	Time::ConfigTimer(tim, period_in_us);
+
+	alarm.alarm = func;
+	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
+	Time::high_precision_alarms_by_timer[tim] = alarm;
+
+	return high_precision_ids++;
 }
 
 bool Time::unregister_high_precision_alarm(uint16_t id){
@@ -122,18 +133,14 @@ bool Time::unregister_high_precision_alarm(uint16_t id){
 }
 
 uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void()> func){
-	uint16_t id = Time::low_precision_ids.front();
-	Time::low_precision_ids.pop_front();
-
 	Time::Alarm alarm = {
 			.period = period_in_ms,
 			.tim = low_precision_timer,
 			.alarm = func
 	};
-	Time::low_precision_alarms_by_id[id] = alarm;
-	Time::high_precision_ids.push_front(id);
+	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
 
-	return id;
+	return low_precision_ids++;
 }
 
 bool Time::unregister_low_precision_alarm(uint16_t id){
@@ -141,13 +148,13 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 		return false;
 	}
 	Time::low_precision_alarms_by_id.erase(id);
-	Time::high_precision_ids.push_front(id);
 
 	return true;
 }
 
 void Time::set_timeout(int milliseconds, function<void()> callback){
-	int id = Time::register_low_precision_alarm(milliseconds, [&](){
+	uint8_t id = low_precision_ids;
+	Time::register_low_precision_alarm(milliseconds, [&,id](){
 		callback();
 		Time::unregister_low_precision_alarm(id);
 	});
@@ -181,4 +188,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* tim){
 	else if(Time::high_precision_timers.contains(tim)) {
 			Time::high_precision_timer_callback(tim);
 	}
+}
+
+void Time::ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us){
+	__HAL_TIM_DISABLE_IT(tim,TIM_IT_UPDATE);
+	tim->Instance->CR1 &= ~(TIM_CR1_DIR|TIM_CR1_CMS);
+	tim->Instance->CR1 |= TIM_COUNTERMODE_UP;
+	tim->Instance->CR1 &= ~TIM_CR1_CKD;
+	tim->Instance->CR1 |= TIM_CLOCKDIVISION_DIV1;
+	tim->Instance->ARR = period_in_us;
+	tim->Instance->PSC = 275;
+	tim->Instance->EGR = TIM_EGR_UG;
+	tim->Instance->SMCR = 0;
+	tim->Instance->BDTR = 0;
+	tim->Instance->CR1 = TIM_CR1_CEN;
+	tim->Instance->CNT = 1;
+	tim->Instance->DIER = TIM_IT_UPDATE;
+
 }

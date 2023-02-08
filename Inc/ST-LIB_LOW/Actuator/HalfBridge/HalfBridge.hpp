@@ -8,8 +8,9 @@
 #pragma once
 
 #include "Time/Time.hpp"
-#include "DigitalOutputservice/DigitalOutputservice.hpp"
-#include "PWMservice/PWMservice.hpp"
+#include "DigitalOutputService/DigitalOutputService.hpp"
+#include "PWMService/PWMService.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 class HalfBridge {
 public:

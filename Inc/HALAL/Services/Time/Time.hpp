@@ -8,6 +8,7 @@
 #pragma once
 
 #include "stm32h7xx_hal.h"
+
 #ifdef HAL_TIM_MODULE_ENABLED
 
 #include "C++Utilities/CppUtils.hpp"
@@ -24,8 +25,8 @@ extern TIM_HandleTypeDef htim6;		// Used for the low precision alarms (1mS)
 class Time {
 
 private :
-	static forward_list<uint8_t> high_precision_ids;
-	static forward_list<uint8_t> low_precision_ids;
+	static uint8_t high_precision_ids;
+	static uint8_t low_precision_ids;
 
 	struct Alarm {
 		uint32_t period;
@@ -43,7 +44,8 @@ private :
 
 	static void stop_timer(TIM_HandleTypeDef* htim);
 	static void start_timer(TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
-	static void init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
+	static void init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period, IRQn_Type interrupt_channel);
+	static void ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us);
 
 public :
 	static TIM_HandleTypeDef* global_timer;
