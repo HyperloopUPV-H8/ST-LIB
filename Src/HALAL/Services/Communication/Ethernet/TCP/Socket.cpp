@@ -55,7 +55,6 @@ void Socket::reconnect(){
 
 
 void Socket::send(){
-	uint16_t is_freed;
 	pbuf* temporal_packet_buffer;
 	err_t error = ERR_OK;
 	while(error == ERR_OK && tx_packet_buffer != nullptr && tx_packet_buffer->len <= tcp_sndbuf(socket_control_block)){

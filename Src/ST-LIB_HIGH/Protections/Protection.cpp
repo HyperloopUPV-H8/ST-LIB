@@ -1,4 +1,5 @@
 #include "Protections/Protection.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 Protection::Protection(double* src): src(src) {}
 
