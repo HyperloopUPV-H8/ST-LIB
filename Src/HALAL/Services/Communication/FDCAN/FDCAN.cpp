@@ -186,11 +186,11 @@ void FDCAN::init(FDCAN::Instance* fdcan){
 	handle->Init.ProtocolException = DISABLE;
 	handle->Init.NominalPrescaler = 1;
 	handle->Init.NominalSyncJumpWidth = 16;
-	handle->Init.NominalTimeSeg1 = 47;
-	handle->Init.NominalTimeSeg2 = 16;
+	handle->Init.NominalTimeSeg1 = 59;
+	handle->Init.NominalTimeSeg2 = 20;
 	handle->Init.DataPrescaler = 1;
 	handle->Init.DataSyncJumpWidth = 4;
-	handle->Init.DataTimeSeg1 = 11;
+	handle->Init.DataTimeSeg1 = 14;
 	handle->Init.DataTimeSeg2 = 5;
 	handle->Init.MessageRAMOffset = 0;
 	handle->Init.StdFiltersNbr = 1;

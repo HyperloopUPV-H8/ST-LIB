@@ -112,6 +112,7 @@ public:
 
     static bool read(uint8_t id, FDCAN::Packet* data);
 
+    //The use of this method is highly discouraged.
     static bool wait_and_read(uint8_t id, FDCAN::Packet* data);
 
     /**
