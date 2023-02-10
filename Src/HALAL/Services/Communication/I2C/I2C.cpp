@@ -8,23 +8,13 @@
 
 #ifdef HAL_I2C_MODULE_ENABLED
 
-extern I2C_HandleTypeDef hi2c2;
-
-I2C::Instance I2C::instance2 = { .SCL = PF0, .SDA = PF1, .hi2c = &hi2c2, .instance = I2C2,
-
-                               };
-
-I2C::Peripheral I2C::i2c2 = I2C::Peripheral::peripheral2;
-
 unordered_map<uint8_t, I2C::Instance* > I2C::active_i2c;
-unordered_map<I2C::Peripheral, I2C::Instance*> I2C::available_i2cs = {
-	{I2C::i2c2, &I2C::instance2}
-};
 
 uint16_t I2C::id_counter = 0;
 
 optional<uint8_t> I2C::inscribe(I2C::Peripheral& i2c){
 	if ( !I2C::available_i2cs.contains(i2c)){
+
 		return nullopt; //TODO: Error handler or throw the exception
 	}
 
@@ -32,7 +22,6 @@ optional<uint8_t> I2C::inscribe(I2C::Peripheral& i2c){
 
     Pin::inscribe(i2c_instance->SCL, ALTERNATIVE);
     Pin::inscribe(i2c_instance->SDA, ALTERNATIVE);
-
 
     uint8_t id = I2C::id_counter++;
 
@@ -51,7 +40,7 @@ void I2C::start(){
 
 bool I2C::transmit_next_packet(uint8_t id, I2CPacket& packet){
     if (!I2C::active_i2c.contains(id)){
-    	printf("I2C No encontrado al enviar paquete \n\r");
+    	ErrorHandler("I2C No encontrado al enviar paquete \n\r");
         return false; //TODO: Error handler
     }
 
@@ -59,12 +48,35 @@ bool I2C::transmit_next_packet(uint8_t id, I2CPacket& packet){
 
 
     if(i2c->hi2c->State == HAL_I2C_STATE_BUSY_TX){
-    	printf("I2C Transmit buffer busy!\n\r");
-       return false;
+    	ErrorHandler("I2C Transmit buffer busy!\n\r");
+    	return false;
     }
 
     if (HAL_I2C_Master_Transmit_DMA(i2c->hi2c, packet.get_id(), packet.get_data(), packet.get_size()) != HAL_OK){
-    	printf("Error during I2C transmission\n\r");
+    	ErrorHandler("Error during I2C transmission\n\r");
+        return false; //TODO: Warning, Error during transmision
+    }
+
+    printf("Packet send successfully \n\r");
+    return true;
+}
+
+bool I2C::transmit_next_packet_polling(uint8_t id, I2CPacket& packet){
+    if (!I2C::active_i2c.contains(id)){
+    	ErrorHandler("I2C No encontrado al enviar paquete \n\r");
+        return false; //TODO: Error handler
+    }
+
+    I2C::Instance* i2c = I2C::active_i2c[id];
+
+
+    if(i2c->hi2c->State == HAL_I2C_STATE_BUSY_TX){
+    	ErrorHandler("I2C Transmit buffer busy!\n\r");
+    	return false;
+    }
+
+    if (HAL_I2C_Master_Transmit(i2c->hi2c, packet.get_id(), packet.get_data(), packet.get_size(), 1000) != HAL_OK){
+    	ErrorHandler("Error during I2C transmission\n\r");
         return false; //TODO: Warning, Error during transmision
     }
 
@@ -73,20 +85,22 @@ bool I2C::transmit_next_packet(uint8_t id, I2CPacket& packet){
 }
 
 bool I2C::receive_next_packet(uint8_t id, I2CPacket& packet){
-	 if (!I2C::active_i2c.contains(id))
-	        return false; //TODO: Error handler
+	 if (!I2C::active_i2c.contains(id)){
+		 ErrorHandler("That id doesn t correspond to a I2C");
+	        return false;
+	 }
 
 	 I2C::Instance* i2c = I2C::active_i2c[id];
 
     if(i2c->hi2c->State == HAL_I2C_STATE_BUSY_RX){
-    	printf("I2C Receive buffer busy!\n\r");
-       return false;
+    	ErrorHandler("I2C Receive buffer busy!\n\r");
+    	return false;
     }
 
     *packet.get_data() = 0;
 
     if (HAL_I2C_Master_Receive_DMA(i2c->hi2c, packet.get_id(), packet.get_data(), packet.get_size()) != HAL_OK) {
-    	printf("I2C Error during receive!\n\r");
+    	ErrorHandler("I2C Error during receive!\n\r");
         return false; //TODO: Warning, Error during receive
     }
 
@@ -94,7 +108,32 @@ bool I2C::receive_next_packet(uint8_t id, I2CPacket& packet){
     return true;
 }
 
-void HAL_SPI_RxCpltCallback(I2C_HandleTypeDef * hi2c){
+
+bool I2C::receive_next_packet_polling(uint8_t id, I2CPacket& packet){
+	 if (!I2C::active_i2c.contains(id)){
+		 ErrorHandler("That id doesn t correspond to a I2C");
+	        return false;
+	 }
+
+	 I2C::Instance* i2c = I2C::active_i2c[id];
+
+    if(i2c->hi2c->State == HAL_I2C_STATE_BUSY_RX){
+    	ErrorHandler("I2C Receive buffer busy!\n\r");
+    	return false;
+    }
+
+    *packet.get_data() = 0;
+
+    if (HAL_I2C_Master_Receive(i2c->hi2c, packet.get_id(), packet.get_data(), packet.get_size(), 1000) != HAL_OK) {
+    	ErrorHandler("I2C Error during receive!\n\r");
+        return false; //TODO: Warning, Error during receive
+    }
+
+    i2c->receive_ready = false;
+    return true;
+}
+
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef * hi2c){
     auto result = find_if(I2C::active_i2c.begin(), I2C::active_i2c.end(), [&](auto i2c){return (i2c.second->hi2c == hi2c);});
 
     if (result != I2C::active_i2c.end()) {
@@ -175,42 +214,32 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hspi){
     return;
 }
 
-/*
-void I2C::init(I2C::Instance* spi){
-	if (spi->initialized) {
+
+void I2C::init(I2C::Instance* i2c){
+	if(i2c->initialized){
 		return;
 	}
-    SPI_InitTypeDef init_data = spi->hspi->Init;
-	spi->hspi->Instance = spi->instance;
-	init_data.Mode = spi->mode;
-	init_data.Direction = SPI_DIRECTION_2LINES;
-	init_data.DataSize = spi->data_size;
-	init_data.CLKPolarity = spi->clock_polarity;
-	init_data.CLKPhase = spi->clock_phase;
-	if (spi->mode == SPI_MODE_MASTER) {
-		init_data.NSS = SPI_NSS_HARD_OUTPUT;
-		init_data.BaudRatePrescaler = spi->baud_rate_prescaler;
-	}else{
-		init_data.NSS = SPI_NSS_HARD_INPUT;
-	}
-	init_data.FirstBit = spi->first_bit;
-	init_data.TIMode = SPI_TIMODE_DISABLE;
-	init_data.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-	init_data.CRCPolynomial = 0x0;
-	init_data.NSSPMode = SPI_NSS_PULSE_ENABLE;
-	init_data.NSSPolarity = spi->nss_polarity;
-	init_data.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
-	init_data.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-	init_data.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-	init_data.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
-	init_data.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
-	init_data.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
-	init_data.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
-	init_data.IOSwap = SPI_IO_SWAP_DISABLE;
-	if (HAL_SPI_Init(&hspi3) != HAL_OK){
-		//TODO: Error handler
-	}
-	spi->initialized = true;
+	i2c->hi2c->Instance = i2c->instance;
+	i2c->hi2c->Init.Timing = 0x60404E72;
+	i2c->hi2c->Init.OwnAddress1 = (i2c->address)<<1;
+	i2c->hi2c->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+	i2c->hi2c->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+	i2c->hi2c->Init.OwnAddress2 = 0;
+	i2c->hi2c->Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+	i2c->hi2c->Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+	i2c->hi2c->Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+
+	if (HAL_I2C_Init(i2c->hi2c) != HAL_OK){
+		ErrorHandler("Error configurating I2C");
+	  }
+
+	if (HAL_I2CEx_ConfigAnalogFilter(i2c->hi2c, I2C_ANALOGFILTER_ENABLE) != HAL_OK){
+		ErrorHandler("Error configurating Analog Filter of the I2C");
+	  }
+
+	if (HAL_I2CEx_ConfigDigitalFilter(i2c->hi2c, 0) != HAL_OK){
+	    ErrorHandler("Error configurating Digital Filter of the I2C");
+	  }
+	  i2c->initialized = true;
 }
-*/
 #endif
