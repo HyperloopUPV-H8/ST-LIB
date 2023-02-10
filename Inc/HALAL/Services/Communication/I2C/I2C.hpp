@@ -92,7 +92,7 @@ public:
      */
     static void start();
 
-    /**@brief	Transmits 1 RawPacket of any size by polling.
+    /**@brief	Transmits 1 RawPacket of any size by DMAs.
      * 			Handles the packet size automatically.
      * @param id Id of the I2C
      * @param packet Packet to be send
@@ -104,7 +104,7 @@ public:
     static bool transmit_next_packet_polling(uint8_t id, I2CPacket& packet);
 
     /**						
-     * @brief This method request the receive of a new RawPacket of any size by polling.
+     * @brief This method request the receive of a new RawPacket of any size by DMA.
      * 
      * @param id Id of the I2C
      * @param packet RawPacket in which the data will be stored
