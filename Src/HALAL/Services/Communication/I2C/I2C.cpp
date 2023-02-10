@@ -23,6 +23,9 @@ optional<uint8_t> I2C::inscribe(I2C::Peripheral& i2c){
     Pin::inscribe(i2c_instance->SCL, ALTERNATIVE);
     Pin::inscribe(i2c_instance->SDA, ALTERNATIVE);
 
+    DMA::inscribe_stream(i2c_instance->RX_DMA);
+    DMA::inscribe_stream(i2c_instance->TX_DMA);
+
     uint8_t id = I2C::id_counter++;
 
     I2C::active_i2c[id] = i2c_instance;

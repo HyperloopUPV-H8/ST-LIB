@@ -10,6 +10,7 @@
 #include "C++Utilities/CppUtils.hpp"
 #include "Packets/I2CPacket.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "DMA/DMA.hpp"
 
 #define HALAL_I2C_EMPTY_ID (uint16_t)0
 
@@ -32,6 +33,8 @@ private:
         Pin SDA; /**< MOSI pin. */
         I2C_HandleTypeDef* hi2c;  /**< HAL UART struct. */
         I2C_TypeDef* instance;
+        DMA::Stream RX_DMA;
+        DMA::Stream TX_DMA;
         uint8_t address = 0;
         uint32_t speed_frequency = 100; /**< frequency in khz*/
         uint32_t data_length = 8; /**< size in bits*/
@@ -63,6 +66,9 @@ public:
      *
      */
     static I2C::Peripheral i2c2;
+
+    static DMA_HandleTypeDef hdma_i2c2_rx;
+    static DMA_HandleTypeDef hdma_i2c2_tx;
 
     /**
      * @brief I2C 2 instance of the STM32H723.
