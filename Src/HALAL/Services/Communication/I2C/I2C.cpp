@@ -35,7 +35,7 @@ optional<uint8_t> I2C::inscribe(I2C::Peripheral& i2c, uint8_t address){
 }
 
 optional<uint8_t> I2C::inscribe(I2C::Peripheral& i2c){
-	I2C::inscribe(i2c, 0);
+	return I2C::inscribe(i2c, 0);
 }
 
 void I2C::start(){
@@ -107,8 +107,8 @@ bool I2C::receive_next_packet(uint8_t id, I2CPacket& packet){
     *packet.get_data() = 0;
 
     if (HAL_I2C_Master_Receive_DMA(i2c->hi2c, packet.get_id(), packet.get_data(), packet.get_size()) != HAL_OK) {
-    	ErrorHandler("I2C Error during receive!\n\r");
-        return false; //TODO: Warning, Error during receive
+    	ErrorHandler("I2C Error during memory read DMA!\n\r");
+        return false;
     }
 
     i2c->is_receive_ready = false;
@@ -133,7 +133,7 @@ bool I2C::receive_next_packet_polling(uint8_t id, I2CPacket& packet){
 
     if (HAL_I2C_Master_Receive(i2c->hi2c, packet.get_id(), packet.get_data(), packet.get_size(), 1000) != HAL_OK) {
     	ErrorHandler("I2C Error during receive!\n\r");
-        return false; //TODO: Warning, Error during receive
+        return false;
     }
 
     i2c->is_receive_ready = false;
@@ -152,8 +152,10 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c){
 
 
 bool I2C::read_from(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t mem_size){
-	 if (!I2C::active_i2c.contains(id))
-	        return false; //TODO: Error handler
+	 if (!I2C::active_i2c.contains(id)){
+		 ErrorHandler("That id doesn t correspond to a I2C");
+		 return false;
+	 }
 
 	 I2C::Instance* i2c = I2C::active_i2c[id];
 
@@ -166,8 +168,8 @@ bool I2C::read_from(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t m
 	 }
 
 	 if (HAL_I2C_Mem_Read_DMA(i2c->hi2c, packet.get_id(), mem_addr, 1, packet.get_data(), packet.get_size())){
-		 printf("I2C Error during receive!\n\r");
-		 return false; //TODO: Warning, Error during receive
+		 printf("I2C Error during memory read DMA!\n\r");
+		 return false;
 	 }
 
 	 i2c->is_receive_ready = false;
@@ -175,8 +177,9 @@ bool I2C::read_from(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t m
 }
 
 bool I2C::write_to(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t mem_size){
-	if (!I2C::active_i2c.contains(id))
-		return false; //TODO: Error handler
+	if (!I2C::active_i2c.contains(id)){
+		return false;
+	}
 
 	I2C::Instance* i2c = I2C::active_i2c[id];
 
