@@ -12,10 +12,10 @@ unordered_map<uint8_t, I2C::Instance* > I2C::active_i2c;
 
 uint16_t I2C::id_counter = 0;
 
-optional<uint8_t> I2C::inscribe(I2C::Peripheral& i2c){
+optional<uint8_t> I2C::inscribe(I2C::Peripheral& i2c, uint8_t address){
 	if ( !I2C::available_i2cs.contains(i2c)){
-
-		return nullopt; //TODO: Error handler or throw the exception
+		ErrorHandler("This I2C is not available on the runes files");
+		return nullopt;
 	}
 
 	I2C::Instance* i2c_instance = I2C::available_i2cs[i2c];
@@ -29,10 +29,14 @@ optional<uint8_t> I2C::inscribe(I2C::Peripheral& i2c){
     uint8_t id = I2C::id_counter++;
 
     I2C::active_i2c[id] = i2c_instance;
+    i2c_instance->address = address;
 
     return id;
 }
 
+optional<uint8_t> I2C::inscribe(I2C::Peripheral& i2c){
+	I2C::inscribe(i2c, 0);
+}
 
 void I2C::start(){
 	for(auto iter: I2C::active_i2c){
@@ -107,7 +111,7 @@ bool I2C::receive_next_packet(uint8_t id, I2CPacket& packet){
         return false; //TODO: Warning, Error during receive
     }
 
-    i2c->receive_ready = false;
+    i2c->is_receive_ready = false;
     return true;
 }
 
@@ -132,7 +136,7 @@ bool I2C::receive_next_packet_polling(uint8_t id, I2CPacket& packet){
         return false; //TODO: Warning, Error during receive
     }
 
-    i2c->receive_ready = false;
+    i2c->is_receive_ready = false;
     return true;
 }
 
@@ -140,7 +144,7 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef * hi2c){
     auto result = find_if(I2C::active_i2c.begin(), I2C::active_i2c.end(), [&](auto i2c){return (i2c.second->hi2c == hi2c);});
 
     if (result != I2C::active_i2c.end()) {
-        (*result).second->receive_ready = true;
+        (*result).second->is_receive_ready = true;
     }else{
         //TODO: Warning: Data receive form an unknown SPI
     }
@@ -166,7 +170,7 @@ bool I2C::read_from(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t m
 		 return false; //TODO: Warning, Error during receive
 	 }
 
-	 i2c->receive_ready = false;
+	 i2c->is_receive_ready = false;
 	 return true;
 }
 
@@ -195,7 +199,7 @@ bool I2C::has_next_packet(uint8_t id){
 
     I2C::Instance* i2c = I2C::active_i2c[id];
 
-    return i2c->receive_ready;
+    return i2c->is_receive_ready;
 }
 
 bool I2C::is_busy(uint8_t id){
@@ -222,8 +226,12 @@ void I2C::init(I2C::Instance* i2c){
 	if(i2c->initialized){
 		return;
 	}
+	if(!available_speed_frequencies.contains(i2c->speed_frequency_kHz)){
+		ErrorHandler("Error initializing, the frequency of the I2C is not available");
+		return;
+	}
 	i2c->hi2c->Instance = i2c->instance;
-	i2c->hi2c->Init.Timing = 0x60404E72;
+	i2c->hi2c->Init.Timing = available_speed_frequencies[i2c->speed_frequency_kHz];
 	i2c->hi2c->Init.OwnAddress1 = (i2c->address)<<1;
 	i2c->hi2c->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
 	i2c->hi2c->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;

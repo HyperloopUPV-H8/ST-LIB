@@ -36,9 +36,9 @@ private:
         DMA::Stream RX_DMA;
         DMA::Stream TX_DMA;
         uint8_t address = 0;
-        uint32_t speed_frequency = 100; /**< frequency in khz*/
-        uint32_t data_length = 8; /**< size in bits*/
-        bool receive_ready = false; /**< Receive value is ready to use pin. */
+        uint32_t speed_frequency_kHz = 100;
+        uint32_t data_length_in_bits = 8; /**< size in bits*/
+        bool is_receive_ready = false; /**< Receive value is ready to use pin. */
         bool initialized = false;
 
     };
