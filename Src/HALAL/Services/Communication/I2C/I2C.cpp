@@ -140,7 +140,7 @@ bool I2C::receive_next_packet_polling(uint8_t id, I2CPacket& packet){
     return true;
 }
 
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef * hi2c){
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c){
     auto result = find_if(I2C::active_i2c.begin(), I2C::active_i2c.end(), [&](auto i2c){return (i2c.second->hi2c == hi2c);});
 
     if (result != I2C::active_i2c.end()) {
