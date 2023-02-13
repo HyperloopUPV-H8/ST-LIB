@@ -29,16 +29,16 @@ private:
      *           
      */
     struct Instance{
-        Pin SCL; /**< Clock pin. */
-        Pin SDA; /**< MOSI pin. */
-        I2C_HandleTypeDef* hi2c;  /**< HAL UART struct. */
+        Pin SCL;
+        Pin SDA;
+        I2C_HandleTypeDef* hi2c;
         I2C_TypeDef* instance;
         DMA::Stream RX_DMA;
         DMA::Stream TX_DMA;
         uint8_t address = 0;
         uint32_t speed_frequency_kHz = 100;
-        uint32_t data_length_in_bits = 8; /**< size in bits*/
-        bool is_receive_ready = false; /**< Receive value is ready to use pin. */
+        uint32_t data_length_in_bits = 8;
+        bool is_receive_ready = false;
         bool initialized = false;
 
     };
