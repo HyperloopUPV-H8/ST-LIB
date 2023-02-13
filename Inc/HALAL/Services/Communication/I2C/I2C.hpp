@@ -39,7 +39,7 @@ private:
         uint32_t speed_frequency_kHz = 100;
         uint32_t data_length_in_bits = 8;
         bool is_receive_ready = false;
-        bool initialized = false;
+        bool is_initialized = false;
 
     };
 

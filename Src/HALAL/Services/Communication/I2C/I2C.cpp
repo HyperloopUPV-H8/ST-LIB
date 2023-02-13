@@ -223,7 +223,7 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hspi){
 
 
 void I2C::init(I2C::Instance* i2c){
-	if(i2c->initialized){
+	if(i2c->is_initialized){
 		return;
 	}
 	if(!available_speed_frequencies.contains(i2c->speed_frequency_kHz)){
@@ -251,6 +251,6 @@ void I2C::init(I2C::Instance* i2c){
 	if (HAL_I2CEx_ConfigDigitalFilter(i2c->hi2c, 0) != HAL_OK){
 	    ErrorHandler("Error configurating Digital Filter of the I2C");
 	  }
-	  i2c->initialized = true;
+	  i2c->is_initialized = true;
 }
 #endif
