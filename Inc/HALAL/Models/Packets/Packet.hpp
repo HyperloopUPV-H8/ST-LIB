@@ -48,6 +48,7 @@ public:
     Packet(uint16_t id);
     Packet(uint16_t id, PacketValue<Type> value, PacketValue<Types>... args);
     Packet(PacketValue<Type> value, PacketValue<Types>... args);
+    ~Packet();
 
     template<int I>
     const auto& get() const;
@@ -112,6 +113,13 @@ Packet<Type, Types...>::Packet(uint16_t id, PacketValue<Type> value, PacketValue
 
 template<class Type, class... Types>
 Packet<Type, Types...>::Packet(PacketValue<Type> value, PacketValue<Types>... args) : Packet<Types...>(args...), value(value) {}
+
+template<class Type, class... Types>
+Packet<Type, Types...>::~Packet(){
+    if(buffer != nullptr){
+        free(buffer);
+    }
+}
 
 template<class Type, class... Types> template<int I>
 const auto& Packet<Type, Types...>::get() const {
