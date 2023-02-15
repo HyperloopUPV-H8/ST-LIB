@@ -1,6 +1,7 @@
 #pragma once
 
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 #define PROTECTIONTYPE_LENGTH 5
 
