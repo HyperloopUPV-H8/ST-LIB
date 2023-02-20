@@ -17,7 +17,7 @@ public:
 
 	void turn_on();
 	void turn_off();
-	void set_duty_cycle(uint8_t duty_cycle);
+	void set_duty_cycle(float duty_cycle);
 
 private:
 	uint8_t id;
