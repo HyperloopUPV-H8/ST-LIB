@@ -12,7 +12,7 @@
 uint8_t PWMservice::id_counter = 0;
 map<uint8_t, PWMservice::Instance> PWMservice::active_instances = {};
 PWMservice::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PWMservice::Mode mode) :
-		peripheral(peripheral), channel(channel), mode(mode) {}
+		peripheral(peripheral), channel(channel), mode(mode), duty_cycle(0) {}
 
 optional<uint8_t> PWMservice::inscribe(Pin& pin){
 	if (not available_instances.contains(pin)) {
@@ -102,7 +102,8 @@ void PWMservice::turn_off(uint8_t id){
 	}
 }
 
-void PWMservice::set_duty_cycle(uint8_t id, uint8_t duty_cycle) {
+void PWMservice::set_duty_cycle(uint8_t id, float duty_cycle) {
+
 	if (not (duty_cycle >= 0 && duty_cycle <= 100)) {
 		ErrorHandler("The duty cycle of value %d must be in the range [0, 100]", duty_cycle);
 		return;
@@ -113,8 +114,22 @@ void PWMservice::set_duty_cycle(uint8_t id, uint8_t duty_cycle) {
 	}
 
 	Instance& instance = get_instance(id);
-	uint16_t raw_duty = round(__HAL_TIM_GET_AUTORELOAD(instance.peripheral->handle) / 100.0 * duty_cycle);
+	instance.duty_cycle = duty_cycle;
+
+	uint16_t raw_duty = round(instance.peripheral->get_period() / 100.0 * duty_cycle);
 	__HAL_TIM_SET_COMPARE(instance.peripheral->handle, instance.channel, raw_duty);
+}
+
+void PWMservice::set_frequency(uint8_t id, uint32_t frequency) {
+	if (not instance_exists(id)) {
+		ErrorHandler("Instance with id %d does not exist", id);
+		return;
+	}
+
+	TIM_TypeDef& timer = *get_instance(id).peripheral->handle->Instance;
+
+	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / timer.PSC) / frequency;
+	set_duty_cycle(id, get_instance(id).duty_cycle);
 }
 
 bool PWMservice::instance_exists(uint8_t id) {
