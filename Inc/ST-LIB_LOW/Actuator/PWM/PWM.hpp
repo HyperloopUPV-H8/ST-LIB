@@ -18,6 +18,7 @@ public:
 	void turn_on();
 	void turn_off();
 	void set_duty_cycle(float duty_cycle);
+	void set_frequency(uint32_t frequency);
 
 private:
 	uint8_t id;

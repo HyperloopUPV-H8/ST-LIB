@@ -128,7 +128,7 @@ void PWMservice::set_frequency(uint8_t id, uint32_t frequency) {
 
 	TIM_TypeDef& timer = *get_instance(id).peripheral->handle->Instance;
 
-	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / timer.PSC) / frequency;
+	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / (timer.PSC+1)) / frequency;
 	set_duty_cycle(id, get_instance(id).duty_cycle);
 }
 
