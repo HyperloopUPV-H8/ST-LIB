@@ -23,7 +23,6 @@ TimerPeripheral::TimerPeripheral(
 		name(name){}
 
 void TimerPeripheral::init() {
-		TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 		TIM_MasterConfigTypeDef sMasterConfig = {0};
 		TIM_IC_InitTypeDef sConfigIC = {0};
 		TIM_OC_InitTypeDef sConfigOC = {0};

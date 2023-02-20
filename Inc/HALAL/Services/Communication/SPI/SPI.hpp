@@ -49,6 +49,12 @@ private:
         string name;
     };
 
+
+
+    static void turn_on_chip_select(SPI::Instance* spi);
+    static void turn_off_chip_select(SPI::Instance* spi);
+
+public:
     /**
      * @brief Enum that abstracts the use of the Instance struct to facilitate the mocking of the HALAL.
      *
@@ -62,10 +68,6 @@ private:
  		peripheral6 = 5,
      };
 
-    static void turn_on_chip_select(SPI::Instance* spi);
-    static void turn_off_chip_select(SPI::Instance* spi);
-
-public:
     static uint16_t id_counter;
     
     static unordered_map<uint8_t, SPI::Instance* > registered_spi;

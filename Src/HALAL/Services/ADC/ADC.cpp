@@ -83,10 +83,10 @@ optional<float> ADC::get_value(uint8_t id) {
 	Instance& instance = active_instances[id];
 	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
 	if(instance.peripheral->handle == &hadc3) {
-		return raw / MAX_12BIT * MAX_VOLTAGE;
+		return raw / MAX_12BIT * ADC_MAX_VOLTAGE;
 	}
 	else {
-		return raw / MAX_16BIT * MAX_VOLTAGE;
+		return raw / MAX_16BIT * ADC_MAX_VOLTAGE;
 	}
 
 	return nullopt;
