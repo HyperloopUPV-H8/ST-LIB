@@ -83,19 +83,19 @@ void StateMachine::add_transition(uint8_t old_state, uint8_t new_state,
 	transitions[old_state][new_state] = transition;
 }
 
-void StateMachine::add_state_machine(StateMachine* state_machine, uint8_t state) {
-	nested_state_machine[state] = state_machine;
+void StateMachine::add_state_machine(StateMachine& state_machine, uint8_t state) {
+	nested_state_machine[state] = &state_machine;
 
 	if (current_state != state) {
-		for (uint8_t timed_action : nested_sm->current_state_timed_actions_in_microseconds) {
+		for (uint8_t timed_action : state_machine.current_state_timed_actions_in_microseconds) {
 			Time::unregister_high_precision_alarm(timed_action);
 		}
-		nested_sm->current_state_timed_actions_in_microseconds.clear();
+		state_machine.current_state_timed_actions_in_microseconds.clear();
 
-		for (uint8_t timed_action : nested_sm->current_state_timed_actions_in_milliseconds) {
+		for (uint8_t timed_action : state_machine.current_state_timed_actions_in_milliseconds) {
 			Time::unregister_low_precision_alarm(timed_action);
 		}
-		nested_sm->current_state_timed_actions_in_milliseconds.clear();
+		state_machine.current_state_timed_actions_in_milliseconds.clear();
 	}
 }
 

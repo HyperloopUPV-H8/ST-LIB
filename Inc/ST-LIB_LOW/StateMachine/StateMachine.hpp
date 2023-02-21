@@ -55,7 +55,7 @@ public:
 	void force_change_state(uint8_t new_state);
 	void check_transitions();
 
-	void add_state_machine(StateMachine* state_machine, uint8_t state);
+	void add_state_machine(StateMachine& state_machine, uint8_t state);
 
 
 private:
