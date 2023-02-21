@@ -45,6 +45,7 @@ void StateMachine::add_enter_action(function<void()> action) {
 	}
 	states[current_state].on_enter_actions.push_back(action);
 }
+
 void StateMachine::add_enter_action(function<void()> action, uint8_t state) {
 	if (not states.contains(state)) {
 		ErrorHandler("The state %d is not added to the state machine", state);
@@ -82,11 +83,24 @@ void StateMachine::add_transition(uint8_t old_state, uint8_t new_state,
 	transitions[old_state][new_state] = transition;
 }
 
+void StateMachine::add_state_machine(StateMachine* state_machine, uint8_t state) {
+	nested_state_machine[state] = state_machine;
+
+	if (current_state != state) {
+		state_machine->current_state_timed_actions_in_milliseconds.clear();
+		state_machine->current_state_timed_actions_in_microseconds.clear();
+	}
+}
+
 void StateMachine::check_transitions() {
 	for (auto const state_transition : transitions[current_state]) {
 		if (state_transition.second()) {
 			force_change_state(state_transition.first);
 		}
+	}
+
+	if (nested_state_machine.contains(current_state)) {
+		nested_state_machine[current_state]->check_transitions();
 	}
 }
 
@@ -99,14 +113,37 @@ void StateMachine::force_change_state(uint8_t new_state) {
 	for (uint8_t timed_action : current_state_timed_actions_in_microseconds) {
 		Time::unregister_high_precision_alarm(timed_action);
 	}
+	current_state_timed_actions_in_microseconds.clear();
+
 	for (uint8_t timed_action : current_state_timed_actions_in_milliseconds) {
 		Time::unregister_low_precision_alarm(timed_action);
 	}
+	current_state_timed_actions_in_milliseconds.clear();
+
+	if (nested_state_machine.contains(current_state)) {
+		StateMachine* nested_sm = nested_state_machine[current_state];
+		for (uint8_t timed_action : nested_sm->current_state_timed_actions_in_microseconds) {
+			Time::unregister_high_precision_alarm(timed_action);
+		}
+		nested_sm->current_state_timed_actions_in_microseconds.clear();
+
+		for (uint8_t timed_action : nested_sm->current_state_timed_actions_in_milliseconds) {
+			Time::unregister_low_precision_alarm(timed_action);
+		}
+		nested_sm->current_state_timed_actions_in_milliseconds.clear();
+	}
+
 	states[current_state].exit();
 
 	current_state = new_state;
 
 	states[current_state].enter();
+
+	if (nested_state_machine.contains(current_state)) {
+		StateMachine* nested_sm = nested_state_machine[current_state];
+		nested_sm->current_state = nested_sm->initial_state;
+	}
+
 	for (TimedAction timed_action : states[current_state].cyclic_actions) {
 		if (timed_action.microseconds % 1000 == 0) {
 			optional<uint8_t> optional_id = Time::register_low_precision_alarm(timed_action.microseconds/1000, timed_action.action);

@@ -9,6 +9,8 @@
 
 #ifdef HAL_TIM_MODULE_ENABLED
 
+using std::map;
+
 class TimedAction {
 public:
 	function<void()> action;
@@ -53,17 +55,21 @@ public:
 	void force_change_state(uint8_t new_state);
 	void check_transitions();
 
+	void add_state_machine(StateMachine* state_machine, uint8_t state);
+
+
 private:
 	unordered_map<uint8_t, State> states;
 	unordered_map<uint8_t, unordered_map<uint8_t, function<bool()>>> transitions;
 
+	map<uint8_t, StateMachine*> nested_state_machine;
 	vector<uint8_t> current_state_timed_actions_in_milliseconds;
 	vector<uint8_t> current_state_timed_actions_in_microseconds;
 };
 
 template<class TimeUnit>
 void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, uint8_t state) {
-	if (not state) {
+	if (not states.contains(state)) {
 		ErrorHandler("The state %d is not added to the state machine", state);
 		return;
 	}
