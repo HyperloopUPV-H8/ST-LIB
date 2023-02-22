@@ -16,6 +16,5 @@ void STLIB::start(TARGET target, string ip, string subnet_mask, string gateway, 
 
 void STLIB::update() {
     Ethernet::update();
-    MX_LWIP_Process();
 	ErrorHandlerModel::ErrorHandlerUpdate();
 }

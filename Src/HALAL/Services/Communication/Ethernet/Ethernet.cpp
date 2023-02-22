@@ -87,6 +87,7 @@ void Ethernet::inscribe(){
 		ErrorHandler("Unable to inscribe Ethernet because is already ready!");
 	}
 
+
 }
 
 void Ethernet::update(){
@@ -106,9 +107,7 @@ void Ethernet::update(){
 			netif_set_up(&gnetif);
 		}
 	}
-	else {
-		ErrorHandler("Unable to update Ethernet because is not running!");
-	}
+
 }
 
 #endif
