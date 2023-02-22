@@ -66,11 +66,6 @@ void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway){
 		return;
 	}
 
-	ipaddr = local_ip.address;
-	netmask = subnet_mask.address;
-	gw = gateway.address;
-	MX_LWIP_Init();
-	is_running = true;
 }
 
 void Ethernet::inscribe(){
@@ -92,19 +87,6 @@ void Ethernet::inscribe(){
 		ErrorHandler("Unable to inscribe Ethernet because is already ready!");
 	}
 
-	Pin::inscribe(PA1, ALTERNATIVE);
-	Pin::inscribe(PA2, ALTERNATIVE);
-	Pin::inscribe(PA7, ALTERNATIVE);
-	Pin::inscribe(PB13, ALTERNATIVE);
-	Pin::inscribe(PC1, ALTERNATIVE);
-	Pin::inscribe(PC4, ALTERNATIVE);
-	Pin::inscribe(PC5, ALTERNATIVE);
-	Pin::inscribe(PG11, ALTERNATIVE);
-	Pin::inscribe(PG13, ALTERNATIVE);
-	mpu_start();
-	SCB_EnableICache();
-	SCB_EnableDCache();
-	is_ready = true;
 }
 
 void Ethernet::update(){
@@ -124,7 +106,6 @@ void Ethernet::update(){
 			netif_set_up(&gnetif);
 		}
 	}
-
 	else {
 		ErrorHandler("Unable to update Ethernet because is not running!");
 	}
