@@ -1,4 +1,4 @@
-	/*
+/*
  * Created by Alejandro
  */
 
@@ -8,8 +8,6 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_TIM_MODULE_ENABLED
-
-using std::map;
 
 class TimedAction {
 public:
