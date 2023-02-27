@@ -64,7 +64,6 @@ void PWMservice::turn_on(uint8_t id) {
 	Instance& instance = get_instance(id);
 
 	if (instance.mode == NORMAL) {
-		HAL_TIM_PWM_Start(instance.peripheral->handle, instance.channel);
 	}
 
 	else if (instance.mode == NEGATED) {
