@@ -121,3 +121,11 @@ void TimerPeripheral::start() {
 bool TimerPeripheral::is_registered() {
 	return init_data.pwm_channels.size() + init_data.input_capture_channels.size();
 }
+
+uint32_t TimerPeripheral::get_prescaler() {
+	return handle->Instance->PSC;
+}
+
+uint32_t TimerPeripheral::get_period() {
+	return handle->Instance->ARR;
+}
