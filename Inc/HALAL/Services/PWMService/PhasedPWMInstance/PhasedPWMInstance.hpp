@@ -14,4 +14,5 @@ private:
 	uint16_t phase;
 
 	void set_duty_cycle(uint8_t duty_cycle);
+	void set_phase(uint8_t phase);
 };

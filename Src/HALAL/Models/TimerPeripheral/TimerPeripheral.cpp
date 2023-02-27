@@ -7,8 +7,36 @@
 
 #include "TimerPeripheral/TimerPeripheral.hpp"
 
+constexpr map<TIM_HandleTypeDef*, TIM_TypeDef*> TimerPeripheral::handle_to_timer = {
+		{&htim1, TIM1},
+		{&htim2, TIM2},
+		{&htim3, TIM3},
+		{&htim4, TIM4},
+		{&htim5, TIM5},
+		{&htim6, TIM6},
+		{&htim7, TIM7},
+		{&htim8, TIM8},
+		{&htim9, TIM9},
+		{&htim10, TIM10},
+		{&htim11, TIM11},
+		{&htim12, TIM12},
+		{&htim13, TIM13},
+		{&htim14, TIM14},
+		{&htim15, TIM15},
+		{&htim16, TIM16},
+		{&htim17, TIM17},
+		{&htim18, TIM18},
+		{&htim19, TIM19},
+		{&htim20, TIM20},
+		{&htim21, TIM21},
+		{&htim22, TIM22},
+		{&htim23, TIM23},
+		{&htim24, TIM24},
+};
+
+
 TimerPeripheral::InitData::InitData(
-		TIM_TypeDef* timer, bool is_base, uint32_t prescaler, uint32_t period, uint32_t deadtime) :
+		bool is_base, uint32_t prescaler, uint32_t period, uint32_t deadtime) :
 		timer(timer),
 		prescaler(prescaler),
 		period(period),
@@ -17,10 +45,10 @@ TimerPeripheral::InitData::InitData(
 		{}
 
 TimerPeripheral::TimerPeripheral(
-		TIM_HandleTypeDef* handle, InitData init_data, string name) :
+		TIM_HandleTypeDef* handle, InitData& init_data, string name) :
 		handle(handle),
 		init_data(init_data),
-		name(name){}
+		name(name) {}
 
 void TimerPeripheral::init() {
 		TIM_MasterConfigTypeDef sMasterConfig = {0};
@@ -28,7 +56,7 @@ void TimerPeripheral::init() {
 		TIM_OC_InitTypeDef sConfigOC = {0};
 		TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
-		handle->Instance = init_data.timer;
+		handle->Instance = handle_to_timer[handle];
 		handle->Init.Prescaler = init_data.prescaler;
 		handle->Init.CounterMode = TIM_COUNTERMODE_UP;
 		handle->Init.Period = init_data.period;
