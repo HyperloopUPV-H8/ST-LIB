@@ -35,6 +35,7 @@
 #include <ranges>
 #include <cstdarg>
 #include <stdarg.h>
+#include <variant>
 
 namespace chrono = std::chrono;
 
@@ -65,6 +66,8 @@ using std::hash;
 using std::unordered_map;
 using std::vector;
 using std::queue;
+using std::variant;
+using std::get;
 
 
 template<class Type>

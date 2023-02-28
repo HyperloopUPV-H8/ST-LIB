@@ -10,6 +10,31 @@
 
 #ifdef HAL_TIM_MODULE_ENABLED
 
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim5;
+extern TIM_HandleTypeDef htim6;
+extern TIM_HandleTypeDef htim7;
+extern TIM_HandleTypeDef htim8;
+extern TIM_HandleTypeDef htim9;
+extern TIM_HandleTypeDef htim10;
+extern TIM_HandleTypeDef htim11;
+extern TIM_HandleTypeDef htim12;
+extern TIM_HandleTypeDef htim13;
+extern TIM_HandleTypeDef htim14;
+extern TIM_HandleTypeDef htim15;
+extern TIM_HandleTypeDef htim16;
+extern TIM_HandleTypeDef htim17;
+extern TIM_HandleTypeDef htim18;
+extern TIM_HandleTypeDef htim19;
+extern TIM_HandleTypeDef htim20;
+extern TIM_HandleTypeDef htim21;
+extern TIM_HandleTypeDef htim22;
+extern TIM_HandleTypeDef htim23;
+extern TIM_HandleTypeDef htim24;
+
 #include "C++Utilities/CppUtils.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
@@ -44,7 +69,7 @@ public:
 	uint32_t get_period();
 
 private:
-	static constexpr map<TIM_HandleTypeDef*, TIM_TypeDef*> handle_to_timer;
+	static map<TIM_HandleTypeDef*, TIM_TypeDef*> handle_to_timer;
 };
 
 #endif

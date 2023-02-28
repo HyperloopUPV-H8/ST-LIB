@@ -7,10 +7,10 @@
 
 #include "PWMService/PhasedPWMInstance/PhasedPWMInstance.hpp"
 
-void PhasedPWMInstance::set_duty_cycle() {
+void PhasedPWMInstance::set_duty_cycle(uint8_t duty_cycle) {
 	//TODO: Implement
 }
 
-void PhasedPWMInstance::set_phase() {
+void PhasedPWMInstance::set_phase(uint8_t phase) {
 	//TODO: Implement
 }

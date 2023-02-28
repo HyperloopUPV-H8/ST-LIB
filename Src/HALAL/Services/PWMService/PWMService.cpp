@@ -10,8 +10,8 @@
 
 
 uint8_t PWMservice::id_counter = 0;
-map<uint8_t, PWMservice::Instance> PWMservice::active_instances = {};
-PWMservice::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PWMservice::Mode mode) :
+map<uint8_t, pair<PWMservice::PWM_MODE, PWMvariant>> PWMservice::active_instances = {};
+PWMservice::Instance::Instance(TimerPeripheral* peripheral, uint32_t channel, PWMservice::PWM_MODE mode) :
 		peripheral(peripheral), channel(channel), mode(mode), duty_cycle(0) {}
 
 optional<uint8_t> PWMservice::inscribe(Pin& pin){
@@ -21,24 +21,11 @@ optional<uint8_t> PWMservice::inscribe(Pin& pin){
 	}
 
 	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
-	active_instances[id_counter] = available_instances[pin];
+	active_instances[id_counter] = {PWM_MODE::NORMAL, available_instances[pin]};
 
-	TimerPeripheral::InitData& init_data = active_instances[id_counter].peripheral->init_data;
-	init_data.pwm_channels.push_back(active_instances[id_counter].channel);
+	TimerPeripheral::InitData& init_data = available_instances[pin].peripheral->init_data;
+	init_data.pwm_channels.push_back(available_instances[pin].channel);
 	return id_counter++;
-}
-
-optional<uint8_t> PWMservice::inscribe_negated(Pin& pin) {
-	if (not available_instances_negated.contains(pin)) {
-		return nullopt;
-		ErrorHandler("Pin %s is not configured as a PWM in you configuration file", pin.to_string().c_str());
-	} 	
-	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
-	active_instances[id_counter] = available_instances_negated[pin];
-
-	TimerPeripheral::InitData& init_data = active_instances[id_counter].peripheral->init_data;
-	init_data.pwm_channels.push_back(active_instances[id_counter].channel);
- 	return id_counter++;
 }
 
 optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
@@ -48,32 +35,56 @@ optional<uint8_t> PWMservice::inscribe_dual(Pin& pin, Pin& pin_negated){
 	} 	
 	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
 	Pin::inscribe(pin_negated, TIMER_ALTERNATE_FUNCTION);
-	active_instances[id_counter] = available_instances_dual[{pin, pin_negated}];
 
-	TimerPeripheral::InitData& init_data = active_instances[id_counter].peripheral->init_data;
-	init_data.pwm_channels.push_back(active_instances[id_counter].channel);
+	uint8_t real_id = id_counter+32;
+	id_counter++;
+	active_instances[real_id] = {PWM_MODE::DUAL, available_instances_dual[{pin, pin_negated}]};
+
+	TimerPeripheral::InitData& init_data = available_instances_dual[{pin, pin_negated}].peripheral->init_data;
+	init_data.pwm_channels.push_back(available_instances_dual[{pin, pin_negated}].channel);
+	return real_id;
+}
+
+optional<uint8_t> PWMservice::inscribe_phased(Pin& pin) {
+	if (not available_instances_phased.contains(pin)) {
+		ErrorHandler("Pin %s is not configured as a phased PWM in you configuration file", pin.to_string().c_str());
+		return nullopt;
+	}
+
+	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
+
+	uint8_t real_id = id_counter+64;
+	id_counter++;
+	active_instances[real_id] = {PWM_MODE::PHASED, available_instances[pin]};
+
+	TimerPeripheral::InitData& init_data = available_instances[pin].peripheral->init_data;
+	init_data.pwm_channels.push_back(available_instances[pin].channel);
 	return id_counter++;
 }
 
-void PWMservice::turn_on(uint8_t id) {
+optional<uint8_t> PWMservice::inscribe_dual_phased(Pin& pin) {
+	if (not available_instances_phased_dual.contains({pin, pin_negated})) {
+		return nullopt;
+		ErrorHandler("Pin %s and Pin %s are not configured as a dual phased PWM in you configuration file", pin.to_string().c_str(), pin_negated.to_string().c_str());
+	}
+
+	uint8_t real_id = id_counter+96;
+	id_counter++;
+	active_instances[real_id] = {PWM_MODE::PHASED_DUAL, available_instances[pin]};
+
+	TimerPeripheral::InitData& init_data = available_instances[pin].peripheral->init_data;
+	init_data.pwm_channels.push_back(available_instances[pin].channel);
+	return id_counter++;
+}
+
+void PWMservice::turn_on(constexpr uint8_t id) {
 	if (not instance_exists(id)) {
 		ErrorHandler("Instance with id %d does not exist", id);
 		return;
 	}
 
-	Instance& instance = get_instance(id);
-
-	if (instance.mode == NORMAL) {
-	}
-
-	else if (instance.mode == NEGATED) {
-		HAL_TIMEx_PWMN_Start(instance.peripheral->handle, instance.channel);
-	}
-
-	else if(instance.mode == DUAL) {
-		HAL_TIM_PWM_Start(instance.peripheral->handle, instance.channel);
-		HAL_TIMEx_PWMN_Start(instance.peripheral->handle, instance.channel);
-	}
+	constexpr uint8_t pwm_type = id / 32;
+	get<pwm_type>(get_instance(id)).turn_on();
 }
 
 void PWMservice::turn_off(uint8_t id){
@@ -82,23 +93,7 @@ void PWMservice::turn_off(uint8_t id){
 		return;
 	}
 
-	Instance& instance = get_instance(id);
-	if (instance.mode == NORMAL) {
-		HAL_TIM_PWM_Stop(instance.peripheral->handle, instance.channel);
-	}
-
-	else if (instance.mode == NEGATED) {
-		HAL_TIMEx_PWMN_Stop(instance.peripheral->handle, instance.channel);
-	}
-
-	else if (instance.mode == DUAL) {
-		HAL_TIM_PWM_Stop(instance.peripheral->handle, instance.channel);
-		HAL_TIMEx_PWMN_Stop(instance.peripheral->handle, instance.channel);
-	}
-
-	else {
-		ErrorHandler("This should never be activated", 0);
-	}
+	get<get_type(id)>(get_instance(id)).turn_off();
 }
 
 void PWMservice::set_duty_cycle(uint8_t id, float duty_cycle) {
@@ -112,11 +107,7 @@ void PWMservice::set_duty_cycle(uint8_t id, float duty_cycle) {
 		return;
 	}
 
-	Instance& instance = get_instance(id);
-	instance.duty_cycle = duty_cycle;
-
-	uint16_t raw_duty = round(instance.peripheral->get_period() / 100.0 * duty_cycle);
-	__HAL_TIM_SET_COMPARE(instance.peripheral->handle, instance.channel, raw_duty);
+	get<get_type(id)>(get_instance(id)).set_duty_cycle();
 }
 
 void PWMservice::set_frequency(uint8_t id, uint32_t frequency) {
@@ -125,10 +116,7 @@ void PWMservice::set_frequency(uint8_t id, uint32_t frequency) {
 		return;
 	}
 
-	TIM_TypeDef& timer = *get_instance(id).peripheral->handle->Instance;
-
-	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / (timer.PSC+1)) / frequency;
-	set_duty_cycle(id, get_instance(id).duty_cycle);
+	get<get_type(id)>(get_instance(id)).set_frequency();
 }
 
 bool PWMservice::instance_exists(uint8_t id) {
@@ -139,8 +127,10 @@ bool PWMservice::instance_exists(uint8_t id) {
 	return false;
 }
 
-PWMservice::Instance& PWMservice::get_instance(uint8_t id) {
-	return PWMservice::active_instances[id];
+PWMvariant& PWMservice::get_instance(uint8_t id) {
+	return PWMservice::active_instances[id].second;
 }
 
-
+constexpr PWMservice::PWM_MODE PWMservice::get_type(uint8_t id) {
+	return PWMservice::active_instances[id].first;
+}

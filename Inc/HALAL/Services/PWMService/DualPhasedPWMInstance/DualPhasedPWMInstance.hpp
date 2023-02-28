@@ -10,4 +10,4 @@
 #include "PWMService/PhasedPWMInstance/PhasedPWMInstance.hpp"
 #include "PWMService/DualPWMInstance/DualPWMInstance.hpp"
 
-class DualPhasedPWMInstance : virtual public DualPhasedPWMInstance {};
+class DualPhasedPWMInstance : virtual public PhasedPWMInstance, DualPWMInstance {};

@@ -7,7 +7,7 @@
 
 #include "TimerPeripheral/TimerPeripheral.hpp"
 
-constexpr map<TIM_HandleTypeDef*, TIM_TypeDef*> TimerPeripheral::handle_to_timer = {
+map<TIM_HandleTypeDef*, TIM_TypeDef*> TimerPeripheral::handle_to_timer= {
 		{&htim1, TIM1},
 		{&htim2, TIM2},
 		{&htim3, TIM3},
@@ -16,20 +16,12 @@ constexpr map<TIM_HandleTypeDef*, TIM_TypeDef*> TimerPeripheral::handle_to_timer
 		{&htim6, TIM6},
 		{&htim7, TIM7},
 		{&htim8, TIM8},
-		{&htim9, TIM9},
-		{&htim10, TIM10},
-		{&htim11, TIM11},
 		{&htim12, TIM12},
 		{&htim13, TIM13},
 		{&htim14, TIM14},
 		{&htim15, TIM15},
 		{&htim16, TIM16},
 		{&htim17, TIM17},
-		{&htim18, TIM18},
-		{&htim19, TIM19},
-		{&htim20, TIM20},
-		{&htim21, TIM21},
-		{&htim22, TIM22},
 		{&htim23, TIM23},
 		{&htim24, TIM24},
 };
