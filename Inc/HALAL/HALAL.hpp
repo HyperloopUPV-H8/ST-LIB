@@ -19,6 +19,7 @@
 #include "Communication/Ethernet/TCP/Socket.hpp"
 #include "Communication/Ethernet/Ethernet.hpp"
 #include "Communication/FDCAN/FDCAN.hpp"
+#include "Communication/SNTP/SNTP.hpp"
 #include "CORDIC/CORDIC.hpp"
 
 namespace HALAL {
