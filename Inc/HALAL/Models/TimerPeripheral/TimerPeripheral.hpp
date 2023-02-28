@@ -24,8 +24,8 @@ public:
 		vector<uint32_t> pwm_channels = {};
 		vector<pair<uint32_t, uint32_t>> input_capture_channels = {};
 		InitData() = default;
-		InitData(TIM_TypeDef* timer, bool is_base = false, uint32_t prescaler = 275,
-				uint32_t period = 1000, uint32_t deadtime = 0);
+		InitData(TIM_TypeDef* timer, bool is_base = false, uint32_t prescaler = 5,
+				uint32_t period = 55000, uint32_t deadtime = 0);
 	};
 
 	TIM_HandleTypeDef* handle;
@@ -40,6 +40,8 @@ public:
 
 	void init();
 	bool is_registered();
+	uint32_t get_prescaler();
+	uint32_t get_period();
 
 };
 

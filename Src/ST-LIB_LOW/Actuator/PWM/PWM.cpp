@@ -33,6 +33,10 @@ void PWM::turn_off() {
 	PWMservice::turn_off(id);
 }
 
-void PWM::set_duty_cycle(uint8_t duty_cycle) {
+void PWM::set_duty_cycle(float duty_cycle) {
 	PWMservice::set_duty_cycle(id, duty_cycle);
+}
+
+void PWM::set_frequency(uint32_t frequency) {
+	PWMservice::set_frequency(id, frequency);
 }
