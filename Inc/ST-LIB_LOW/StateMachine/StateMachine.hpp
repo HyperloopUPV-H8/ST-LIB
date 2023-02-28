@@ -62,7 +62,7 @@ private:
 	unordered_map<state_id, State> states;
 	unordered_map<state_id, unordered_map<state_id, function<bool()>>> transitions;
 
-	map<state_id, StateMachine*> nested_state_machine;
+	unordered_map<state_id, StateMachine*> nested_state_machine;
 	vector<uint8_t> current_state_timed_actions_in_milliseconds;
 	vector<uint8_t> current_state_timed_actions_in_microseconds;
 };
