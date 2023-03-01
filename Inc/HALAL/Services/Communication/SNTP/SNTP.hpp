@@ -11,11 +11,7 @@
 
 #pragma once
 
-#define SNTP_STARTUP_DELAY 0
-
-#include <lwip/ip_addr.h>
-#include "sntp.h"
-#include "IPV4/IPV4.hpp"
+#include "C++Utilities/CppUtils.hpp"
 
 class SNTP{
 public:

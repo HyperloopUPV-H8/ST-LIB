@@ -6,6 +6,9 @@
  */
 
 #include "Communication/SNTP/SNTP.hpp"
+#include <lwip/ip_addr.h>
+#include "sntp.h"
+#include "IPV4/IPV4.hpp"
 
 void SNTP::sntp_update(uint8_t address_head, uint8_t address_second, uint8_t address_third, uint8_t address_last){
 	sntp_setoperatingmode(SNTP_OPMODE_POLL);
