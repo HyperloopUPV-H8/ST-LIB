@@ -289,6 +289,7 @@ void Time::set_RTC_data(uint16_t counter, uint8_t second, uint8_t minute, uint8_
 	gTime.Hours = hour;
 	gTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
 	gTime.StoreOperation = RTC_STOREOPERATION_RESET;
+	gDate.WeekDay = 0;
 	gDate.Date = day;
 	gDate.Month = month;
 	gDate.Year = year - 2000;

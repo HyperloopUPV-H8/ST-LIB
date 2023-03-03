@@ -32,7 +32,7 @@ extern "C" u32_t get_rtc_s(){
 	time_t nowtime = 0;
 	struct tm *nowtm;
 	nowtm = gmtime(&nowtime);
-	nowtm->tm_year	= rtc_time.year;
+	nowtm->tm_year	= rtc_time.year -1900;
 	nowtm->tm_mon	= rtc_time.month - 1;
 	nowtm->tm_mday	= rtc_time.day;
 	nowtm->tm_hour	= rtc_time.hour;
