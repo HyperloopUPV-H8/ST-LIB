@@ -276,7 +276,7 @@ Time::rtc_data Time::get_RTC_data(){
 	ret.hour = gTime.Hours;
 	ret.day = gDate.Date;
 	ret.month = gDate.Month;
-	ret.year = gDate.Year;
+	ret.year = 2000 + gDate.Year;
 	return ret;
 }
 
@@ -291,7 +291,7 @@ void Time::set_RTC_data(uint16_t counter, uint8_t second, uint8_t minute, uint8_
 	gTime.StoreOperation = RTC_STOREOPERATION_RESET;
 	gDate.Date = day;
 	gDate.Month = month;
-	gDate.Year = year;
+	gDate.Year = year - 2000;
 	if (HAL_RTC_SetTime(&hrtc, &gTime, RTC_FORMAT_BIN) != HAL_OK)
 	{
 		ErrorHandler("Error on writing Time on the RTC");
@@ -300,5 +300,4 @@ void Time::set_RTC_data(uint16_t counter, uint8_t second, uint8_t minute, uint8_
 	{
 		ErrorHandler("Error on writing Date on the RTC");
 	}
-	HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, 0x32F2); // backup register
 }
