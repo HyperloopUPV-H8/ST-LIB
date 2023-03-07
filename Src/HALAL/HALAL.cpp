@@ -60,7 +60,7 @@ void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, 
 
 #ifdef HAL_TIM_MODULE_ENABLED
 	Encoder::start();
-	Time::start_RTC();
+	Time::start_rtc();
 	TimerPeripheral::start();
 	Time::start();
 #endif

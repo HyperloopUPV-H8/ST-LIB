@@ -209,63 +209,45 @@ void Time::ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us){
 
 }
 
-void Time::start_RTC(){
+void Time::start_rtc(){
+	RTC_TimeTypeDef sTime = { 0 };
+	RTC_DateTypeDef sDate = { 0 };
 
+	hrtc.Instance = RTC;
+	hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+	hrtc.Init.AsynchPrediv = 0;
+	hrtc.Init.SynchPrediv = 32767;
+	hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+	hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+	hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+	hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
 
-	RTC_TimeTypeDef sTime = {0};
-		  RTC_DateTypeDef sDate = {0};
+	if (HAL_RTC_Init(&hrtc) != HAL_OK) {
+		ErrorHandler("Error on RTC Init");
+	}
+	sTime.Hours = 0x0;
+	sTime.Minutes = 0x0;
+	sTime.Seconds = 0x0;
+	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+	sTime.StoreOperation = RTC_STOREOPERATION_RESET;
 
-		  /* USER CODE BEGIN RTC_Init 1 */
+	if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+		ErrorHandler("Error while setting time at RTC start");
+	}
 
-		  /* USER CODE END RTC_Init 1 */
+	sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+	sDate.Month = RTC_MONTH_JANUARY;
+	sDate.Date = 0x1;
+	sDate.Year = 23;
 
-		  /** Initialize RTC Only
-		  */
-		  hrtc.Instance = RTC;
-		  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
-		  hrtc.Init.AsynchPrediv = 0;
-		  hrtc.Init.SynchPrediv = 32767;
-		  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
-		  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-		  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
-		  hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
-		  if (HAL_RTC_Init(&hrtc) != HAL_OK)
-		  {
-			  ErrorHandler("Error on RTC Init");
-		  }
-
-		  /* USER CODE BEGIN Check_RTC_BKUP */
-
-		  /* USER CODE END Check_RTC_BKUP */
-
-		  /** Initialize RTC and set the Time and Date
-		  */
-		  sTime.Hours = 0x0;
-		  sTime.Minutes = 0x0;
-		  sTime.Seconds = 0x0;
-		  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-		  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-		  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
-		  {
-			  ErrorHandler("Error while setting time at RTC start");
-		  }
-		  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-		  sDate.Month = RTC_MONTH_JANUARY;
-		  sDate.Date = 0x1;
-		  sDate.Year = 0x0;
-
-		  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
-		  {
-			  ErrorHandler("Error while setting date at RTC start");
-		  }
-		  /* USER CODE BEGIN RTC_Init 2 */
-
-		  /* USER CODE END RTC_Init 2 */
+	if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+		ErrorHandler("Error while setting date at RTC start");
+	}
 }
 
 
-Time::rtc_data Time::get_RTC_data(){
-	rtc_data ret;
+Time::RTCData Time::get_rtc_data(){
+	RTCData ret;
 	RTC_TimeTypeDef gTime;
 	RTC_DateTypeDef gDate;
 	HAL_RTC_GetTime(&hrtc, &gTime, RTC_FORMAT_BIN);
@@ -280,7 +262,7 @@ Time::rtc_data Time::get_RTC_data(){
 	return ret;
 }
 
-void Time::set_RTC_data(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year){
+void Time::set_rtc_data(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year){
 	RTC_TimeTypeDef gTime;
 	RTC_DateTypeDef gDate;
 	gTime.SubSeconds = counter;

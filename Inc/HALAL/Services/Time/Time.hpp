@@ -9,7 +9,7 @@
 
 #include "stm32h7xx_hal.h"
 
-#define RTC_max_counter 32767
+#define RTC_MAX_COUNTER 32767
 
 #ifdef HAL_TIM_MODULE_ENABLED
 
@@ -104,7 +104,7 @@ public:
 	static void set_timeout(int milliseconds, function<void()> callback);
 
 #ifdef HAL_RTC_MODULE_ENABLED
-	struct rtc_data{
+	struct RTCData{
 		uint16_t counter;
 		uint8_t second;
 		uint8_t minute;
@@ -114,9 +114,9 @@ public:
 		uint16_t year;
 	};
 
-	static void start_RTC();
-	static rtc_data get_RTC_data();
-	static void set_RTC_data(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year);
+	static void start_rtc();
+	static RTCData get_rtc_data();
+	static void set_rtc_data(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year);
 
 	static RTC_HandleTypeDef hrtc;
 #endif
