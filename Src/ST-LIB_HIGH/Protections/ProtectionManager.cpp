@@ -4,33 +4,26 @@ void ProtectionManager::set_id(int board_id){
     ProtectionManager::board_id = board_id;
 }
 
+void ProtectionManager::set_state_machine(StateMachine& state_machine, uint8_t faulty_state){
+	ProtectionManager::state_machine = state_machine;
+	ProtectionManager::faulty_state = faulty_state;
+}
+
+void ProtectionManager::set_tcp_server_socket(Socket& socket){
+	ProtectionManager::socket = socket;
+}
+
 void ProtectionManager::check_protections() {
-    for (Protection protection: protections) {
-        if (protection.check_state()) {
-            //TODO: Send Packet through TCP with information
-            continue;
-        }
+    for (Protection& protection: protections) {
+    	if(!protection.check_state()){
+    		state_machine.force_change_state(faulty_state);
 
-        //TODO: Send StateMachine to FAULT state
-        string range = "";
-        string penultimate_protection = to_string(protection.boundaries[protection.boundary_counter - 1]);
-        if (protection.jumped_protection != ProtectionType::OUT_OF_RANGE) {
-            range = penultimate_protection;
-            //TODO: Send Packet through TCP with information
-            continue;
-        }
-
-        string last_protection = to_string(protection.boundaries[protection.boundary_counter]);
-        string antepenultimate_protection = to_string(protection.boundaries[protection.boundary_counter - 2]);
-        if (*protection.src < protection.boundaries[protection.boundary_counter - 1]) {
-            range = "[" + penultimate_protection + "," + last_protection + "]";
-        }
-        else {
-            range = "[" + antepenultimate_protection + "," + penultimate_protection + "]";
-        }
-        //TODO: Send Packet through TCP with information
+    	}
     }
 }
 
+Socket ProtectionManager::socket = {};
+StateMachine ProtectionManager::state_machine = {};
+uint8_t ProtectionManager::faulty_state = 255;
 int ProtectionManager::board_id = -1;
 vector<Protection> ProtectionManager::protections = {};

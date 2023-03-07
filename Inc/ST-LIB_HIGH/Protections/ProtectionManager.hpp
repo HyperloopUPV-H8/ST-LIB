@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Protection.hpp"
+#include "ST-LIB_LOW/ST-LIB_LOW.hpp"
 
 #define getname(var) #var
 #define ProtectionManager_add_protection(src,...)  \
@@ -12,6 +13,9 @@ class ProtectionManager {
 public:
     static int board_id;
     static vector<Protection> protections;
+    static StateMachine state_machine;
+    static uint8_t faulty_state;
+    static Socket& socket;
 
     static void set_id(int board_id);
 
@@ -20,6 +24,8 @@ public:
     template<class... AdditionalProtections>
     static Protection& _add_protection(double* src, ProtectionType protection_type, double lower_bound, double upper_bound, AdditionalProtections... more_protections);
 
+    static void set_state_machine(StateMachine& state_machine, uint8_t faulty_state);
+    static void set_tcp_socket(Socket& socket);
     static void check_protections();
 };
 

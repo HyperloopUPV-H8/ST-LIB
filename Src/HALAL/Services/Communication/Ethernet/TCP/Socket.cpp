@@ -5,6 +5,7 @@
  *      Author: stefa
  */
 #include "Communication/Ethernet/TCP/Socket.hpp"
+#include "ST-LIB_LOW/ErrorHandler/ErrorHandler.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
 
 unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
@@ -26,7 +27,14 @@ Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remo
 Socket::Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port):Socket(IPV4(local_ip),local_port,IPV4(remote_ip),remote_port){}
 
 
-Socket::Socket(EthernetNode local_node, EthernetNode remote_node):Socket(local_node.ip, local_node.port, remote_node.ip, remote_node.port){}
+Socket::Socket(EthernetNode local_node, EthernetNode remote_node):Socket(local_node.ip, local_node.port, remote_node.ip, remote_node.port){
+	if(local_node.type != EthernetNode::HostType::Client){
+		ErrorHandlerModel::ErrorHandlerTrigger("Connection to %s was instantiated with the wrong type of local EthernetNode", remote_node.ip.string_address);
+	}
+	if(remote_node.type != EthernetNode::HostType::Server){
+		ErrorHandlerModel::ErrorHandlerTrigger("Connection to %s was instantiated with the wrong type of remote EthernetNode", remote_node.ip.string_address);
+	}
+}
 
 void Socket::close(){
   tcp_arg(socket_control_block, nullptr);
@@ -70,7 +78,7 @@ void Socket::send(){
 		}else if(error == ERR_MEM){			//Low on memory
 			tx_packet_buffer = temporal_packet_buffer;
 		}else{
-			//TODO: Error Handler
+			ErrorHandlerModel::ErrorHandlerTrigger("Error when sending TCP Packet");
 		}
 	}
 }
@@ -172,7 +180,7 @@ void Socket::error_callback(void *arg, err_t error){
 	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
 	}
-	//TODO: Error Handler
+	ErrorHandlerModel::ErrorHandlerTrigger("Connection to %s closed abruptly",socket->remote_ip.string_address);
 }
 
 #endif

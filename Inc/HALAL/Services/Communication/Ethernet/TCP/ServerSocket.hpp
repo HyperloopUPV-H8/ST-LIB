@@ -28,6 +28,7 @@ public:
 	struct pbuf* tx_packet_buffer;
 	struct pbuf* rx_packet_buffer;
 	IPV4 local_ip;
+	IPV4 remote_ip;
 	uint32_t local_port;
 	ServerState state;
 	static uint8_t priority;

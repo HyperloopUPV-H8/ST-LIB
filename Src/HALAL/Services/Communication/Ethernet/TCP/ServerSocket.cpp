@@ -6,6 +6,7 @@
  */
 
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
+#include "ST-LIB_LOW/ErrorHandler/ErrorHandler.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
 
 uint8_t ServerSocket::priority = 0;
@@ -26,13 +27,17 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 		tcp_accept(server_control_block, accept_callback);
 	}else{
 		memp_free(MEMP_TCP_PCB, server_control_block);
-		//TODO: Error Handler
+		ErrorHandlerModel::ErrorHandlerTrigger("Could not create server TCP control block with local IP %s and port %d", local_ip.string_address, local_port);
 	}
 }
 
 ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(IPV4(local_ip),local_port){}
 
-ServerSocket::ServerSocket(EthernetNode local_node) : ServerSocket(local_node.ip,local_node.port){};
+ServerSocket::ServerSocket(EthernetNode local_node) : ServerSocket(local_node.ip,local_node.port){
+	if (local_node.type != EthernetNode::HostType::Server){
+		ErrorHandlerModel::ErrorHandlerTrigger("Local node is not Server Host Type");
+	}
+};
 
 ServerSocket::~ServerSocket(){
 	close();
@@ -89,7 +94,7 @@ void ServerSocket::send(){
 		}else if(error == ERR_MEM){			//Low on memory
 			tx_packet_buffer = temporal_packet_buffer;
 		}else{
-			//TODO: Error Handler
+			ErrorHandlerModel::ErrorHandlerTrigger("TCP Server could not send to %s", remote_ip.string_address);
 		}
 	}
 }
@@ -97,6 +102,7 @@ void ServerSocket::send(){
 err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control_block, err_t error){
 	if(listening_sockets.contains(incomming_control_block->local_port)){
 		ServerSocket* server_socket = listening_sockets[incomming_control_block->local_port];
+		server_socket->remote_ip = IPV4(incomming_control_block->remote_ip);
 		listening_sockets.erase(incomming_control_block->local_port);
 
 		server_socket->state = ACCEPTED;
@@ -158,7 +164,7 @@ void ServerSocket::error_callback(void *arg, err_t error){
 	if(error == ERR_RST || error == ERR_ABRT){
 		server_socket->close();
 	}
-	//TODO: Error Handler
+	ErrorHandlerModel::ErrorHandlerTrigger("Connection to %s closed abruptly", server_socket->remote_ip);
 }
 
 err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_block){

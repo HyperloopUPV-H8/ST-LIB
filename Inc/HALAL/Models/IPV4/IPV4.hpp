@@ -25,6 +25,7 @@ public:
 
 	IPV4();
 	IPV4(string address);
+	IPV4(ip_addr_t address);
 
 };
 
