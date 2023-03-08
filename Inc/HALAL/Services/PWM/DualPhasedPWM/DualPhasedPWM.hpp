@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "PWMService/PhasedPWMInstance/PhasedPWMInstance.hpp"
-#include "PWMService/DualPWMInstance/DualPWMInstance.hpp"
+#include "PWM/PhasedPWM/PhasedPWM.hpp"
+#include "PWM/DualPWM/DualPWM.hpp"
 
 class DualPhasedPWMInstance : virtual public PhasedPWMInstance, DualPWMInstance {};

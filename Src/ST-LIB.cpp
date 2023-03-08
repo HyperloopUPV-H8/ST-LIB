@@ -15,6 +15,6 @@ void STLIB::start(TARGET target, string ip, string subnet_mask, string gateway, 
 }
 
 void STLIB::update() {
-    Ethernet::update();
+   // Ethernet::update();
 	ErrorHandlerModel::ErrorHandlerUpdate();
 }

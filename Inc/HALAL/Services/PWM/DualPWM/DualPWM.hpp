@@ -7,10 +7,12 @@
 
 #pragma once
 
-#include "PWMService/PWMInstance/PWMInstance.hpp"
+#include "PWM/PWM/PWM.hpp"
 
-class DualPWMInstance : virtual public PWMInstance {
-private:
+class DualPWM : virtual public PWM {
+public:
+	DualPWM(Pin& pin, Pin& pin_negated);
+
 	void turn_on();
 	void turn_off();
 };

@@ -1,5 +1,5 @@
 /*
- * PWMInstance.hpp
+ * PWM.hpp
  *
  *  Created on: Feb 27, 2023
  *      Author: aleja
@@ -13,13 +13,16 @@
 
 #ifdef HAL_TIM_MODULE_ENABLED
 
-class PWMInstance {
+class PWM {
 private:
 	TimerPeripheral* peripheral;
 	uint32_t channel;
 	float duty_cycle;
 
-	PWMInstance() = default;
+	PWM() = default;
+
+public:
+	PWM(Pin& pin);
 
 	void turn_on();
 	void turn_off();
@@ -27,12 +30,8 @@ private:
 	void set_frequency(uint32_t frequency);
 	void set_phase(uint8_t phase);
 
-public:
-	PWMInstance(TimerPeripheral* peripheral, uint32_t channel);
-
-	friend class PWMservice;
-	friend class DualPWMInstance;
-	friend class PhasedPWMInstance;
+	friend class DualPWM;
+	friend class PhasedPWM;
 };
 
 #endif

@@ -14,11 +14,8 @@ map<TIM_HandleTypeDef*, TIM_TypeDef*> TimerPeripheral::handle_to_timer= {
 		{&htim4, TIM4},
 		{&htim5, TIM5},
 		{&htim6, TIM6},
-		{&htim7, TIM7},
 		{&htim8, TIM8},
 		{&htim12, TIM12},
-		{&htim13, TIM13},
-		{&htim14, TIM14},
 		{&htim15, TIM15},
 		{&htim16, TIM16},
 		{&htim17, TIM17},
@@ -28,16 +25,15 @@ map<TIM_HandleTypeDef*, TIM_TypeDef*> TimerPeripheral::handle_to_timer= {
 
 
 TimerPeripheral::InitData::InitData(
-		bool is_base, uint32_t prescaler, uint32_t period, uint32_t deadtime) :
-		timer(timer),
+		TIM_TYPE type, uint32_t prescaler, uint32_t period, uint32_t deadtime) :
 		prescaler(prescaler),
 		period(period),
 		deadtime(deadtime),
-		is_base(is_base)
+		type(type)
 		{}
 
 TimerPeripheral::TimerPeripheral(
-		TIM_HandleTypeDef* handle, InitData& init_data, string name) :
+		TIM_HandleTypeDef* handle, InitData&& init_data, string name) :
 		handle(handle),
 		init_data(init_data),
 		name(name) {}
@@ -50,13 +46,20 @@ void TimerPeripheral::init() {
 
 		handle->Instance = handle_to_timer[handle];
 		handle->Init.Prescaler = init_data.prescaler;
+
 		handle->Init.CounterMode = TIM_COUNTERMODE_UP;
+		for (PWMData pwm_data : init_data.pwm_channels) {
+			if (pwm_data.mode == PHASED) {
+				handle->Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
+				break;
+			}
+		}
 		handle->Init.Period = init_data.period;
 		handle->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 		handle->Init.RepetitionCounter = 0;
 		handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
-		if (init_data.is_base) {
+		if (init_data.type == BASE) {
 			if (HAL_TIM_Base_Init(handle) != HAL_OK){
 				ErrorHandler("Unable to init base timer on %d", name.c_str());
 			}
@@ -82,10 +85,10 @@ void TimerPeripheral::init() {
 			ErrorHandler("Unable to configure master synchronization on %d", name.c_str());
 		}
 
-		sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-		sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-		sConfigIC.ICFilter = 0;
 		for (pair<uint32_t, uint32_t> channels_rising_falling : init_data.input_capture_channels) {
+			sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+			sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+			sConfigIC.ICFilter = 0;
 			sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
 			if (HAL_TIM_IC_ConfigChannel(handle, &sConfigIC, channels_rising_falling.first) != HAL_OK) {
 				ErrorHandler("Unable to configure a IC channel on %d", name.c_str());
@@ -98,17 +101,34 @@ void TimerPeripheral::init() {
 			}
 		}
 
-		sConfigOC.OCMode = TIM_OCMODE_PWM1;
-		sConfigOC.Pulse = 0;
-		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-		sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-		sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-		sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+		for (PWMData pwm_data : init_data.pwm_channels) {
+			sConfigOC.Pulse = 0;
+			sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+			sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+			sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+			sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+			sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
 
-		for (uint32_t channel : init_data.pwm_channels) {
-			if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, channel) != HAL_OK) {
-				ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());
+			if (pwm_data.mode == PHASED) {
+				sConfigOC.OCMode = TIM_OCMODE_ASSYMETRIC_PWM1;
+				if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, pwm_data.channel) != HAL_OK) {
+					ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());
+				}
+				sConfigOC.OCMode = TIM_OCMODE_PWM1;
+				if (pwm_data.channel % 8) {
+					if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, pwm_data.channel-4) != HAL_OK) {
+						ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());
+					}
+				} else {
+					if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, pwm_data.channel+4) != HAL_OK) {
+						ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());
+					}
+				}
+			} else {
+				sConfigOC.OCMode = TIM_OCMODE_PWM1;
+				if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, pwm_data.channel) != HAL_OK) {
+					ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());
+				}
 			}
 		}
 
