@@ -11,6 +11,7 @@
 #ifdef HAL_FLASH_MODULE_ENABLED
 
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 #define FLASHWORD 8
 #define FLASH_START_ADDRESS 0x08000000

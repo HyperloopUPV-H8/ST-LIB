@@ -10,8 +10,10 @@
 void Flash::read(uint32_t source_addr, uint32_t* result, uint32_t number_of_words){
 	if (source_addr < FLASH_START_ADDRESS || source_addr > FLASH_END_ADDRESS) {
 			//TODO: Handle exception (address out of memory limits)
+			ErrorHandler("Address out of memory when trying to read flash memory.");
 			return;
 	}
+	//printf("Entro a leer\n");
 
 	HAL_FLASH_Unlock();
 	while(number_of_words > 0){
@@ -19,6 +21,7 @@ void Flash::read(uint32_t source_addr, uint32_t* result, uint32_t number_of_word
 		source_addr += 4;
 		result++;
 		number_of_words--;
+		//printf("Number of words = %lu\r\n", number_of_words);
 	}
 	HAL_FLASH_Lock();
 }

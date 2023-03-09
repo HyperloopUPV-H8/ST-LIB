@@ -70,7 +70,7 @@ private:
         bool start = false;
 
     };
-
+public:
     /**
 	 * @brief Enum which abstracts the use of the Instance struct to facilitate the mocking of the HALAL.Struct
 	 *
@@ -81,7 +81,7 @@ private:
 		peripheral3 = 2,
 	};
 
-public:
+
     static uint16_t id_counter;
 
     static unordered_map<uint8_t, FDCAN::Instance*> registered_fdcan;
