@@ -104,14 +104,19 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 			.tim = tim,
 			.alarm = [&](){}
 	};
+
+	NVIC_DisableIRQ(TIM5_DAC_IRQn);
+	NVIC_DisableIRQ(TIM24_DAC_IRQn);
 	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
+	NVIC_EnableIRQ(TIM5_DAC_IRQn);
+	NVIC_EnableIRQ(TIM24_DAC_IRQn);
 
 
 	Time::ConfigTimer(tim, period_in_us);
 
 	alarm.alarm = func;
-	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
+	Time::high_precision_alarms_by_id[high_precision_ids] = alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
 
 	return high_precision_ids++;
@@ -138,8 +143,10 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 			.tim = low_precision_timer,
 			.alarm = func
 	};
-	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
 
+	NVIC_DisableIRQ(TIM6_DAC_IRQn);
+	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
+	NVIC_EnableIRQ(TIM6_DAC_IRQn);
 	return low_precision_ids++;
 }
 
@@ -192,10 +199,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* tim){
 
 void Time::ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us){
 	__HAL_TIM_DISABLE_IT(tim,TIM_IT_UPDATE);
-	tim->Instance->CR1 &= ~(TIM_CR1_DIR|TIM_CR1_CMS);
-	tim->Instance->CR1 |= TIM_COUNTERMODE_UP;
-	tim->Instance->CR1 &= ~TIM_CR1_CKD;
-	tim->Instance->CR1 |= TIM_CLOCKDIVISION_DIV1;
+	tim->Instance->CR1 = ~(TIM_CR1_DIR|TIM_CR1_CMS) & tim->Instance->CR1;
+	tim->Instance->CR1 = TIM_COUNTERMODE_UP | tim->Instance->CR1;
+	tim->Instance->CR1 = ~TIM_CR1_CKD & tim->Instance->CR1;
+	tim->Instance->CR1 = TIM_CLOCKDIVISION_DIV1 | tim->Instance->CR1;
 	tim->Instance->ARR = period_in_us;
 	tim->Instance->PSC = 275;
 	tim->Instance->EGR = TIM_EGR_UG;
