@@ -16,6 +16,7 @@ private:
 
 public:
 	void set_duty_cycle(float duty_cycle);
+	void set_frequency(uint32_t frequency);
 	void set_phase(float phase);
 
 	PhasedPWM(Pin& pin);
