@@ -11,12 +11,14 @@
 
 class PhasedPWM : virtual public PWM {
 private:
-	int16_t phase;
-//	uint16_t duty_cycle;
+	float phase;
+	PhasedPWM() = default;
 
 public:
-	void set_duty_cycle(uint8_t duty_cycle);
-	void set_phase(int8_t phase);
+	void set_duty_cycle(float duty_cycle);
+	void set_phase(float phase);
 
 	PhasedPWM(Pin& pin);
+
+	friend class DualPhasedPWM;
 };

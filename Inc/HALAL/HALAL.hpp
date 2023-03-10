@@ -10,6 +10,7 @@
 #include "PWM/PWM/PWM.hpp"
 #include "PWM/DualPWM/DualPWM.hpp"
 #include "PWM/PhasedPWM/PhasedPWM.hpp"
+#include "PWM/DualPhasedPWM/DualPhasedPWM.hpp"
 #include "Time/Time.hpp"
 #include "InputCapture/InputCapture.hpp"
 #include "Encoder/Encoder.hpp"

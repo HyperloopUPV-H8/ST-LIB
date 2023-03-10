@@ -38,8 +38,8 @@ void PWM::turn_off() {
 	HAL_TIM_PWM_Stop(peripheral->handle, channel);
 }
 
-void PWM::set_duty_cycle(uint8_t duty_cycle) {
-	uint16_t raw_duty = round(__HAL_TIM_GET_AUTORELOAD(peripheral->handle) / 100.0 * duty_cycle);
+void PWM::set_duty_cycle(float duty_cycle) {
+	uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(peripheral->handle) / 100.0 * duty_cycle;
 	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty);
 }
 
@@ -49,6 +49,6 @@ void PWM::set_frequency(uint32_t frequency) {
 	set_duty_cycle(duty_cycle);
 }
 
-void PWM::set_phase(uint8_t phase) {
+void PWM::set_phase(float phase) {
 	ErrorHandler("This PWM instance does not support phasing");
 }

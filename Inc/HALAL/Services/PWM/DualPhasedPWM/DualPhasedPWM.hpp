@@ -10,4 +10,9 @@
 #include "PWM/PhasedPWM/PhasedPWM.hpp"
 #include "PWM/DualPWM/DualPWM.hpp"
 
-class DualPhasedPWMInstance : virtual public PhasedPWMInstance, DualPWMInstance {};
+class DualPhasedPWM : public PhasedPWM, public DualPWM {
+private:
+	DualPhasedPWM() = default;
+public:
+	DualPhasedPWM(Pin& pin, Pin& pin_negated);
+};

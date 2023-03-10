@@ -30,22 +30,22 @@ PhasedPWM::PhasedPWM(Pin& pin) {
 	phase = 0;
 }
 
-void PhasedPWM::set_duty_cycle(uint8_t duty_cycle) {
+void PhasedPWM::set_duty_cycle(float duty_cycle) {
 	this->duty_cycle = duty_cycle;
-	uint32_t period = peripheral->handle->Instance->ARR;
+	uint32_t arr = peripheral->handle->Instance->ARR;
+	float raw_duty = arr - (arr / 100.0 * duty_cycle);
+	float raw_phase = raw_duty * phase / 100.0;
 
-	uint16_t raw_duty = round(__HAL_TIM_GET_AUTORELOAD(peripheral->handle) / 100.0 * duty_cycle);
+	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty + raw_phase);
 
-	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty + phase*raw_duty / 100.0);
-
-	if (channel % 8) {
-		__HAL_TIM_SET_COMPARE(peripheral->handle, channel - 4, raw_duty - phase*raw_duty / 100.0);
+	if (channel % 8 == 0) {
+		__HAL_TIM_SET_COMPARE(peripheral->handle, channel + 4, raw_duty - raw_phase);
 	} else {
-		__HAL_TIM_SET_COMPARE(peripheral->handle, channel + 4, raw_duty);
+		__HAL_TIM_SET_COMPARE(peripheral->handle, channel - 4, raw_duty - raw_phase);
 	}
 }
 
-void PhasedPWM::set_phase(int8_t phase) {
+void PhasedPWM::set_phase(float phase) {
 	this->phase = phase;
 	set_duty_cycle(duty_cycle);
 }

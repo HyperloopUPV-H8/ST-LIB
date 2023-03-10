@@ -110,11 +110,11 @@ void TimerPeripheral::init() {
 			sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
 
 			if (pwm_data.mode == PHASED) {
-				sConfigOC.OCMode = TIM_OCMODE_ASSYMETRIC_PWM1;
+				sConfigOC.OCMode = TIM_OCMODE_ASSYMETRIC_PWM2;
 				if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, pwm_data.channel) != HAL_OK) {
 					ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());
 				}
-				sConfigOC.OCMode = TIM_OCMODE_PWM1;
+				sConfigOC.OCMode = TIM_OCMODE_PWM2;
 				if (pwm_data.channel % 8) {
 					if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, pwm_data.channel-4) != HAL_OK) {
 						ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());

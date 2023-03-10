@@ -10,9 +10,13 @@
 #include "PWM/PWM/PWM.hpp"
 
 class DualPWM : virtual public PWM {
+private:
+	DualPWM() = default;
 public:
 	DualPWM(Pin& pin, Pin& pin_negated);
 
 	void turn_on();
 	void turn_off();
+
+	friend class DualPhasedPWM;
 };

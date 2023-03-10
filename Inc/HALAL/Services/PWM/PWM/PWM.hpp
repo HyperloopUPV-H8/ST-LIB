@@ -26,12 +26,13 @@ public:
 
 	void turn_on();
 	void turn_off();
-	void set_duty_cycle(uint8_t duty_cycle);
+	void set_duty_cycle(float duty_cycle);
 	void set_frequency(uint32_t frequency);
-	void set_phase(uint8_t phase);
+	void set_phase(float phase);
 
 	friend class DualPWM;
 	friend class PhasedPWM;
+	friend class DualPhasedPWM;
 };
 
 #endif
