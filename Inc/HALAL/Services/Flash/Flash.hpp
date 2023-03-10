@@ -26,6 +26,7 @@
 #define FLASH_END_ADDRESS 0x080FFFFF
 #define SECTOR_SIZE_IN_WORDS 32768
 
+#define SECTOR_SIZE_IN_BYTES		((uint32_t)131072U)
 /*
 	**IMPORTANT**
 	We need to reserve memory in the linker script to avoid overwriting:
