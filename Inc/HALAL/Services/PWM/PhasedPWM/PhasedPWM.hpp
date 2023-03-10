@@ -21,4 +21,5 @@ public:
 	PhasedPWM(Pin& pin);
 
 	friend class DualPhasedPWM;
+	friend class HalfBridge;
 };
