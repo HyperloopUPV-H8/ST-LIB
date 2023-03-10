@@ -9,18 +9,14 @@
 
 map<TIM_HandleTypeDef*, TIM_TypeDef*> TimerPeripheral::handle_to_timer= {
 		{&htim1, TIM1},
-		{&htim2, TIM2},
 		{&htim3, TIM3},
 		{&htim4, TIM4},
-		{&htim5, TIM5},
-		{&htim6, TIM6},
 		{&htim8, TIM8},
 		{&htim12, TIM12},
 		{&htim15, TIM15},
 		{&htim16, TIM16},
 		{&htim17, TIM17},
 		{&htim23, TIM23},
-		{&htim24, TIM24},
 };
 
 
