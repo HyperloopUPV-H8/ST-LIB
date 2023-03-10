@@ -32,6 +32,7 @@ private :
 		uint32_t period;
 		TIM_HandleTypeDef* tim;
 		function<void()> alarm;
+		uint64_t offset;
 	};
 
 	static const uint32_t HIGH_PRECISION_MAX_ARR = 4294967295;
