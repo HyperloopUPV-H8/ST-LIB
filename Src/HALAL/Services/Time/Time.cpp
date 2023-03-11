@@ -109,8 +109,6 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 	NVIC_DisableIRQ(TIM24_IRQn);
 	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
-	NVIC_EnableIRQ(TIM5_IRQn);
-	NVIC_EnableIRQ(TIM24_IRQn);
 
 
 	Time::ConfigTimer(tim, period_in_us);
@@ -118,6 +116,8 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 	alarm.alarm = func;
 	Time::high_precision_alarms_by_id[high_precision_ids] = alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
+	NVIC_EnableIRQ(TIM5_IRQn);
+	NVIC_EnableIRQ(TIM24_IRQn);
 
 	return high_precision_ids++;
 }
@@ -127,12 +127,16 @@ bool Time::unregister_high_precision_alarm(uint16_t id){
 		return false;
 	}
 
+	NVIC_DisableIRQ(TIM5_IRQn);
+	NVIC_DisableIRQ(TIM24_IRQn);
 	Time::Alarm alarm = high_precision_alarms_by_id[id];
 	Time::available_high_precision_timers.push(alarm.tim);
 	Time::stop_timer(alarm.tim);
 
 	Time::high_precision_alarms_by_id.erase(id);
 	Time::high_precision_alarms_by_timer.erase(alarm.tim);
+	NVIC_EnableIRQ(TIM5_IRQn);
+	NVIC_EnableIRQ(TIM24_IRQn);
 
 	return true;
 }
@@ -155,7 +159,10 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 	if(not Time::low_precision_alarms_by_id.contains(id)){
 		return false;
 	}
+
+	NVIC_DisableIRQ(TIM6_DAC_IRQn);
 	Time::low_precision_alarms_by_id.erase(id);
+	NVIC_EnableIRQ(TIM6_DAC_IRQn);
 
 	return true;
 }
