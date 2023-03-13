@@ -48,7 +48,6 @@ void FDCAN::start(){
 		header.TxFrameType = FDCAN_DATA_FRAME;
 		header.BitRateSwitch = FDCAN_BRS_ON;
 		header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-		//header.FDFormat = FDCAN_FRAME_FD_BRS;
 		header.IdType = FDCAN_STANDARD_ID;
 		header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 		header.MessageMarker = 0;
