@@ -108,15 +108,18 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		return;
 	}
 
-	FDCAN::DLC dlc = FDCAN::handle_to_fdcan[hfdcan]->dlc;
-
-	vector<uint8_t> data_buffer(FDCAN::dlc_to_len[dlc]);
-	FDCAN_RxHeaderTypeDef header_buffer = FDCAN_RxHeaderTypeDef();
-	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN::handle_to_fdcan[hfdcan]->rx_location, &header_buffer, data_buffer.data());
-
 	if (FDCAN::handle_to_fdcan[hfdcan]->rx_queue.size() >= FDCAN::handle_to_fdcan[hfdcan]->rx_queue_max_size) {
 		return; // TODO: WARNING RX_QUEUE FULL
 	}
+
+	FDCAN::DLC dlc = FDCAN::handle_to_fdcan[hfdcan]->dlc;
+
+	vector<uint8_t> data_buffer(FDCAN::dlc_to_len[dlc]);
+
+	FDCAN_RxHeaderTypeDef header_buffer = FDCAN_RxHeaderTypeDef();
+	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN::handle_to_fdcan[hfdcan]->rx_location, &header_buffer, data_buffer.data());
+
+
 	FDCAN::Packet packet_buffer = {data_buffer, header_buffer.Identifier, (FDCAN::DLC)header_buffer.DataLength};
 	FDCAN::handle_to_fdcan[hfdcan]->rx_queue.push(packet_buffer);
 }

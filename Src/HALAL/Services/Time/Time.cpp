@@ -151,8 +151,9 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 	if(not Time::low_precision_alarms_by_id.contains(id)){
 		return false;
 	}
+	NVIC_DisableIRQ(TIM6_DAC_IRQn);
 	Time::low_precision_alarms_by_id.erase(id);
-
+	NVIC_EnableIRQ(TIM6_DAC_IRQn);
 	return true;
 }
 
