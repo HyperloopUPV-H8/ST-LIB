@@ -23,6 +23,13 @@ void SNTP::sntp_update(uint8_t address_head, uint8_t address_second, uint8_t add
 	sntp_init();
 }
 
+void SNTP::sntp_update(string ip) {
+	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+	IPV4 target(ip);
+	sntp_setserver(0,&target.address);
+	sntp_init();
+}
+
 extern "C" void set_rtc(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year){
 	Time::set_rtc_data(counter, second, minute, hour, day, month, year);
 }
