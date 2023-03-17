@@ -48,7 +48,3 @@ void PWM::set_frequency(uint32_t frequency) {
 	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / (timer.PSC+1)) / frequency;
 	set_duty_cycle(duty_cycle);
 }
-
-void PWM::set_phase(float phase) {
-	ErrorHandler("This PWM instance does not support phasing");
-}
