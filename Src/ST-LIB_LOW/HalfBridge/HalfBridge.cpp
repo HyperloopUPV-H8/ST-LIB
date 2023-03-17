@@ -22,11 +22,11 @@ HalfBridge::HalfBridge(Pin& positive_pwm_pin, Pin& positive_pwm_negated_pin,
 void HalfBridge::turn_on() {
 	positive_pwm.turn_on();
 	negative_pwm.turn_on();
-	DigitalOutputService::turn_on(enable); // enable al final para evitar ruido
+	DigitalOutputService::turn_on(enable); // enable at the end to avoid noise
 }
 
 void HalfBridge::turn_off() {
-	DigitalOutputService::turn_off(enable); // enable al principio para evitar ruido
+	DigitalOutputService::turn_off(enable); // enable at the start to avoid noise
 	positive_pwm.turn_off();
 	negative_pwm.turn_off();
 }

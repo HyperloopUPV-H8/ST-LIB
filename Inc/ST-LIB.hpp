@@ -8,7 +8,7 @@ class STLIB {
 public:
 	static void start(
 			TARGET target = Board,
-			string ip = "192.168.1.0",
+			string ip = "192.168.1.4",
 			string subnet_mask = "255.255.0.0",
 			string gateway = "192.168.1.1",
 			UART::Peripheral& printf_peripheral = UART::uart2);

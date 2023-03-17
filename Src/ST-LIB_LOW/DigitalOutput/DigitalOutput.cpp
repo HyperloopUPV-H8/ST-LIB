@@ -5,7 +5,7 @@
  *      Author: aleja
  */
 
-#include <DigitalOutput/DigitalOutput.hpp>
+#include "DigitalOutput/DigitalOutput.hpp"
 
 DigitalOutput::DigitalOutput(Pin& pin) : pin(pin), id(DigitalOutputService::inscribe(pin)) {}
 
