@@ -186,7 +186,7 @@ void Time::high_precision_timer_callback(TIM_HandleTypeDef* tim){
 void Time::low_precision_timer_callback(){
 	for(auto pair : Time::low_precision_alarms_by_id){
 		Time::Alarm alarm = pair.second;
-		if((Time::low_precision_tick + alarm.offset) % alarm.period == 0)
+		if((Time::low_precision_tick - alarm.offset) % alarm.period == 0)
 			alarm.alarm();
 	}
 	low_precision_tick += 1;
