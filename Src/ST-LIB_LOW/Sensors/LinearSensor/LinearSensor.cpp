@@ -1,7 +1,7 @@
 #include "Sensors/LinearSensor/LinearSensor.hpp"
 #include "Sensors/Sensor/Sensor.hpp"
 
-LinearSensor::LinearSensor(Pin &pin, double slope, double offset, double *value)
+LinearSensor::LinearSensor(Pin &pin, float *value, float slope, float offset)
 : pin(pin), slope(slope), offset(offset), value(value){
 	optional<uint8_t> identification = ADC::inscribe(pin);
 	if(not identification){
@@ -13,7 +13,7 @@ LinearSensor::LinearSensor(Pin &pin, double slope, double offset, double *value)
 
 }
 
-LinearSensor::LinearSensor(Pin &pin, double slope, double offset, double &value):LinearSensor::LinearSensor(pin,slope,offset,&value){}
+LinearSensor::LinearSensor(Pin &pin, float &value, float slope, float offset) : LinearSensor::LinearSensor(pin, &value, slope,offset){}
 
 void LinearSensor::read(){
 	optional<float> val = ADC::get_value(id);
