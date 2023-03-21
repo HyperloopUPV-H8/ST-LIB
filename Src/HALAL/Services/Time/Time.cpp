@@ -136,13 +136,9 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 	Time::Alarm alarm = {
 			.period = period_in_ms,
 			.tim = low_precision_timer,
-			.alarm = func,
-			.offset = (Time::low_precision_tick),
+			.alarm = func
 	};
-
-	NVIC_DisableIRQ(TIM6_DAC_IRQn);
 	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
-	NVIC_EnableIRQ(TIM6_DAC_IRQn);
 
 	return low_precision_ids++;
 }
@@ -151,9 +147,8 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 	if(not Time::low_precision_alarms_by_id.contains(id)){
 		return false;
 	}
-	NVIC_DisableIRQ(TIM6_DAC_IRQn);
 	Time::low_precision_alarms_by_id.erase(id);
-	NVIC_EnableIRQ(TIM6_DAC_IRQn);
+
 	return true;
 }
 
@@ -176,13 +171,8 @@ void Time::high_precision_timer_callback(TIM_HandleTypeDef* tim){
 void Time::low_precision_timer_callback(){
 	for(auto pair : Time::low_precision_alarms_by_id){
 		Time::Alarm alarm = pair.second;
-		if(Time::low_precision_tick % (alarm.period + alarm.offset) == 0){
+		if(Time::low_precision_tick % alarm.period == 0)
 			alarm.alarm();
-			if (alarm.offset != 0) {
-				alarm.offset = 0;
-			}
-		}
-
 	}
 	low_precision_tick += 1;
 }
@@ -214,4 +204,5 @@ void Time::ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us){
 	tim->Instance->CR1 = TIM_CR1_CEN;
 	tim->Instance->CNT = 1;
 	tim->Instance->DIER = TIM_IT_UPDATE;
+
 }
