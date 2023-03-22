@@ -1,6 +1,5 @@
 #compiler output
 Release/
-.settings/
 cmake/build/
 compile_commands.json
 build
@@ -11,8 +10,6 @@ PRUEBAS/
 
 #ccls cache
 .ccls-cache/
-.settings
 
 #vscode 
 .vscode
-.cproject
