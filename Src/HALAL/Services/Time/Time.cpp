@@ -102,8 +102,11 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 	Time::Alarm alarm = {
 			.period = period_in_us,
 			.tim = tim,
-			.alarm = [&](){}
+			.alarm = [&](){},
 	};
+
+	NVIC_DisableIRQ(TIM5_IRQn);
+	NVIC_DisableIRQ(TIM24_IRQn);
 	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
 
@@ -111,8 +114,10 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 	Time::ConfigTimer(tim, period_in_us);
 
 	alarm.alarm = func;
-	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
+	Time::high_precision_alarms_by_id[high_precision_ids] = alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
+	NVIC_EnableIRQ(TIM5_IRQn);
+	NVIC_EnableIRQ(TIM24_IRQn);
 
 	return high_precision_ids++;
 }
@@ -122,12 +127,16 @@ bool Time::unregister_high_precision_alarm(uint16_t id){
 		return false;
 	}
 
+	NVIC_DisableIRQ(TIM5_IRQn);
+	NVIC_DisableIRQ(TIM24_IRQn);
 	Time::Alarm alarm = high_precision_alarms_by_id[id];
 	Time::available_high_precision_timers.push(alarm.tim);
 	Time::stop_timer(alarm.tim);
 
 	Time::high_precision_alarms_by_id.erase(id);
 	Time::high_precision_alarms_by_timer.erase(alarm.tim);
+	NVIC_EnableIRQ(TIM5_IRQn);
+	NVIC_EnableIRQ(TIM24_IRQn);
 
 	return true;
 }
@@ -136,10 +145,13 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 	Time::Alarm alarm = {
 			.period = period_in_ms,
 			.tim = low_precision_timer,
-			.alarm = func
+			.alarm = func,
+			.offset = low_precision_tick % period_in_ms
 	};
-	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
 
+	NVIC_DisableIRQ(TIM6_DAC_IRQn);
+	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
+	NVIC_EnableIRQ(TIM6_DAC_IRQn);
 	return low_precision_ids++;
 }
 
@@ -147,7 +159,10 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 	if(not Time::low_precision_alarms_by_id.contains(id)){
 		return false;
 	}
+
+	NVIC_DisableIRQ(TIM6_DAC_IRQn);
 	Time::low_precision_alarms_by_id.erase(id);
+	NVIC_EnableIRQ(TIM6_DAC_IRQn);
 
 	return true;
 }
@@ -171,7 +186,7 @@ void Time::high_precision_timer_callback(TIM_HandleTypeDef* tim){
 void Time::low_precision_timer_callback(){
 	for(auto pair : Time::low_precision_alarms_by_id){
 		Time::Alarm alarm = pair.second;
-		if(Time::low_precision_tick % alarm.period == 0)
+		if((Time::low_precision_tick - alarm.offset) % alarm.period == 0)
 			alarm.alarm();
 	}
 	low_precision_tick += 1;
@@ -192,10 +207,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* tim){
 
 void Time::ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us){
 	__HAL_TIM_DISABLE_IT(tim,TIM_IT_UPDATE);
-	tim->Instance->CR1 &= ~(TIM_CR1_DIR|TIM_CR1_CMS);
-	tim->Instance->CR1 |= TIM_COUNTERMODE_UP;
-	tim->Instance->CR1 &= ~TIM_CR1_CKD;
-	tim->Instance->CR1 |= TIM_CLOCKDIVISION_DIV1;
+	tim->Instance->CR1 = ~(TIM_CR1_DIR|TIM_CR1_CMS) & tim->Instance->CR1;
+	tim->Instance->CR1 = TIM_COUNTERMODE_UP | tim->Instance->CR1;
+	tim->Instance->CR1 = ~TIM_CR1_CKD & tim->Instance->CR1;
+	tim->Instance->CR1 = TIM_CLOCKDIVISION_DIV1 | tim->Instance->CR1;
 	tim->Instance->ARR = period_in_us;
 	tim->Instance->PSC = 275;
 	tim->Instance->EGR = TIM_EGR_UG;
