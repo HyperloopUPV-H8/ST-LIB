@@ -3,7 +3,6 @@ Debug/
 Release/
 cmake/build/
 compile_commands.json
-build
 
 #test folder
 Pruebas/
