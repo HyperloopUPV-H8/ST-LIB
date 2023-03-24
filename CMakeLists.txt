@@ -4,10 +4,49 @@ project (ST-LIB)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(LIBRARY st-lib)
 
-add_library(st-lib STATIC Src/ST-LIB.cpp)
+add_library(${LIBRARY} STATIC Src/ST-LIB.cpp)
 
-target_include_directories(st-lib PUBLIC
+target_compile_definitions(${LIBRARY} PUBLIC
+  -DUSE_HAL_DRIVER
+  -DSTM32H723xx
+  -DDEBUG
+)
+
+target_compile_options(${LIBRARY} PUBLIC
+  -mcpu=cortex-m7
+  -mfpu=fpv5-d16
+  -mfloat-abi=hard
+  -mthumb
+  
+  -O0
+  -ffunction-sections
+  -fdata-sections
+  -fno-exceptions
+  -fno-rtti
+  -fno-use-cxa-atexit
+
+  -Wall
+
+  --specs=nano.specs
+)
+
+target_link_options(${LIBRARY} PRIVATE
+        -T${CMAKE_SOURCE_DIR}/BSP/STM32F413ZHTx_FLASH.ld
+        -mcpu=cortex-m7
+        -mthumb
+        -mfpu=fpv5-d16
+        -mfloat-abi=hard
+        -specs=nano.specs
+        -lc
+        -lm
+        -lnosys
+        -Wl,-Map=${PROJECT_NAME}.map,--cref
+        -Wl,--gc-sections
+        )
+
+target_include_directories(${LIBRARY} PUBLIC
   Drivers/CMSIS/Device/ST/STM32H7xx/Include
   Drivers/CMSIS/Include
   Drivers/STM32H7xx_HAL_Driver/Inc
@@ -36,3 +75,10 @@ target_include_directories(st-lib PUBLIC
   Inc/ST-LIB_LOW
   Inc/ST-LIB_HIGH
 )
+
+IF(CMAKE_CROSSCOMPILING)
+    message(STATUS "Cross-compiling")
+ELSE()
+  message(STATUS "NOT Cross-compiling")
+ENDIF()
+

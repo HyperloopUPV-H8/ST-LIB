@@ -1,4 +1,5 @@
 #compiler output
+Debug/
 Release/
 cmake/build/
 compile_commands.json
