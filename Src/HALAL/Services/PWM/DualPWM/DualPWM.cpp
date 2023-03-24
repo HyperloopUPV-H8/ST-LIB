@@ -5,6 +5,8 @@
  *      Author: aleja
  */
 
+#include "ErrorHandler/ErrorHandler.hpp"
+#include "stm32h7xx_hal_def.h"
 #include <PWM/DualPWM/DualPWM.hpp>
 
 DualPWM::DualPWM(Pin& pin, Pin& pin_negated) {
@@ -30,11 +32,22 @@ DualPWM::DualPWM(Pin& pin, Pin& pin_negated) {
 }
 
 void DualPWM::turn_on() {
-	HAL_TIM_PWM_Start(peripheral->handle, channel);
-	HAL_TIMEx_PWMN_Start(peripheral->handle, channel);
+  if (HAL_TIM_PWM_Start(peripheral->handle, channel) != HAL_OK) {
+    ErrorHandler("Dual PWM positive channel did not start correctly", 0);
+  }
+
+  if (HAL_TIMEx_PWMN_Start(peripheral->handle, channel) != HAL_OK) {
+    ErrorHandler("Dual PWM negative channel did not start correctly", 0);
+  }
 }
 
 void DualPWM::turn_off() {
-	HAL_TIM_PWM_Stop(peripheral->handle, channel);
-	HAL_TIMEx_PWMN_Stop(peripheral->handle, channel);
+
+  if (HAL_TIM_PWM_Stop(peripheral->handle, channel) != HAL_OK) {
+    ErrorHandler("Dual PWM positive channel did not stop correctly", 0);
+  }
+
+  if (HAL_TIMEx_PWMN_Stop(peripheral->handle, channel) != HAL_OK) {
+    ErrorHandler("Dual PWM negative channel did not stop correctly", 0);
+  }
 }

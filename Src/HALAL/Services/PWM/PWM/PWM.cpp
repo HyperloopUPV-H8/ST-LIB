@@ -7,6 +7,7 @@
 
 #include <PWM/PWM/PWM.hpp>
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "stm32h7xx_hal_def.h"
 
 PWM::PWM(Pin& pin) {
 	if (not TimerPeripheral::available_pwm.contains(pin)) {
@@ -31,11 +32,15 @@ PWM::PWM(Pin& pin) {
 }
 
 void PWM::turn_on() {
-	HAL_TIM_PWM_Start(peripheral->handle, channel);
+  if(HAL_TIM_PWM_Start(peripheral->handle, channel) != HAL_OK) {
+    ErrorHandler("PWM did not turn on correctly", 0);
+  }
 }
 
 void PWM::turn_off() {
-	HAL_TIM_PWM_Stop(peripheral->handle, channel);
+  if(HAL_TIM_PWM_Stop(peripheral->handle, channel) != HAL_OK) {
+    ErrorHandler("PWM did not stop correctly", 0);
+  }
 }
 
 void PWM::set_duty_cycle(float duty_cycle) {
