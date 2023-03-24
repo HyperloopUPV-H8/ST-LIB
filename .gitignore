@@ -16,4 +16,5 @@ PRUEBAS/
 .vscode
 
 .settings
-build/.cmake
+build
+!build/build.sh
