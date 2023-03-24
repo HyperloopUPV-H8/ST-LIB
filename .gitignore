@@ -16,3 +16,4 @@ PRUEBAS/
 .vscode
 
 .settings
+build/.cmake
