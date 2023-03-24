@@ -77,8 +77,15 @@ target_include_directories(${LIBRARY} PUBLIC
 )
 
 IF(CMAKE_CROSSCOMPILING)
-    message(STATUS "Cross-compiling")
+  message(STATUS "Cross-compiling")
 ELSE()
   message(STATUS "NOT Cross-compiling")
 ENDIF()
+
+add_custom_command(TARGET ${LIBRARY}
+  POST_BUILD
+  COMMAND echo ""
+  COMMAND ls -lh libst-lib.a
+  COMMAND echo ""
+  )
 
