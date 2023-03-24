@@ -11,6 +11,7 @@ PRUEBAS/
 
 #ccls cache
 .ccls-cache/
+.cache/
 
 #vscode 
 .vscode
