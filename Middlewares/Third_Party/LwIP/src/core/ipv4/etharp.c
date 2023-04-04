@@ -1111,7 +1111,7 @@ etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
   LWIP_ASSERT("netif != NULL", netif != NULL);
 
   /* allocate a pbuf for the outgoing ARP request packet */
-  p = pbuf_alloc(PBUF_LINK, SIZEOF_ETHARP_HDR, PBUF_POOL);
+  p = pbuf_alloc(PBUF_LINK, SIZEOF_ETHARP_HDR, PBUF_RAM);
   /* could allocate a pbuf for an ARP request? */
   if (p == NULL) {
     LWIP_DEBUGF(ETHARP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_LEVEL_SERIOUS,
@@ -1158,7 +1158,7 @@ etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
 
   ETHARP_STATS_INC(etharp.xmit);
   /* free ARP query packet */
-  memp_free_pool(memp_pools[8],p);
+  pbuf_free(p);
   p = NULL;
   /* could not allocate pbuf for ARP request */
 

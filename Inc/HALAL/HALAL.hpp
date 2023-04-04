@@ -26,5 +26,5 @@
 #include "CORDIC/CORDIC.hpp"
 
 namespace HALAL {
-	void start(TARGET target, string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral);
+	void start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral);
 }

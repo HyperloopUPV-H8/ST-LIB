@@ -555,7 +555,7 @@ tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
         /* Data is not copied */
         /* If the last unsent pbuf is of type PBUF_ROM, try to extend it. */
         struct pbuf *p;
-        for (p = last_unsent->p; p->next != NULL || (p->next > 0x30000000 && p->next < 0x3FFFFFFF); p = p->next);
+        for (p = last_unsent->p; p->next != NULL; p = p->next);
         if (((p->type_internal & (PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS | PBUF_TYPE_FLAG_DATA_VOLATILE)) == 0) &&
             (const u8_t *)p->payload + p->len == (const u8_t *)arg) {
           LWIP_ASSERT("tcp_write: ROM pbufs cannot be oversized", pos == 0);
@@ -610,10 +610,6 @@ tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
       if ((p = tcp_pbuf_prealloc(PBUF_TRANSPORT, seglen + optlen, mss_local, &oversize, pcb, apiflags, queue == NULL)) == NULL) {
         LWIP_DEBUGF(TCP_OUTPUT_DEBUG | LWIP_DBG_LEVEL_SERIOUS, ("tcp_write : could not allocate memory for pbuf copy size %"U16_F"\n", seglen));
         goto memerr;
-      }
-      if(p->payload < 0x30000000 || p->payload > 0x3FFFFFFF){
-    	  pbuf_free(p);
-    	  return ERR_MEM;
       }
       LWIP_ASSERT("tcp_write: check that first pbuf can hold the complete seglen",
                   (p->len >= seglen));
@@ -1455,7 +1451,7 @@ tcp_output_segment_busy(const struct tcp_seg *seg)
  * @param pcb the tcp_pcb for the TCP connection used to send the segment
  * @param netif the netif used to send the segment
  */
-err_t
+static err_t
 tcp_output_segment(struct tcp_seg *seg, struct tcp_pcb *pcb, struct netif *netif)
 {
   err_t err;
@@ -1649,18 +1645,10 @@ tcp_rexmit_rto_prepare(struct tcp_pcb *pcb)
   for (seg = pcb->unacked; seg->next != NULL; seg = seg->next) {
     if (tcp_output_segment_busy(seg)) {
       LWIP_DEBUGF(TCP_RTO_DEBUG, ("tcp_rexmit_rto: segment busy\n"));
-      if(seg->p->payload == NULL || seg->p->payload < 0x30000000 || seg->p->payload > 0x3FFFFFFF){
-    	  pcb->unacked = seg->next;
-    	  tcp_seg_free(seg);
-      }
       return ERR_VAL;
     }
   }
   if (tcp_output_segment_busy(seg)) {
-      if(seg->p->payload == NULL || seg->p->payload < 0x30000000 || seg->p->payload > 0x3FFFFFFF){
-    	  pcb->unacked = seg->next;
-    	  tcp_seg_free(seg);
-      }
     LWIP_DEBUGF(TCP_RTO_DEBUG, ("tcp_rexmit_rto: segment busy\n"));
     return ERR_VAL;
   }

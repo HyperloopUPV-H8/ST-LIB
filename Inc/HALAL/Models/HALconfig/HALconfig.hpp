@@ -16,7 +16,7 @@ enum TARGET {
 };
 
 namespace HALconfig {
-void system_clock(TARGET target);
-void peripheral_clock(TARGET target);
+void system_clock();
+void peripheral_clock();
 
 }
