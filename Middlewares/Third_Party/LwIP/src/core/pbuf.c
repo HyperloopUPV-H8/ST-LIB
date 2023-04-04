@@ -77,6 +77,8 @@
 #include "lwip/memp.h"
 #include "lwip/sys.h"
 #include "lwip/netif.h"
+#include "cmsis_gcc.h"
+
 #if LWIP_TCP && TCP_QUEUE_OOSEQ
 #include "lwip/priv/tcp_priv.h"
 #endif
@@ -811,10 +813,16 @@ pbuf_clen(const struct pbuf *p)
   u16_t len;
 
   len = 0;
+  __disable_irq();
   while (p != NULL) {
     ++len;
-    p = p->next;
+    if(p->next > (uint32_t*)0x5000000){
+    	return len;
+    }
+	  p = p->next;
+
   }
+  __enable_irq();
   return len;
 }
 

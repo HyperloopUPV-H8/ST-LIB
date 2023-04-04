@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2023 STMicroelectronics.
+  * Copyright (c) 2022 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -40,6 +40,6 @@ u32_t sys_jiffies(void);
 u32_t sys_now(void);
 
 /* USER CODE BEGIN 1 */
-
+void pbuf_free_custom(struct pbuf *p);
 /* USER CODE END 1 */
 #endif

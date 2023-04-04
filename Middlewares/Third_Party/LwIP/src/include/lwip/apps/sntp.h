@@ -1,11 +1,10 @@
 /**
  * @file
- * Base TCP API definitions shared by TCP and ALTCP\n
- * See also @ref tcp_raw
+ * SNTP client API
  */
 
 /*
- * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
+ * Copyright (c) 2007-2009 Frédéric Bernon, Simon Goldschmidt
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -32,57 +31,50 @@
  *
  * This file is part of the lwIP TCP/IP stack.
  *
- * Author: Adam Dunkels <adam@sics.se>
+ * Author: Frédéric Bernon, Simon Goldschmidt
  *
  */
-#ifndef LWIP_HDR_TCPBASE_H
-#define LWIP_HDR_TCPBASE_H
+#ifndef LWIP_HDR_APPS_SNTP_H
+#define LWIP_HDR_APPS_SNTP_H
 
-#include "lwip/opt.h"
-
-#if LWIP_TCP /* don't build if not configured for use in lwipopts.h */
+#include "lwip/apps/sntp_opts.h"
+#include "lwip/ip_addr.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/* SNTP operating modes: default is to poll using unicast.
+   The mode has to be set before calling sntp_init(). */
+#define SNTP_OPMODE_POLL            0
+#define SNTP_OPMODE_LISTENONLY      1
+void sntp_setoperatingmode(u8_t operating_mode);
+u8_t sntp_getoperatingmode(void);
 
-#if LWIP_WND_SCALE
-typedef u32_t tcpwnd_size_t;
-#else
-typedef u16_t tcpwnd_size_t;
-#endif
+void sntp_init(void);
+void sntp_stop(void);
+u8_t sntp_enabled(void);
 
-enum tcp_state {
-  CLOSED      = 0,
-  LISTEN      = 1,
-  SYN_SENT    = 2,
-  SYN_RCVD    = 3,
-  ESTABLISHED = 4,
-  FIN_WAIT_1  = 5,
-  FIN_WAIT_2  = 6,
-  CLOSE_WAIT  = 7,
-  CLOSING     = 8,
-  LAST_ACK    = 9,
-  TIME_WAIT   = 10
-};
-/* ATTENTION: this depends on state number ordering! */
-#define TCP_STATE_IS_CLOSING(state) ((state) >= FIN_WAIT_1)
+void sntp_setserver(u8_t idx, const ip_addr_t *addr);
+const ip_addr_t* sntp_getserver(u8_t idx);
 
-/* Flags for "apiflags" parameter in tcp_write */
-#define TCP_WRITE_FLAG_COPY 0x01
-#define TCP_WRITE_FLAG_MORE 0x02
+#if SNTP_MONITOR_SERVER_REACHABILITY
+u8_t sntp_getreachability(u8_t idx);
+#endif /* SNTP_MONITOR_SERVER_REACHABILITY */
 
-#define TCP_PRIO_MIN    1
-#define TCP_PRIO_NORMAL 64
-#define TCP_PRIO_MAX    127
+#if SNTP_SERVER_DNS
+void sntp_setservername(u8_t idx, const char *server);
+const char *sntp_getservername(u8_t idx);
+#endif /* SNTP_SERVER_DNS */
 
-const char* tcp_debug_state_str(enum tcp_state s);
+#if SNTP_GET_SERVERS_FROM_DHCP
+void sntp_servermode_dhcp(int set_servers_from_dhcp);
+#else /* SNTP_GET_SERVERS_FROM_DHCP */
+#define sntp_servermode_dhcp(x)
+#endif /* SNTP_GET_SERVERS_FROM_DHCP */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* LWIP_TCP */
-
-#endif /* LWIP_HDR_TCPBASE_H */
+#endif /* LWIP_HDR_APPS_SNTP_H */

@@ -1,4 +1,4 @@
-	/* USER CODE BEGIN Header */
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * File Name          : ethernetif.c
@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2023 STMicroelectronics.
+  * Copyright (c) 2022 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -48,7 +48,7 @@
 /* ETH_RX_BUFFER_SIZE parameter is defined in lwipopts.h */
 
 /* USER CODE BEGIN 1 */
-
+uint64_t last_tick;
 /* USER CODE END 1 */
 
 /* Private variables ---------------------------------------------------------*/
@@ -114,7 +114,17 @@ ETH_DMADescTypeDef DMATxDscrTab[ETH_TX_DESC_CNT] __attribute__((section(".TxDecr
 #endif
 
 /* USER CODE BEGIN 2 */
+#if defined ( __ICCARM__ ) /*!< IAR Compiler */
+#pragma location = 0x30000200
+extern u8_t memp_memory_RX_POOL_base[];
 
+#elif defined ( __CC_ARM )  /* MDK ARM Compiler */
+__attribute__((at(0x30000200)) extern u8_t memp_memory_RX_POOL_base[];
+
+#elif defined ( __GNUC__ ) /* GNU Compiler */
+__attribute__((section(".Rx_PoolSection"))) extern u8_t memp_memory_RX_POOL_base[];
+
+#endif
 /* USER CODE END 2 */
 
 /* Global Ethernet handle */
@@ -231,6 +241,7 @@ static void low_level_init(struct netif *netif)
   }
   else
   {
+	HAL_NVIC_SystemReset();
     Error_Handler();
   }
 #endif /* LWIP_ARP || LWIP_ETHERNET */
@@ -260,7 +271,6 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
   uint32_t i = 0U;
   struct pbuf *q = NULL;
-  err_t errval = ERR_OK;
   ETH_BufferTypeDef Txbuffer[ETH_TX_DESC_CNT] = {0};
 
   memset(Txbuffer, 0 , ETH_TX_DESC_CNT*sizeof(ETH_BufferTypeDef));
@@ -294,9 +304,9 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 
   HAL_ETH_Transmit(&heth, &TxConfig, 0);
 
-  return errval;
-}
 
+  return ERR_OK;
+}
 
 /**
  * @brief Should allocate a pbuf and transfer the bytes of the incoming
@@ -312,7 +322,9 @@ static struct pbuf * low_level_input(struct netif *netif)
 
   if(RxAllocStatus == RX_ALLOC_OK)
   {
-    HAL_ETH_ReadData(&heth, (void **)&p);
+    if(HAL_ETH_ReadData(&heth, (void **)&p) == HAL_ERROR && p != NULL && (p > (struct pbuf*)0x40000000 || p < (struct pbuf*)0x30000000)){
+    	SCB_CleanInvalidateDCache_by_Addr(p->payload, p->len);
+    }
   }
 
   return p;
@@ -338,7 +350,7 @@ void ethernetif_input(struct netif *netif)
     {
       if (netif->input( p, netif) != ERR_OK )
       {
-        pbuf_free(p);
+        pbuf_free_custom(p);
       }
     }
   } while(p!=NULL);
@@ -494,28 +506,28 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef* ethHandle)
     GPIO_InitStruct.Pin = RMII_MDC_Pin|RMII_RXD0_Pin|RMII_RXD1_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = GPIO_PIN_1|RMII_MDIO_Pin|GPIO_PIN_7;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = RMII_TXD1_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
     HAL_GPIO_Init(RMII_TXD1_GPIO_Port, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = RMII_TX_EN_Pin|RMII_TXD0_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
     HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
@@ -609,13 +621,12 @@ int32_t ETH_PHY_IO_ReadReg(uint32_t DevAddr, uint32_t RegAddr, uint32_t *pRegVal
 {
   if(HAL_ETH_ReadPHYRegister(&heth, DevAddr, RegAddr, pRegVal) != HAL_OK)
   {
-    HAL_NVIC_SystemReset();
+	HAL_NVIC_SystemReset();
     return -1;
   }
 
   return 0;
 }
-
 
 /**
   * @brief  Write a value to a PHY register through the MDIO interface.
@@ -628,7 +639,7 @@ int32_t ETH_PHY_IO_WriteReg(uint32_t DevAddr, uint32_t RegAddr, uint32_t RegVal)
 {
   if(HAL_ETH_WritePHYRegister(&heth, DevAddr, RegAddr, RegVal) != HAL_OK)
   {
-    HAL_NVIC_SystemReset();
+	HAL_NVIC_SystemReset();
     return -1;
   }
 

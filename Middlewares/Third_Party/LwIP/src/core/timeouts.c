@@ -396,7 +396,6 @@ sys_check_timeouts(void)
   SCB_CleanInvalidateDCache();
 }
 
-
 /** Rebase the timeout times to the current time.
  * This is necessary if sys_check_timeouts() hasn't been called for a long
  * time (e.g. while saving energy) to prevent all timer functions of that
