@@ -59,6 +59,9 @@ bool I2C::transmit_next_packet(uint8_t id, I2CPacket& packet){
     	return false;
     }
 
+    if(hdma_i2c2_tx.State != 0x01U){
+    }
+
     if (HAL_I2C_Master_Transmit_DMA(i2c->hi2c, packet.get_id(), packet.get_data(), packet.get_size()) != HAL_OK){
     	ErrorHandler("I2C Error during memory read DMA!\n\r");
         return false;

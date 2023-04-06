@@ -41,6 +41,9 @@ void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, 
 	ADC::start();
 #endif
 
+#ifdef HAL_I2C_MODULE_ENABLED
+	I2C::start();
+#endif
 
 #ifdef HAL_SPI_MODULE_ENABLED
 	SPI::start();
