@@ -66,8 +66,6 @@ bool I2C::transmit_next_packet(uint8_t id, I2CPacket& packet){
     	ErrorHandler("I2C Error during memory read DMA!\n\r");
         return false;
     }
-
-    printf("Packet send successfully \n\r");
     return true;
 }
 
@@ -89,8 +87,6 @@ bool I2C::transmit_next_packet_polling(uint8_t id, I2CPacket& packet){
     	ErrorHandler("Error during I2C transmission \n\r");
         return false;
     }
-
-    printf("Packet send successfully \n\r");
     return true;
 }
 
@@ -166,12 +162,12 @@ bool I2C::read_from(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t m
 	 *packet.get_data() = 0;
 
 	 if(i2c->hi2c->State == HAL_I2C_STATE_BUSY_TX){
-		printf("I2C Transmit buffer busy!\n\r");
+		ErrorHandler("I2C Transmit buffer busy!\n\r");
 		return false;
 	 }
 
 	 if (HAL_I2C_Mem_Read_DMA(i2c->hi2c, packet.get_id(), mem_addr, 1, packet.get_data(), packet.get_size())){
-		 printf("I2C Error during memory read DMA!\n\r");
+		 ErrorHandler("I2C Error during memory read DMA!\n\r");
 		 return false;
 	 }
 
@@ -188,12 +184,12 @@ bool I2C::write_to(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t me
 	I2C::Instance* i2c = I2C::active_i2c[id];
 
 	if(i2c->hi2c->State == HAL_I2C_STATE_BUSY_RX){
-		printf("I2C Receive buffer busy!\n\r");
+		ErrorHandler("I2C Receive buffer busy!\n\r");
 		return false;
 	}
 
 	if (HAL_I2C_Mem_Write_DMA(i2c->hi2c, packet.get_id(), mem_addr, mem_size, packet.get_data(), packet.get_size())){
-		printf("I2C Error during memory write DMA!\n\r");
+		ErrorHandler("I2C Error during memory write DMA!\n\r");
 		return false;
 	}
 
