@@ -2,7 +2,7 @@
  * I2C.hpp
  *
  *  Created on: 12 dec. 2022
- *      Author: Pablo
+ *      Author: Pablo, Ricardo
  */
 #pragma once
 

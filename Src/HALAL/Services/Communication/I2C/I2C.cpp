@@ -1,8 +1,8 @@
 /*
  * I2C.hpp
  *
- *  Created on: 6 april. 2023
- *      Author: Ricardo
+ *  Created on: 12 dec. 2022
+ *      Author: Pablo, Ricardo
  */
 #include "Communication/I2C/I2C.hpp"
 
