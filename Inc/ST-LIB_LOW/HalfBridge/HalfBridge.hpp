@@ -9,22 +9,26 @@
 
 #include "Time/Time.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
-#include "PWMService/PWMService.hpp"
+#include "PWM/PhasedPWM/PhasedPWM.hpp"
+#include "PWM/DualPhasedPWM/DualPhasedPWM.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
 class HalfBridge {
 public:
 	HalfBridge() = default;
-	HalfBridge(Pin& positive_pwm_pin, Pin& negative_pwm_pin, Pin& enable_pin);
 	HalfBridge(Pin& positive_pwm_pin, Pin& positive_pwm_negated_pin, Pin& negative_pwm_pin, Pin& negative_pwm_negated_pin,
 			Pin& enable_pin);
 
 	void turn_on();
 	void turn_off();
-	void set_duty_cycle(int8_t duty_cycle);
+	void set_duty_cycle(float duty_cycle);
+	void set_frequency(int32_t frequency);
+	void set_phase(float phase);
 
 private:
-	uint8_t positive_pwm;
-	uint8_t negative_pwm;
+	bool is_dual;
+
+	DualPhasedPWM positive_pwm;
+	DualPhasedPWM negative_pwm;
 	uint8_t enable;
 };

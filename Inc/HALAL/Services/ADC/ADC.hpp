@@ -21,7 +21,7 @@ using std::string;
 #define LPTIM2_PERIOD 3000
 #define LPTIM3_PERIOD 3000
 
-#define MAX_VOLTAGE 3.3
+#define ADC_MAX_VOLTAGE 3.3
 #define MAX_12BIT 4095.0
 #define MAX_16BIT 65535.0
 

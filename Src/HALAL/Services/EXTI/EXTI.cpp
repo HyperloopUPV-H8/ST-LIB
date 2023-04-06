@@ -21,12 +21,17 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin) {
 	}
 }
 
-optional<uint8_t> ExternalInterrupt::inscribe(Pin& pin, function<void()>&& action) {
+optional<uint8_t> ExternalInterrupt::inscribe(Pin& pin, function<void()>&& action, TRIGGER trigger) {
 	if (not instances.contains(pin.gpio_pin)) {
 		return nullopt;
 	}
 
-	Pin::inscribe(pin, EXTERNAL_INTERRUPT);
+	if (trigger == RISING) {
+		Pin::inscribe(pin, EXTERNAL_INTERRUPT_RISING);
+	}
+	else if (trigger == FALLING) {
+		Pin::inscribe(pin, EXTERNAL_INTERRUPT_FALLING);
+	}
 
 	service_ids[id_counter] = pin;
 	instances[pin.gpio_pin].action = action;

@@ -17,3 +17,4 @@ PRUEBAS/
 #vscode 
 .vscode
 .cproject
+.cache
