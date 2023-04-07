@@ -22,6 +22,7 @@ void DMA::inscribe_stream() {
 	inscribed_streams.push_back(available_streams.back());
 	available_streams.pop_back();
 }
+
 void DMA::inscribe_stream(Stream dma_stream) {
 	if (std::find(available_streams.begin(), available_streams.end(), dma_stream) == available_streams.end()) {
 		ErrorHandler("The DMA stream %d is not available", dma_stream);
