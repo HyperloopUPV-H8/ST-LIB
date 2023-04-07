@@ -104,6 +104,7 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
     	ErrorHandler("Error during receive in %s", spi->name.c_str());
 		return false;
 	}
+
 	turn_on_chip_select(spi);
 
 	return true;

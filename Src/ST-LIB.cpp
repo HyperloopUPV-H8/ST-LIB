@@ -10,8 +10,8 @@
 
 #include "ST-LIB.hpp"
 
-void STLIB::start(TARGET target, string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
-	HALAL::start(target, ip, subnet_mask, gateway, printf_peripheral);
+void STLIB::start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
+	HALAL::start(ip, subnet_mask, gateway, printf_peripheral);
 }
 
 void STLIB::update() {

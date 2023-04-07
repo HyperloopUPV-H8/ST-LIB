@@ -7,15 +7,15 @@
 
 #include "HALAL/HALAL.hpp"
 
-void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
+void HALAL::start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
 
 #ifdef HAL_ETH_MODULE_ENABLED
 	Ethernet::inscribe();
 #endif
 
 	HAL_Init();
-	HALconfig::system_clock(target);
-	HALconfig::peripheral_clock(target);
+	HALconfig::system_clock();
+	HALconfig::peripheral_clock();
 
 #ifdef HAL_UART_MODULE_ENABLED
 	UART::set_up_printf(printf_peripheral);

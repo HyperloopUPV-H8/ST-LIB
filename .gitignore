@@ -1,10 +1,8 @@
 #compiler output
 Debug/
 Release/
-.settings/
 cmake/build/
 compile_commands.json
-build
 
 #test folder
 Pruebas/
@@ -12,9 +10,13 @@ PRUEBAS/
 
 #ccls cache
 .ccls-cache/
-.settings
+.cache/
 
 #vscode 
 .vscode
 .cproject
 .cache
+
+.settings
+build
+!build/build.sh
