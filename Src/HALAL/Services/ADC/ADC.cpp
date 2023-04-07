@@ -15,6 +15,20 @@ extern ADC_HandleTypeDef hadc3;
 uint8_t ADC::id_counter = 0;
 unordered_map<uint8_t, ADC::Instance> ADC::active_instances = {};
 
+void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc){
+	if(hadc == ADC::peripherals[0].handle){
+		SCB_CleanInvalidateDCache_by_Addr((uint32_t*)ADC::peripherals[0].dma_stream, 32);
+	}
+
+	if(hadc == ADC::peripherals[1].handle){
+		SCB_CleanInvalidateDCache_by_Addr((uint32_t*)ADC::peripherals[1].dma_stream, 32);
+	}
+	
+	if(hadc == ADC::peripherals[2].handle){
+		SCB_CleanInvalidateDCache_by_Addr((uint32_t*)ADC::peripherals[2].dma_stream, 32);
+	}
+}
+
 ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream, string name) :
 		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels), dma_stream(dma_stream), name(name) {}
 
