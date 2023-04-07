@@ -105,12 +105,6 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
 		return false;
 	}
 
-//	uint8_t tx_data[command_data.size()+receive_data.size()] = { 0 };
-//	std::copy(command_data.data(), command_data.data() + command_data.size(), tx_data);
-//
-//
-//	uint8_t rx_data[command_data.size()+receive_data.size()] = { 0 };
-//	HAL_SPI_TransmitReceive(spi->hspi, tx_data, rx_data, command_data.size()+receive_data.size(), 10);
 	turn_on_chip_select(spi);
 
 	return true;
