@@ -16,12 +16,10 @@ public:
 
 	DatagramSocket();
 	DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
-	DatagramSocket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port);
 	DatagramSocket(EthernetNode local_node, EthernetNode remote_node);
 	~DatagramSocket();
 
-	template<class Type, class... Types>
-	bool send(Packet<Type,Types...>& packet);
+	bool send(Packet& packet);
 
 	void close();
 
@@ -30,12 +28,11 @@ private:
 	
 };
 
-template<class Type, class... Types>
-bool DatagramSocket::send(Packet<Type, Types...> & packet){
-	packet.build();
+bool DatagramSocket::send(Packet& packet){
+	uint8_t* packet_buffer = packet.build();
 
-	struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.buffer_size, PBUF_RAM);
-	pbuf_take(tx_buffer, packet.buffer, packet.buffer_size);
+	struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.size, PBUF_RAM);
+	pbuf_take(tx_buffer, packet_buffer, packet.size);
 	udp_send(udp_control_block, tx_buffer);
 	pbuf_free(tx_buffer);
 

@@ -34,10 +34,6 @@ ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(
 
 ServerSocket::ServerSocket(EthernetNode local_node) : ServerSocket(local_node.ip,local_node.port){};
 
-ServerSocket::~ServerSocket(){
-	close();
-}
-
 void ServerSocket::close(){
 	// Clean all callbacks
 	tcp_arg(client_control_block, nullptr);
@@ -60,14 +56,7 @@ void ServerSocket::close(){
 
 void ServerSocket::process_data(){
 	uint8_t* new_data = (uint8_t*)rx_packet_buffer->payload;
-	uint16_t id = Packet<>::get_id(new_data);
-	if(Packet<>::save_by_id.contains(id)){
-		Packet<>::save_by_id[id](new_data);
-	}
-
-	if(Packet<>::on_received.contains(id)){
-		Packet<>::on_received[id]();
-	}
+	Order::process_data(new_data);
 	tcp_recved(client_control_block, rx_packet_buffer->tot_len);
 	pbuf_free(rx_packet_buffer);
 	rx_packet_buffer = rx_packet_buffer->next;
@@ -102,7 +91,7 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 		server_socket->state = ACCEPTED;
 		server_socket->client_control_block = incomming_control_block;
 		server_socket->tx_packet_buffer = nullptr;
-	
+
 		tcp_setprio(incomming_control_block, priority);
 		tcp_nagle_disable(incomming_control_block);
 		tcp_arg(incomming_control_block, server_socket);

@@ -24,7 +24,7 @@ public:
 	};
 
 	static unordered_map<uint32_t,ServerSocket*> listening_sockets;
-	struct tcp_pcb* server_control_block;
+	struct tcp_pcb* server_control_block = nullptr;
 	struct pbuf* tx_packet_buffer;
 	struct pbuf* rx_packet_buffer;
 	IPV4 local_ip;
@@ -38,14 +38,12 @@ public:
 	ServerSocket(IPV4 local_ip, uint32_t local_port);
 	ServerSocket(string local_ip, uint32_t local_port);
 	ServerSocket(EthernetNode local_node);
-	~ServerSocket();
 
 	void close();
 
 	void process_data();
 
-	template<class Type, class...Types>
-	bool send_order(Order<Type,Types...>& order);
+	bool send_order(Order& order);
 
 	void send();
 
@@ -59,8 +57,7 @@ private:
 
 };
 
-template<class Type, class...Types>
-bool ServerSocket::send_order(Order<Type,Types...>& order){
+bool ServerSocket::send_order(Order& order){
 	if(state != ACCEPTED){
 		return false;
 	}
@@ -74,13 +71,13 @@ bool ServerSocket::send_order(Order<Type,Types...>& order){
 		return false;
 	}
 
-	order.build();
-	if(order.buffer_size > tcp_sndbuf(client_control_block)){
+	uint8_t* order_buffer = order.build();
+	if(order.size > tcp_sndbuf(client_control_block)){
 		return false;
 	}
 
-	tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.buffer_size, PBUF_POOL);
-	pbuf_take(tx_packet_buffer, order.buffer, order.buffer_size);
+	tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
+	pbuf_take(tx_packet_buffer, order_buffer, order.size);
 	send();
 	return true;
 }
