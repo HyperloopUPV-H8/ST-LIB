@@ -25,8 +25,8 @@ public:
 
 	static unordered_map<uint32_t,ServerSocket*> listening_sockets;
 	struct tcp_pcb* server_control_block = nullptr;
-	struct pbuf* tx_packet_buffer = nullptr;
-	struct pbuf* rx_packet_buffer = nullptr;
+	queue<struct pbuf*> tx_packet_buffer;
+	queue<struct pbuf*> rx_packet_buffer;
 	IPV4 local_ip;
 	uint32_t local_port;
 	ServerState state;
@@ -62,8 +62,8 @@ public:
 			return false;
 		}
 
-		tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
-		pbuf_take(tx_packet_buffer, order_buffer, order.size);
+		struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
+		tx_packet_buffer.push(packet);
 		send();
 		return true;
 	}

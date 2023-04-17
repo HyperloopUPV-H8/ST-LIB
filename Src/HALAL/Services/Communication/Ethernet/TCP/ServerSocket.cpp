@@ -7,6 +7,7 @@
 
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "lwip/priv/tcp_priv.h"
+#include <mutex>
 #ifdef HAL_ETH_MODULE_ENABLED
 
 uint8_t ServerSocket::priority = 0;
@@ -15,6 +16,8 @@ unordered_map<uint32_t,ServerSocket*> ServerSocket::listening_sockets = {};
 ServerSocket::ServerSocket() = default;
 
 ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_ip),local_port(local_port){
+	tx_packet_buffer = {};
+	rx_packet_buffer = {};
 	state = INACTIVE;
 	server_control_block = tcp_new();
 	tcp_nagle_disable(server_control_block);
@@ -44,9 +47,13 @@ void ServerSocket::close(){
 	tcp_poll(client_control_block, nullptr, 0);
 
 	tcp_close(client_control_block);
-	while(pbuf_free(tx_packet_buffer) != 0);
+	while(!tx_packet_buffer.empty()){
+		pbuf_free(tx_packet_buffer.front());
+		tx_packet_buffer.pop();
+	}
 
-	memp_free(MEMP_TCP_PCB, client_control_block);
+    tcp_pcb_remove(&tcp_active_pcbs, client_control_block);
+    tcp_free(client_control_block);
 
 	listening_sockets[local_port] = this;
 	state = LISTENING;
@@ -56,28 +63,26 @@ void ServerSocket::close(){
 }
 
 void ServerSocket::process_data(){
-	uint8_t* new_data = (uint8_t*)rx_packet_buffer->payload;
-	Order::process_data(new_data);
-	tcp_recved(client_control_block, rx_packet_buffer->tot_len);
-	pbuf_free(rx_packet_buffer);
-	rx_packet_buffer = rx_packet_buffer->next;
+	while(!rx_packet_buffer.empty()){
+		struct pbuf* packet = rx_packet_buffer.front();
+		rx_packet_buffer.pop();
+		uint8_t* new_data = (uint8_t*)(packet->payload);
+		Order::process_data(new_data);
+		tcp_recved(client_control_block, packet->tot_len);
+		pbuf_free(packet);
+	}
 }
 
 void ServerSocket::send(){
 	pbuf* temporal_packet_buffer;
 	err_t error = ERR_OK;
-	while(error == ERR_OK && tx_packet_buffer != nullptr && tx_packet_buffer->len <= tcp_sndbuf(client_control_block)){
-		temporal_packet_buffer = tx_packet_buffer;
-		error = tcp_write(client_control_block, tx_packet_buffer->payload, tx_packet_buffer->len, 0);
+	while(error == ERR_OK && !tx_packet_buffer.empty() && tx_packet_buffer.front()->len <= tcp_sndbuf(client_control_block)){
+		temporal_packet_buffer = tx_packet_buffer.front();
+		error = tcp_write(client_control_block, temporal_packet_buffer->payload, temporal_packet_buffer->len, 0);
 		if(error == ERR_OK){
+			tx_packet_buffer.pop();
 			tcp_output(client_control_block);
-			tx_packet_buffer = tx_packet_buffer->next;
-			if(tx_packet_buffer != nullptr){
-				pbuf_ref(tx_packet_buffer);
-			}
 			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],temporal_packet_buffer);
-		}else if(error == ERR_MEM){			//Low on memory
-			tx_packet_buffer = temporal_packet_buffer;
 		}else{
 			//TODO: Error Handler
 		}
@@ -91,7 +96,8 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 
 		server_socket->state = ACCEPTED;
 		server_socket->client_control_block = incomming_control_block;
-		server_socket->tx_packet_buffer = nullptr;
+		server_socket->tx_packet_buffer = {};
+		server_socket->rx_packet_buffer = {};
 
 		tcp_setprio(incomming_control_block, priority);
 		tcp_nagle_disable(incomming_control_block);
@@ -115,7 +121,6 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 
 	if(packet_buffer == nullptr){      //FIN has been received
 		server_socket->state = CLOSING;
-		pbuf_free(server_socket->tx_packet_buffer);
 //		tcp_ack_now(client_control_block);
 //		tcp_output(client_control_block);
 //		server_socket->close();
@@ -129,17 +134,13 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 		return error;
 	}
 	else if(server_socket->state == ACCEPTED){
-		if(server_socket->rx_packet_buffer == nullptr){
-			server_socket->rx_packet_buffer = packet_buffer;
-			server_socket->process_data();
-		}else{
-			pbuf_chain(server_socket->rx_packet_buffer, packet_buffer);
-		}
+		server_socket->rx_packet_buffer.push(packet_buffer);
+		server_socket->process_data();
 		return ERR_OK;
 	}
 	else if(server_socket->state == CLOSING){ 		//Socket is already closed
-		pbuf_free(server_socket->rx_packet_buffer);
-		server_socket->rx_packet_buffer = nullptr;
+		pbuf_free(server_socket->rx_packet_buffer.front());
+		server_socket->rx_packet_buffer = {};
 		pbuf_free(packet_buffer);
 		return ERR_OK;
 	}
@@ -161,11 +162,11 @@ err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_bloc
 		return ERR_ABRT;
 	}
 
-	if(server_socket->tx_packet_buffer != nullptr){		//TX FIFO is not empty
+	while(!server_socket->tx_packet_buffer.empty()){		//TX FIFO is not empty
 		server_socket->send();
 	}
 
-	if(server_socket->rx_packet_buffer != nullptr){		//RX FIFO is not empty
+	while(!server_socket->rx_packet_buffer.empty()){		//RX FIFO is not empty
 		server_socket->process_data();
 	}
 
@@ -179,7 +180,7 @@ err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_bloc
 err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_block, u16_t len){
 	ServerSocket* server_socket = (ServerSocket*)arg;
 	server_socket->client_control_block = client_control_block;
-	if(server_socket->tx_packet_buffer != nullptr){
+	if(!server_socket->tx_packet_buffer.empty()){
 		tcp_sent(client_control_block, send_callback);
 		server_socket->send();
 	}
