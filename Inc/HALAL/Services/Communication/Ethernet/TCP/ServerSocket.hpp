@@ -25,8 +25,8 @@ public:
 
 	static unordered_map<uint32_t,ServerSocket*> listening_sockets;
 	struct tcp_pcb* server_control_block = nullptr;
-	struct pbuf* tx_packet_buffer;
-	struct pbuf* rx_packet_buffer;
+	struct pbuf* tx_packet_buffer = nullptr;
+	struct pbuf* rx_packet_buffer = nullptr;
 	IPV4 local_ip;
 	uint32_t local_port;
 	ServerState state;
@@ -43,7 +43,30 @@ public:
 
 	void process_data();
 
-	bool send_order(Order& order);
+	bool send_order(Order& order){
+		if(state != ACCEPTED){
+			return false;
+		}
+		struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
+		if(next_memory_pointer_in_packet_buffer_pool == nullptr){
+			if(client_control_block->unsent != nullptr){
+				tcp_output(client_control_block);
+			}else{
+				memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], next_memory_pointer_in_packet_buffer_pool);
+			}
+			return false;
+		}
+
+		uint8_t* order_buffer = order.build();
+		if(order.size > tcp_sndbuf(client_control_block)){
+			return false;
+		}
+
+		tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
+		pbuf_take(tx_packet_buffer, order_buffer, order.size);
+		send();
+		return true;
+	}
 
 	void send();
 
@@ -57,28 +80,4 @@ private:
 
 };
 
-bool ServerSocket::send_order(Order& order){
-	if(state != ACCEPTED){
-		return false;
-	}
-	struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
-	if(next_memory_pointer_in_packet_buffer_pool == nullptr){
-		if(client_control_block->unsent != nullptr){
-			tcp_output(client_control_block);
-		}else{
-			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], next_memory_pointer_in_packet_buffer_pool);
-		}
-		return false;
-	}
-
-	uint8_t* order_buffer = order.build();
-	if(order.size > tcp_sndbuf(client_control_block)){
-		return false;
-	}
-
-	tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
-	pbuf_take(tx_packet_buffer, order_buffer, order.size);
-	send();
-	return true;
-}
 #endif

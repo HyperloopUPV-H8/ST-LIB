@@ -44,12 +44,12 @@ protected:
 };
 
 template<size_t BufferLength, class... Types> 
-class StackPacket : Packet{
+class StackPacket : public Packet{
 public:
     uint16_t id;
     PacketValue<>* values[sizeof...(Types)];
     uint8_t buffer[BufferLength + sizeof(id)];
-    const size_t size = BufferLength + sizeof(id);
+    size_t& size = Packet::size;
     stack_tuple<PacketValue<Types>...> packetvalue_warehouse;
     StackPacket(uint16_t id, Types*... values): id(id), packetvalue_warehouse{PacketValue<Types>(values)...} {
         int i = 0;
@@ -57,6 +57,7 @@ public:
             this->values[i++] = &value;
         });
         packets[id] = this;
+        size = BufferLength + sizeof(id);
     }
     void parse(void* data) override {
         data+=sizeof(id);
@@ -85,7 +86,7 @@ public:
 };
 
 template<class... Types>
-class StackPacket<0, Types...> : Packet{
+class StackPacket<0, Types...> : public Packet{
 public:
     uint16_t id;
     PacketValue<>* values[sizeof...(Types)];
@@ -120,7 +121,7 @@ public:
 
     uint8_t* build() override {
         data_size = get_size();
-        if (buffer != nullptr && (data_size > buffersize || data_size < buffer_size/2)){
+        if (buffer != nullptr && (data_size > buffer_size || data_size < buffer_size/2)){
             delete[] buffer;
             buffer = new uint8_t[data_size]; 
             buffer_size = data_size;
@@ -203,7 +204,7 @@ StackPacket(uint16_t, Types*... values)->StackPacket<(!has_container<Types...>::
 StackPacket()->StackPacket<0>;
 #endif
 
-class HeapPacket : Packet{
+class HeapPacket : public Packet{
 public:
     uint16_t id;
     vector<PacketValue<>*> values;
@@ -226,6 +227,7 @@ public:
     size_t get_size() override {
         size_t new_size = 0;
         for (PacketValue<>* value : values) {
+        	size_t vec_size = values.size();
             new_size += value->get_size();
         }
         return new_size + sizeof(id);

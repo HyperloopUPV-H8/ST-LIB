@@ -6,6 +6,7 @@
  */
 
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
+#include "lwip/priv/tcp_priv.h"
 #ifdef HAL_ETH_MODULE_ENABLED
 
 uint8_t ServerSocket::priority = 0;
@@ -112,13 +113,16 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 	ServerSocket* server_socket = (ServerSocket*) arg;
 	server_socket->client_control_block = client_control_block;
 
-	if(packet_buffer == nullptr){									//If RECEIVING buffer is empty, is a signal to close connection
+	if(packet_buffer == nullptr){      //FIN has been received
 		server_socket->state = CLOSING;
 		pbuf_free(server_socket->tx_packet_buffer);
-		server_socket->close();
+//		tcp_ack_now(client_control_block);
+//		tcp_output(client_control_block);
+//		server_socket->close();
 		return ERR_OK;
 	}
-	else if(error != ERR_OK){										//Check if packet is valid
+
+	if(error != ERR_OK){										//Check if packet is valid
 		if(packet_buffer != nullptr){
 			pbuf_free(packet_buffer);
 		}
@@ -133,7 +137,7 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 		}
 		return ERR_OK;
 	}
-	else if(server_socket->state == CLOSING){
+	else if(server_socket->state == CLOSING){ 		//Socket is already closed
 		pbuf_free(server_socket->rx_packet_buffer);
 		server_socket->rx_packet_buffer = nullptr;
 		pbuf_free(packet_buffer);
@@ -144,9 +148,7 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 
 void ServerSocket::error_callback(void *arg, err_t error){
 	ServerSocket* server_socket = (ServerSocket*) arg;
-	if(error == ERR_RST || error == ERR_ABRT){
-		server_socket->close();
-	}
+	server_socket->close();
 	//TODO: Error Handler
 }
 
@@ -154,21 +156,24 @@ err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_bloc
 	ServerSocket* server_socket = (ServerSocket*)arg;
 	server_socket->client_control_block = client_control_block;
 
-	if(server_socket != nullptr){
-		if(server_socket->tx_packet_buffer != nullptr){
-			server_socket->send();
-		}else{
-			if(server_socket->state == CLOSING){
-				server_socket->close();
-			}
-		}
-		return ERR_OK;
-	}
-	else{
+	if(server_socket == nullptr){    //Polling non existing pcb, fatal error
 		tcp_abort(client_control_block);
 		return ERR_ABRT;
 	}
 
+	if(server_socket->tx_packet_buffer != nullptr){		//TX FIFO is not empty
+		server_socket->send();
+	}
+
+	if(server_socket->rx_packet_buffer != nullptr){		//RX FIFO is not empty
+		server_socket->process_data();
+	}
+
+	if(server_socket->state == CLOSING){ //pcb has been polled to close
+		server_socket->close();
+	}
+
+	return ERR_OK;
 }
 
 err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_block, u16_t len){
