@@ -103,6 +103,7 @@ public :
 	* @return void
 	*/
 	static void set_timeout(int milliseconds, function<void()> callback);
+	static void set_timeout(int milliseconds, void(*callback)());
 
 #ifdef HAL_RTC_MODULE_ENABLED
 	struct RTCData{
