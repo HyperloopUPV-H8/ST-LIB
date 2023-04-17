@@ -77,14 +77,7 @@ void Socket::send(){
 
 void Socket::process_data(){
 	uint8_t* new_data = (uint8_t*)rx_packet_buffer->payload;
-	uint16_t id = Packet<>::get_id(new_data);
-	if(Packet<>::save_by_id.contains(id)){
-		Packet<>::save_by_id[id](new_data);
-	}
-	
-	if(Packet<>::on_received.contains(id)){
-		Packet<>::on_received[id]();
-	}
+	Order::process_data(new_data);
 }
 
 err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, err_t error){

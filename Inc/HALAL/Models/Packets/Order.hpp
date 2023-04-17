@@ -8,36 +8,83 @@
 
 #include "Packet.hpp"
 
-
-template<class Type, class... Types>
-class Order : public Packet<Type,Types...> {
+class Order : public Packet{
 public:
-
-    Order();
-    Order(int id, PacketValue<Type> value, PacketValue<Types>... rest);
-    Order(Packet<Type, Types...>& packet);
-    Order(int id, void(&callback)(),PacketValue<Type> value ,PacketValue<Types>... rest);
-
-    void set_callback(void(&callback)());
+    virtual void set_callback(void(*callback)(void)) = 0;
+    virtual void process() = 0;
+    static void process_by_id(uint16_t id) {
+        if (orders.find(id) != orders.end()) orders[id]->process();
+    }
+    static void process_data(void* data) {
+        uint16_t id = Packet::get_id(data);
+        if (orders.contains(id)) {
+            orders[id]->parse(data);
+            orders[id]->process();
+        }
+    }
+protected:
+    static map<uint16_t,Order*> orders;
 };
 
-template<class Type, class... Types>
-Order<Type,Types...>::Order() = default;
+template<size_t BufferLength,class... Types>
+class StackOrder : public StackPacket<BufferLength,Types...>, public Order{
+public:
+    StackOrder(uint16_t id,void(*callback)(void), Types*... values) : StackPacket<BufferLength,Types...>(id,values...), callback(callback) {orders[id] = this;}
+    StackOrder(uint16_t id, Types*... values) : StackPacket<BufferLength,Types...>(id,values...) {orders[id] = this;}
+    void(*callback)(void) = nullptr;
+    void set_callback(void(*callback)(void)) override {
+        this->callback = callback;
+    }
+    void process() override {
+        if (callback != nullptr) callback();
+    }
+    uint8_t* build() override {
+        return StackPacket<BufferLength,Types...>::build();
+    }
+    void parse(void* data) override {
+        StackPacket<BufferLength,Types...>::parse(data);
+    }
+    size_t get_size() override {
+        return StackPacket<BufferLength,Types...>::get_size();
+    }
+    uint16_t get_id() override {
+        return StackPacket<BufferLength,Types...>::get_id();
+    }
+};
 
-template<class Type, class... Types>
-Order<Type,Types...>::Order(int id, PacketValue<Type> value, PacketValue<Types>... rest) : Packet<Type,Types...>::Packet(id, value, rest...) {}
+#if __cpp_deduction_guides >= 201606
+template<class... Types>
+StackOrder(uint16_t id,void(*callback)(void), Types*... values)->StackOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
 
-template<class Type, class... Types>
-Order<Type,Types...>::Order(Packet<Type, Types...>& packet){
-	memcpy(this, &packet, sizeof(packet));
-}
+template<class... Types>
+StackOrder(uint16_t id, Types*... values)->StackOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
+#endif
 
-template<class Type, class... Types>
-Order<Type,Types...>::Order(int id, void(&callback)(),PacketValue<Type> value ,PacketValue<Types>... rest) : Packet<Type, Types...>::Packet(id,value,rest...) {
-    Packet<>::on_received[id] = &callback;
-}
+class HeapOrder : public HeapPacket, public Order{
+public:
+    template<class... Types>
+    HeapOrder(uint16_t id,void(*callback)(void), Types*... values) : HeapPacket(id,values...), callback(callback) {orders[id] = this;}
 
-template<class Type, class... Types>
-void Order<Type,Types...>::set_callback(void(&callback)()) {
-	Packet<>::on_received[this->id] = &callback;
-}
+    template<class... Types>
+    HeapOrder(uint16_t id, Types*... values) : HeapPacket(id,values...) {orders[id] = this;}
+
+    void(*callback)(void) = nullptr;
+    void set_callback(void(*callback)(void)) override {
+        this->callback = callback;
+    }
+    void process() override {
+        if (callback != nullptr) callback();
+    }
+    uint8_t* build() override {
+        return HeapPacket::build();
+    }
+    void parse(void* data) override {
+        HeapPacket::parse(data);
+    }
+    size_t get_size() override {
+        return HeapPacket::get_size();
+    }
+    uint16_t get_id() override {
+        return HeapPacket::get_id();
+    }
+};

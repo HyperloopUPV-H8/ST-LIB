@@ -24,8 +24,10 @@ public:
 	string string_address;
 
 	IPV4();
+	IPV4(const char* address);
 	IPV4(string address);
 
+	void operator=(const char* address);
 };
 
 #endif

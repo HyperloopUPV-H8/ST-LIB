@@ -35,7 +35,7 @@ void StateMachine::add_state(uint8_t state) {
 		initial_state = state;
 		current_state = state;
 	}
-	states[state] = State();
+	states[state];
 }
 
 void StateMachine::add_enter_action(function<void()> action) {
