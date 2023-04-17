@@ -9,7 +9,7 @@
 
 void Flash::read(uint32_t source_addr, uint32_t* result, uint32_t number_of_words){
 	if (source_addr < FLASH_START_ADDRESS || source_addr > FLASH_END_ADDRESS) {
-			//TODO: Handle exception (address out of memory limits)
+			ErrorHandler("Address out of memory when trying to read flash memory.");
 			return;
 	}
 

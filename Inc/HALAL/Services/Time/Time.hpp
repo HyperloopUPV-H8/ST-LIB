@@ -50,7 +50,7 @@ private :
 	static void init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period, IRQn_Type interrupt_channel);
 	static void ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us);
 
-public:
+public :
 	static TIM_HandleTypeDef* global_timer;
 
 	static set<TIM_HandleTypeDef*> high_precision_timers;
