@@ -171,7 +171,15 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 
 void Time::set_timeout(int milliseconds, function<void()> callback){
 	uint8_t id = low_precision_ids;
-	Time::register_low_precision_alarm(milliseconds, [&,id](){
+	Time::register_low_precision_alarm(milliseconds, [&,id,callback](){
+		callback();
+		Time::unregister_low_precision_alarm(id);
+	});
+}
+
+void Time::set_timeout(int milliseconds, void(*callback)()){
+	uint8_t id = low_precision_ids;
+	Time::register_low_precision_alarm(milliseconds, [&,id,callback](){
 		callback();
 		Time::unregister_low_precision_alarm(id);
 	});
@@ -188,7 +196,7 @@ void Time::high_precision_timer_callback(TIM_HandleTypeDef* tim){
 void Time::low_precision_timer_callback(){
 	for(auto pair : Time::low_precision_alarms_by_id){
 		Time::Alarm alarm = pair.second;
-		if((Time::low_precision_tick - alarm.offset) % alarm.period == 0)
+		if((Time::low_precision_tick + alarm.offset) % alarm.period == 0)
 			alarm.alarm();
 	}
 	low_precision_tick += 1;
