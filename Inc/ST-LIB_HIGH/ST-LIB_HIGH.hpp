@@ -9,3 +9,8 @@
 
 #include "Protections/Protection.hpp"
 #include "Protections/ProtectionManager.hpp"
+#include "Control/ControlBlock.hpp"
+#include "Control/ControlSystem.hpp"
+#include "Control/Blocks/PI.hpp"
+#include "Control/Blocks/PID.hpp"
+#include "Control/Blocks/Saturator.hpp"
