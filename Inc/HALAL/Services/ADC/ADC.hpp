@@ -70,9 +70,10 @@ public:
 	static optional<float> get_value(uint8_t id);
 	static optional<uint16_t> get_int_value(uint8_t id);
 
+	static Peripheral peripherals[3];
+
 private:
 	static uint32_t ranks[16];
-	static Peripheral peripherals[3];
 	static map<Pin, Instance> available_instances;
 	static unordered_map<uint8_t, Instance> active_instances;
 	static uint8_t id_counter;
