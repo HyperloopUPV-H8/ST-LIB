@@ -37,6 +37,7 @@
 #include <stdarg.h>
 
 namespace chrono = std::chrono;
+namespace placeholders = std::placeholders;
 
 using std::map;
 using std::optional;
