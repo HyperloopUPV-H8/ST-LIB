@@ -217,7 +217,7 @@ public:
     HeapPacket(uint16_t id, Types*... values): id(id), values{new PacketValue<Types>(values)...} {packets[id] = this;}
 
     void parse(void* data) override {
-        data+=sizeof(id);
+        data += sizeof(id);
         for (PacketValue<>* value : values) {
             value->parse(data);
             data += value->get_size();
@@ -227,7 +227,6 @@ public:
     size_t get_size() override {
         size_t new_size = 0;
         for (PacketValue<>* value : values) {
-        	size_t vec_size = values.size();
             new_size += value->get_size();
         }
         return new_size + sizeof(id);
