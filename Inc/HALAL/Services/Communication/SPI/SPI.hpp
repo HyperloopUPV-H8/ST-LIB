@@ -10,6 +10,7 @@
 #include "PinModel/Pin.hpp"
 #include "Packets/RawPacket.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
@@ -45,8 +46,15 @@ private:
         uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
        
         bool initialized = false; /**< Peripheral has already been initialized */
+        string name;
     };
 
+
+
+    static void turn_on_chip_select(SPI::Instance* spi);
+    static void turn_off_chip_select(SPI::Instance* spi);
+
+public:
     /**
      * @brief Enum that abstracts the use of the Instance struct to facilitate the mocking of the HALAL.
      *
@@ -60,10 +68,6 @@ private:
  		peripheral6 = 5,
      };
 
-    static void turn_on_chip_select(SPI::Instance* spi);
-    static void turn_off_chip_select(SPI::Instance* spi);
-
-public:
     static uint16_t id_counter;
     
     static unordered_map<uint8_t, SPI::Instance* > registered_spi;
@@ -147,7 +151,7 @@ public:
 	 * @return bool Returns true if the data have been read successfully.
 	 * 			    Returns false if a problem has occurred.
 	 */
-    static bool command_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
+    static bool transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
 
     /**
      * @brief This method sets chip select to high level.

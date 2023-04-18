@@ -1,7 +1,6 @@
 #pragma once
-
-#ifdef HAL_ETH_MODULE_ENABLED
 #include "stm32h7xx_hal.h"
+
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
 #include "lwip/tcp.h"
@@ -13,6 +12,9 @@
 #include "timeouts.h"
 #include "C++Utilities/CppUtils.hpp"
 
+#ifdef HAL_ETH_MODULE_ENABLED
+
+
 using std::stringstream;
 using std::getline;
 
@@ -22,7 +24,10 @@ public:
 	string string_address;
 
 	IPV4();
+	IPV4(const char* address);
 	IPV4(string address);
 
+	void operator=(const char* address);
 };
+
 #endif

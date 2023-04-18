@@ -5,10 +5,11 @@
  *      Author: stefa
  */
 #pragma once
-#ifdef HAL_ETH_MODULE_ENABLED
+
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
+#ifdef HAL_ETH_MODULE_ENABLED
 
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
@@ -39,8 +40,31 @@ public:
 
 	void reconnect();
 
-	template<class Type, class... Types>
-	bool send_order(Order<Type,Types...>& order);
+	bool send_order(Order& order){
+		if(state != CONNECTED){
+			reconnect();
+			return false;
+		}
+		struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
+		if(next_memory_pointer_in_packet_buffer_pool == nullptr){
+			if(socket_control_block->unsent != nullptr){
+				tcp_output(socket_control_block);
+			}else{
+				memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], next_memory_pointer_in_packet_buffer_pool);
+			}
+			return false;
+		}
+
+		uint8_t* order_buffer = order.build();
+		if(order.size > tcp_sndbuf(socket_control_block)){
+			return false;
+		}
+
+		tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
+		pbuf_take(tx_packet_buffer, order_buffer, order.size);
+		send();
+		return true;
+	}
 
 	void send();
 
@@ -53,31 +77,4 @@ public:
 	static void error_callback(void *arg, err_t error);
 
 };
-
-template<class Type, class... Types>
-bool Socket::send_order(Order<Type,Types...>& order){
-	if(state != CONNECTED){
-		reconnect();
-		return false;
-	}
-	struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
-	if(next_memory_pointer_in_packet_buffer_pool == nullptr){
-		if(socket_control_block->unsent != nullptr){
-			tcp_output(socket_control_block);
-		}else{
-			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], next_memory_pointer_in_packet_buffer_pool);
-		}
-		return false;
-	}
-
-	order.build();
-	if(order.buffer_size > tcp_sndbuf(socket_control_block)){
-		return false;
-	}
-
-	tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.buffer_size, PBUF_POOL);
-	pbuf_take(tx_packet_buffer, order.buffer, order.buffer_size);
-	send();
-	return true;
-}
 #endif

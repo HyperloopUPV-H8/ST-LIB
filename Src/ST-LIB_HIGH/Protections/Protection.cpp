@@ -1,4 +1,5 @@
 #include "Protections/Protection.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 Protection::Protection(double* src): src(src) {}
 
@@ -9,7 +10,8 @@ Protection::Protection(double* src, ProtectionType protection_type, double bound
 
 Protection::Protection(double* src, ProtectionType protection_type, double lower_boundary, double upper_boundary) :src(src) {
     if (protection_type != OUT_OF_RANGE) {
-        return;              //TODO: Error Handler
+    	ErrorHandler("You can not use two values for this protection");
+        return;
     }
     protections.push_back(protection_type);
     boundaries.push_back(lower_boundary);

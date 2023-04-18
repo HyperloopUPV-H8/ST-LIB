@@ -1,14 +1,22 @@
-#Ignore compiler output
+#compiler output
 Debug/
 Release/
-.settings/
-build/
+cmake/build/
 compile_commands.json
 
-#Ignore test folder
+#test folder
 Pruebas/
 PRUEBAS/
 
-#Ignore ccls cache
+#ccls cache
 .ccls-cache/
+.cache/
+
+#vscode 
+.vscode
+.cproject
+.cache
+
 .settings
+build
+!build/build.sh

@@ -6,10 +6,13 @@
  */
 
 #include "Communication/Ethernet/Ethernet.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
+
 #ifdef HAL_ETH_MODULE_ENABLED
+
 extern uint32_t EthernetLinkTimer;
 extern struct netif gnetif;
-extern ip4_addr_t ipaddr,netmask,gw;
+extern ip4_addr_t ipaddr, netmask, gw;
 
 bool Ethernet::is_ready = false;
 bool Ethernet::is_running = false;
@@ -55,8 +58,14 @@ void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway){
 		MX_LWIP_Init();
 		is_running = true;
 	}else{
-		//TODO: Error Handler
+		ErrorHandler("Unable to start Ethernet!");
 	}
+
+	if (not is_ready) {
+		ErrorHandler("Ethernet is not ready");
+		return;
+	}
+
 }
 
 void Ethernet::inscribe(){
@@ -75,25 +84,30 @@ void Ethernet::inscribe(){
 		SCB_EnableDCache();
 		is_ready = true;
 	}else{
-		//TODO: Error Handler
+		ErrorHandler("Unable to inscribe Ethernet because is already ready!");
 	}
+
+
 }
 
 void Ethernet::update(){
-	if(is_running){
-		ethernetif_input(&gnetif);
-		sys_check_timeouts();
-		
-		if (HAL_GetTick() - EthernetLinkTimer >= 100){
+	if(not is_running) {
+		ErrorHandler("Ethernet is not running, check if its been inscribed");
+		return;
+	}
+
+	ethernetif_input(&gnetif);
+	sys_check_timeouts();
+
+	if (HAL_GetTick() - EthernetLinkTimer >= 100) {
 		EthernetLinkTimer = HAL_GetTick();
 		ethernet_link_check_state(&gnetif);
-		}
 		
 		if(gnetif.flags == 15){
-		 netif_set_up(&gnetif);
+			netif_set_up(&gnetif);
 		}
-	}else{
-		//TODO: Error Handler;
 	}
+
 }
+
 #endif

@@ -67,7 +67,8 @@ enum OperationMode{
 	INPUT,
 	OUTPUT,
 	ANALOG,
-	EXTERNAL_INTERRUPT,
+	EXTERNAL_INTERRUPT_RISING,
+	EXTERNAL_INTERRUPT_FALLING,
 	TIMER_ALTERNATE_FUNCTION,
 	ALTERNATIVE,
 };
@@ -84,12 +85,12 @@ public:
 	AlternativeFunction alternative_function;
 	OperationMode mode = OperationMode::NOT_USED;
 	static const vector<reference_wrapper<Pin>> pinVector;
-	static const map<GPIO_TypeDef*,const char*> port_to_string;
-	static const map<GPIOPin,const char*> gpio_pin_to_string;
+	static const map<GPIO_TypeDef*,const string> port_to_string;
+	static const map<GPIOPin,const string> gpio_pin_to_string;
 	Pin();
 	Pin(GPIOPort port, GPIOPin pin);
 	Pin(GPIOPort port, GPIOPin pin, AlternativeFunction alternative_function);
-	const char* to_string() const;
+	const string to_string() const;
 	static void inscribe(Pin& pin, OperationMode mode);
 	static void start();
 

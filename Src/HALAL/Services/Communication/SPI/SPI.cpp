@@ -9,13 +9,13 @@
 #ifdef HAL_SPI_MODULE_ENABLED
 
 
-unordered_map<uint8_t, SPI::Instance* > SPI::registered_spi;
+unordered_map<uint8_t, SPI::Instance*> SPI::registered_spi = {};
 
 uint16_t SPI::id_counter = 0;
 
 optional<uint8_t> SPI::inscribe(SPI::Peripheral& spi){
 	if ( !SPI::available_spi.contains(spi)){
-		return nullopt; //TODO: Error handler or throw the exception
+		return nullopt;
 	}
 
 	SPI::Instance* spi_instance = SPI::available_spi[spi];
@@ -46,7 +46,8 @@ bool SPI::transmit(uint8_t id, uint8_t data){
 
 bool SPI::transmit(uint8_t id, span<uint8_t> data) {
     if (!SPI::registered_spi.contains(id)) {
-        return false; //TODO: Error handler
+        ErrorHandler("No SPI registered with id %u", id);
+    	return false;
     }
 
     SPI::Instance* spi = SPI::registered_spi[id];
@@ -54,7 +55,8 @@ bool SPI::transmit(uint8_t id, span<uint8_t> data) {
     turn_off_chip_select(spi);
     if (HAL_SPI_Transmit(spi->hspi, data.data(), data.size(), 10) != HAL_OK){
     	turn_on_chip_select(spi);
-    	return false; //TODO: Warning, Error during transmision
+        ErrorHandler("Error during transmission in %s", spi->name.c_str());
+    	return false;
     }
 	turn_on_chip_select(spi);
 
@@ -62,63 +64,73 @@ bool SPI::transmit(uint8_t id, span<uint8_t> data) {
 }
 
 bool SPI::receive(uint8_t id, span<uint8_t> data) {
-        if (!SPI::registered_spi.contains(id))
-            return false; //TODO: Error handler
+        if (!SPI::registered_spi.contains(id)){
+            ErrorHandler("No SPI registered with id %u", id);
+            return false;
+        }
+
 
         SPI::Instance* spi = SPI::registered_spi[id];
 
     	turn_off_chip_select(spi);
         if (HAL_SPI_Receive(spi->hspi, data.data(), data.size(), 10) != HAL_OK) {
         	turn_on_chip_select(spi);
-            return false; //TODO: Warning, Error during receive
+            ErrorHandler("Error during receive in %s", spi->name.c_str());
+        	return false;
         }
     	turn_on_chip_select(spi);
 
         return true;
     };
 
-bool SPI::command_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data){
-	 if (!SPI::registered_spi.contains(id))
-	        return false; //TODO: Error handler
+bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data){
+	 if (!SPI::registered_spi.contains(id)){
+		ErrorHandler("No SPI registered with id %u", id);
+		return false;
+	 }
+
 
 	SPI::Instance* spi = SPI::registered_spi[id];
 
 	turn_off_chip_select(spi);
 	if (HAL_SPI_Transmit(spi->hspi, command_data.data(), command_data.size(), 10) != HAL_OK){
     	turn_on_chip_select(spi);
-		return false; //TODO: Warning, Error during transmision
+    	ErrorHandler("Error during transmission in %s", spi->name.c_str());
+		return false;
 	}
 
 	if (HAL_SPI_Receive(spi->hspi, receive_data.data(), receive_data.size(), 10) != HAL_OK) {
     	turn_on_chip_select(spi);
-		return false; //TODO: Warning, Error during receive
+    	ErrorHandler("Error during receive in %s", spi->name.c_str());
+		return false;
 	}
+
 	turn_on_chip_select(spi);
 
 	return true;
 }
 
 void SPI::chip_select_on(uint8_t id){
-	if (!SPI::registered_spi.contains(id))
-		return; //TODO: Error handler
+	if (!SPI::registered_spi.contains(id)){
+		ErrorHandler("No SPI registered with id %u", id);
+		return;
+	}
+
 
 	SPI::Instance* spi = SPI::registered_spi[id];
 	turn_on_chip_select(spi);
 }
 
 void SPI::chip_select_off(uint8_t id){
-	if (!SPI::registered_spi.contains(id))
-		return; //TODO: Error handler
+	if (!SPI::registered_spi.contains(id)){
+		ErrorHandler("No SPI registered with id %u", id);
+		return;
+	}
 
 	SPI::Instance* spi = SPI::registered_spi[id];
 	turn_off_chip_select(spi);
 }
 
-
-void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
-    //TODO: Fault, SPI error
-    return;
-}
 
 void SPI::init(SPI::Instance* spi){
 	if (spi->initialized) {
@@ -156,7 +168,8 @@ void SPI::init(SPI::Instance* spi){
 
 
 	if (HAL_SPI_Init(spi->hspi) != HAL_OK){
-		return;//TODO: Error handler
+		ErrorHandler("Unable to init %s", spi->name);
+		return;
 	}
 
 	spi->initialized = true;

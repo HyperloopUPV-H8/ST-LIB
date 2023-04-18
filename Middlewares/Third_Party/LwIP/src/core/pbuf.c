@@ -77,6 +77,8 @@
 #include "lwip/memp.h"
 #include "lwip/sys.h"
 #include "lwip/netif.h"
+#include "cmsis_gcc.h"
+
 #if LWIP_TCP && TCP_QUEUE_OOSEQ
 #include "lwip/priv/tcp_priv.h"
 #endif

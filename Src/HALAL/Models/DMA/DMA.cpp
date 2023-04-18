@@ -6,6 +6,7 @@
  */
 
 #include "DMA/DMA.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 vector<DMA::Stream> DMA::inscribed_streams = {};
 
@@ -20,7 +21,7 @@ void DMA::inscribe_stream() {
 
 void DMA::inscribe_stream(Stream dma_stream) {
 	if (std::find(available_streams.begin(), available_streams.end(), dma_stream) == available_streams.end()) {
-		Error_Handler("The selected DMA stream isn't available");
+		ErrorHandler("The DMA stream %d is not available", dma_stream);
 		return;
 	}
 

@@ -6,18 +6,23 @@
  */
 
 #pragma once
+#include <string>
+
 #include "PinModel/Pin.hpp"
 #include "DMA/DMA.hpp"
 #include "LowPowerTimer/LowPowerTimer.hpp"
+#include "DMA/DMA.hpp"
 
 #if defined(HAL_ADC_MODULE_ENABLED) && defined(HAL_LPTIM_MODULE_ENABLED)
+
+using std::string;
 
 #define ADC_BUF_LEN 16
 #define LPTIM1_PERIOD 3000
 #define LPTIM2_PERIOD 3000
 #define LPTIM3_PERIOD 3000
 
-#define MAX_VOLTAGE 3.3
+#define ADC_MAX_VOLTAGE 3.3
 #define MAX_12BIT 4095.0
 #define MAX_16BIT 65535.0
 
@@ -29,8 +34,11 @@ public:
 		uint32_t resolution;
 		uint32_t external_trigger;
 		vector<uint32_t> channels;
+		DMA::Stream dma_stream;
+		string name;
+
 		InitData() = default;
-		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels);
+		InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream, string name);
 	};
 
 	class Peripheral {
@@ -63,10 +71,11 @@ public:
 	static optional<float> get_value(uint8_t id);
 	static optional<uint16_t> get_int_value(uint8_t id);
 
+	static Peripheral peripherals[3];
+
 private:
 	static uint32_t ranks[16];
-	static Peripheral peripherals[3];
-	static unordered_map<Pin, Instance> available_instances;
+	static map<Pin, Instance> available_instances;
 	static unordered_map<uint8_t, Instance> active_instances;
 	static uint8_t id_counter;
 

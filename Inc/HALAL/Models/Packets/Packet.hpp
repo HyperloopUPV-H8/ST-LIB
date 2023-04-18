@@ -2,210 +2,262 @@
 
 #include "PacketValue.hpp"
 
-struct empty_type{};
+template<class... Types> class stack_tuple;
 
-template<class... ValueTypes> class Packet;
-
-template<>
-class Packet<>
-{
+template<> 
+class stack_tuple<> {
 public:
-	uint16_t id;
-	using value_type = empty_type;
-	static constexpr size_t number_of_values = 0;
-	using base_type = empty_type;
-	static map<decltype(Packet<>::id), function<void(uint8_t*)>> save_by_id;
-	static map<decltype(Packet<>::id), void(*)()> on_received;
-
-public:
-	Packet(uint16_t id): id(static_cast<decltype(this->id)>(id)){}
-	Packet() = default;
-
-	static decltype(id) get_id(uint8_t* new_data){
-		return *(decltype(id)*)new_data;
-	}
+    stack_tuple() = default;
+    template<class FunctionType>
+    void for_each(FunctionType function) {}
 };
 
 template<class Type, class... Types>
-class Packet<Type, Types...> : public Packet<Types...>
-{
+class stack_tuple<Type, Types...>: public stack_tuple<Types...> {
 public:
-	uint16_t id = 0;
-	uint8_t* buffer = nullptr;
-	using value_type = Type;
-	static constexpr size_t number_of_values = 1 + sizeof...(Types);
-	using base_type = Packet<Types...>;
+    Type value;
+    stack_tuple() = default;
+    stack_tuple(Type value, Types... values): stack_tuple<Types...>(values...), value(value) {}
+    template<class FunctionType>
+    void for_each(FunctionType function) {
+        function(value);
+        stack_tuple<Types...>::for_each(function);
+    }
+};
 
+class Packet{
+public:
+    size_t size;
+    virtual uint8_t* build() = 0;
+    virtual void parse(void* data) = 0;
+    virtual size_t get_size() = 0;
+    virtual uint16_t get_id() = 0; 
+    static uint16_t get_id(void* data) {
+        return *((uint16_t*)data);
+    }
+    static void parse_data(void* data){
+        uint16_t id = get_id(data);
+        if(packets.contains(id)) packets[id]->parse(data);
+    }
 protected:
-	PacketValue<value_type> value;
+    static map<uint16_t, Packet*> packets;
+};
 
+template<size_t BufferLength, class... Types> 
+class StackPacket : public Packet{
 public:
-	Packet();
-	Packet(uint16_t id);
-	Packet(uint16_t id, PacketValue<Type> value, PacketValue<Types>... args);
+    uint16_t id;
+    PacketValue<>* values[sizeof...(Types)];
+    uint8_t buffer[BufferLength + sizeof(id)];
+    size_t& size = Packet::size;
+    stack_tuple<PacketValue<Types>...> packetvalue_warehouse;
+    StackPacket(uint16_t id, Types*... values): id(id), packetvalue_warehouse{PacketValue<Types>(values)...} {
+        int i = 0;
+        packetvalue_warehouse.for_each([this, &i](auto& value) {
+            this->values[i++] = &value;
+        });
+        packets[id] = this;
+        size = BufferLength + sizeof(id);
+    }
+    void parse(void* data) override {
+        data+=sizeof(id);
+        for (PacketValue<>* value : values) {
+            value->parse(data);
+            data += value->get_size();
+        }
+    }
+    size_t get_size() override {
+        return size;
+    }
+    uint8_t* build() override {
+        uint8_t* data = buffer;
+        memcpy(data, &id, sizeof(id));
+        data += sizeof(id);
+        for (PacketValue<>* value : values) {
+            value->copy_to(data);
+            data += value->get_size();
+        }
+        return buffer;
+    }
 
-	template<int I>
-	const auto& get() const;
+    uint16_t get_id() override {
+        return id;
+    }
+};
 
-	template<int I>
-	auto& get();
-
-	uint8_t* build();
-
-	template <size_t I = 0>
-	void calculate_sizes();
-
-	template <size_t I = 0>
-	void fill_buffer();
-
-	bool check_id(uint8_t* new_data);
-
-    decltype(Packet<Type,Types...>::id) get_id();
-
-    template <size_t I = 0>
-    void load_data(uint8_t* new_data);
-
-    void save_data(uint8_t* new_data);
-
+template<class... Types>
+class StackPacket<0, Types...> : public Packet{
 public:
-	uint16_t buffer_size = sizeof(id);
-	uint16_t ptr_loc = sizeof(id);
-	bool has_been_built = false;
-	bool has_container_values = false;
+    uint16_t id;
+    PacketValue<>* values[sizeof...(Types)];
+    stack_tuple<PacketValue<Types>...> packetvalue_warehouse;
+    size_t buffer_size = 0;
+    size_t& data_size = Packet::size;
+    uint8_t* buffer = nullptr;
+
+    StackPacket(uint16_t id, Types*... values): id(id), packetvalue_warehouse{PacketValue<Types>(values)...} {
+        int i = 0;
+        packetvalue_warehouse.for_each([this, &i](auto& value) {
+            this->values[i++] = &value;
+        });
+        packets[id] = this;
+    }
+
+    void parse(void* data) override {
+        data+=sizeof(id);
+        for (PacketValue<>* value : values) {
+            value->parse(data);
+            data += value->get_size();
+        }
+    }
+
+    size_t get_size()override {
+        size_t new_size = 0;
+        for (PacketValue<>* value : values) {
+            new_size += value->get_size();
+        }
+        return new_size + sizeof(id);
+    }
+
+    uint8_t* build() override {
+        data_size = get_size();
+        if (buffer != nullptr && (data_size > buffer_size || data_size < buffer_size/2)){
+            delete[] buffer;
+            buffer = new uint8_t[data_size]; 
+            buffer_size = data_size;
+        }
+        else if (buffer == nullptr) {
+            buffer = new uint8_t[data_size];
+            buffer_size = data_size;
+        }
+
+        uint8_t* data = buffer;
+        memcpy(data, &id, sizeof(id));
+        data += sizeof(id);
+        for (PacketValue<>* value : values) {
+            value->copy_to(data);
+            data += value->get_size();
+        }
+        return buffer;
+    }
+
+    uint16_t get_id() override {
+        return id;
+    }
+
+    ~StackPacket() {
+        if (buffer != nullptr) delete[] buffer;
+    }
+};
+
+template<>
+class StackPacket<0> : public Packet{
+public:
+    uint16_t id;
+    const size_t size = sizeof(id);
+    StackPacket() = default;
+    StackPacket(uint16_t id) : id(id){packets[id] = this;}
+    void parse(void* data) override {}
+    uint8_t* build() override {
+        return (uint8_t*)&id;
+    }
+    uint16_t get_id() override {
+        return id;
+    }
+    size_t get_size() override {
+        return sizeof(id); 
+    }
+};
+
+template<class... Types> struct has_container;
+
+template<class Type, class... Types>
+struct has_container<Type, Types...>{
+public:
+    static constexpr bool value = Container<Type> || has_container<Types...>::value;
+};
+
+template<>
+struct has_container<>{
+public:
+    static constexpr bool value = false;
+};
+
+template<class... Types> struct total_sizeof;
+
+template<class Type, class... Types>
+struct total_sizeof<Type,Types...>{
+public:
+    static constexpr size_t value = sizeof(Type) + total_sizeof<Types...>::value;
+};
+
+template<>
+struct total_sizeof<>{
+public:
+    static constexpr size_t value = 0;
 };
 
 #if __cpp_deduction_guides >= 201606
-template<class Type, class... Types>
-Packet(uint16_t id, PacketValue<Type> value, PacketValue<Types>... args)->Packet<Type, Types...>;
-template<class Type>
-Packet(uint16_t id, PacketValue<Type> value)->Packet<Type>;
-Packet(uint16_t id)->Packet<>;
+template<class... Types>
+StackPacket(uint16_t, Types*... values)->StackPacket<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
+
+StackPacket()->StackPacket<0>;
 #endif
 
-template<class Type, class... Types>
-Packet<Type, Types...>::Packet() = default;
+class HeapPacket : public Packet{
+public:
+    uint16_t id;
+    vector<PacketValue<>*> values;
+    uint8_t* buffer = nullptr;
+    size_t& data_size = Packet::size;
+    size_t buffer_size = 0;
+    HeapPacket() = default;
 
-template<class Type, class... Types>
-Packet<Type, Types...>::Packet(uint16_t id) : id(id) {}
+    template<class... Types>
+    HeapPacket(uint16_t id, Types*... values): id(id), values{new PacketValue<Types>(values)...} {packets[id] = this;}
 
-template<class Type, class... Types>
-Packet<Type, Types...>::Packet(uint16_t id, PacketValue<Type> value, PacketValue<Types>... args) : Packet<Types...>(id, args...), id(id), value(value) {
-	Packet<>::save_by_id[this->id] = [this](uint8_t* new_data) {save_data(new_data); };
-}
-
-template<class Type, class... Types> template<int I>
-const auto& Packet<Type, Types...>::get() const{
-	if constexpr (I == 0){
-		return this->value;
-	}
-	else if constexpr (I > 0){
-		return static_cast<const base_type&>(*this). template get<I - 1>();
-	}
-}
-
-template<class Type, class... Types> template<int I>
-auto& Packet<Type, Types...>::get(){
-	if constexpr (I == 0){
-		return this->value;
-	}
-	else if constexpr (I > 0){
-		return static_cast<base_type&>(*this). template get<I - 1>();
-	}
-}
-
-template<class Type, class... Types> template <size_t I = 0>
-void Packet<Type, Types...>::calculate_sizes() {
-	if constexpr (I == number_of_values) {
-		return;
-	}
-	else if constexpr (I < number_of_values) {
-		auto elem = get<I>();
-		using cast_type = remove_reference<decltype(elem)>::type::value_type;
-		if constexpr (is_container<cast_type>::value) {
-			has_container_values = true;
-		}
-		buffer_size += (uint16_t)elem.size();
-		calculate_sizes<I + 1>();
-	}
-}
-
-template<class Type, class... Types> template <size_t I = 0>
-void Packet<Type, Types...>::fill_buffer() {
-	if constexpr (I == number_of_values) {
-		return;
-	}
-	else if constexpr (I < number_of_values) {
-		auto elem = get<I>();
-		using cast_type = remove_reference<decltype(elem)>::type::value_type;
-		if constexpr (is_container<cast_type>::value) {
-			memcpy(buffer + ptr_loc, elem.convert(), elem.size());
-		}
-		else {
-			auto data = elem.convert();
-			memcpy(buffer + ptr_loc, &data, elem.size());
-		}
-		ptr_loc += (uint16_t)elem.size();
-		fill_buffer<I + 1>();
-	}
-}
-
-template<class Type, class... Types>
-uint8_t* Packet<Type, Types...>::build() {
-	if (!has_been_built || has_container_values) {
-		buffer_size = sizeof(id);
-		calculate_sizes();
-		if(buffer != nullptr){
-			free(buffer);
-		}
-		buffer = (uint8_t*)malloc(buffer_size);
-		memcpy(buffer, &id, sizeof(id));
-	}
-	fill_buffer();
-	ptr_loc = sizeof(id);
-	has_been_built = true;
-	return this->buffer;
-}
-
-template<class Type, class... Types> template <size_t I = 0>
-void Packet<Type, Types...>::load_data(uint8_t* new_data) {
-    if constexpr (I == number_of_values) {
-        return;
-    }
-    else if constexpr (I < number_of_values) {
-        auto elem = get<I>();
-        using cast_type = remove_reference<decltype(elem)>::type::value_type;
-        cast_type* new_value = (cast_type*)(new_data+ptr_loc);
-        if constexpr (is_container<cast_type>::value) {
-            elem.load(new_value);
+    void parse(void* data) override {
+        data += sizeof(id);
+        for (PacketValue<>* value : values) {
+            value->parse(data);
+            data += value->get_size();
         }
-		else {
-            elem.load(*new_value);
+    }
+
+    size_t get_size() override {
+        size_t new_size = 0;
+        for (PacketValue<>* value : values) {
+            new_size += value->get_size();
         }
-        ptr_loc += (uint16_t)elem.size();
-        load_data<I + 1>(new_data);
+        return new_size + sizeof(id);
     }
-}
 
-template<class Type, class ... Types>
-bool Packet<Type, Types...>::check_id(uint8_t* new_data) {
-    if (id != *(uint16_t*)new_data) {
-        return false;
+    uint8_t* build() override {
+        data_size = get_size();
+        if (buffer != nullptr && (data_size > buffer_size || data_size < buffer_size/2)){
+            delete[] buffer;
+            buffer = new uint8_t[data_size]; 
+            buffer_size = data_size;
+        }
+        else if (buffer == nullptr) {
+            buffer = new uint8_t[data_size];
+            buffer_size = data_size;
+        }
+        uint8_t* data = buffer;
+        memcpy(data, &id, sizeof(id));
+        data += sizeof(id);
+        for (PacketValue<>* value : values) {
+            value->copy_to(data);
+            data += value->get_size();
+        }
+        return buffer;
     }
-    return true;
-}
-
-template<class Type, class... Types>
-void Packet<Type, Types...>::save_data(uint8_t* new_data) {
-    if (!check_id(new_data)) {
-        return;
+    uint16_t get_id() override {
+        return id;
     }
-    load_data(new_data);
-    ptr_loc = sizeof(id);
-}
 
-
-template<class Type, class... Types>
-decltype(Packet<Type,Types...>::id) Packet<Type, Types...>::get_id() {
-    return this->id;
-}
-
+    ~HeapPacket() {
+        if(buffer != nullptr) delete[] buffer;
+        for(PacketValue<>* value : values) delete value;
+    }
+};

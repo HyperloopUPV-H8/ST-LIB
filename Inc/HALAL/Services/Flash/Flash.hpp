@@ -11,6 +11,7 @@
 #ifdef HAL_FLASH_MODULE_ENABLED
 
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 #define FLASHWORD 8
 #define FLASH_START_ADDRESS 0x08000000
@@ -25,6 +26,7 @@
 #define FLASH_END_ADDRESS 0x080FFFFF
 #define SECTOR_SIZE_IN_WORDS 32768
 
+#define SECTOR_SIZE_IN_BYTES		((uint32_t)131072U)
 /*
 	**IMPORTANT**
 	We need to reserve memory in the linker script to avoid overwriting:

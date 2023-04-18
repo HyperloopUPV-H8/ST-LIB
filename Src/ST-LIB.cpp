@@ -7,3 +7,14 @@
   * @brief    Default under dev library file.
   ******************************************************************************
 */
+
+#include "ST-LIB.hpp"
+
+void STLIB::start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
+	HALAL::start(ip, subnet_mask, gateway, printf_peripheral);
+}
+
+void STLIB::update() {
+    Ethernet::update();
+	ErrorHandlerModel::ErrorHandlerUpdate();
+}

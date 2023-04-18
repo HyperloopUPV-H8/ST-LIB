@@ -13,9 +13,15 @@
 
 class ExternalInterrupt {
 public:
+	enum TRIGGER {
+		RISING,
+		FALLING
+	};
+
 	class Instance {
 	public:
 		IRQn_Type interrupt_request_number;
+
 		function<void()> action = nullptr;
 		bool is_on = true;
 
@@ -27,7 +33,7 @@ public:
 	static map<uint16_t, Instance> instances;
 	static uint8_t id_counter;
 
-	static optional<uint8_t> inscribe(Pin& pin, function<void()>&& action);
+	static optional<uint8_t> inscribe(Pin& pin, function<void()>&& action, TRIGGER trigger=RISING);
 	static void start();
 	static void turn_on(uint8_t id);
 	static void turn_off(uint8_t id);

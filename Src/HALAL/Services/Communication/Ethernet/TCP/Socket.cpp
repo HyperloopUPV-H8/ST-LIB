@@ -4,8 +4,8 @@
  *  Created on: Nov 23, 2022
  *      Author: stefa
  */
-#ifdef HAL_ETH_MODULE_ENABLED
 #include "Communication/Ethernet/TCP/Socket.hpp"
+#ifdef HAL_ETH_MODULE_ENABLED
 
 unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
 
@@ -55,7 +55,6 @@ void Socket::reconnect(){
 
 
 void Socket::send(){
-	uint16_t is_freed;
 	pbuf* temporal_packet_buffer;
 	err_t error = ERR_OK;
 	while(error == ERR_OK && tx_packet_buffer != nullptr && tx_packet_buffer->len <= tcp_sndbuf(socket_control_block)){
@@ -78,14 +77,7 @@ void Socket::send(){
 
 void Socket::process_data(){
 	uint8_t* new_data = (uint8_t*)rx_packet_buffer->payload;
-	uint16_t id = Packet<>::get_id(new_data);
-	if(Packet<>::save_by_id.contains(id)){
-		Packet<>::save_by_id[id](new_data);
-	}
-	
-	if(Packet<>::on_received.contains(id)){
-		Packet<>::on_received[id]();
-	}
+	Order::process_data(new_data);
 }
 
 err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, err_t error){

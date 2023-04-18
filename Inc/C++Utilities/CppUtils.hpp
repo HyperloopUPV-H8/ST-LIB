@@ -33,8 +33,11 @@
 #include <cstring>
 #include <span>
 #include <ranges>
+#include <cstdarg>
+#include <stdarg.h>
 
 namespace chrono = std::chrono;
+namespace placeholders = std::placeholders;
 
 using std::map;
 using std::optional;
@@ -63,7 +66,7 @@ using std::hash;
 using std::unordered_map;
 using std::vector;
 using std::queue;
-
+using std::map;
 
 template<class Type>
 concept Integral = is_integral<Type>::value;

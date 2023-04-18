@@ -15,8 +15,22 @@ extern ADC_HandleTypeDef hadc3;
 uint8_t ADC::id_counter = 0;
 unordered_map<uint8_t, ADC::Instance> ADC::active_instances = {};
 
-ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels) :
-		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels) {}
+void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc){
+	if(hadc == ADC::peripherals[0].handle){
+		SCB_CleanInvalidateDCache_by_Addr((uint32_t*)ADC::peripherals[0].dma_stream, 32);
+	}
+
+	if(hadc == ADC::peripherals[1].handle){
+		SCB_CleanInvalidateDCache_by_Addr((uint32_t*)ADC::peripherals[1].dma_stream, 32);
+	}
+	
+	if(hadc == ADC::peripherals[2].handle){
+		SCB_CleanInvalidateDCache_by_Addr((uint32_t*)ADC::peripherals[2].dma_stream, 32);
+	}
+}
+
+ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream, string name) :
+		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels), dma_stream(dma_stream), name(name) {}
 
 ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data) :
 	handle(handle), dma_stream(dma_stream), timer(timer), init_data(init_data) {}
@@ -37,6 +51,7 @@ optional<uint8_t> ADC::inscribe(Pin pin) {
 	active_instances[id_counter] = available_instances[pin];
 
 	InitData& init_data = active_instances[id_counter].peripheral->init_data;
+	DMA::inscribe_stream(init_data.dma_stream);
 	active_instances[id_counter].rank = init_data.channels.size();
 	init_data.channels.push_back(active_instances[id_counter].channel);
 	return id_counter++;
@@ -62,13 +77,13 @@ void ADC::turn_on(uint8_t id){
 
 	uint32_t buffer_length = peripheral->init_data.channels.size();
 	if (HAL_ADC_Start_DMA(peripheral->handle, (uint32_t*) peripheral->dma_stream, buffer_length) != HAL_OK) {
-		ErrorHandler("DMA %d of ADC %d did not start correctly", peripheral->dma_stream, id);
+		ErrorHandler("DMA - %d - of ADC - %d - did not start correctly", peripheral->dma_stream, id);
 		return;
 	}
 
 	LowPowerTimer& timer = peripheral->timer;
 	if (HAL_LPTIM_TimeOut_Start_IT(&timer.handle, timer.period, timer.period / 2) != HAL_OK) {
-		ErrorHandler("LPTIM %d of ADC %d did not start correctly", timer.instance, id);
+		ErrorHandler("LPTIM - %d - of ADC - %d - did not start correctly", timer.name, peripheral->handle);
 		return;
 	}
 	peripheral->is_on = true;
@@ -82,10 +97,10 @@ optional<float> ADC::get_value(uint8_t id) {
 	Instance& instance = active_instances[id];
 	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
 	if(instance.peripheral->handle == &hadc3) {
-		return raw / MAX_12BIT * MAX_VOLTAGE;
+		return raw / MAX_12BIT * ADC_MAX_VOLTAGE;
 	}
 	else {
-		return raw / MAX_16BIT * MAX_VOLTAGE;
+		return raw / MAX_16BIT * ADC_MAX_VOLTAGE;
 	}
 
 	return nullopt;
@@ -132,14 +147,16 @@ void ADC::init(Peripheral& peripheral) {
 	adc_handle.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
 	adc_handle.Init.OversamplingMode = DISABLE;
 	if (HAL_ADC_Init(&adc_handle) != HAL_OK) {
-		ErrorHandler("ADC %d did not start correctly", adc_handle);
+		ErrorHandler("ADC  - %d - did not start correctly", init_data.name);
 		return;
 	}
 
 	multimode.Mode = ADC_MODE_INDEPENDENT;
-	if (HAL_ADCEx_MultiModeConfigChannel(&adc_handle, &multimode) != HAL_OK) {
-		ErrorHandler("ADC MultiModeConfigChannel %d did not start correctly", adc_handle);
-		return;
+	if(adc_handle.Instance == ADC1){
+		if (HAL_ADCEx_MultiModeConfigChannel(&adc_handle, &multimode) != HAL_OK) {
+			ErrorHandler("ADC MultiModeConfigChannel - %d - did not start correctly", init_data.name);
+			return;
+		}
 	}
 
 	uint8_t counter = 0;
@@ -152,7 +169,7 @@ void ADC::init(Peripheral& peripheral) {
 	  sConfig.Offset = 0;
 	  sConfig.OffsetSignedSaturation = DISABLE;
 	  if (HAL_ADC_ConfigChannel(&adc_handle, &sConfig) != HAL_OK) {
-		ErrorHandler("ADC ConfigChannel %d did not start correctly", adc_handle);
+		ErrorHandler("ADC ConfigChannel - %d - did not start correctly", init_data.name);
 	  }
 	  counter++;
 	}

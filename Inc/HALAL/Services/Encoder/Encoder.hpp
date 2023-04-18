@@ -11,6 +11,7 @@
 #include "PinModel/Pin.hpp"
 #include "TimerPeripheral/TimerPeripheral.hpp"
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 
 #ifdef HAL_TIM_MODULE_ENABLED
