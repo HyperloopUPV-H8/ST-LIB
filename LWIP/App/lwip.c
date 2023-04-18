@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2022 STMicroelectronics.
+  * Copyright (c) 2023 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -30,6 +30,7 @@
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
+/* Private function prototypes -----------------------------------------------*/
 static void ethernet_link_status_updated(struct netif *netif);
 static void Ethernet_Link_Periodic_Handle(struct netif *netif);
 /* ETH Variables initialization ----------------------------------------------*/
@@ -59,18 +60,18 @@ uint8_t GATEWAY_ADDRESS[4];
 void MX_LWIP_Init(void)
 {
   /* IP addresses initialization */
-  IP_ADDRESS[0] = 169;
-  IP_ADDRESS[1] = 254;
-  IP_ADDRESS[2] = 127;
-  IP_ADDRESS[3] = 21;
+  IP_ADDRESS[0] = 192;
+  IP_ADDRESS[1] = 168;
+  IP_ADDRESS[2] = 1;
+  IP_ADDRESS[3] = 4;
   NETMASK_ADDRESS[0] = 255;
   NETMASK_ADDRESS[1] = 255;
   NETMASK_ADDRESS[2] = 0;
   NETMASK_ADDRESS[3] = 0;
-  GATEWAY_ADDRESS[0] = 169;
-  GATEWAY_ADDRESS[1] = 254;
-  GATEWAY_ADDRESS[2] = 200;
-  GATEWAY_ADDRESS[3] = 108;
+  GATEWAY_ADDRESS[0] = 192;
+  GATEWAY_ADDRESS[1] = 168;
+  GATEWAY_ADDRESS[2] = 1;
+  GATEWAY_ADDRESS[3] = 1;
 
 /* USER CODE BEGIN IP_ADDRESSES */
 /* USER CODE END IP_ADDRESSES */
@@ -107,7 +108,7 @@ void MX_LWIP_Init(void)
 
 /* USER CODE BEGIN 3 */
   if(!netif_is_link_up(&gnetif)){
-	  HAL_NVIC_SystemReset();
+    HAL_NVIC_SystemReset();
   }
 /* USER CODE END 3 */
 }

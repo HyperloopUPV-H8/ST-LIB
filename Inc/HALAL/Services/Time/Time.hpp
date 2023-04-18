@@ -9,6 +9,8 @@
 
 #include "stm32h7xx_hal.h"
 
+#define RTC_MAX_COUNTER 32767
+
 #ifdef HAL_TIM_MODULE_ENABLED
 
 #include "C++Utilities/CppUtils.hpp"
@@ -32,6 +34,7 @@ private :
 		uint32_t period;
 		TIM_HandleTypeDef* tim;
 		function<void()> alarm;
+		uint64_t offset;
 	};
 
 	static const uint32_t HIGH_PRECISION_MAX_ARR = 4294967295;
@@ -100,6 +103,25 @@ public :
 	* @return void
 	*/
 	static void set_timeout(int milliseconds, function<void()> callback);
+	static void set_timeout(int milliseconds, void(*callback)());
+
+#ifdef HAL_RTC_MODULE_ENABLED
+	struct RTCData{
+		uint16_t counter;
+		uint8_t second;
+		uint8_t minute;
+		uint8_t hour;
+		uint8_t day;
+		uint8_t month;
+		uint16_t year;
+	};
+
+	static void start_rtc();
+	static RTCData get_rtc_data();
+	static void set_rtc_data(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year);
+
+	static RTC_HandleTypeDef hrtc;
+#endif
 };
 
 #endif

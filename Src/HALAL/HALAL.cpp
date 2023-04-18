@@ -7,15 +7,15 @@
 
 #include "HALAL/HALAL.hpp"
 
-void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
+void HALAL::start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
 
 #ifdef HAL_ETH_MODULE_ENABLED
-	//Ethernet::inscribe();
+	Ethernet::inscribe();
 #endif
 
 	HAL_Init();
-	HALconfig::system_clock(target);
-	HALconfig::peripheral_clock(target);
+	HALconfig::system_clock();
+	HALconfig::peripheral_clock();
 
 #ifdef HAL_UART_MODULE_ENABLED
 	UART::set_up_printf(printf_peripheral);
@@ -41,6 +41,9 @@ void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, 
 	ADC::start();
 #endif
 
+#ifdef HAL_I2C_MODULE_ENABLED
+	I2C::start();
+#endif
 
 #ifdef HAL_SPI_MODULE_ENABLED
 	SPI::start();
@@ -55,11 +58,12 @@ void HALAL::start(TARGET target, string ip, string subnet_mask, string gateway, 
 #endif
 
 #ifdef HAL_ETH_MODULE_ENABLED
-	//Ethernet::start(ip, subnet_mask, gateway);
+	Ethernet::start(ip, subnet_mask, gateway);
 #endif
 
 #ifdef HAL_TIM_MODULE_ENABLED
 	Encoder::start();
+	Time::start_rtc();
 	TimerPeripheral::start();
 	Time::start();
 #endif

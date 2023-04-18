@@ -37,16 +37,17 @@ optional<uint8_t> FDCAN::inscribe(FDCAN::Peripheral& fdcan){
 }
 
 void FDCAN::start(){
-	for(const auto [id, instance]: FDCAN::registered_fdcan){
+	for( std::pair<uint8_t, FDCAN::Instance*> inst: FDCAN::registered_fdcan){
+		uint8_t id = inst.first;
+		FDCAN::Instance* instance = inst.second;
 		FDCAN::init(instance);
 
-		FDCAN_TxHeaderTypeDef header = FDCAN_TxHeaderTypeDef();
+		FDCAN_TxHeaderTypeDef header;
 		header.FDFormat = FDCAN_FD_CAN;
 		header.DataLength = instance->dlc;
 		header.TxFrameType = FDCAN_DATA_FRAME;
 		header.BitRateSwitch = FDCAN_BRS_ON;
-		header.ErrorStateIndicator = FDCAN_ESI_PASSIVE;
-		header.FDFormat = FDCAN_FRAME_FD_BRS;
+		header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 		header.IdType = FDCAN_STANDARD_ID;
 		header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 		header.MessageMarker = 0;
@@ -66,6 +67,8 @@ void FDCAN::start(){
 	    }
 
 	    instance->start = true;
+
+	    FDCAN::registered_fdcan[id] = instance;
 	}
 }
 
@@ -104,15 +107,18 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		return;
 	}
 
-	FDCAN::DLC dlc = FDCAN::handle_to_fdcan[hfdcan]->dlc;
-
-	vector<uint8_t> data_buffer(FDCAN::dlc_to_len[dlc]);
-	FDCAN_RxHeaderTypeDef header_buffer = FDCAN_RxHeaderTypeDef();
-	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN::handle_to_fdcan[hfdcan]->rx_location, &header_buffer, data_buffer.data());
-
 	if (FDCAN::handle_to_fdcan[hfdcan]->rx_queue.size() >= FDCAN::handle_to_fdcan[hfdcan]->rx_queue_max_size) {
 		return; // TODO: WARNING RX_QUEUE FULL
 	}
+
+	FDCAN::DLC dlc = FDCAN::handle_to_fdcan[hfdcan]->dlc;
+
+	vector<uint8_t> data_buffer(FDCAN::dlc_to_len[dlc]);
+
+	FDCAN_RxHeaderTypeDef header_buffer = FDCAN_RxHeaderTypeDef();
+	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN::handle_to_fdcan[hfdcan]->rx_location, &header_buffer, data_buffer.data());
+
+
 	FDCAN::Packet packet_buffer = {data_buffer, header_buffer.Identifier, (FDCAN::DLC)header_buffer.DataLength};
 	FDCAN::handle_to_fdcan[hfdcan]->rx_queue.push(packet_buffer);
 }

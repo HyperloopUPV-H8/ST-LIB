@@ -12,6 +12,38 @@ IPV4::IPV4(string address) : string_address(address){
 	IP_ADDR4(&(this->address), ip_bytes[0], ip_bytes[1], ip_bytes[2], ip_bytes[3]);
 }
 
+IPV4::IPV4(const char* address) {
+    char* temp_ip = (char*)malloc(strlen(address));
+    strcpy(temp_ip,address);
+    string_address = temp_ip;
+    const char* token = strtok(temp_ip,".");
+    int i = 0;
+    uint8_t ip_bytes[4];
+    while(token!=nullptr){
+        ip_bytes[i++] = atoi(token);
+        token = strtok(nullptr,".");
+    }
+    free(temp_ip);
+	IP_ADDR4(&(this->address), ip_bytes[0], ip_bytes[1], ip_bytes[2], ip_bytes[3]);
+}
+
 IPV4::IPV4() = default;
+
+void IPV4::operator =(const char* address){
+    char* temp_ip = (char*)malloc(strlen(address));
+    strcpy(temp_ip,address);
+    string_address = temp_ip;
+    const char* token = strtok(temp_ip,".");
+    int i = 0;
+    uint8_t ip_bytes[4];
+    while(token!=nullptr){
+        ip_bytes[i++] = atoi(token);
+        token = strtok(nullptr,".");
+    }
+    free(temp_ip);
+	IP_ADDR4(&(this->address), ip_bytes[0], ip_bytes[1], ip_bytes[2], ip_bytes[3]);
+}
+
+
 
 #endif

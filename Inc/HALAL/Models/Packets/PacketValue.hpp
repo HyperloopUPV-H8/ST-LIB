@@ -2,131 +2,117 @@
 
 #include "C++Utilities/CppUtils.hpp"
 
-template<typename T>
-struct has_const_iterator
+template <class T>
+concept Container = requires(T a, const T b)
 {
-private:
-    typedef char                      yes;
-    typedef struct { char array[2]; } no;
-
-    template<typename C> static yes test(typename C::const_iterator*);
-    template<typename C> static no  test(...);
-public:
-    static const bool value = sizeof(test<T>(0)) == sizeof(yes);
-    typedef T type;
+    requires std::regular<T>;
+    requires std::swappable<T>;
+    requires std::same_as<typename T::reference, typename T::value_type &>;
+    requires std::same_as<typename T::const_reference, const typename T::value_type &>;
+    requires std::forward_iterator<typename T::iterator>;
+    requires std::forward_iterator<typename T::const_iterator>;
+    requires std::signed_integral<typename T::difference_type>;
+    requires std::same_as<typename T::difference_type, typename std::iterator_traits<typename T::iterator>::difference_type>;
+    requires std::same_as<typename T::difference_type, typename std::iterator_traits<typename T::const_iterator>::difference_type>;
+    { a.begin() } -> std::same_as<typename T::iterator>;
+    { a.end() } -> std::same_as<typename T::iterator>;
+    { b.begin() } -> std::same_as<typename T::const_iterator>;
+    { b.end() } -> std::same_as<typename T::const_iterator>;
+    { a.cbegin() } -> std::same_as<typename T::const_iterator>;
+    { a.cend() } -> std::same_as<typename T::const_iterator>;
+    { a.size() } -> std::same_as<typename T::size_type>;
+    { a.max_size() } -> std::same_as<typename T::size_type>;
+    { a.empty() } -> std::convertible_to<bool>;
 };
 
-template <typename T>
-struct has_begin_end
-{
-    template<typename C> static char(&f(typename std::enable_if<
-        std::is_same<decltype(static_cast<typename C::const_iterator(C::*)() const>(&C::begin)),
-        typename C::const_iterator(C::*)() const>::value, void>::type*))[1];
+template <class T>
+concept NotContainer = !Container<T>;
 
-    template<typename C> static char(&f(...))[2];
+struct empty_type {};
 
-    template<typename C> static char(&g(typename std::enable_if<
-        std::is_same<decltype(static_cast<typename C::const_iterator(C::*)() const>(&C::end)),
-        typename C::const_iterator(C::*)() const>::value, void>::type*))[1];
+template <class... Types> class PacketValue;
 
-    template<typename C> static char(&g(...))[2];
-
-    static bool const beg_value = sizeof(f<T>(0)) == 1;
-    static bool const end_value = sizeof(g<T>(0)) == 1;
-};
-
-template<typename T>
-struct is_container : integral_constant<bool, has_const_iterator<T>::value&& has_begin_end<T>::beg_value&& has_begin_end<T>::end_value> {};
-
-template<class Type>
-concept Container = is_container<Type>::value;
-
-template<class Type>
-concept NotContainer = !is_container<Type>::value;
-
-template<class BaseType>
-concept CustomButNotContainer = NotContainer<BaseType> && NotIntegral<BaseType>;
-
-template<class... Types> class PacketValue;
-
-template<class ConversionType>
-class PacketValue<ConversionType> {
+template<>
+class PacketValue<> {
 public:
-    using value_type = ConversionType;
-    double* src;
-    double factor;
-    ConversionType converted_value;
-
+    using value_type = empty_type;
     PacketValue() = default;
-    PacketValue(double* src, double factor) :src(src), factor(factor != 0 ? factor : 1) {}
-
-    ConversionType* convert() {
-        converted_value = static_cast<ConversionType>((*src) * factor);
-        return &converted_value;
-    }
-
-    void load(ConversionType* new_data) {
-        *src = static_cast<double>(*new_data / factor);
-    }
-
-    inline constexpr size_t size() const {
-        return sizeof(ConversionType);
-    }
+    virtual ~PacketValue();
+    virtual void* get_pointer() = 0;
+    virtual size_t get_size() = 0;
+    virtual void parse(void* data) = 0;
+    virtual void copy_to(void* data) = 0;
 };
 
-template<class BaseType> requires CustomButNotContainer<BaseType>
-class PacketValue<BaseType> {
+template<class Type> requires NotContainer<Type>
+class PacketValue<Type>: public PacketValue<> {
 public:
-    using value_type = BaseType;
-    BaseType* src;
-
+    using value_type = Type;
+    Type* src = nullptr;
     PacketValue() = default;
-    PacketValue(BaseType* src) : src(src) {}
-
-    inline BaseType* convert() const {
+    PacketValue(Type* src): src(src) {}
+    void* get_pointer() override {
         return src;
     }
-
-    void load(BaseType* new_data) {
-        *src = *new_data;
+    size_t get_size() override {
+        return sizeof(Type);
     }
-
-    inline constexpr size_t size() const {
-        return sizeof(BaseType);
+    void parse(void* data) override {
+        *src = *((Type*)data);
     }
-};
-
-template<class BaseType> requires Container<BaseType>
-class PacketValue<BaseType> {
-public:
-    using value_type = BaseType;
-    BaseType* src;
-
-    PacketValue() = default;
-    PacketValue(BaseType* src) : src(src) {
-        if constexpr (is_same<string, BaseType>::value) {
-            is_string = true;
-        }
+    void copy_to(void* data) override {
+        *((Type*)data) = *src;
     }
-
-    auto* convert() {
-        return src->data();
-    }
-
-    void load(BaseType* new_data) {
-        memcpy(src->data(), new_data, size());
-    }
-
-    size_t size() const{
-        return src->size() * sizeof(typename remove_reference<decltype(*src)>::type::value_type) + is_string;
-    }
-private:
-    bool is_string = false;
 };
 
 #if __cpp_deduction_guides >= 201606
-template<Container BaseType>
-PacketValue(BaseType* src)->PacketValue<BaseType>;
-template<CustomButNotContainer BaseType>
-PacketValue(BaseType* src)->PacketValue<BaseType>;
+template<class Type> requires NotContainer<Type>
+PacketValue(Type)->PacketValue<Type>;
+#endif
+
+template<class Type> requires Container<Type>
+class PacketValue<Type>: public PacketValue<> {
+public:
+    using value_type = Type;
+    Type* src = nullptr;
+    PacketValue() = default;
+    PacketValue(Type* src): src(src) {}
+    void* get_pointer() override {
+        return src->data();
+    }
+    size_t get_size() override {
+        return src->size()*sizeof(typename Type::value_type);
+    }
+    void parse(void* data) override {
+        memcpy(src->data(), data, get_size());
+    }
+    void copy_to(void* data) override {
+        memcpy(data, src->data(), get_size());
+    }
+};
+
+template<>
+class PacketValue<string> : public PacketValue<>{
+public:
+    using value_type = string;
+    string* src = nullptr;
+    PacketValue() = default;
+    PacketValue(string* src): src(src) {}
+    void* get_pointer() override {
+        return src->data();
+    }
+    size_t get_size() override {
+        return strlen(src->c_str()) + 1;
+    }
+    void parse(void* data) override {
+        memcpy(src->data(), data, get_size());
+    }
+    void copy_to(void* data) override {
+        memcpy(data, src->data(), get_size());
+    }
+};
+
+#if __cpp_deduction_guides >= 201606
+template<class Type> requires Container<Type>
+PacketValue(Type)->PacketValue<Type>;
 #endif

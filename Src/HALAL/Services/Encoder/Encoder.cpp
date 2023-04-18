@@ -104,7 +104,7 @@ void Encoder::init(TimerPeripheral* encoder){
 	  TIM_Encoder_InitTypeDef sConfig = {0};
 	  TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-	  encoder->handle->Instance = encoder->init_data.timer;
+	  encoder->handle->Instance = TimerPeripheral::handle_to_timer[encoder->handle];
 	  encoder->handle->Init.Prescaler = encoder->init_data.prescaler;
 	  encoder->handle->Init.CounterMode = TIM_COUNTERMODE_UP;
 	  encoder->handle->Init.Period = encoder->init_data.period;
