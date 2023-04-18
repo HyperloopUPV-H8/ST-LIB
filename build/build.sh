@@ -1,9 +1,5 @@
 #!/bin/bash
 
-#clean cache
-rm -R CMakeCache.txt CMakeFiles cmake_install.cmake CMakeLists.txt compile_commands.json Makefile 2> /dev/null
-
-
 echo "Enter Target (nucleo|n / board|b) : "
 read TARGET
 
@@ -26,3 +22,7 @@ fi
 
 cmake -DCMAKE_TOOLCHAIN_FILE=../arm-none-eabi.cmake -D${TARGET}=ON ..
 make -j16 all
+
+rm -R CMakeCache.txt CMakeFiles cmake_install.cmake CMakeLists.txt Makefile 2> /dev/null
+
+mv compile_commands.json ..
