@@ -37,6 +37,7 @@ class PacketValue<> {
 public:
     using value_type = empty_type;
     PacketValue() = default;
+    virtual ~PacketValue();
     virtual void* get_pointer() = 0;
     virtual size_t get_size() = 0;
     virtual void parse(void* data) = 0;
