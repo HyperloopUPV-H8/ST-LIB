@@ -37,7 +37,7 @@ class PacketValue<> {
 public:
     using value_type = empty_type;
     PacketValue() = default;
-    virtual ~PacketValue();
+    ~PacketValue() = default;
     virtual void* get_pointer() = 0;
     virtual size_t get_size() = 0;
     virtual void parse(void* data) = 0;
@@ -51,6 +51,7 @@ public:
     Type* src = nullptr;
     PacketValue() = default;
     PacketValue(Type* src): src(src) {}
+    ~PacketValue() = default;
     void* get_pointer() override {
         return src;
     }
@@ -77,6 +78,7 @@ public:
     Type* src = nullptr;
     PacketValue() = default;
     PacketValue(Type* src): src(src) {}
+    ~PacketValue() = default;
     void* get_pointer() override {
         return src->data();
     }
@@ -98,6 +100,7 @@ public:
     string* src = nullptr;
     PacketValue() = default;
     PacketValue(string* src): src(src) {}
+    ~PacketValue() = default;
     void* get_pointer() override {
         return src->data();
     }
