@@ -12,8 +12,6 @@ PRUEBAS/
 .ccls-cache/
 .cache/
 
-#vscode 
-.vscode
 .cproject
 .cache
 
