@@ -26,7 +26,7 @@ public:
 };
 
 template<class Type>
-class Protection<Type> : Protection<> {
+class Protection<Type> : public Protection<> {
 public:
     Type* src;
     vector<ProtectionType> protections;
