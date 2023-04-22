@@ -46,6 +46,7 @@ void PWM::turn_off() {
 void PWM::set_duty_cycle(float duty_cycle) {
 	uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(peripheral->handle) / 100.0 * duty_cycle;
 	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty);
+	this->duty_cycle = duty_cycle;
 }
 
 void PWM::set_frequency(uint32_t frequency) {

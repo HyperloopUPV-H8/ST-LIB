@@ -1,29 +1,7 @@
 #pragma once
 
 #include "PacketValue.hpp"
-
-template<class... Types> class stack_tuple;
-
-template<> 
-class stack_tuple<> {
-public:
-    stack_tuple() = default;
-    template<class FunctionType>
-    void for_each(FunctionType function) {}
-};
-
-template<class Type, class... Types>
-class stack_tuple<Type, Types...>: public stack_tuple<Types...> {
-public:
-    Type value;
-    stack_tuple() = default;
-    stack_tuple(Type value, Types... values): stack_tuple<Types...>(values...), value(value) {}
-    template<class FunctionType>
-    void for_each(FunctionType function) {
-        function(value);
-        stack_tuple<Types...>::for_each(function);
-    }
-};
+#include "DataStructures/StackTuple.hpp"
 
 class Packet{
 public:
@@ -207,27 +185,27 @@ StackPacket()->StackPacket<0>;
 class HeapPacket : public Packet{
 public:
     uint16_t id;
-    vector<PacketValue<>*> values;
+    vector<unique_ptr<PacketValue<>>> values;
     uint8_t* buffer = nullptr;
     size_t& data_size = Packet::size;
     size_t buffer_size = 0;
     HeapPacket() = default;
 
     template<class... Types>
-    HeapPacket(uint16_t id, Types*... values): id(id), values{new PacketValue<Types>(values)...} {packets[id] = this;}
+    HeapPacket(uint16_t id, Types*... values): id(id), values{make_unique(new PacketValue<Types>(values))...} {packets[id] = this;}
 
     void parse(void* data) override {
         data += sizeof(id);
-        for (PacketValue<>* value : values) {
-            value->parse(data);
-            data += value->get_size();
+        for (unique_ptr<PacketValue<>>& value : values) {
+            value.get()->parse(data);
+            data += value.get()->get_size();
         }
     }
 
     size_t get_size() override {
         size_t new_size = 0;
-        for (PacketValue<>* value : values) {
-            new_size += value->get_size();
+        for (unique_ptr<PacketValue<>>& value : values) {
+            new_size += value.get()->get_size();
         }
         return new_size + sizeof(id);
     }
@@ -246,7 +224,7 @@ public:
         uint8_t* data = buffer;
         memcpy(data, &id, sizeof(id));
         data += sizeof(id);
-        for (PacketValue<>* value : values) {
+        for (unique_ptr<PacketValue<>>& value : values) {
             value->copy_to(data);
             data += value->get_size();
         }
@@ -258,6 +236,5 @@ public:
 
     ~HeapPacket() {
         if(buffer != nullptr) delete[] buffer;
-        for(PacketValue<>* value : values) delete value;
     }
 };

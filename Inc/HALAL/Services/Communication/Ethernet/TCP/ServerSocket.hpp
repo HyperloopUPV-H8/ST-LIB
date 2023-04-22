@@ -57,7 +57,7 @@ public:
 			return false;
 		}
 
-		uint8_t* order_buffer = order.build();
+		order.build();
 		if(order.size > tcp_sndbuf(client_control_block)){
 			return false;
 		}
