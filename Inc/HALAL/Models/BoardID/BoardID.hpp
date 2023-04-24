@@ -3,7 +3,8 @@
 namespace Board{
 	enum ID{
 		VCU,
-		BLCU,
+		BLCU_VEHICLE,
+		BLCU_INFRASTRUCTURE,
 		TCU,
 		LCU_MASTER,
 		LCU_SLAVE,

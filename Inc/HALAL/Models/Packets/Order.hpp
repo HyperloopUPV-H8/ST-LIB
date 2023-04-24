@@ -26,7 +26,7 @@ protected:
     static map<uint16_t,Order*> orders;
 };
 
-template<size_t BufferLength,class... Types> requires NotCallablePack<Types...>
+template<size_t BufferLength,class... Types> requires NotCallablePack<Types*...>
 class StackOrder : public StackPacket<BufferLength,Types...>, public Order{
 public:
     StackOrder(uint16_t id,void(*callback)(void), Types*... values) : StackPacket<BufferLength,Types...>(id,values...), callback(callback) {orders[id] = this;}
@@ -53,10 +53,10 @@ public:
 };
 
 #if __cpp_deduction_guides >= 201606
-template<class... Types> requires NotCallablePack<Types...>
+template<class... Types> requires NotCallablePack<Types*...>
 StackOrder(uint16_t id,void(*callback)(void), Types*... values)->StackOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
 
-//template<class... Types> requires NotCallablePack<Types...>
+//template<class... Types> requires NotCallablePack<Types*...>
 //StackOrder(uint16_t id, Types*... values)->StackOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
 #endif
 
