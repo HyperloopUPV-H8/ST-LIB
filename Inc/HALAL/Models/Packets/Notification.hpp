@@ -1,12 +1,12 @@
 #pragma once
 
+#include "C++Utilities/CppUtils.hpp"
 #include "Order.hpp"
 #include "BoardID/BoardID.hpp"
 
-
-
-template
-class Notification : public Order{
+class Notification : public Order , public HeapOrder{
 public:
+    stringstream message;
+
 };
 

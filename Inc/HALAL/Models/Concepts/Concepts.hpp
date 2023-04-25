@@ -60,3 +60,6 @@ concept Container = requires(T a, const T b)
 
 template <class T>
 concept NotContainer = !Container<T>;
+
+template <class T, class... U>
+concept PackDerivesFrom = (std::derived_from<T, U> && ...);
