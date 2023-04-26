@@ -44,7 +44,7 @@ public:
     virtual void copy_to(void* data) = 0;
 };
 
-template<class Type> requires NotContainer<Type>
+template<class Type> requires NotContainer<Type> 
 class PacketValue<Type>: public PacketValue<> {
 public:
     using value_type = Type;
@@ -120,7 +120,7 @@ template<class Type> requires Container<Type>
 PacketValue(Type)->PacketValue<Type>;
 #endif
 
-template<class Type,size_t N> requires  std::is_pointer<Type>::value
+template<class Type,size_t N> 
 class PacketValue<Type(&)[N]>: public PacketValue<> {
 public:
     using value_type = Type;
