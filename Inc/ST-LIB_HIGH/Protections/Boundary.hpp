@@ -10,8 +10,8 @@ enum ProtectionType : uint64_t {
 };
 
 struct BoundaryInterface{
-    static map<ProtectionType, string> protection_type_name;
     virtual bool check_bounds() = 0;
+	virtual string serialize() = 0;
 };
 
 template<class Type, ProtectionType Protector> struct Boundary;
@@ -28,6 +28,9 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 		if(*src < boundary) return false;
 		return true;
 	}
+	string serialize()override{
+		return "Type: " + (int)Protector + ",Value: " + to_string(*src) + ",Boundary: " + to_string(boundary);
+	}
 };
 
 template<class Type>
@@ -41,6 +44,9 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	bool check_bounds()override{
 		if(*src > boundary) return false;
 		return true;
+	}
+	string serialize()override{
+		return "Type: " + (int)Protector + ",Value: " + to_string(*src) + ",Boundary: " + to_string(boundary);
 	}
 };
 
@@ -56,6 +62,9 @@ struct Boundary<Type, EQUALS> : public BoundaryInterface{
 		if(*src == boundary) return false;
 		return true;
 	}
+	string serialize()override{
+		return "Type: " + (int)Protector + ",Value: " + to_string(*src) + ",Boundary: " + to_string(boundary);
+	}
 };
 
 template<class Type>
@@ -70,6 +79,9 @@ struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 		if(*src != boundary) return false;
 		return true;
 	}
+	string serialize()override{
+		return "Type: " + (int)Protector + ",Value: " + to_string(*src) + ",Boundary: " + to_string(boundary);
+	}
 };
 
 template<class Type>
@@ -83,6 +95,9 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 	bool check_bounds()override{
 		if(*src < lower_boundary || *src > upper_boundary) return false;
 		return true;
+	}
+	string serialize()override{
+		return "Type: " + (int)Protector + ",Value: " + to_string(*src) + ",Boundary_1: " + to_string(lower_boundary) + ",Boundary_2: " + to_string(upper_boundary);
 	}
 };
 

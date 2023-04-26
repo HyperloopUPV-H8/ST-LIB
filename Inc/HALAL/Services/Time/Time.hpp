@@ -114,6 +114,10 @@ public :
 		uint8_t day;
 		uint8_t month;
 		uint16_t year;
+
+		string serialize(){
+			return "Counter: " + to_string(counter) + ",Second: " + to_string(second) + ",Minute: " + to_string(minute) + ",Hour: " + to_string(hour) + ",Day: " + to_string(day) + ",Month: " + to_string(month) + ",Year: " + to_string(year);
+		}
 	};
 
 	static void start_rtc();

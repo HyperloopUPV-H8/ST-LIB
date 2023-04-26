@@ -7,7 +7,7 @@
 
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "lwip/priv/tcp_priv.h"
-#include <mutex>
+#include "ErrorHandler/ErrorHandler.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
 
 uint8_t ServerSocket::priority = 0;
@@ -30,8 +30,9 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 		tcp_accept(server_control_block, accept_callback);
 	}else{
 		memp_free(MEMP_TCP_PCB, server_control_block);
-		//TODO: Error Handler
+		ErrorHandler("Cannnot bind server socket, memory low");
 	}
+	OrderProtocol::sockets.push_back(this);
 }
 
 ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(IPV4(local_ip),local_port){}
@@ -84,7 +85,7 @@ void ServerSocket::send(){
 			tcp_output(client_control_block);
 			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],temporal_packet_buffer);
 		}else{
-			//TODO: Error Handler
+			ErrorHandler("Cannot write to socket, error: %d", error);
 		}
 	}
 }
@@ -121,9 +122,6 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 
 	if(packet_buffer == nullptr){      //FIN has been received
 		server_socket->state = CLOSING;
-//		tcp_ack_now(client_control_block);
-//		tcp_output(client_control_block);
-//		server_socket->close();
 		return ERR_OK;
 	}
 
@@ -150,7 +148,7 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 void ServerSocket::error_callback(void *arg, err_t error){
 	ServerSocket* server_socket = (ServerSocket*) arg;
 	server_socket->close();
-	//TODO: Error Handler
+	ErrorHandler("Socket error: %d. Socket closed", error);
 }
 
 err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_block){

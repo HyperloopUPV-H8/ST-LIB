@@ -1,4 +1,6 @@
 #include "Protections/ProtectionManager.hpp"
+#include "Time/Time.hpp"
+#include "Protections/Notification.hpp"
 
 StateMachine* ProtectionManager::general_state_machine = nullptr;
 
@@ -26,7 +28,8 @@ void ProtectionManager::check_protections() {
         	return;
         }
 
-        ProtectionManager::general_state_machine->force_change_state(fault_id);
+        ProtectionManager::to_fault();
+        Notification notification(board_id, &protection, "Protection Jumped");
     }
 }
 

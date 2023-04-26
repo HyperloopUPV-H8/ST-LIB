@@ -9,11 +9,12 @@
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
+#include "Communication/Ethernet/TCP/OrderProtocol.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
 
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
-class ServerSocket{
+class ServerSocket : OrderProtocol{
 public:
 
 	enum ServerState{
@@ -43,7 +44,7 @@ public:
 
 	void process_data();
 
-	bool send_order(Order& order){
+	bool send_order(Order& order) override{
 		if(state != ACCEPTED){
 			return false;
 		}
@@ -57,13 +58,14 @@ public:
 			return false;
 		}
 
-		order.build();
+		uint8_t* order_buffer = order.build();
 		if(order.size > tcp_sndbuf(client_control_block)){
 			return false;
 		}
 
 		struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
 		tx_packet_buffer.push(packet);
+		pbuf_take(tx_packet_buffer.front(), order_buffer, order.size);
 		send();
 		return true;
 	}

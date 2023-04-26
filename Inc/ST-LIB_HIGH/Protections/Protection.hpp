@@ -32,4 +32,16 @@ public:
         }
         return true;
     }
+
+    string serialize() {
+        string ret = "Protection: { Name:" + string(name) + ", ";
+        if(jumped_protection != nullptr){
+            ret += "Jumped: {" + jumped_protection->serialize() + "}";
+        }
+        else{
+            ret += "Jumped: None";
+        }
+        ret += " }";
+        return ret;
+    }
 };
