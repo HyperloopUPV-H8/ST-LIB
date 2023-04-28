@@ -1,0 +1,21 @@
+{
+    "files.exclude": {
+        "**/.cache": true,
+        "**/.cproject": true,
+        "**/.gitignore": true,
+        "**/.mxproject": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/arm-none-eabi.cmake": true,
+        "**/build": true,
+        "**/cmake_install.cmake": true,
+        "**/CMakeFiles": true,
+        "**/CMakeLists.txt": true,
+        "**/compile_commands.json": true,
+        "**/Debug": true,
+        "**/libst-lib.a": true,
+        "**/Makefile": true
+    },
+    "C_Cpp.default.cppStandard": "c++20",
+    "C_Cpp.default.cStandard": "c17"
+}
