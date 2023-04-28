@@ -6,6 +6,7 @@
 
 class Protection{
 private:
+	static constexpr const char* format = "\"protection\" : {\"name\":%s, %s}";
     char* name = nullptr;
     vector<unique_ptr<BoundaryInterface>> boundaries;
     BoundaryInterface* jumped_protection = nullptr;
@@ -33,15 +34,12 @@ public:
         return true;
     }
 
-    string serialize() {
-        string ret = "Protection: { Name:" + string(name) + ", ";
-        if(jumped_protection != nullptr){
-            ret += "Jumped: {" + jumped_protection->serialize() + "}";
-        }
-        else{
-            ret += "Jumped: None";
-        }
-        ret += " }";
-        return ret;
+    char* serialize(char* dst) {
+    	sprintf(dst,format,name,jumped_protection->serialize(dst));
+    	return dst;
+    }
+
+    int get_string_size(){
+    	return jumped_protection->get_string_size() + snprintf(nullptr,0,format, name, "");
     }
 };

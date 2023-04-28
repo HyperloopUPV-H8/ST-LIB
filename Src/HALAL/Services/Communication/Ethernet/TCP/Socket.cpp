@@ -137,7 +137,7 @@ err_t Socket::poll_callback(void* arg, struct tcp_pcb* client_control_block){
 	Socket* socket = (Socket*)arg;
 	socket->socket_control_block = client_control_block;
 	if(socket != nullptr){
-		if(socket->tx_packet_buffer!=nullptr){
+		if(not socket->tx_packet_buffer.empty()){
 			socket->send();
 		}
 		if(socket->state == CLOSING){
@@ -153,7 +153,7 @@ err_t Socket::poll_callback(void* arg, struct tcp_pcb* client_control_block){
 err_t Socket::send_callback(void* arg, struct tcp_pcb* client_control_block, uint16_t length){
 	Socket* socket = (Socket*)arg;
 	socket->socket_control_block = client_control_block;
-	if(socket->tx_packet_buffer != nullptr){
+	if(not socket->tx_packet_buffer.empty()){
 		socket->send();
 	}else if(socket->state == CLOSING){
 		socket->close();

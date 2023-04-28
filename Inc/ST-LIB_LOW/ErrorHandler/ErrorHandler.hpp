@@ -48,6 +48,8 @@ public:
 	 */
 	static void ErrorHandlerUpdate();
 
+	friend class BoundaryInterface;
+
 };
 
 #define ErrorHandler(x, ...) do { ErrorHandlerModel::SetMetaData(__LINE__, __FUNCTION__, __FILE__); \

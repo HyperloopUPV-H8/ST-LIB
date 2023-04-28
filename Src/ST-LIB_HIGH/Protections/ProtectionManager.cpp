@@ -29,9 +29,12 @@ void ProtectionManager::check_protections() {
         }
 
         ProtectionManager::to_fault();
-        Notification notification(board_id, &protection, "Protection Jumped");
+//        Notification notification(board_id, &protection, "Protection Jumped");
     }
 }
 
 int ProtectionManager::board_id = -1;
+size_t ProtectionManager::message_size = 0;
+char* ProtectionManager::message = nullptr;
+ProtectionManager::state_id ProtectionManager::fault_state_id = 255;
 vector<Protection> ProtectionManager::protections = {};
