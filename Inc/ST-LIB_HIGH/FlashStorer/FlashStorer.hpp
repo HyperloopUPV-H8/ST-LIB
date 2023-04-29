@@ -1,6 +1,7 @@
 #pragma once
 
 #include "C++Utilities/CppUtils.hpp"
+#include "Concepts/Concepts.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "Flash/Flash.hpp"
 #include "FlashVariable.hpp"
@@ -21,7 +22,7 @@ public:
 	static void store_all(void);
 	template<class Type>
 	static void store(Type& var);
-	template<class... Type>
+	template<class... Type> requires requires{requires sizeof...(Type) != 1;}
 	static void store(Type&... var);
 
 private:

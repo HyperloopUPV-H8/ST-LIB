@@ -12,13 +12,9 @@ void FlashStorer::add_size(Type& var){
 template<class... Type>
 bool FlashStorer::add_variables(Type&... var){
 	FlashStorer::variable_list.push_back(FlashVariable(var)...);
-	FlashStorer::add_size(var...);
+	FlashStorer::total_size = total_sizeof<Type...>::var;
 
-	if (FlashStorer::total_size > FLASH_STORER_MAX_SIZE) {
-		return false;
-	}else{
-		return true;
-	}
+	return FlashStorer::total_size >= FLASH_STORER_MAX_SIZE;
 }
 
 void FlashStorer::read(){
@@ -47,7 +43,7 @@ void FlashStorer::store_all(){
 }
 
 template<class Type>
-void FlashStorer::store(Type& var){
+void FlashStorer::store(Type& var) {
 	uint32_t* data = (uint32_t*)malloc(FlashStorer::total_size);
 	Flash::read(FLASH_STORER_START_ADDRESS, (uint32_t*)data, FlashStorer::total_size);
 
@@ -64,7 +60,7 @@ void FlashStorer::store(Type& var){
 	free(data);
 }
 
-template<class... Type>
+template<class... Type> requires requires{requires sizeof...(Type) != 1;}
 void FlashStorer::store(Type&... var){
 	(FlashStorer::store(var), ...);
 }
