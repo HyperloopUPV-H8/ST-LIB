@@ -27,5 +27,5 @@ public:
 
 private:
 	template<class Type>
-	static void add_size(Type& var);
+	static void add_size(Type& var);//?Mirar, si no hace falta borrar
 };

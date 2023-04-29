@@ -5,7 +5,7 @@ vector<FlashVariable> FlashStorer::variable_list = {};
 uint32_t FlashStorer::total_size = 0;
 
 template<class Type>
-void FlashStorer::add_size(Type& var){
+void FlashStorer::add_size(Type& var){//?Mirar, si no hace falta borrar
 	FlashStorer::total_size += sizeof(Type);
 }
 
@@ -13,7 +13,7 @@ template<class... Type>
 bool FlashStorer::add_variables(Type&... var){
 	FlashStorer::variable_list.push_back(FlashVariable(var)...);
 	FlashStorer::total_size = total_sizeof<Type...>::var;
-
+	
 	return FlashStorer::total_size >= FLASH_STORER_MAX_SIZE;
 }
 
