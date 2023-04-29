@@ -1455,7 +1455,7 @@ tcp_output_segment_busy(const struct tcp_seg *seg)
  * @param pcb the tcp_pcb for the TCP connection used to send the segment
  * @param netif the netif used to send the segment
  */
-err_t
+static err_t
 tcp_output_segment(struct tcp_seg *seg, struct tcp_pcb *pcb, struct netif *netif)
 {
   err_t err;
