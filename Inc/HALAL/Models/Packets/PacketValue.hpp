@@ -41,9 +41,36 @@ public:
     }
 };
 
+
 #if __cpp_deduction_guides >= 201606
 template<class Type> requires NotContainer<Type>
 PacketValue(Type)->PacketValue<Type>;
+#endif
+
+template<>
+class PacketValue<double>: public PacketValue<> {
+public:
+    using value_type = double;
+    double* src = nullptr;
+    PacketValue() = default;
+    PacketValue(double* src): src(src) {}
+    ~PacketValue() = default;
+    void* get_pointer() override {
+        return src;
+    }
+    size_t get_size() override {
+        return sizeof(double);
+    }
+    void parse(void* data) override {
+        *src = *((double*)data);
+    }
+    void copy_to(void* data) override {
+        memcpy(data,src,get_size());
+    }
+};
+
+#if __cpp_deduction_guides >= 201606
+PacketValue(double*) -> PacketValue<double>;
 #endif
 
 template<class Type> requires Container<Type>

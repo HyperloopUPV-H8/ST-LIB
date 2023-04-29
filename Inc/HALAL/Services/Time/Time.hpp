@@ -22,7 +22,7 @@ extern TIM_HandleTypeDef htim5;		// Used for the high precision alarms (1uS)
 extern TIM_HandleTypeDef htim24;	// Used for the high precision alarms (1uS)
 
 // LOW RESOLUTION TIMERS
-extern TIM_HandleTypeDef htim6;		// Used for the low precision alarms (1mS)
+extern TIM_HandleTypeDef htim7;		// Used for the low precision alarms (1mS)
 
 class Time {
 
@@ -92,6 +92,7 @@ public :
 	* @return uint8_t Returns id of the alarm.
 	*/
 	static uint8_t register_low_precision_alarm(uint32_t period_in_ms, function<void()> func);
+	static uint8_t register_low_precision_alarm(uint32_t period_in_ms, void(*func)());
 	static bool unregister_low_precision_alarm(uint16_t id);
 
 	/**

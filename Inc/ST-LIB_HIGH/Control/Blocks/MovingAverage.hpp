@@ -24,7 +24,7 @@ class MovingAverage : public ControlBlock<double,double> {
         		counter++;
         		return;
         	}
-            output_value -= first / N;
+            output_value -= buffer[first] / N;
             first = (first + 1) % N;
 
             last = (last + 1) % N;
