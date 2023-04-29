@@ -12,7 +12,7 @@ void FlashStorer::add_size(Type& var){
 template<class... Type>
 bool FlashStorer::add_variables(Type&... var){
 	FlashStorer::variable_list.push_back(FlashVariable(var)...);
-	((void)FlashStorer::add_size(&var), ...);
+	FlashStorer::add_size(var...);
 
 	if (FlashStorer::total_size > FLASH_STORER_MAX_SIZE) {
 		return false;

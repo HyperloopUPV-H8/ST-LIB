@@ -11,7 +11,7 @@
 
 
 class FlashStorer{
-
+public:
 	static vector<FlashVariable> variable_list;
 	static uint32_t total_size;
 

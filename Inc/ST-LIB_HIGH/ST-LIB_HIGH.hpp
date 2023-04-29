@@ -21,3 +21,4 @@
 #include "Control/Blocks/PID.hpp"
 #include "Control/Blocks/Saturator.hpp"
 #include "Control/ControlSystem.hpp"
+#include "FlashStorer/FlashStorer.hpp"
