@@ -165,7 +165,7 @@ struct Boundary<double, TIME_ACCUMULATION> : public BoundaryInterface{
 	double bound;
 	float time_limit;
 	float frequency;
-	Boundary(double bound, float time_limit, float frequency): time_limit(time_limit),bound(bound), frequency(frequency), moving_order(frequency*time_limit/100){};
+	Boundary(double bound, float time_limit, float frequency): bound(bound),time_limit(time_limit),frequency(frequency), moving_order(frequency*time_limit/100){};
 	Boundary(double* src, Boundary<double, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100){}
 	Boundary(double* src, double bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100){}
 
@@ -217,11 +217,11 @@ struct Boundary<float, TIME_ACCUMULATION> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = TIME_ACCUMULATION;
 	static constexpr const char* format = "\"type\": TIME ACCUMULATION, \"data\": { \"value\": %s, \"time_limit\": %s }";
 	float* src = nullptr;
-	float time_limit;
 	float bound;
+	float time_limit;
 	float frequency;
 	bool still_good = true;
-	Boundary(float bound, float time_limit, float frequency): time_limit(time_limit),bound(bound), frequency(frequency), moving_order(frequency*time_limit/100){};
+	Boundary(float bound, float time_limit, float frequency): bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100){};
 	Boundary(float* src, Boundary<float, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100){}
 	Boundary(float* src, float bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100){}
 

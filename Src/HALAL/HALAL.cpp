@@ -10,7 +10,7 @@
 void HALAL::start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
 
 #ifdef HAL_ETH_MODULE_ENABLED
-//	Ethernet::inscribe();
+	Ethernet::inscribe();
 #endif
 
 	HAL_Init();
@@ -42,11 +42,11 @@ void HALAL::start(string ip, string subnet_mask, string gateway, UART::Periphera
 #endif
 
 #ifdef HAL_I2C_MODULE_ENABLED
-//	I2C::start();
+	I2C::start();
 #endif
 
 #ifdef HAL_SPI_MODULE_ENABLED
-//	SPI::start();
+	SPI::start();
 #endif
 
 #ifdef HAL_UART_MODULE_ENABLED
@@ -54,22 +54,22 @@ void HALAL::start(string ip, string subnet_mask, string gateway, UART::Periphera
 #endif
 
 #ifdef HAL_FDCAN_MODULE_ENABLED
-//	FDCAN::start();
+	FDCAN::start();
 #endif
 
 #ifdef HAL_ETH_MODULE_ENABLED
-//	Ethernet::start(ip, subnet_mask, gateway);
+	Ethernet::start(ip, subnet_mask, gateway);
 #endif
 
 #ifdef HAL_TIM_MODULE_ENABLED
-//	Encoder::start();
-//	Time::start_rtc();
+	Encoder::start();
+	Time::start_rtc();
 	TimerPeripheral::start();
 	Time::start();
 #endif
 
 #ifdef HAL_EXTI_MODULE_ENABLED
-//	ExternalInterrupt::start();
+	ExternalInterrupt::start();
 #endif
 
 

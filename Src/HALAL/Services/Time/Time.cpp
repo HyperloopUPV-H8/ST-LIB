@@ -185,9 +185,9 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 
 void Time::set_timeout(int milliseconds, function<void()> callback){
 	uint8_t id = low_precision_ids;
-	Time::register_low_precision_alarm(milliseconds, [&,id,callback](){
-		static uint8_t first_execution = 1;
-		if(first_execution--){
+	uint64_t tick_on_register = low_precision_tick;
+	Time::register_low_precision_alarm(milliseconds, [&,id,callback,tick_on_register](){
+		if(tick_on_register == low_precision_tick){
 			return;
 		}
 		callback();
@@ -197,9 +197,9 @@ void Time::set_timeout(int milliseconds, function<void()> callback){
 
 void Time::set_timeout(int milliseconds, void(*callback)()){
 	uint8_t id = low_precision_ids;
-	Time::register_low_precision_alarm(milliseconds, [&,id,callback](){
-		static uint8_t first_execution = 1;
-		if(first_execution--){
+	uint64_t tick_on_register = low_precision_tick;
+	Time::register_low_precision_alarm(milliseconds, [&,id,callback,tick_on_register](){
+		if(tick_on_register == low_precision_tick){
 			return;
 		}
 		callback();
