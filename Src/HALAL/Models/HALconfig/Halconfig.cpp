@@ -45,7 +45,6 @@ void HALconfig::system_clock() {
 	RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
 	RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
 	RCC_OscInitStruct.PLL.PLLFRACN = 0;
-
 #else
 static_assert(false, "No TARGET is choosen. Choose NUCLEO or BOARD");
 #endif
