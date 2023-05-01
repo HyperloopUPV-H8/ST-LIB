@@ -8,34 +8,35 @@ double computeMA(double input_value);
 template<size_t N>
 class MovingAverage : public ControlBlock<double,double> {
     private:
-		double buffer[N] = {0};
-        uint32_t first = 0, last = 0;
+		double buffer[N] = {0.0};
+        uint32_t first = 0, last = -1;
         uint32_t counter = 0;
+        double accumulator = 0.0;
 
     public:
         MovingAverage(): ControlBlock<double,double>(){output_value = 0.0;}
 
         void execute() override {
-        	while(counter < N){
-        		if(counter == 0) buffer[first] = input_value;
+        	if(counter < N) {
+                last++;
         		buffer[last] = input_value;
-        		last++;
-        		output_value += input_value/N;
+        		accumulator += input_value/N;
         		counter++;
         		return;
         	}
-            output_value -= buffer[first] / N;
+        	accumulator -= buffer[first] / N;
             first = (first + 1) % N;
-
             last = (last + 1) % N;
             buffer[last] = input_value;
-            output_value += buffer[last] / N;
+            accumulator += buffer[last] / N;
+            output_value = accumulator;
+            return;
         }
 
         double compute(double input_v) {
-            input(input_v);
-            execute();
-            return output_value;
+        	this->input(input_v);
+        	execute();
+        	return this->output_value;
         }
 };
 
