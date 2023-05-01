@@ -49,7 +49,12 @@ void PWM::set_duty_cycle(float duty_cycle) {
 }
 
 void PWM::set_frequency(uint32_t frequency) {
+	this->frequency = frequency;
 	TIM_TypeDef& timer = *peripheral->handle->Instance;
 	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / (timer.PSC+1)) / frequency;
 	set_duty_cycle(duty_cycle);
+}
+
+uint32_t PWM::get_frequency() {
+	return frequency;
 }
