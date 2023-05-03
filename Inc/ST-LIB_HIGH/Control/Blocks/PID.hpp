@@ -27,13 +27,15 @@ class PID<IntegratorMethod,FilterDerivatorType::None>{
         }
         void set_kp(double kp){
             this->kp = kp;
+            reset();
         }
         void set_ki(double ki){
             this->ki = ki;
-            integrator.reset();
+            reset();
         }
         void set_kd(double kd){
             this->kd = kd;
+            reset();
         }
         void reset(){
             integrator.reset();
@@ -63,13 +65,15 @@ class PID<IntegratorMethod,FilterDerivatorType::Moving_Average,N> : public Contr
         }
         void set_kp(double kp){
             this->kp = kp;
+            reset();
         }
         void set_ki(double ki){
             this->ki = ki;
-            integrator.reset();
+            reset();
         }
         void set_kd(double kd){
             this->kd = kd;
+            reset();
         }
         void reset(){
             integrator.reset();

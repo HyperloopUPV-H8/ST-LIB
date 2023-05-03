@@ -40,6 +40,7 @@ class Integrator<IntegratorType::Trapezoidal> : public ControlBlock<double,doubl
             return;
         }
         void reset(){
+        	first_execution = true;
             integral = 0.0;
             index = 0;
             for(int i = 0; i < N; i++){
@@ -76,6 +77,7 @@ class Integrator<IntegratorType::ForwardEuler> : public ControlBlock<double,doub
             return;
         }
         void reset(){
+        	first_execution = true;
             integral = 0.0;
             index = 0;
             for(int i = 0; i < N; i++){
@@ -112,6 +114,7 @@ class Integrator<IntegratorType::BackwardEuler>: public ControlBlock<double,doub
             return;
         }
         void reset(){
+        	first_execution = true;
             integral = 0.0;
             index = 0;
             for(int i = 0; i < N; i++){

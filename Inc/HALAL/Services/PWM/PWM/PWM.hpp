@@ -18,6 +18,7 @@ public:
 	TimerPeripheral* peripheral;
 	uint32_t channel;
 	float duty_cycle;
+	bool is_on = false;
 
 	PWM() = default;
 

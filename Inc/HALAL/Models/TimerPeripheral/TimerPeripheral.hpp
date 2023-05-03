@@ -76,6 +76,7 @@ public:
 	bool is_registered();
 	uint32_t get_prescaler();
 	uint32_t get_period();
+	bool is_occupied();
 
 private:
 	static map<TIM_HandleTypeDef*, TIM_TypeDef*> handle_to_timer;

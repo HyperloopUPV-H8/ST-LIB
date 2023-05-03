@@ -17,9 +17,9 @@
 using std::string;
 
 #define ADC_BUF_LEN 16
-#define LPTIM1_PERIOD 3000
-#define LPTIM2_PERIOD 3000
-#define LPTIM3_PERIOD 3000
+#define LPTIM1_PERIOD 6875
+#define LPTIM2_PERIOD 6875
+#define LPTIM3_PERIOD 6875
 
 #define ADC_MAX_VOLTAGE 3.3
 #define MAX_12BIT 4095.0

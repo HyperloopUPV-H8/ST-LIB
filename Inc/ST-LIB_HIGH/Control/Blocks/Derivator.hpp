@@ -40,6 +40,13 @@ class BDFDerivator : public ControlBlock<double,double>{
             index %= (N+1);
             counter--;
         }
+
+        void reset(){
+        	counter = 0.0;
+        	for(double& e : buffer){
+        		e = 0.0;
+        	}
+        }
 };
 
 class SimpleDerivator : public ControlBlock<double,double>{

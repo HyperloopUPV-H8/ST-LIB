@@ -165,3 +165,7 @@ uint32_t TimerPeripheral::get_prescaler() {
 uint32_t TimerPeripheral::get_period() {
 	return handle->Instance->ARR;
 }
+
+bool TimerPeripheral::is_occupied(){
+	return init_data.pwm_channels.size() && init_data.input_capture_channels.size();
+}
