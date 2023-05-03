@@ -20,6 +20,8 @@ uint8_t Time::high_precision_ids = 0;
 uint8_t Time::low_precision_ids = 0;
 uint8_t Time::mid_precision_ids = 0;
 
+bool Time::mid_precision_registered = false;
+
 stack<TIM_HandleTypeDef*> Time::available_high_precision_timers;
 set<TIM_HandleTypeDef*> Time::high_precision_timers;
 
@@ -130,7 +132,39 @@ optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, fun
 	return high_precision_ids++;
 }
 
-bool Time::unregister_high_precision_alarm(uint16_t id){
+optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, void(*func)()){
+	if(available_high_precision_timers.size() == 0) {
+		ErrorHandler("There are no available high precision timers left");
+		return nullopt;
+	}
+
+	TIM_HandleTypeDef* tim = Time::available_high_precision_timers.top();
+	Time::available_high_precision_timers.pop();
+
+	Time::Alarm alarm = {
+			.period = period_in_us,
+			.tim = tim,
+			.alarm = [&](){},
+	};
+
+	NVIC_DisableIRQ(TIM5_IRQn);
+	NVIC_DisableIRQ(TIM24_IRQn);
+	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
+	Time::high_precision_alarms_by_timer[tim] = alarm;
+
+
+	Time::ConfigTimer(tim, period_in_us);
+
+	alarm.alarm = func;
+	Time::high_precision_alarms_by_id[high_precision_ids] = alarm;
+	Time::high_precision_alarms_by_timer[tim] = alarm;
+	NVIC_EnableIRQ(TIM5_IRQn);
+	NVIC_EnableIRQ(TIM24_IRQn);
+
+	return high_precision_ids++;
+}
+
+bool Time::unregister_high_precision_alarm(uint8_t id){
 	if(not Time::high_precision_alarms_by_id.contains(id)) {
 		return false;
 	}
@@ -166,6 +200,7 @@ optional<uint8_t> Time::register_mid_precision_alarm(uint32_t period_in_us, func
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
 
 	if(not Time::mid_precision_registered){
+		Time::init_timer(TIM23, Time::mid_precision_timer, 275, Time::mid_precision_step_in_us, TIM23_IRQn);
 		Time::ConfigTimer(Time::mid_precision_timer, Time::mid_precision_step_in_us);
 		Time::mid_precision_registered = true;
 	}
@@ -195,6 +230,7 @@ optional<uint8_t> Time::register_mid_precision_alarm(uint32_t period_in_us, void
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
 
 	if(not Time::mid_precision_registered){
+		Time::init_timer(TIM23, Time::mid_precision_timer, 275, Time::mid_precision_step_in_us, TIM23_IRQn);
 		Time::ConfigTimer(Time::mid_precision_timer, Time::mid_precision_step_in_us);
 		Time::mid_precision_registered = true;
 	}
@@ -234,7 +270,7 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, void(*func)())
 	return low_precision_ids++;
 }
 
-bool Time::unregister_low_precision_alarm(uint16_t id){
+bool Time::unregister_low_precision_alarm(uint8_t id){
 	if(not Time::low_precision_alarms_by_id.contains(id)){
 		return false;
 	}

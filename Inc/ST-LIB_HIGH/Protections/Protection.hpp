@@ -4,12 +4,18 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "Boundary.hpp"
 
+enum FaultType{
+	FAULT,
+	WARNING
+};
+
 class Protection{
 private:
 	static constexpr const char* format = "\"protection\" : {\"name\":%s, %s}";
     char* name = nullptr;
     vector<unique_ptr<BoundaryInterface>> boundaries;
     BoundaryInterface* jumped_protection = nullptr;
+    static constexpr FaultType fault_type = FaultType::FAULT;
 public:
     template<class Type, ProtectionType... Protector, template<class,ProtectionType> class Boundaries>
     Protection(Type* src, Boundaries<Type,Protector>... protectors) {
@@ -42,4 +48,6 @@ public:
     int get_string_size(){
     	return jumped_protection->get_string_size() + snprintf(nullptr,0,format, name, "");
     }
+
+    friend class ProtectionManager;
 };

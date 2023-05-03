@@ -9,7 +9,7 @@
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
-#include "Communication/Ethernet/TCP/OrderProtocol.hpp"
+#include "Packets/OrderProtocol.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
 
 #define PBUF_POOL_MEMORY_DESC_POSITION 8

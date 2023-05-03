@@ -3,8 +3,10 @@
 #include "Protections/Notification.hpp"
 
 StateMachine* ProtectionManager::general_state_machine = nullptr;
+Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, ProtectionManager::to_fault};
+Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
 
-void ProtectionManager::set_id(int board_id){
+void ProtectionManager::set_id(BoardID board_id){
     ProtectionManager::board_id = board_id;
 }
 
@@ -29,11 +31,21 @@ void ProtectionManager::check_protections() {
         }
 
         ProtectionManager::to_fault();
-//        Notification notification(board_id, &protection, "Protection Jumped");
+
+        if(protection.fault_type != FaultType::FAULT) {
+        	char* message = (char*)malloc(protection.get_string_size());
+        	warning_notification.notify(string(protection.serialize(message)));
+        	free(message);
+        }
+
+    	char* message = (char*)malloc(protection.get_string_size());
+    	fault_notification.notify(string(protection.serialize(message)));
+    	free(message);
+
     }
 }
 
-int ProtectionManager::board_id = -1;
+BoardID ProtectionManager::board_id = NOBOARD;
 size_t ProtectionManager::message_size = 0;
 char* ProtectionManager::message = nullptr;
 ProtectionManager::state_id ProtectionManager::fault_state_id = 255;

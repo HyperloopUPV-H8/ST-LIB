@@ -1,5 +1,7 @@
 #pragma once
-#include "Packets/Order.hpp"
+#include "Packets/Packet.hpp"
+
+class Order;
 
 class OrderProtocol{
 public:

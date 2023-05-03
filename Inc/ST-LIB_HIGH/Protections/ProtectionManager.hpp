@@ -4,6 +4,8 @@
 #include "StateMachine/StateMachine.hpp"
 #include "Packets/Order.hpp"
 #include "Time/Time.hpp"
+#include "Notification.hpp"
+#include "BoardID/BoardID.hpp"
 
 #define getname(var) #var
 #define add_protection(src,...)  \
@@ -17,7 +19,7 @@ class ProtectionManager {
 public:
 	typedef uint8_t state_id;
 
-    static void set_id(int board_id);
+    static void set_id(BoardID id);
 
     static void link_state_machine(StateMachine& general_state_machine, state_id fault_id);
 
@@ -36,10 +38,13 @@ private:
 	static size_t message_size;
 	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}";
 
-    static int board_id;
+    static BoardID board_id;
     static vector<Protection> protections;
     static StateMachine* general_state_machine;
     static state_id fault_state_id;
+
+    static Notification fault_notification;
+    static Notification warning_notification;
 
     static int get_string_size(Protection& prot){
     	return snprintf(nullptr,0,format,"","","") + prot.get_string_size();

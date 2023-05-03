@@ -7,18 +7,23 @@
 #pragma once
 
 #include "Packet.hpp"
+#include "OrderProtocol.hpp"
 
 class Order : public Packet{
 public:
     virtual void set_callback(void(*callback)(void)) = 0;
     virtual void process() = 0;
+    virtual void parse(OrderProtocol* socket, void* data) = 0;
+    void parse(void* data) override {
+    	parse(nullptr, data);
+    }
     static void process_by_id(uint16_t id) {
         if (orders.find(id) != orders.end()) orders[id]->process();
     }
-    static void process_data(void* data) {
+    static void process_data(OrderProtocol* socket, void* data) {
         uint16_t id = Packet::get_id(data);
         if (orders.contains(id)) {
-            orders[id]->parse(data);
+            orders[id]->parse(socket, data);
             orders[id]->process();
         }
     }
@@ -43,6 +48,9 @@ public:
     }
     void parse(void* data) override {
         StackPacket<BufferLength,Types...>::parse(data);
+    }
+    void parse(OrderProtocol* socket, void* data){
+    	parse(data);
     }
     size_t get_size() override {
         return StackPacket<BufferLength,Types...>::get_size();
@@ -80,6 +88,9 @@ public:
     }
     void parse(void* data) override {
         HeapPacket::parse(data);
+    }
+    void parse(OrderProtocol* socket, void* data){
+    	parse(data);
     }
     size_t get_size() override {
         return HeapPacket::get_size();

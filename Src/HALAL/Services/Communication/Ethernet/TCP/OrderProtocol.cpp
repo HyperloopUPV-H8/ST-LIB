@@ -1,3 +1,3 @@
-#include "Communication/Ethernet/TCP/OrderProtocol.hpp"
+#include <Packets/OrderProtocol.hpp>
 
 vector<OrderProtocol*> OrderProtocol::sockets = {};

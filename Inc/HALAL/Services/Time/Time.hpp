@@ -46,7 +46,7 @@ private :
 	static uint64_t global_tick;
 	static uint64_t low_precision_tick;
 	static uint64_t mid_precision_tick;
-	static bool mid_precision_registered = false;
+	static bool mid_precision_registered;
 
 	static unordered_map<uint8_t, Alarm> high_precision_alarms_by_id;
 	static unordered_map<TIM_HandleTypeDef*, Alarm> high_precision_alarms_by_timer;
@@ -116,8 +116,8 @@ public :
 	* @return void
 	*/
 
-	static uint8_t register_mid_precision_alarm(uint32_t period_in_ms, function<void()> func);
-	static uint8_t register_mid_precision_alarm(uint32_t period_in_ms, void(*func)());
+	static optional<uint8_t> register_mid_precision_alarm(uint32_t period_in_ms, function<void()> func);
+	static optional<uint8_t> register_mid_precision_alarm(uint32_t period_in_ms, void(*func)());
 	static bool unregister_mid_precision_alarm(uint16_t id);
 
 	static void set_timeout(int milliseconds, function<void()> callback);
