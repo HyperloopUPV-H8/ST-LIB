@@ -44,7 +44,7 @@ public:
     virtual void copy_to(void* data) = 0;
 };
 
-template<class Type> requires NotContainer<Type>
+template<class Type> requires NotContainer<Type> 
 class PacketValue<Type>: public PacketValue<> {
 public:
     using value_type = Type;
@@ -118,4 +118,65 @@ public:
 #if __cpp_deduction_guides >= 201606
 template<class Type> requires Container<Type>
 PacketValue(Type)->PacketValue<Type>;
+#endif
+
+template<class Type,size_t N> 
+class PacketValue<Type(&)[N]>: public PacketValue<> {
+public:
+    using value_type = Type;
+    Type(*src )[N] = nullptr;
+    PacketValue() = default;
+    PacketValue(Type(*src)[N]): src(src) {}
+    ~PacketValue() = default;
+    void* get_pointer() override {
+        return src;
+    }
+    size_t get_size() override {
+        return N*sizeof(Type);
+    }
+    void parse(void* data) override {
+        memcpy(src, data, get_size());
+    }
+    void copy_to(void* data) override {
+        memcpy(data, src, get_size());
+    }
+};
+
+#if __cpp_deduction_guides >= 201606
+template<class Type,size_t N> 
+PacketValue(Type(*)[N])->PacketValue<Type(&)[N]>;
+#endif
+
+
+template<class Type,size_t N> 
+class PacketValue<Type*(&)[N]>: public PacketValue<> {
+public:
+    using value_type = Type*;
+    Type*(*src )[N] = nullptr;
+    PacketValue() = default;
+    PacketValue(Type*(*src)[N]): src(src) {}
+    ~PacketValue() = default;
+    void* get_pointer() override {
+        return src;
+    }
+    size_t get_size() override {
+        return N*sizeof(Type);
+    }
+    void parse(void* data) override {
+        for(Type* i : *src) {
+            *i = *(Type*)data;
+            data += sizeof(Type);
+        }
+    }
+    void copy_to(void* data) override {
+        for(Type* i : *src) {
+            *(Type*)data = *i;
+            data += sizeof(Type);
+        }
+    }
+};
+
+#if __cpp_deduction_guides >= 201606 
+template<class Type,size_t N>
+PacketValue(Type*(*)[N])->PacketValue<Type*(&)[N]>;
 #endif

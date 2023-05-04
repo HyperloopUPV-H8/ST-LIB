@@ -11,7 +11,7 @@
 RTC_HandleTypeDef Time::hrtc;
 
 TIM_HandleTypeDef* Time::global_timer = &htim2;
-TIM_HandleTypeDef* Time::low_precision_timer = &htim6;
+TIM_HandleTypeDef* Time::low_precision_timer = &htim7;
 
 uint8_t Time::high_precision_ids = 0;
 uint8_t Time::low_precision_ids = 0;
@@ -54,13 +54,13 @@ void Time::init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescal
 void Time::start(){
     __HAL_RCC_TIM2_CLK_ENABLE();
     __HAL_RCC_TIM5_CLK_ENABLE();
-    __HAL_RCC_TIM6_CLK_ENABLE();
+    __HAL_RCC_TIM7_CLK_ENABLE();
     __HAL_RCC_TIM24_CLK_ENABLE();
 
 	Time::init_timer(TIM2, &htim2, 0, HIGH_PRECISION_MAX_ARR, TIM2_IRQn);
 	Time::init_timer(TIM5, &htim5, 0, HIGH_PRECISION_MAX_ARR, TIM5_IRQn);
 	Time::init_timer(TIM24, &htim24, 0, HIGH_PRECISION_MAX_ARR, TIM24_IRQn);
-	Time::init_timer(TIM6, &htim6, 275, 1000, TIM6_DAC_IRQn);
+	Time::init_timer(TIM7, &htim7, 275, 1000, TIM7_IRQn);
 
 	HAL_TIM_Base_Start_IT(global_timer);
 	HAL_TIM_Base_Start_IT(low_precision_timer);
@@ -151,9 +151,23 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 			.offset = low_precision_tick % period_in_ms
 	};
 
-	NVIC_DisableIRQ(TIM6_DAC_IRQn);
+	NVIC_DisableIRQ(TIM7_IRQn);
 	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
-	NVIC_EnableIRQ(TIM6_DAC_IRQn);
+	NVIC_EnableIRQ(TIM7_IRQn);
+	return low_precision_ids++;
+}
+
+uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, void(*func)()){
+	Time::Alarm alarm = {
+			.period = period_in_ms,
+			.tim = low_precision_timer,
+			.alarm = func,
+			.offset = low_precision_tick % period_in_ms
+	};
+
+	NVIC_DisableIRQ(TIM7_IRQn);
+	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
+	NVIC_EnableIRQ(TIM7_IRQn);
 	return low_precision_ids++;
 }
 
@@ -162,9 +176,9 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 		return false;
 	}
 
-	NVIC_DisableIRQ(TIM6_DAC_IRQn);
+	NVIC_DisableIRQ(TIM7_IRQn);
 	Time::low_precision_alarms_by_id.erase(id);
-	NVIC_EnableIRQ(TIM6_DAC_IRQn);
+	NVIC_EnableIRQ(TIM7_IRQn);
 
 	return true;
 }
@@ -172,6 +186,10 @@ bool Time::unregister_low_precision_alarm(uint16_t id){
 void Time::set_timeout(int milliseconds, function<void()> callback){
 	uint8_t id = low_precision_ids;
 	Time::register_low_precision_alarm(milliseconds, [&,id,callback](){
+		static uint8_t first_execution = 1;
+		if(first_execution--){
+			return;
+		}
 		callback();
 		Time::unregister_low_precision_alarm(id);
 	});
@@ -179,10 +197,9 @@ void Time::set_timeout(int milliseconds, function<void()> callback){
 
 void Time::set_timeout(int milliseconds, void(*callback)()){
 	uint8_t id = low_precision_ids;
-	bool first_execution = true;
 	Time::register_low_precision_alarm(milliseconds, [&,id,callback](){
-		if(first_execution){
-			first_execution = false;
+		static uint8_t first_execution = 1;
+		if(first_execution--){
 			return;
 		}
 		callback();
