@@ -22,5 +22,8 @@
         "bitset": "cpp",
         "cstdlib": "cpp",
         "mutex": "cpp"
-    }
+    },
+    "docwriter.style": "Doxygen",
+    "docwriter.progress.trackFunctions": true,
+    "docwriter.progress.trackMethods": true
 }
