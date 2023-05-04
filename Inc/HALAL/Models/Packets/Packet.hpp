@@ -214,7 +214,7 @@ public:
     HeapPacket() = default;
 
     template<class... Types>
-    HeapPacket(uint16_t id, Types*... values): id(id), values{new PacketValue<Types>(values)...} {packets[id] = this;}
+    HeapPacket(uint16_t id, Types*... values): id(id), values{new PacketValue(values)...} {packets[id] = this;}
 
     void parse(void* data) override {
         data += sizeof(id);
