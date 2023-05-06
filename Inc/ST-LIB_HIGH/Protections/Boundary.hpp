@@ -44,10 +44,10 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 		return true;
 	}
 	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src), to_string(boundary));
+		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(boundary).c_str());
 	}
 	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src), to_string(boundary));
+		sprintf(dst, format, to_string(*src).c_str(), to_string(boundary).c_str());
 		return dst;
 	}
 };
@@ -66,10 +66,10 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 		return true;
 	}
 	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src), to_string(boundary));
+		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(boundary).c_str());
 	}
 	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src), to_string(boundary));
+		sprintf(dst, format, to_string(*src).c_str(), to_string(boundary).c_str());
 		return dst;
 	}
 };
@@ -88,10 +88,10 @@ struct Boundary<Type, EQUALS> : public BoundaryInterface{
 		return true;
 	}
 	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src), to_string(boundary));
+		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(boundary).c_str());
 	}
 	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src), to_string(boundary));
+		sprintf(dst, format, to_string(*src).c_str(), to_string(boundary).c_str());
 		return dst;
 	}
 };
@@ -110,10 +110,10 @@ struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 		return true;
 	}
 	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src), to_string(boundary));
+		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(boundary).c_str());
 	}
 	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src), to_string(boundary));
+		sprintf(dst, format, to_string(*src).c_str(), to_string(boundary).c_str());
 		return dst;
 	}
 };
@@ -132,10 +132,10 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 		return true;
 	}
 	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src), to_string(lower_boundary), to_string(upper_boundary));
+		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(lower_boundary).c_str(), to_string(upper_boundary).c_str());
 	}
 	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src), to_string(lower_boundary), to_string(upper_boundary));
+		sprintf(dst, format, to_string(*src).c_str(), to_string(lower_boundary).c_str(), to_string(upper_boundary).c_str());
 		return dst;
 	}
 };
@@ -204,10 +204,10 @@ public:
 		return true;
 	}
 	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src), to_string(time_limit));
+		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(time_limit).c_str());
 	}
 	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src), to_string(time_limit));
+		sprintf(dst, format, to_string(*src).c_str(), to_string(time_limit).c_str());
 		return dst;
 	}
 };
@@ -215,7 +215,7 @@ public:
 template<>
 struct Boundary<float, TIME_ACCUMULATION> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = TIME_ACCUMULATION;
-	static constexpr const char* format = "\"type\": TIME ACCUMULATION, \"data\": { \"value\": %s, \"time_limit\": %s }";
+	static constexpr const char* format = "\"type\": TIME_ACCUMULATION, \"data\": { \"value\": %s, \"bound\": %s,\"time_limit\": %s }";
 	float* src = nullptr;
 	float bound;
 	float time_limit;
@@ -261,10 +261,10 @@ public:
 		return true;
 	}
 	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src), to_string(time_limit));
+		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(bound).c_str() ,to_string(time_limit).c_str());
 	}
 	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src), to_string(time_limit));
+		sprintf(dst, format, to_string(*src).c_str(),to_string(bound).c_str() ,to_string(time_limit).c_str());
 		return dst;
 	}
 };

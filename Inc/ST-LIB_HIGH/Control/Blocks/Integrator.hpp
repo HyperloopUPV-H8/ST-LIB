@@ -40,6 +40,7 @@ class Integrator<IntegratorType::Trapezoidal> : public ControlBlock<double,doubl
             return;
         }
         void reset(){
+        	output_value = 0;
         	first_execution = true;
             integral = 0.0;
             index = 0;

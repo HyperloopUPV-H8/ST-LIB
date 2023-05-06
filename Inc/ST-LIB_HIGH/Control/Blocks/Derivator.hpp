@@ -42,6 +42,7 @@ class BDFDerivator : public ControlBlock<double,double>{
         }
 
         void reset(){
+        	output_value = 0;
         	counter = 0.0;
         	for(double& e : buffer){
         		e = 0.0;
@@ -65,6 +66,7 @@ class SimpleDerivator : public ControlBlock<double,double>{
             return;
         }
         void reset(){
+        	output_value = 0;
             index = 0;
             for(int i = 0; i < N; i++){
                 buffer[i] = 0.0;

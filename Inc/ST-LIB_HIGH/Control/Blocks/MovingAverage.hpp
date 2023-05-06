@@ -44,6 +44,7 @@ class MovingAverage : public ControlBlock<double,double> {
         	last = -1;
         	counter = 0;
         	accumulator = 0;
+        	output_value = 0;
         	for(double& e: buffer){
 				e = 0;
         	}

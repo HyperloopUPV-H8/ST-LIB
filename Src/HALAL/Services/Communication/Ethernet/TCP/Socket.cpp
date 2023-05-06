@@ -63,7 +63,7 @@ void Socket::send(){
 	err_t error = ERR_OK;
 	while(error == ERR_OK && !tx_packet_buffer.empty() && tx_packet_buffer.front()->len <= tcp_sndbuf(socket_control_block)){
 		temporal_packet_buffer = tx_packet_buffer.front();
-		error = tcp_write(socket_control_block, temporal_packet_buffer->payload, temporal_packet_buffer->len, 0);
+		error = tcp_write(socket_control_block, temporal_packet_buffer->payload, temporal_packet_buffer->len, TCP_WRITE_FLAG_COPY);
 		if(error == ERR_OK){
 			tx_packet_buffer.pop();
 			tcp_output(socket_control_block);
@@ -137,7 +137,7 @@ err_t Socket::poll_callback(void* arg, struct tcp_pcb* client_control_block){
 	Socket* socket = (Socket*)arg;
 	socket->socket_control_block = client_control_block;
 	if(socket != nullptr){
-		if(not socket->tx_packet_buffer.empty()){
+		while(not socket->tx_packet_buffer.empty()){
 			socket->send();
 		}
 		if(socket->state == CLOSING){

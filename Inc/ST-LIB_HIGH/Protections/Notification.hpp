@@ -61,7 +61,6 @@ public:
 
     void notify(){
     	if(tx_message.empty()) ErrorHandler("Cannot notify empty notification");
-    	build();
     	for(OrderProtocol* socket : OrderProtocol::sockets){
     		socket->send_order(*this);
     	}
@@ -77,7 +76,8 @@ public:
     }
 
     size_t get_size() {
-    	return  sizeof(id) +  sizeof(tx_message_size) +  tx_message_size;
+    	size = sizeof(id) +  sizeof(tx_message_size) +  tx_message_size;
+    	return size;
     }
 
     uint16_t get_id() {

@@ -41,7 +41,7 @@ public:
     }
 
     char* serialize(char* dst) {
-    	sprintf(dst,format,name,jumped_protection->serialize(dst));
+    	sprintf(dst,format,name,string(jumped_protection->serialize(dst)).c_str());
     	return dst;
     }
 

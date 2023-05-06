@@ -92,8 +92,6 @@ public :
 	*/
 	static optional<uint8_t> register_high_precision_alarm(uint32_t period_in_us, function<void()> func);
 
-	static optional<uint8_t> register_high_precision_alarm(uint32_t period_in_us, void(*func)());
-
 	static bool unregister_high_precision_alarm(uint8_t id);
 
 	/**
@@ -104,7 +102,6 @@ public :
 	* @return uint8_t Returns id of the alarm.
 	*/
 	static uint8_t register_low_precision_alarm(uint32_t period_in_ms, function<void()> func);
-	static uint8_t register_low_precision_alarm(uint32_t period_in_ms, void(*func)());
 	static bool unregister_low_precision_alarm(uint8_t id);
 
 	/**
@@ -116,12 +113,10 @@ public :
 	* @return void
 	*/
 
-	static optional<uint8_t> register_mid_precision_alarm(uint32_t period_in_ms, function<void()> func);
-	static optional<uint8_t> register_mid_precision_alarm(uint32_t period_in_ms, void(*func)());
+	static optional<uint8_t> register_mid_precision_alarm(uint32_t period_in_us, function<void()> func);
 	static bool unregister_mid_precision_alarm(uint16_t id);
 
 	static void set_timeout(int milliseconds, function<void()> callback);
-	static void set_timeout(int milliseconds, void(*callback)());
 
 #ifdef HAL_RTC_MODULE_ENABLED
 	struct RTCData{
@@ -133,8 +128,12 @@ public :
 		uint8_t month;
 		uint16_t year;
 
-		string serialize(){
+		string serialize() const {
 			return "Counter: " + to_string(counter) + ",Second: " + to_string(second) + ",Minute: " + to_string(minute) + ",Hour: " + to_string(hour) + ",Day: " + to_string(day) + ",Month: " + to_string(month) + ",Year: " + to_string(year);
+		}
+
+		static size_t get_string_size(const RTCData& to_serialize){
+			return to_serialize.serialize().size();
 		}
 	};
 

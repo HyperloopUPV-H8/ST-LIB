@@ -64,8 +64,8 @@ public:
 		}
 
 		struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
+		pbuf_take(packet, order_buffer, order.size);
 		tx_packet_buffer.push(packet);
-		pbuf_take(tx_packet_buffer.front(), order_buffer, order.size);
 		send();
 		return true;
 	}

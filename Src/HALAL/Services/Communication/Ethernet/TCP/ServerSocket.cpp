@@ -10,7 +10,7 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
 
-uint8_t ServerSocket::priority = 0;
+uint8_t ServerSocket::priority = 1;
 unordered_map<uint32_t,ServerSocket*> ServerSocket::listening_sockets = {};
 
 ServerSocket::ServerSocket() = default;
@@ -52,6 +52,10 @@ void ServerSocket::close(){
 		pbuf_free(tx_packet_buffer.front());
 		tx_packet_buffer.pop();
 	}
+	while(!rx_packet_buffer.empty()){
+		pbuf_free(rx_packet_buffer.front());
+		rx_packet_buffer.pop();
+	}
 
     tcp_pcb_remove(&tcp_active_pcbs, client_control_block);
     tcp_free(client_control_block);
@@ -79,7 +83,7 @@ void ServerSocket::send(){
 	err_t error = ERR_OK;
 	while(error == ERR_OK && !tx_packet_buffer.empty() && tx_packet_buffer.front()->len <= tcp_sndbuf(client_control_block)){
 		temporal_packet_buffer = tx_packet_buffer.front();
-		error = tcp_write(client_control_block, temporal_packet_buffer->payload, temporal_packet_buffer->len, 0);
+		error = tcp_write(client_control_block, temporal_packet_buffer->payload, temporal_packet_buffer->len, TCP_WRITE_FLAG_COPY);
 		if(error == ERR_OK){
 			tx_packet_buffer.pop();
 			tcp_output(client_control_block);
@@ -137,7 +141,10 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 		return ERR_OK;
 	}
 	else if(server_socket->state == CLOSING){ 		//Socket is already closed
-		pbuf_free(server_socket->rx_packet_buffer.front());
+		while(not server_socket->rx_packet_buffer.empty()){
+			pbuf_free(server_socket->rx_packet_buffer.front());
+			server_socket->rx_packet_buffer.pop();
+		}
 		server_socket->rx_packet_buffer = {};
 		pbuf_free(packet_buffer);
 		return ERR_OK;
@@ -160,11 +167,12 @@ err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_bloc
 		return ERR_ABRT;
 	}
 
-	while(!server_socket->tx_packet_buffer.empty()){		//TX FIFO is not empty
+	while(not server_socket->tx_packet_buffer.empty()){		//TX FIFO is not empty
+		size_t size = server_socket->tx_packet_buffer.size();
 		server_socket->send();
 	}
 
-	while(!server_socket->rx_packet_buffer.empty()){		//RX FIFO is not empty
+	while(not server_socket->rx_packet_buffer.empty()){		//RX FIFO is not empty
 		server_socket->process_data();
 	}
 
@@ -179,13 +187,10 @@ err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_bloc
 	ServerSocket* server_socket = (ServerSocket*)arg;
 	server_socket->client_control_block = client_control_block;
 	if(!server_socket->tx_packet_buffer.empty()){
-		tcp_sent(client_control_block, send_callback);
 		server_socket->send();
 	}
-	else{
-		if(server_socket->state == CLOSING){
-			server_socket->close();
-		}
+	else if(server_socket->state == CLOSING){
+		server_socket->close();
 	}
 	return ERR_OK;
 }

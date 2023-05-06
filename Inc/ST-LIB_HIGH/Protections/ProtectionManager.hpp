@@ -15,6 +15,13 @@
             sprintf(ref.get_name(),"%s",getname(src)+1); \
 		}\
 
+#define add_high_frequency_protection(src,...)  \
+		{\
+            Protection& ref = ProtectionManager::_add_high_frequency_protection(src,__VA_ARGS__); \
+            ref.set_name((char*)malloc(sizeof(getname(src))-1)); \
+            sprintf(ref.get_name(),"%s",getname(src)+1); \
+		}\
+
 class ProtectionManager {
 public:
 	typedef uint8_t state_id;
@@ -25,11 +32,18 @@ public:
 
     template<class Type, ProtectionType... Protector, template<class,ProtectionType> class Boundaries>
     static Protection& _add_protection(Type* src, Boundaries<Type,Protector>... protectors){
-        protections.push_back(Protection(src,protectors...));
-        return protections.back();
+    	low_frequency_protections.push_back(Protection(src,protectors...));
+        return low_frequency_protections.back();
+    }
+
+    template<class Type, ProtectionType... Protector, template<class,ProtectionType> class Boundaries>
+    static Protection& _add_high_frequency_protection(Type* src, Boundaries<Type,Protector>... protectors){
+    	high_frequency_protections.push_back(Protection(src,protectors...));
+        return high_frequency_protections.back();
     }
 
     static void check_protections();
+    static void check_high_frequency_protections();
 
 private:
 	static constexpr uint16_t warning_id = 1;
@@ -39,22 +53,20 @@ private:
 	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}";
 
     static BoardID board_id;
-    static vector<Protection> protections;
+    static vector<Protection> low_frequency_protections;
+    static vector<Protection> high_frequency_protections;
     static StateMachine* general_state_machine;
     static state_id fault_state_id;
 
     static Notification fault_notification;
     static Notification warning_notification;
 
-    static int get_string_size(Protection& prot){
-    	return snprintf(nullptr,0,format,"","","") + prot.get_string_size();
+    static int get_string_size(Protection& prot ,const Time::RTCData& timestamp){
+    	return snprintf(nullptr,0,format,"","","") + prot.get_string_size() + Time::RTCData::get_string_size(timestamp);
     }
 
-    static char* serialize(Protection& prot){
-    	message_size = get_string_size(prot);
-    	if(message != nullptr) delete[] message;
-    	message = new char[message_size];
-    	sprintf(message,format,to_string(board_id).c_str(),Time::get_rtc_data().serialize().c_str(),prot.serialize(message));
+    static char* serialize(Protection& prot, const Time::RTCData& timestamp){
+    	sprintf(message,format,to_string(board_id).c_str(),timestamp.serialize().c_str(),string(prot.serialize(message)).c_str());
     	return message;
     }
 

@@ -21,7 +21,7 @@ void ProtectionManager::to_fault(){
 }
 
 void ProtectionManager::check_protections() {
-    for (Protection& protection: protections) {
+    for (Protection& protection: low_frequency_protections) {
         if (protection.check_state()) {
             continue;
         }
@@ -32,16 +32,49 @@ void ProtectionManager::check_protections() {
 
         ProtectionManager::to_fault();
 
-        if(protection.fault_type != FaultType::FAULT) {
-        	char* message = (char*)malloc(protection.get_string_size());
-        	warning_notification.notify(string(protection.serialize(message)));
-        	free(message);
+        Time::RTCData current_timestamp = Time::get_rtc_data();
+        message = (char*)malloc(get_string_size(protection, current_timestamp));
+        serialize(protection, current_timestamp);
+
+        switch(protection.fault_type){
+        case FaultType::WARNING:
+        	warning_notification.notify(message);
+        case FaultType::FAULT:
+        	fault_notification.notify(message);
+        default:
+        	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
         }
 
-    	char* message = (char*)malloc(protection.get_string_size());
-    	fault_notification.notify(string(protection.serialize(message)));
     	free(message);
+    }
+}
 
+void ProtectionManager::check_high_frequency_protections(){
+    for (Protection& protection: high_frequency_protections) {
+        if (protection.check_state()) {
+            continue;
+        }
+        if(general_state_machine == nullptr){
+        	ErrorHandler("Protection Manager does not have General State Machine Linked");
+        	return;
+        }
+
+        ProtectionManager::to_fault();
+
+        Time::RTCData current_timestamp = Time::get_rtc_data();
+        message = (char*)malloc(get_string_size(protection, current_timestamp));
+        serialize(protection, current_timestamp);
+
+        switch(protection.fault_type){
+        case FaultType::WARNING:
+        	warning_notification.notify(message);
+        case FaultType::FAULT:
+        	fault_notification.notify(message);
+        default:
+        	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
+        }
+
+    	free(message);
     }
 }
 
@@ -49,4 +82,5 @@ BoardID ProtectionManager::board_id = NOBOARD;
 size_t ProtectionManager::message_size = 0;
 char* ProtectionManager::message = nullptr;
 ProtectionManager::state_id ProtectionManager::fault_state_id = 255;
-vector<Protection> ProtectionManager::protections = {};
+vector<Protection> ProtectionManager::low_frequency_protections = {};
+vector<Protection> ProtectionManager::high_frequency_protections = {};
