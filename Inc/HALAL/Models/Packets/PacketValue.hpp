@@ -68,7 +68,7 @@ public:
 
 #if __cpp_deduction_guides >= 201606
 template<class Type> requires NotContainer<Type>
-PacketValue(Type)->PacketValue<Type>;
+PacketValue(Type*)->PacketValue<Type>;
 #endif
 
 template<class Type> requires Container<Type>
@@ -117,7 +117,7 @@ public:
 
 #if __cpp_deduction_guides >= 201606
 template<class Type> requires Container<Type>
-PacketValue(Type)->PacketValue<Type>;
+PacketValue(Type*)->PacketValue<Type>;
 #endif
 
 template<class Type,size_t N> 
