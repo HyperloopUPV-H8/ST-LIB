@@ -5,7 +5,7 @@
  *      Author: aleja
  */
 
-#include <PWM/PhasedPWM/PhasedPWM.hpp>
+#include "PWM/PhasedPWM/PhasedPWM.hpp"
 
 PhasedPWM::PhasedPWM(Pin& pin) {
 	if (not TimerPeripheral::available_pwm.contains(pin)) {

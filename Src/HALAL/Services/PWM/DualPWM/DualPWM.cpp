@@ -5,7 +5,7 @@
  *      Author: aleja
  */
 
-#include <PWM/DualPWM/DualPWM.hpp>
+#include "PWM/DualPWM/DualPWM.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "stm32h7xx_hal_def.h"
 
