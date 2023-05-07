@@ -184,6 +184,18 @@ optional<uint8_t> Time::register_mid_precision_alarm(uint32_t period_in_us, func
 	return mid_precision_ids++;
 }
 
+bool Time::unregister_mid_precision_alarm(uint8_t id){
+	if(not Time::mid_precision_alarms_by_id.contains(id)) {
+		return false;
+	}
+
+	NVIC_DisableIRQ(TIM23_IRQn);
+	Time::mid_precision_alarms_by_id.erase(id);
+	NVIC_EnableIRQ(TIM23_IRQn);
+
+	return true;
+}
+
 uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void()> func){
 	Time::Alarm alarm = {
 			.period = period_in_ms,
