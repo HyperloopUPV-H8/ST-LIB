@@ -20,6 +20,8 @@ private:
 	float duty_cycle;
 	uint32_t frequency;
 
+	bool is_on = false;
+
 	PWM() = default;
 
 public:
