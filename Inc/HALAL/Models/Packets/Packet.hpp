@@ -192,7 +192,10 @@ public:
     HeapPacket() = default;
 
     template<class... Types>
-    HeapPacket(uint16_t id, Types*... values): id(id), values{make_unique(new PacketValue(values))...} {packets[id] = this;}
+    HeapPacket(uint16_t id, Types*... values): id(id) {
+    	(this->values.emplace_back(unique_ptr<PacketValue<>>(new PacketValue(values))) , ...);
+    	packets[id] = this;
+    }
 
     void parse(void* data) override {
         data += sizeof(id);

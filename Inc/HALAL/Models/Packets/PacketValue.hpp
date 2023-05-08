@@ -42,11 +42,6 @@ public:
 };
 
 
-#if __cpp_deduction_guides >= 201606
-template<class Type> requires NotContainer<Type>
-PacketValue(Type*)->PacketValue<Type>;
-#endif
-
 template<>
 class PacketValue<double>: public PacketValue<> {
 public:
@@ -95,6 +90,11 @@ public:
     }
 };
 
+#if __cpp_deduction_guides >= 201606
+template<class Type>
+PacketValue(Type*)->PacketValue<Type>;
+#endif
+
 template<>
 class PacketValue<string> : public PacketValue<>{
 public:
@@ -116,11 +116,6 @@ public:
         memcpy(data, src->data(), get_size());
     }
 };
-
-#if __cpp_deduction_guides >= 201606
-template<class Type> requires Container<Type>
-PacketValue(Type*)->PacketValue<Type>;
-#endif
 
 template<class Type,size_t N> 
 class PacketValue<Type(&)[N]>: public PacketValue<> {
