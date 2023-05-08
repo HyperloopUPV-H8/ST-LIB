@@ -19,6 +19,7 @@ private:
 	uint32_t channel;
 	float duty_cycle;
 	uint32_t frequency;
+	bool is_on = false;
 
 	PWM() = default;
 

@@ -5,6 +5,7 @@
  *      Author: stefa
  */
 #include "Communication/Ethernet/TCP/Socket.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
 
 unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
@@ -21,6 +22,7 @@ Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remo
 
 	connecting_sockets[remote_node] = this;
 	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
+	OrderProtocol::sockets.push_back(this);
 }
 
 Socket::Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port):Socket(IPV4(local_ip),local_port,IPV4(remote_ip),remote_port){}
@@ -35,12 +37,14 @@ void Socket::close(){
   tcp_err(socket_control_block, nullptr);
   tcp_poll(socket_control_block, nullptr, 0);
 
-  if(tx_packet_buffer!=nullptr){
-	  pbuf_free(tx_packet_buffer);
-  }
-  if(rx_packet_buffer!=nullptr){
-	  pbuf_free(rx_packet_buffer);
-  }
+	while(!tx_packet_buffer.empty()){
+		pbuf_free(tx_packet_buffer.front());
+		tx_packet_buffer.pop();
+	}
+	while(!rx_packet_buffer.empty()){
+		pbuf_free(rx_packet_buffer.front());
+		rx_packet_buffer.pop();
+	}
 
   tcp_close(socket_control_block);
 }
@@ -57,27 +61,28 @@ void Socket::reconnect(){
 void Socket::send(){
 	pbuf* temporal_packet_buffer;
 	err_t error = ERR_OK;
-	while(error == ERR_OK && tx_packet_buffer != nullptr && tx_packet_buffer->len <= tcp_sndbuf(socket_control_block)){
-		temporal_packet_buffer = tx_packet_buffer;
-		error = tcp_write(socket_control_block, tx_packet_buffer->payload, tx_packet_buffer->len, 0);
+	while(error == ERR_OK && !tx_packet_buffer.empty() && tx_packet_buffer.front()->len <= tcp_sndbuf(socket_control_block)){
+		temporal_packet_buffer = tx_packet_buffer.front();
+		error = tcp_write(socket_control_block, temporal_packet_buffer->payload, temporal_packet_buffer->len, TCP_WRITE_FLAG_COPY);
 		if(error == ERR_OK){
+			tx_packet_buffer.pop();
 			tcp_output(socket_control_block);
-			tx_packet_buffer = tx_packet_buffer->next;
-			if(tx_packet_buffer != nullptr){
-				pbuf_ref(tx_packet_buffer);
-			}
 			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],temporal_packet_buffer);
-		}else if(error == ERR_MEM){			//Low on memory
-			tx_packet_buffer = temporal_packet_buffer;
 		}else{
-			//TODO: Error Handler
+			ErrorHandler("Cannot write to client socket. Error code: %d",error);
 		}
 	}
 }
 
 void Socket::process_data(){
-	uint8_t* new_data = (uint8_t*)rx_packet_buffer->payload;
-	Order::process_data(new_data);
+	while(!rx_packet_buffer.empty()){
+		struct pbuf* packet = rx_packet_buffer.front();
+		rx_packet_buffer.pop();
+		uint8_t* new_data = (uint8_t*)(packet->payload);
+		Order::process_data(this, new_data);
+		tcp_recved(socket_control_block, packet->tot_len);
+		pbuf_free(packet);
+	}
 }
 
 err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, err_t error){
@@ -105,28 +110,24 @@ err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, 
 err_t Socket::receive_callback(void* arg, struct tcp_pcb* client_control_block, struct pbuf* packet_buffer, err_t error){
 	Socket* socket = (Socket*)arg;
 	socket->socket_control_block = client_control_block;
-	if(packet_buffer == nullptr){ 		//If empty packet is received, connection is closed
+	if(packet_buffer == nullptr){ 		//FIN is received
 		socket->state = CLOSING;
-		if(socket->tx_packet_buffer == nullptr){   //Check if there is data waiting to be sent
-			socket->close();
-		}else{
-			tcp_sent(client_control_block, send_callback);
-			socket->send();
-		}
 		return ERR_OK;
-	}else if(error != ERR_OK){
-		socket->tx_packet_buffer = nullptr;
-		pbuf_free(packet_buffer);
+	}
+	if(error != ERR_OK){
+		if(packet_buffer != nullptr){
+			pbuf_free(packet_buffer);
+		}
 		return error;
 	}else if(socket->state == CONNECTED){
-		socket->rx_packet_buffer = packet_buffer;
+		socket->rx_packet_buffer.push(packet_buffer);
 		tcp_recved(client_control_block, packet_buffer->tot_len);
 		socket->process_data();
 		pbuf_free(packet_buffer);
 		return ERR_OK;
 	}else{
 		tcp_recved(client_control_block, packet_buffer->tot_len);
-		socket->tx_packet_buffer = nullptr;
+		socket->tx_packet_buffer = {};
 		pbuf_free(packet_buffer);
 		return ERR_OK;
 	}
@@ -136,7 +137,7 @@ err_t Socket::poll_callback(void* arg, struct tcp_pcb* client_control_block){
 	Socket* socket = (Socket*)arg;
 	socket->socket_control_block = client_control_block;
 	if(socket != nullptr){
-		if(socket->tx_packet_buffer!=nullptr){
+		while(not socket->tx_packet_buffer.empty()){
 			socket->send();
 		}
 		if(socket->state == CLOSING){
@@ -152,7 +153,7 @@ err_t Socket::poll_callback(void* arg, struct tcp_pcb* client_control_block){
 err_t Socket::send_callback(void* arg, struct tcp_pcb* client_control_block, uint16_t length){
 	Socket* socket = (Socket*)arg;
 	socket->socket_control_block = client_control_block;
-	if(socket->tx_packet_buffer != nullptr){
+	if(not socket->tx_packet_buffer.empty()){
 		socket->send();
 	}else if(socket->state == CLOSING){
 		socket->close();
@@ -165,7 +166,7 @@ void Socket::error_callback(void *arg, err_t error){
 	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
 	}
-	//TODO: Error Handler
+	ErrorHandler("Client socket error: %d. Socket closed",error);
 }
 
 #endif

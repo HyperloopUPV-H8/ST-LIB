@@ -2,51 +2,52 @@
 
 #include "C++Utilities/CppUtils.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "Boundary.hpp"
 
-#define PROTECTIONTYPE_LENGTH 5
-
-enum ProtectionType : uint64_t {
-    BELOW = std::numeric_limits<uint64_t>::max() - PROTECTIONTYPE_LENGTH + 1,
-    ABOVE,
-    OUT_OF_RANGE,
-    EQUALS,
-    NOT_EQUALS
+enum FaultType{
+	FAULT,
+	WARNING
 };
 
-
-class Protection {
-public:
-
-    double* src;
+class Protection{
+private:
+	static constexpr const char* format = "\"protection\" : {\"name\":%s, %s}";
     char* name = nullptr;
-    vector<ProtectionType> protections;
-    vector<double> boundaries;
-    uint8_t boundary_counter = 0;
-    ProtectionType jumped_protection = (ProtectionType)0;
-    static map<ProtectionType, string> protection_type_name;
+    vector<unique_ptr<BoundaryInterface>> boundaries;
+    BoundaryInterface* jumped_protection = nullptr;
+    static constexpr FaultType fault_type = FaultType::FAULT;
+public:
+    template<class Type, ProtectionType... Protector, template<class,ProtectionType> class Boundaries>
+    Protection(Type* src, Boundaries<Type,Protector>... protectors) {
+        boundaries.push_back(unique_ptr<BoundaryInterface>(new Boundary<Type,Protector>(src,protectors)...));
+    }
 
-    Protection(double* src);
-    Protection(double* src, ProtectionType protection_type, double boundary);
-    Protection(double* src, ProtectionType protection_type, double lower_boundary, double upper_boundary);
+    void set_name(char* name) {
+        this->name = name;
+    }
 
-    void add_protection(ProtectionType protection_type, double boundary);
-    template<class... AdditionalProtections>
-    void add_protection(double upper_boundary, ProtectionType protection, AdditionalProtections... protections);
-    void add_protection(double last_boundary);
-    template<class... AdditionalProtections>
-    void add_protection(ProtectionType protection_type, double boundary,AdditionalProtections... protections);
+    char* get_name() {
+        return name;
+    }
 
-    bool check_state();
+    bool check_state() {
+        for(unique_ptr<BoundaryInterface>& bound: boundaries){
+            if(not bound.get()->check_bounds()){
+                jumped_protection = bound.get();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    char* serialize(char* dst) {
+    	sprintf(dst,format,name,string(jumped_protection->serialize(dst)).c_str());
+    	return dst;
+    }
+
+    int get_string_size(){
+    	return jumped_protection->get_string_size() + snprintf(nullptr,0,format, name, "");
+    }
+
+    friend class ProtectionManager;
 };
-
-template<class... AdditionalProtections>
-void Protection::add_protection(double upper_boundary, ProtectionType protection, AdditionalProtections... protections) {
-    boundaries.push_back(upper_boundary);
-    add_protection(protection, protections...);
-}
-
-template<class... AdditionalProtections>
-void Protection::add_protection(ProtectionType protection_type, double boundary,AdditionalProtections... protections) {
-    add_protection(protection_type, boundary);
-    add_protection(protections...);
-}

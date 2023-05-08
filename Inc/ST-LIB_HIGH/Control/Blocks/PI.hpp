@@ -3,11 +3,12 @@
 #include "../ControlBlock.hpp"
 #include "Integrator.hpp"
 
+template<IntegratorType IntegratorMethod>
 class PI: public ControlBlock<double,double>{
     public:
         double kp;
         double error;
-        Integrator integrator;
+        Integrator<IntegratorMethod> integrator;
     public:
         PI(double kp, double ki, double period): kp(kp), integrator(period,ki) {}
         void execute() override {

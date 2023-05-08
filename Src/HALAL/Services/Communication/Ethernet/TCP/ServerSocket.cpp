@@ -7,10 +7,10 @@
 
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "lwip/priv/tcp_priv.h"
-#include <mutex>
+#include "ErrorHandler/ErrorHandler.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
 
-uint8_t ServerSocket::priority = 0;
+uint8_t ServerSocket::priority = 1;
 unordered_map<uint32_t,ServerSocket*> ServerSocket::listening_sockets = {};
 
 ServerSocket::ServerSocket() = default;
@@ -30,8 +30,9 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 		tcp_accept(server_control_block, accept_callback);
 	}else{
 		memp_free(MEMP_TCP_PCB, server_control_block);
-		//TODO: Error Handler
+		ErrorHandler("Cannnot bind server socket, memory low");
 	}
+	OrderProtocol::sockets.push_back(this);
 }
 
 ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(IPV4(local_ip),local_port){}
@@ -51,6 +52,10 @@ void ServerSocket::close(){
 		pbuf_free(tx_packet_buffer.front());
 		tx_packet_buffer.pop();
 	}
+	while(!rx_packet_buffer.empty()){
+		pbuf_free(rx_packet_buffer.front());
+		rx_packet_buffer.pop();
+	}
 
     tcp_pcb_remove(&tcp_active_pcbs, client_control_block);
     tcp_free(client_control_block);
@@ -67,7 +72,7 @@ void ServerSocket::process_data(){
 		struct pbuf* packet = rx_packet_buffer.front();
 		rx_packet_buffer.pop();
 		uint8_t* new_data = (uint8_t*)(packet->payload);
-		Order::process_data(new_data);
+		Order::process_data(this, new_data);
 		tcp_recved(client_control_block, packet->tot_len);
 		pbuf_free(packet);
 	}
@@ -78,13 +83,13 @@ void ServerSocket::send(){
 	err_t error = ERR_OK;
 	while(error == ERR_OK && !tx_packet_buffer.empty() && tx_packet_buffer.front()->len <= tcp_sndbuf(client_control_block)){
 		temporal_packet_buffer = tx_packet_buffer.front();
-		error = tcp_write(client_control_block, temporal_packet_buffer->payload, temporal_packet_buffer->len, 0);
+		error = tcp_write(client_control_block, temporal_packet_buffer->payload, temporal_packet_buffer->len, TCP_WRITE_FLAG_COPY);
 		if(error == ERR_OK){
 			tx_packet_buffer.pop();
 			tcp_output(client_control_block);
 			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],temporal_packet_buffer);
 		}else{
-			//TODO: Error Handler
+			ErrorHandler("Cannot write to socket, error: %d", error);
 		}
 	}
 }
@@ -121,9 +126,6 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 
 	if(packet_buffer == nullptr){      //FIN has been received
 		server_socket->state = CLOSING;
-//		tcp_ack_now(client_control_block);
-//		tcp_output(client_control_block);
-//		server_socket->close();
 		return ERR_OK;
 	}
 
@@ -139,7 +141,10 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 		return ERR_OK;
 	}
 	else if(server_socket->state == CLOSING){ 		//Socket is already closed
-		pbuf_free(server_socket->rx_packet_buffer.front());
+		while(not server_socket->rx_packet_buffer.empty()){
+			pbuf_free(server_socket->rx_packet_buffer.front());
+			server_socket->rx_packet_buffer.pop();
+		}
 		server_socket->rx_packet_buffer = {};
 		pbuf_free(packet_buffer);
 		return ERR_OK;
@@ -150,7 +155,7 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 void ServerSocket::error_callback(void *arg, err_t error){
 	ServerSocket* server_socket = (ServerSocket*) arg;
 	server_socket->close();
-	//TODO: Error Handler
+	ErrorHandler("Socket error: %d. Socket closed", error);
 }
 
 err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_block){
@@ -162,11 +167,12 @@ err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_bloc
 		return ERR_ABRT;
 	}
 
-	while(!server_socket->tx_packet_buffer.empty()){		//TX FIFO is not empty
+	while(not server_socket->tx_packet_buffer.empty()){		//TX FIFO is not empty
+		size_t size = server_socket->tx_packet_buffer.size();
 		server_socket->send();
 	}
 
-	while(!server_socket->rx_packet_buffer.empty()){		//RX FIFO is not empty
+	while(not server_socket->rx_packet_buffer.empty()){		//RX FIFO is not empty
 		server_socket->process_data();
 	}
 
@@ -181,13 +187,10 @@ err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_bloc
 	ServerSocket* server_socket = (ServerSocket*)arg;
 	server_socket->client_control_block = client_control_block;
 	if(!server_socket->tx_packet_buffer.empty()){
-		tcp_sent(client_control_block, send_callback);
 		server_socket->send();
 	}
-	else{
-		if(server_socket->state == CLOSING){
-			server_socket->close();
-		}
+	else if(server_socket->state == CLOSING){
+		server_socket->close();
 	}
 	return ERR_OK;
 }
