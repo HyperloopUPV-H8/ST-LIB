@@ -179,9 +179,9 @@ private:
 	double accumulator = 0;
 	bool still_good = true;
 public:
-	bool check_bounds()override{
+	bool check_accumulation(double value){
 		if(!still_good) return false;
-		mean_calculator.input(abs(*src));
+		mean_calculator.input(abs(value));
 		if(mean_calculator.output_value == 0){
 			return true;
 		}
@@ -203,6 +203,11 @@ public:
 		} 
 		return true;
 	}
+
+	bool check_bounds() override{
+		return still_good;
+	}
+
 	int get_string_size()override{
 		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(time_limit).c_str());
 	}
@@ -234,9 +239,9 @@ public:
 	uint16_t moving_counter = 0;
 	float accumulator = 0;
 public:
-	bool check_bounds()override{
+	bool check_accumulation(float value){
 		if(!still_good) return false;
-		mean_calculator.input(abs(*src));
+		mean_calculator.input(abs(value));
 		mean_calculator.execute();
 		if(mean_calculator.output_value == 0){
 			return true;
@@ -260,6 +265,11 @@ public:
 		}
 		return true;
 	}
+
+	bool check_bounds() override{
+		return still_good;
+	}
+
 	int get_string_size()override{
 		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(bound).c_str() ,to_string(time_limit).c_str());
 	}

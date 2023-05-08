@@ -115,7 +115,7 @@ public :
 	*/
 
 	static optional<uint8_t> register_mid_precision_alarm(uint32_t period_in_us, function<void()> func);
-	static bool unregister_mid_precision_alarm(uint16_t id);
+	static bool unregister_mid_precision_alarm(uint8_t id);
 
 	static void set_timeout(int milliseconds, function<void()> callback);
 
