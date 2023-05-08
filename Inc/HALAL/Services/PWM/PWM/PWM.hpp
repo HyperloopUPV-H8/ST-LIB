@@ -21,8 +21,6 @@ private:
 	uint32_t frequency;
 	bool is_on = false;
 
-	bool is_on = false;
-
 	PWM() = default;
 
 public:
