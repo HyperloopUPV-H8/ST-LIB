@@ -17,6 +17,44 @@ void State::exit() {
 	}
 }
 
+void State::unregister_all_timed_actions(){
+	for(const TimedAction& timed_action : cyclic_actions){
+		switch(timed_action.alarm_precision){
+		case LOW_PRECISION:
+			Time::unregister_low_precision_alarm(timed_action.id);
+			break;
+		case MID_PRECISION:
+			Time::unregister_mid_precision_alarm(timed_action.id);
+			break;
+		case HIGH_PRECISION:
+			Time::unregister_high_precision_alarm(timed_action.id);
+			break;
+		default:
+			ErrorHandler("Cannot unregister timed action with erroneus alarm precision, Alarm Precision Type: %d", timed_action.alarm_precision);
+			break;
+		}
+	}
+}
+
+void State::register_all_timed_actions(){
+	for(TimedAction& timed_action : cyclic_actions){
+		switch(timed_action.alarm_precision){
+		case LOW_PRECISION:
+			timed_action.id = Time::register_low_precision_alarm(timed_action.period, timed_action.action);
+			break;
+		case MID_PRECISION:
+			timed_action.id = Time::register_mid_precision_alarm(timed_action.period, timed_action.action).value();
+			break;
+		case HIGH_PRECISION:
+			timed_action.id = Time::register_high_precision_alarm(timed_action.period, timed_action.action).value();
+			break;
+		default:
+			ErrorHandler("Cannot register timed action with erroneus alarm precision, Alarm Precision Type: %d", timed_action.alarm_precision);
+			break;
+		}
+	}
+}
+
 /**
  * This is a constructor for a StateMachine object that initializes the initial state and creates a
  * State object for it.
@@ -149,10 +187,19 @@ void StateMachine::add_transition(uint8_t old_state, uint8_t new_state,
  * @param state The state to which the nested state machine is being added.
  */
 void StateMachine::add_state_machine(StateMachine& state_machine, uint8_t state) {
+	if(nested_state_machine.contains(state)){
+		ErrorHandler("Only one Nested State Machine can be added per state, tried to add to state: %d", state);
+		return;
+	}
+
+	if(not state_machine.states[state_machine.current_state].cyclic_actions.empty()){
+		ErrorHandler("Nested State Machine current state has actions registered, must be empty until nesting");
+	}
+
 	nested_state_machine[state] = &state_machine;
 
 	if (current_state != state) {
-		state_machine.states[current_state].unregister_all_timed_actions();
+		state_machine.is_on = false;
 	}
 }
 
@@ -194,6 +241,8 @@ void StateMachine::force_change_state(uint8_t new_state) {
 	if (nested_state_machine.contains(current_state)) {
 		StateMachine* nested_sm = nested_state_machine[current_state];
 		nested_sm->current_state = nested_sm->initial_state;
+		nested_sm->is_on = true;
+		nested_sm->states[nested_sm->current_state].register_all_timed_actions();
 	}
 
 	states[current_state].register_all_timed_actions();

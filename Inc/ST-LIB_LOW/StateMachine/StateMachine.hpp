@@ -37,9 +37,9 @@ public:
 	void enter();
 	void exit();
 	template<class TimeUnit>
-	void add_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
+	void add_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type);
 	template<class TimeUnit>
-	void register_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
+	void register_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type);
 	void unregister_all_timed_actions();
 	void register_all_timed_actions();
 };
@@ -49,19 +49,18 @@ void State::register_new_timed_action(function<void()> action, chrono::duration<
 	TimedAction timed_action = {};
 	timed_action.alarm_precision = precision_type;
 	timed_action.action = action;
+	uint32_t miliseconds = chrono::duration_cast<chrono::milliseconds>(period).count();
+	uint32_t microseconds = chrono::duration_cast<chrono::microseconds>(period).count();
 	switch (precision_type) {
 		case LOW_PRECISION:
-			uint32_t miliseconds = chrono::duration_cast<chrono::milliseconds>(period).count();
 			timed_action.period = miliseconds;
 			timed_action.id = Time::register_low_precision_alarm(miliseconds, action);
 			break;
 		case MID_PRECISION:
-			uint32_t microseconds = chrono::duration_cast<chrono::microseconds>(period).count();
 			timed_action.period = microseconds;
 			timed_action.id = Time::register_mid_precision_alarm(microseconds, action).value();
 			break;
 		case HIGH_PRECISION:
-			uint32_t microseconds = chrono::duration_cast<chrono::microseconds>(period).count();
 			timed_action.period = microseconds;
 			timed_action.id = Time::register_high_precision_alarm(microseconds, action).value();
 			break;
@@ -78,17 +77,16 @@ void State::add_new_timed_action(function<void()> action, chrono::duration<int64
 	TimedAction timed_action = {};
 	timed_action.alarm_precision = precision_type;
 	timed_action.action = action;
+	uint32_t miliseconds = chrono::duration_cast<chrono::milliseconds>(period).count();
+	uint32_t microseconds = chrono::duration_cast<chrono::microseconds>(period).count();
 	switch (precision_type) {
 		case LOW_PRECISION:
-			uint32_t miliseconds = chrono::duration_cast<chrono::milliseconds>(period).count();
 			timed_action.period = miliseconds;
 			break;
 		case MID_PRECISION:
-			uint32_t microseconds = chrono::duration_cast<chrono::microseconds>(period).count();
 			timed_action.period = microseconds;
 			break;
 		case HIGH_PRECISION:
-			uint32_t microseconds = chrono::duration_cast<chrono::microseconds>(period).count();
 			timed_action.period = microseconds;
 			break;
 		default:
@@ -99,44 +97,6 @@ void State::add_new_timed_action(function<void()> action, chrono::duration<int64
 	cyclic_actions.push_back(timed_action);
 }
 
-void State::unregister_all_timed_actions(){
-	for(const TimedAction& timed_action : cyclic_actions){
-		switch(timed_action.alarm_precision){
-		case LOW_PRECISION:
-			Time::unregister_low_precision_alarm(timed_action.id);
-			break;
-		case MID_PRECISION:
-			Time::unregister_mid_precision_alarm(timed_action.id);
-			break;
-		case HIGH_PRECISION:
-			Time::unregister_high_precision_alarm(timed_action.id);
-			break;
-		default:
-			ErrorHandler("Cannot unregister timed action with erroneus alarm precision, Alarm Precision Type: %d", timed_action.alarm_precision);
-			break;
-		}
-	}
-}
-
-void State::register_all_timed_actions(){
-	for(TimedAction& timed_action : cyclic_actions){
-		switch(timed_action.alarm_precision){
-		case LOW_PRECISION:
-			timed_action.id = Time::register_low_precision_alarm(timed_action.period, timed_action.action);
-			break;
-		case MID_PRECISION:
-			timed_action.id = Time::register_mid_precision_alarm(timed_action.period, timed_action.action);
-			break;
-		case HIGH_PRECISION:
-			timed_action.id = Time::register_high_precision_alarm(timed_action.period, timed_action.action);
-			break;
-		default:
-			ErrorHandler("Cannot register timed action with erroneus alarm precision, Alarm Precision Type: %d", timed_action.alarm_precision);
-			break;
-		}
-	}
-}
-
 
 class StateMachine {
 public:
@@ -144,6 +104,8 @@ public:
 
 	state_id initial_state = 0;
 	state_id current_state = 0;
+
+	bool is_on = true;
 
 
 	StateMachine() = default;
@@ -199,7 +161,7 @@ void StateMachine::add_low_precision_cyclic_action(function<void()> action, chro
 		return;
 	}
 
-	if(state == current_state) states[state].register_new_timed_action(action, period, LOW_PRECISION);
+	if(state == current_state && is_on) states[state].register_new_timed_action(action, period, LOW_PRECISION);
 	else states[state].add_new_timed_action(action, period,LOW_PRECISION);
 }
 
@@ -222,7 +184,7 @@ void StateMachine::add_mid_precision_cyclic_action(function<void()> action, chro
 		return;
 	}
 
-	if(state == current_state) states[state].register_new_timed_action(action, period, MID_PRECISION);
+	if(state == current_state && is_on) states[state].register_new_timed_action(action, period, MID_PRECISION);
 	else states[state].add_new_timed_action(action, period,MID_PRECISION);
 }
 
@@ -245,7 +207,7 @@ void StateMachine::add_high_precision_cyclic_action(function<void()> action, chr
 		return;
 	}
 
-	if(state == current_state) states[state].register_new_timed_action(action, period, HIGH_PRECISION);
+	if(state == current_state && is_on) states[state].register_new_timed_action(action, period, HIGH_PRECISION);
 	else states[state].add_new_timed_action(action, period,HIGH_PRECISION);
 }
 
