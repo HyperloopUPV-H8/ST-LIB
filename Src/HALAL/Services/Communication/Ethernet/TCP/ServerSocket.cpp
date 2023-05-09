@@ -168,7 +168,6 @@ err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_bloc
 	}
 
 	while(not server_socket->tx_packet_buffer.empty()){		//TX FIFO is not empty
-		size_t size = server_socket->tx_packet_buffer.size();
 		server_socket->send();
 	}
 

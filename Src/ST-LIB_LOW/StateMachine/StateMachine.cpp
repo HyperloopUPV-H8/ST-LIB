@@ -5,9 +5,6 @@
 #include "StateMachine/StateMachine.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
-TimedAction::TimedAction(function<void()> action, uint32_t microseconds) :
-	action(action), microseconds(microseconds) {}
-
 void State::enter() {
 	for (function<void()> action : on_enter_actions) {
 		action();
@@ -155,15 +152,7 @@ void StateMachine::add_state_machine(StateMachine& state_machine, uint8_t state)
 	nested_state_machine[state] = &state_machine;
 
 	if (current_state != state) {
-		for (uint8_t timed_action : state_machine.current_state_timed_actions_in_microseconds) {
-			Time::unregister_high_precision_alarm(timed_action);
-		}
-		state_machine.current_state_timed_actions_in_microseconds.clear();
-
-		for (uint8_t timed_action : state_machine.current_state_timed_actions_in_milliseconds) {
-			Time::unregister_low_precision_alarm(timed_action);
-		}
-		state_machine.current_state_timed_actions_in_milliseconds.clear();
+		state_machine.states[current_state].unregister_all_timed_actions();
 	}
 }
 
@@ -189,27 +178,11 @@ void StateMachine::force_change_state(uint8_t new_state) {
 		return;
 	}
 
-	for (uint8_t timed_action : current_state_timed_actions_in_microseconds) {
-		Time::unregister_high_precision_alarm(timed_action);
-	}
-	current_state_timed_actions_in_microseconds.clear();
-
-	for (uint8_t timed_action : current_state_timed_actions_in_milliseconds) {
-		Time::unregister_low_precision_alarm(timed_action);
-	}
-	current_state_timed_actions_in_milliseconds.clear();
+	states[current_state].unregister_all_timed_actions();
 
 	if (nested_state_machine.contains(current_state)) {
 		StateMachine* nested_sm = nested_state_machine[current_state];
-		for (uint8_t timed_action : nested_sm->current_state_timed_actions_in_microseconds) {
-			Time::unregister_high_precision_alarm(timed_action);
-		}
-		nested_sm->current_state_timed_actions_in_microseconds.clear();
-
-		for (uint8_t timed_action : nested_sm->current_state_timed_actions_in_milliseconds) {
-			Time::unregister_low_precision_alarm(timed_action);
-		}
-		nested_sm->current_state_timed_actions_in_milliseconds.clear();
+		nested_sm->states[nested_sm->current_state].unregister_all_timed_actions();
 	}
 
 	states[current_state].exit();
@@ -223,20 +196,5 @@ void StateMachine::force_change_state(uint8_t new_state) {
 		nested_sm->current_state = nested_sm->initial_state;
 	}
 
-	for (TimedAction timed_action : states[current_state].cyclic_actions) {
-		if (timed_action.microseconds % 1000 == 0) {
-			optional<uint8_t> optional_id = Time::register_low_precision_alarm(timed_action.microseconds/1000, timed_action.action);
-			if (not optional_id) {
-				ErrorHandler("The timed action could not be registered");
-			}
-			current_state_timed_actions_in_milliseconds.push_back(optional_id.value());
-
-		} else {
-			optional<uint8_t> optional_id = Time::register_high_precision_alarm(timed_action.microseconds, timed_action.action);
-			if (not optional_id) {
-				ErrorHandler("The timed action could not be registered");
-			}
-			current_state_timed_actions_in_microseconds.push_back(optional_id.value());
-		}
-	}
+	states[current_state].register_all_timed_actions();
 }
