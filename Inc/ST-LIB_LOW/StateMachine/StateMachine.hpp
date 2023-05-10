@@ -3,7 +3,7 @@
  */
 
 #pragma once
-#include <C++Utilities/CppUtils.hpp>
+#include "C++Utilities/CppUtils.hpp"
 #include "Time/Time.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
@@ -13,23 +13,90 @@ typedef std::chrono::milliseconds ms;
 typedef std::chrono::microseconds us;
 typedef std::chrono::seconds s;
 
+enum AlarmType{
+	LOW_PRECISION,
+	MID_PRECISION,
+	HIGH_PRECISION
+};
+
 class TimedAction {
 public:
 	function<void()> action;
-	uint32_t microseconds;
+	uint32_t period;
+	AlarmType alarm_precision;
+	uint8_t id = -1;
 
 	TimedAction() = default;
-	TimedAction(function<void()> action, uint32_t microseconds);
 };
 
 class State {
 public:
-	vector<TimedAction> cyclic_actions = {};
+	vector<TimedAction> cyclic_actions;
 	vector<function<void()>> on_enter_actions = {};
 	vector<function<void()>> on_exit_actions = {};
 	void enter();
 	void exit();
+	template<class TimeUnit>
+	void add_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type);
+	template<class TimeUnit>
+	void register_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type);
+	void unregister_all_timed_actions();
+	void register_all_timed_actions();
 };
+
+template<class TimeUnit>
+void State::register_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type){
+	TimedAction timed_action = {};
+	timed_action.alarm_precision = precision_type;
+	timed_action.action = action;
+	uint32_t miliseconds = chrono::duration_cast<chrono::milliseconds>(period).count();
+	uint32_t microseconds = chrono::duration_cast<chrono::microseconds>(period).count();
+	switch (precision_type) {
+		case LOW_PRECISION:
+			timed_action.period = miliseconds;
+			timed_action.id = Time::register_low_precision_alarm(miliseconds, action);
+			break;
+		case MID_PRECISION:
+			timed_action.period = microseconds;
+			timed_action.id = Time::register_mid_precision_alarm(microseconds, action).value();
+			break;
+		case HIGH_PRECISION:
+			timed_action.period = microseconds;
+			timed_action.id = Time::register_high_precision_alarm(microseconds, action).value();
+			break;
+		default:
+			ErrorHandler("Alarm Precision Type does not exist, AlarmType: %d", precision_type);
+			return;
+			break;
+	}
+	cyclic_actions.push_back(timed_action);
+}
+
+template<class TimeUnit>
+void State::add_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type){
+	TimedAction timed_action = {};
+	timed_action.alarm_precision = precision_type;
+	timed_action.action = action;
+	uint32_t miliseconds = chrono::duration_cast<chrono::milliseconds>(period).count();
+	uint32_t microseconds = chrono::duration_cast<chrono::microseconds>(period).count();
+	switch (precision_type) {
+		case LOW_PRECISION:
+			timed_action.period = miliseconds;
+			break;
+		case MID_PRECISION:
+			timed_action.period = microseconds;
+			break;
+		case HIGH_PRECISION:
+			timed_action.period = microseconds;
+			break;
+		default:
+			ErrorHandler("Alarm Precision Type does not exist, AlarmType: %d", precision_type);
+			return;
+			break;
+	}
+	cyclic_actions.push_back(timed_action);
+}
+
 
 class StateMachine {
 public:
@@ -37,6 +104,8 @@ public:
 
 	state_id initial_state = 0;
 	state_id current_state = 0;
+
+	bool is_on = true;
 
 
 	StateMachine() = default;
@@ -46,9 +115,19 @@ public:
 	void add_transition(state_id old_state, state_id new_state, function<bool()> transition);
 
 	template<class TimeUnit>
-	void add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
+	void add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
 	template<class TimeUnit>
-	void add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
+	void add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
+
+	template<class TimeUnit>
+	void add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
+	template<class TimeUnit>
+	void add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
+
+	template<class TimeUnit>
+	void add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
+	template<class TimeUnit>
+	void add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
 
 	void add_enter_action(function<void()> action);
 	void add_enter_action(function<void()> action, state_id state);
@@ -65,42 +144,76 @@ public:
 private:
 	unordered_map<state_id, State> states;
 	unordered_map<state_id, unordered_map<state_id, function<bool()>>> transitions;
-
 	unordered_map<state_id, StateMachine*> nested_state_machine;
-	vector<uint8_t> current_state_timed_actions_in_milliseconds;
-	vector<uint8_t> current_state_timed_actions_in_microseconds;
 };
 
 template<class TimeUnit>
-void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state) {
+void StateMachine::add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state) {
 	if (not states.contains(state)) {
 		ErrorHandler("The state %d is not added to the state machine", state);
 		return;
 	}
 
 	uint32_t microseconds = (uint32_t)chrono::duration_cast<chrono::microseconds>(period).count();
-	TimedAction timed_action(action, microseconds);
-	states[state].cyclic_actions.push_back(timed_action);
 
-	if (state == current_state) {
-		if (microseconds % 1000) {
-			optional<uint8_t> optional_id = Time::register_high_precision_alarm(microseconds, action);
-			if (not optional_id) {
-				ErrorHandler("The high precision alarm could not be registered");
-				return;
-			}
-			current_state_timed_actions_in_microseconds.push_back(optional_id.value());
-		}
-		else {
-			uint8_t id = Time::register_low_precision_alarm(microseconds, action);
-			current_state_timed_actions_in_milliseconds.push_back(id);
-		}
+	if(microseconds % 1000 != 0){
+		ErrorHandler("Low precision cyclic action does not have enough resolution for the desired period, Desired period: %d uS", microseconds);
+		return;
 	}
+
+	if(state == current_state && is_on) states[state].register_new_timed_action(action, period, LOW_PRECISION);
+	else states[state].add_new_timed_action(action, period,LOW_PRECISION);
 }
 
 template<class TimeUnit>
-void StateMachine::add_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
-	add_cyclic_action(action, period, current_state);
+void StateMachine::add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
+	add_low_precision_cyclic_action(action, period, current_state);
+}
+
+template<class TimeUnit>
+void StateMachine::add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state) {
+	if (not states.contains(state)) {
+		ErrorHandler("The state %d is not added to the state machine", state);
+		return;
+	}
+
+	uint32_t microseconds = (uint32_t)chrono::duration_cast<chrono::microseconds>(period).count();
+
+	if(microseconds % 50 != 0){
+		ErrorHandler("Mid precision cyclic action does not have enough resolution for the desired period, Desired period: %d uS", microseconds);
+		return;
+	}
+
+	if(state == current_state && is_on) states[state].register_new_timed_action(action, period, MID_PRECISION);
+	else states[state].add_new_timed_action(action, period,MID_PRECISION);
+}
+
+template<class TimeUnit>
+void StateMachine::add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
+	add_mid_precision_cyclic_action(action, period, current_state);
+}
+
+template<class TimeUnit>
+void StateMachine::add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state) {
+	if (not states.contains(state)) {
+		ErrorHandler("The state %d is not added to the state machine", state);
+		return;
+	}
+
+	uint32_t microseconds = (uint32_t)chrono::duration_cast<chrono::microseconds>(period).count();
+
+	if(microseconds < 1){
+		ErrorHandler("High precision cyclic action does not have enough resolution for the desired period, Desired period: %d uS", microseconds);
+		return;
+	}
+
+	if(state == current_state && is_on) states[state].register_new_timed_action(action, period, HIGH_PRECISION);
+	else states[state].add_new_timed_action(action, period,HIGH_PRECISION);
+}
+
+template<class TimeUnit>
+void StateMachine::add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
+	add_high_precision_cyclic_action(action, period, current_state);
 }
 
 #endif
