@@ -77,7 +77,7 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 template<class Type>
 struct Boundary<Type, EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = EQUALS;
-	static constexpr const char* format = "\"type\": \"EQUALS\", \"data\": { \"value\": %s, \"bound\": %s }";
+	static constexpr const char* format = "\"type\": \"EQUALS\", \"data\": { \"value\": %s }";
 	Type* src = nullptr;
 	Type boundary;
 	Boundary(Type boundary): boundary(boundary){};
@@ -99,7 +99,7 @@ struct Boundary<Type, EQUALS> : public BoundaryInterface{
 template<class Type>
 struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = NOT_EQUALS;
-	static constexpr const char* format = "\"type\": \"NOT_EQUALS\", \"data\": { \"value\": %s, \"bound\": %s }";
+	static constexpr const char* format = "\"type\": \"NOT_EQUALS\", \"data\": { \"value\": %s, \"want\": %s }";
 	Type* src = nullptr;
 	Type boundary;
 	Boundary(Type boundary): boundary(boundary){};
@@ -144,6 +144,8 @@ template<>
 struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ERROR_HANDLER;
 	static constexpr const char* format = "\"type\": \"ERROR_HANDLER\", \"data\": %s ";
+	Boundary(void*){}
+	Boundary(void*, Boundary<void,ERROR_HANDLER>){}
 	Boundary() = default;
 	bool check_bounds() override{
 		return ErrorHandlerModel::error_triggered;

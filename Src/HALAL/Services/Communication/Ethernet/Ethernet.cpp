@@ -89,6 +89,7 @@ void Ethernet::inscribe(){
 		Pin::inscribe(PC4, ALTERNATIVE);
 		Pin::inscribe(PC5, ALTERNATIVE);
 		Pin::inscribe(PG11, ALTERNATIVE);
+		Pin::inscribe(PG0, ALTERNATIVE);
 		Pin::inscribe(PG13, ALTERNATIVE);
 		mpu_start();
 		SCB_EnableICache();

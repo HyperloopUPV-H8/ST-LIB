@@ -7,6 +7,7 @@ Notification ProtectionManager::fault_notification = {ProtectionManager::fault_i
 Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
 
 void ProtectionManager::set_id(BoardID board_id){
+	add_protection((void*)nullptr,Boundary<void, ProtectionType::ERROR_HANDLER>());
     ProtectionManager::board_id = board_id;
 }
 
@@ -39,8 +40,10 @@ void ProtectionManager::check_protections() {
         switch(protection.fault_type){
         case FaultType::WARNING:
         	warning_notification.notify(message);
+        	break;
         case FaultType::FAULT:
         	fault_notification.notify(message);
+        	break;
         default:
         	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
         }
