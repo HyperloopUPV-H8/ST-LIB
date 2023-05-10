@@ -116,7 +116,7 @@ namespace FlashTest{
 	   uint32_t end = HAL_GetTick() - init;
 
 
-	   return result && Flash::write(&end, addr_result + offset, 1);
+	   return result && Flash::write(&end, (uint32_t)(addr_result + offset), 1);
 
    }
 
