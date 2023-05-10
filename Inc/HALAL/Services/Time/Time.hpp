@@ -130,7 +130,7 @@ public :
 		uint16_t year;
 
 		string serialize() const {
-			return "counter: " + to_string(counter) + ",second: " + to_string(second) + ",minute: " + to_string(minute) + ",hour: " + to_string(hour) + ",day: " + to_string(day) + ",month: " + to_string(month) + ",year: " + to_string(year);
+			return "\"counter\": " + to_string(counter) + ",\"second\": " + to_string(second) + ",\"minute\": " + to_string(minute) + ",\"hour\": " + to_string(hour) + ",\"day\": " + to_string(day) + ",\"month\": " + to_string(month) + ",\"year\": " + to_string(year);
 		}
 
 		static size_t get_string_size(const RTCData& to_serialize){

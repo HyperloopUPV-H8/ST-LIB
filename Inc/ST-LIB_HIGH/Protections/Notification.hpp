@@ -15,10 +15,9 @@ private:
     message_size_t tx_message_size;
     string rx_message;
     uint8_t* buffer = nullptr;
-    static constexpr size_t null_length = 1;
     OrderProtocol* received_socket = nullptr;
 public:
-    Notification(uint16_t packet_id,void(*callback)() ,string message) : id(packet_id), callback(callback),tx_message(message), tx_message_size(message.size() + null_length){
+    Notification(uint16_t packet_id,void(*callback)() ,string message) : id(packet_id), callback(callback),tx_message(message), tx_message_size(message.size()){
     	Order::orders[id] = this;
     	Packet::packets[id] = this;
     }
@@ -49,13 +48,13 @@ public:
 
     	memcpy(buffer,&id,sizeof(id));
     	memcpy(buffer + sizeof(id), &tx_message_size, sizeof(tx_message_size));
-     	memcpy(buffer+sizeof(id)+sizeof(tx_message_size),tx_message.c_str(), tx_message.size() + null_length);
+     	memcpy(buffer+sizeof(id)+sizeof(tx_message_size),tx_message.c_str(), tx_message.size());
     	return buffer;
     }
 
     void notify(string message){
     	tx_message = message;
-    	tx_message_size = message.size() + null_length;
+    	tx_message_size = message.size();
     	notify();
     }
 

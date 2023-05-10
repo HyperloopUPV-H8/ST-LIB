@@ -11,7 +11,7 @@ enum FaultType{
 
 class Protection{
 private:
-	static constexpr const char* format = "\"protection\" : {\"name\":%s, %s}";
+	static constexpr const char* format = "\"protection\" : {\"name\":\"%s\", %s}";
     char* name = nullptr;
     vector<unique_ptr<BoundaryInterface>> boundaries;
     BoundaryInterface* jumped_protection = nullptr;

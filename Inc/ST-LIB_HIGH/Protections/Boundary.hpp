@@ -33,7 +33,7 @@ template<class Type, ProtectionType Protector> struct Boundary;
 template<class Type>
 struct Boundary<Type, BELOW> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = BELOW;
-	static constexpr const char* format = "\"type\": LOWER_BOUND, \"data\": { \"value\": %s, \"bound\": %s }";
+	static constexpr const char* format = "\"type\": \"LOWER_BOUND\", \"data\": { \"value\": %s, \"bound\": %s }";
 	Type* src = nullptr;
 	Type boundary;
 	Boundary(Type boundary): boundary(boundary){};
@@ -55,7 +55,7 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 template<class Type>
 struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ABOVE;
-	static constexpr const char* format = "\"type\": UPPER_BOUND, \"data\": { \"value\": %s, \"bound\": %s }";
+	static constexpr const char* format = "\"type\": \"UPPER_BOUND\", \"data\": { \"value\": %s, \"bound\": %s }";
 	Type* src = nullptr;
 	Type boundary;
 	Boundary(Type boundary): boundary(boundary){};
@@ -77,7 +77,7 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 template<class Type>
 struct Boundary<Type, EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = EQUALS;
-	static constexpr const char* format = "\"type\": EQUALS, \"data\": { \"value\": %s, \"bound\": %s }";
+	static constexpr const char* format = "\"type\": \"EQUALS\", \"data\": { \"value\": %s, \"bound\": %s }";
 	Type* src = nullptr;
 	Type boundary;
 	Boundary(Type boundary): boundary(boundary){};
@@ -99,7 +99,7 @@ struct Boundary<Type, EQUALS> : public BoundaryInterface{
 template<class Type>
 struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = NOT_EQUALS;
-	static constexpr const char* format = "\"type\": NOT_EQUALS, \"data\": { \"value\": %s, \"bound\": %s }";
+	static constexpr const char* format = "\"type\": \"NOT_EQUALS\", \"data\": { \"value\": %s, \"bound\": %s }";
 	Type* src = nullptr;
 	Type boundary;
 	Boundary(Type boundary): boundary(boundary){};
@@ -121,7 +121,7 @@ struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 template<class Type>
 struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = OUT_OF_RANGE;
-	static constexpr const char* format = "\"type\": OUT_OF_BOUNDS, \"data\": { \"value\": %s, \"bounds\": [%s, %s] }";
+	static constexpr const char* format = "\"type\": \"OUT_OF_BOUNDS\", \"data\": { \"value\": %s, \"bounds\": [%s, %s] }";
 	Type* src = nullptr;
 	Type lower_boundary, upper_boundary;
 	Boundary(Type lower_boundary, Type upper_boundary): lower_boundary(lower_boundary), upper_boundary(upper_boundary){};
@@ -143,7 +143,7 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 template<>
 struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ERROR_HANDLER;
-	static constexpr const char* format = "\"type\": ERROR_HANDLER, \"data\": %s ";
+	static constexpr const char* format = "\"type\": \"ERROR_HANDLER\", \"data\": %s ";
 	Boundary() = default;
 	bool check_bounds() override{
 		return ErrorHandlerModel::error_triggered;
@@ -160,7 +160,7 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 template<>
 struct Boundary<double, TIME_ACCUMULATION> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = TIME_ACCUMULATION;
-	static constexpr const char* format = "\"type\": TIME_ACCUMULATION, \"data\": { \"value\": %s, \"bound\": %s,\"timelimit\": %s }";
+	static constexpr const char* format = "\"type\": \"TIME_ACCUMULATION\", \"data\": { \"value\": %s, \"bound\": %s,\"timelimit\": %s }";
 	double* src = nullptr;
 	double bound;
 	float time_limit;
@@ -220,7 +220,7 @@ public:
 template<>
 struct Boundary<float, TIME_ACCUMULATION> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = TIME_ACCUMULATION;
-	static constexpr const char* format = "\"type\": TIME_ACCUMULATION, \"data\": { \"value\": %s, \"bound\": %s,\"timelimit\": %s }";
+	static constexpr const char* format = "\"type\": \"TIME_ACCUMULATION\", \"data\": { \"value\": %s, \"bound\": %s,\"timelimit\": %s }";
 	float* src = nullptr;
 	float bound;
 	float time_limit;
