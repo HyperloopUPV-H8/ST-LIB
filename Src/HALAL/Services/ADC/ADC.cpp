@@ -89,11 +89,7 @@ void ADC::turn_on(uint8_t id){
 	peripheral->is_on = true;
 }
 
-optional<float> ADC::get_value(uint8_t id) {
-	if (not active_instances.contains(id)) {
-		return nullopt;
-	}
-
+float ADC::get_value(uint8_t id) {
 	Instance& instance = active_instances[id];
 	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
 	if(instance.peripheral->handle == &hadc3) {
@@ -102,15 +98,9 @@ optional<float> ADC::get_value(uint8_t id) {
 	else {
 		return raw / MAX_16BIT * ADC_MAX_VOLTAGE;
 	}
-
-	return nullopt;
 }
 
 optional<uint16_t> ADC::get_int_value(uint8_t id) {
-	if (not active_instances.contains(id)) {
-		return nullopt;
-	}
-
 	Instance& instance = active_instances[id];
 	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
 	if(instance.peripheral->handle == &hadc3) {

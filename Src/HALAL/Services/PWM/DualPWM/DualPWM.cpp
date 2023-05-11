@@ -5,9 +5,9 @@
  *      Author: aleja
  */
 
+#include "PWM/DualPWM/DualPWM.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "stm32h7xx_hal_def.h"
-#include <PWM/DualPWM/DualPWM.hpp>
 
 DualPWM::DualPWM(Pin& pin, Pin& pin_negated) {
 	if (not TimerPeripheral::available_dual_pwms.contains({pin, pin_negated})) {
