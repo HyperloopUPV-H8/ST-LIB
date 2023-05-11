@@ -64,9 +64,5 @@ void ErrorHandlerModel::ErrorHandlerUpdate(){
 	printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
 #endif
 
-#ifdef HAL_ETH_MODULE_ENABLED
-	//TODO:Enviar el mismo mensaje por ethernet.
-#endif
-
 }
 
