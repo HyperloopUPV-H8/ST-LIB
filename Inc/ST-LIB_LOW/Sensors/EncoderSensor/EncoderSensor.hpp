@@ -10,7 +10,7 @@
 #include "Encoder/Encoder.hpp"
 #include "Time/Time.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-#define COUNTER_DISTANCE_IN_METERS 0.025
+#define COUNTER_DISTANCE_IN_METERS 0.25
 #define NANO_SECOND 1000000000.0
 #define N_FRAMES 8
 #define FRAME_SIZE_IN_SECONDS 0.01
