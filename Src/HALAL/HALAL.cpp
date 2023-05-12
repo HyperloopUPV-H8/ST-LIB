@@ -10,7 +10,7 @@
 void HALAL::start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
 
 #ifdef HAL_ETH_MODULE_ENABLED
-	//Ethernet::inscribe();
+	Ethernet::inscribe();
 #endif
 
 	HAL_Init();

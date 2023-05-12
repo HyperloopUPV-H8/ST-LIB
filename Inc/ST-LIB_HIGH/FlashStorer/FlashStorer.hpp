@@ -60,11 +60,6 @@ bool FlashStorer::store(Type&... var){
 	return (FlashStorer::store(var) & ...);
 }
 
-template<class Type>
-void FlashStorer::add_size(Type& var){//?Mirar, si no hace falta borrar
-	FlashStorer::total_size += sizeof(Type);
-}
-
 template<class... Type>
 bool FlashStorer::add_variables(Type&... var){
 	(FlashStorer::variable_list.push_back(FlashVariable(var)), ...);
