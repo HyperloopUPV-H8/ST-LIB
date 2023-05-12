@@ -32,20 +32,25 @@ PWM::PWM(Pin& pin) {
 }
 
 void PWM::turn_on() {
+  if(is_on) return;
   if(HAL_TIM_PWM_Start(peripheral->handle, channel) != HAL_OK) {
     ErrorHandler("PWM did not turn on correctly", 0);
   }
+  is_on = true;
 }
 
 void PWM::turn_off() {
+  if(not is_on) return;
   if(HAL_TIM_PWM_Stop(peripheral->handle, channel) != HAL_OK) {
     ErrorHandler("PWM did not stop correctly", 0);
   }
+  is_on = false;
 }
 
 void PWM::set_duty_cycle(float duty_cycle) {
 	uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(peripheral->handle) / 100.0 * duty_cycle;
 	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty);
+	this->duty_cycle = duty_cycle;
 }
 
 void PWM::set_frequency(uint32_t frequency) {

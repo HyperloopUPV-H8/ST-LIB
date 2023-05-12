@@ -17,9 +17,9 @@
 using std::string;
 
 #define ADC_BUF_LEN 16
-#define LPTIM1_PERIOD 3000
-#define LPTIM2_PERIOD 3000
-#define LPTIM3_PERIOD 3000
+#define LPTIM1_PERIOD 6875
+#define LPTIM2_PERIOD 6875
+#define LPTIM3_PERIOD 6875
 
 #define ADC_MAX_VOLTAGE 3.3
 #define MAX_12BIT 4095.0
@@ -67,7 +67,7 @@ public:
 	static optional<uint8_t> inscribe(Pin pin);
 	static void start();
 	static void turn_on(uint8_t id);
-	static optional<float> get_value(uint8_t id);
+	static float get_value(uint8_t id);
 	static optional<uint16_t> get_int_value(uint8_t id);
 
 	static Peripheral peripherals[3];

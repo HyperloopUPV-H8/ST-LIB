@@ -9,11 +9,12 @@
 #include "Communication/Ethernet/EthernetNode.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
+#include "Packets/OrderProtocol.hpp"
 #ifdef HAL_ETH_MODULE_ENABLED
 
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
-class Socket{
+class Socket : OrderProtocol{
 public:
 	enum SocketState{
 		INACTIVE,
@@ -26,8 +27,8 @@ public:
 	tcp_pcb* connection_control_block;
 	tcp_pcb* socket_control_block;
 	SocketState state;
-	pbuf* tx_packet_buffer;
-	pbuf* rx_packet_buffer;
+	queue<struct pbuf*> tx_packet_buffer;
+	queue<struct pbuf*> rx_packet_buffer;
 	static unordered_map<EthernetNode,Socket*> connecting_sockets;
 
 	Socket();
@@ -40,7 +41,7 @@ public:
 
 	void reconnect();
 
-	bool send_order(Order& order){
+	bool send_order(Order& order) override{
 		if(state != CONNECTED){
 			reconnect();
 			return false;
@@ -60,8 +61,9 @@ public:
 			return false;
 		}
 
-		tx_packet_buffer = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
-		pbuf_take(tx_packet_buffer, order_buffer, order.size);
+		struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
+		pbuf_take(packet, order_buffer, order.size);
+		tx_packet_buffer.push(packet);
 		send();
 		return true;
 	}
