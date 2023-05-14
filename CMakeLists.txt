@@ -44,7 +44,8 @@ target_compile_options(${LIBRARY} PUBLIC
   -mfloat-abi=hard
   -mthumb
   
-  -O0
+  -Og
+  -g3
   -ffunction-sections
   -fdata-sections
   -fno-exceptions
