@@ -45,7 +45,7 @@ public:
 };
 
 template<class TimeUnit>
-void State::register_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type){
+TimedAction& State::register_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type){
 	TimedAction timed_action = {};
 	timed_action.alarm_precision = precision_type;
 	timed_action.action = action;
@@ -70,10 +70,11 @@ void State::register_new_timed_action(function<void()> action, chrono::duration<
 			break;
 	}
 	cyclic_actions.push_back(timed_action);
+	return cyclic_actions.back();
 }
 
 template<class TimeUnit>
-void State::add_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type){
+TimedAction& State::add_new_timed_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, AlarmType precision_type){
 	TimedAction timed_action = {};
 	timed_action.alarm_precision = precision_type;
 	timed_action.action = action;
@@ -95,6 +96,7 @@ void State::add_new_timed_action(function<void()> action, chrono::duration<int64
 			break;
 	}
 	cyclic_actions.push_back(timed_action);
+	return cyclic_actions.back();
 }
 
 
