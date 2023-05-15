@@ -17,8 +17,36 @@ void State::exit() {
 	}
 }
 
+void State::unregister_timed_action(TimedAction* timed_action){
+	switch (timed_action->alarm_precision) {
+		case LOW_PRECISION:
+			Time::unregister_low_precision_alarm(timed_action->id);
+			break;
+		case MID_PRECISION:
+			Time::unregister_mid_precision_alarm(timed_action->id);
+			break;
+		case HIGH_PRECISION:
+			Time::unregister_high_precision_alarm(timed_action->id);
+			break;
+		default:
+			ErrorHandler("Alarm Precision Type does not exist, AlarmType: %d", timed_action->alarm_precision);
+			return;
+			break;
+	}
+	timed_action->is_on = false;
+}
+
+void State::erase_timed_action(TimedAction* timed_action){
+	if(timed_action->is_on) unregister_timed_action(timed_action);
+	cyclic_actions.erase(find_if(cyclic_actions.begin(), cyclic_actions.end(), [&](TimedAction& other){
+		if(&other == timed_action) return true;
+		return false;
+	}));
+}
+
 void State::unregister_all_timed_actions(){
-	for(const TimedAction& timed_action : cyclic_actions){
+	for(TimedAction& timed_action : cyclic_actions){
+		if(!timed_action.is_on) continue;
 		switch(timed_action.alarm_precision){
 		case LOW_PRECISION:
 			Time::unregister_low_precision_alarm(timed_action.id);
@@ -31,8 +59,10 @@ void State::unregister_all_timed_actions(){
 			break;
 		default:
 			ErrorHandler("Cannot unregister timed action with erroneus alarm precision, Alarm Precision Type: %d", timed_action.alarm_precision);
+			return;
 			break;
 		}
+		timed_action.is_on = false;
 	}
 }
 
@@ -50,8 +80,10 @@ void State::register_all_timed_actions(){
 			break;
 		default:
 			ErrorHandler("Cannot register timed action with erroneus alarm precision, Alarm Precision Type: %d", timed_action.alarm_precision);
+			return;
 			break;
 		}
+		timed_action.is_on = true;
 	}
 }
 
@@ -246,4 +278,22 @@ void StateMachine::force_change_state(uint8_t new_state) {
 	}
 
 	states[current_state].register_all_timed_actions();
+}
+
+void StateMachine::remove_cyclic_action(TimedAction* action) {
+	if (not states.contains(current_state)) {
+		ErrorHandler("The state %d is not added to the state machine", current_state);
+		return;
+	}
+
+	states[current_state].erase_timed_action(action);
+}
+
+void StateMachine::remove_cyclic_action(TimedAction* action, uint8_t state) {
+	if (not states.contains(state)) {
+		ErrorHandler("The state %d is not added to the state machine", state);
+		return;
+	}
+
+	states[state].erase_timed_action(action);
 }
