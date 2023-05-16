@@ -26,7 +26,7 @@ class ProtectionManager {
 public:
 	typedef uint8_t state_id;
 
-    static void set_id(BoardID id);
+    static void set_id(Boards::ID id);
 
     static void link_state_machine(StateMachine& general_state_machine, state_id fault_id);
 
@@ -52,7 +52,7 @@ private:
 	static size_t message_size;
 	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}";
 
-    static BoardID board_id;
+    static Boards::ID board_id;
     static vector<Protection> low_frequency_protections;
     static vector<Protection> high_frequency_protections;
     static StateMachine* general_state_machine;
