@@ -555,7 +555,7 @@ tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
         /* Data is not copied */
         /* If the last unsent pbuf is of type PBUF_ROM, try to extend it. */
         struct pbuf *p;
-        for (p = last_unsent->p; p->next != NULL || (p->next > 0x30000000 && p->next < 0x3FFFFFFF); p = p->next);
+        for (p = last_unsent->p; p->next != NULL || (p->next > (struct pbuf*)ETHERNET_BUFFER_LOWER_LIMIT && p->next < (struct pbuf*)ETHERNET_BUFFER_UPPER_LIMIT); p = p->next);
         if (((p->type_internal & (PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS | PBUF_TYPE_FLAG_DATA_VOLATILE)) == 0) &&
             (const u8_t *)p->payload + p->len == (const u8_t *)arg) {
           LWIP_ASSERT("tcp_write: ROM pbufs cannot be oversized", pos == 0);
@@ -611,7 +611,7 @@ tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
         LWIP_DEBUGF(TCP_OUTPUT_DEBUG | LWIP_DBG_LEVEL_SERIOUS, ("tcp_write : could not allocate memory for pbuf copy size %"U16_F"\n", seglen));
         goto memerr;
       }
-      if(p->payload < 0x30000000 || p->payload > 0x3FFFFFFF){
+      if((uint8_t*)p->payload < (uint8_t*)ETHERNET_BUFFER_LOWER_LIMIT || (uint8_t*)p->payload > (uint8_t*)ETHERNET_BUFFER_UPPER_LIMIT){
     	  pbuf_free(p);
     	  return ERR_MEM;
       }
@@ -1649,7 +1649,7 @@ tcp_rexmit_rto_prepare(struct tcp_pcb *pcb)
   for (seg = pcb->unacked; seg->next != NULL; seg = seg->next) {
     if (tcp_output_segment_busy(seg)) {
       LWIP_DEBUGF(TCP_RTO_DEBUG, ("tcp_rexmit_rto: segment busy\n"));
-      if(seg->p->payload == NULL || seg->p->payload < 0x30000000 || seg->p->payload > 0x3FFFFFFF){
+      if(seg->p->payload == NULL || (uint8_t*)seg->p->payload < (uint8_t*)ETHERNET_BUFFER_LOWER_LIMIT || (uint8_t*)seg->p->payload > (uint8_t*)ETHERNET_BUFFER_UPPER_LIMIT){
     	  pcb->unacked = seg->next;
     	  tcp_seg_free(seg);
       }
@@ -1657,7 +1657,7 @@ tcp_rexmit_rto_prepare(struct tcp_pcb *pcb)
     }
   }
   if (tcp_output_segment_busy(seg)) {
-      if(seg->p->payload == NULL || seg->p->payload < 0x30000000 || seg->p->payload > 0x3FFFFFFF){
+      if(seg->p->payload == NULL || (uint8_t*)seg->p->payload < (uint8_t*)ETHERNET_BUFFER_LOWER_LIMIT || (uint8_t*)seg->p->payload > (uint8_t*)ETHERNET_BUFFER_UPPER_LIMIT){
     	  pcb->unacked = seg->next;
     	  tcp_seg_free(seg);
       }

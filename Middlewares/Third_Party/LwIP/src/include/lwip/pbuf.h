@@ -221,6 +221,8 @@ struct pbuf {
   u8_t if_idx;
 };
 
+#define ETHERNET_BUFFER_LOWER_LIMIT (void*)0x30000000
+#define ETHERNET_BUFFER_UPPER_LIMIT (void*)0x3FFFFFFF
 
 /** Helper struct for const-correctness only.
  * The only meaning of this one is to provide a const payload pointer

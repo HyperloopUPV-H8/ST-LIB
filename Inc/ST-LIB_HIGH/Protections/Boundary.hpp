@@ -211,7 +211,7 @@ public:
 	}
 
 	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(time_limit).c_str());
+		return snprintf(nullptr, 0, format, to_string(*src).c_str(), to_string(time_limit).c_str());
 	}
 	char* serialize(char* dst)override{
 		sprintf(dst, format, to_string(*src).c_str(), to_string(time_limit).c_str());

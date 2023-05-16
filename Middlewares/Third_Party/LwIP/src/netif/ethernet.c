@@ -109,7 +109,7 @@ ethernet_input(struct pbuf *p, struct netif *netif)
                (unsigned char)ethhdr->src.addr[0],  (unsigned char)ethhdr->src.addr[1],  (unsigned char)ethhdr->src.addr[2],
                (unsigned char)ethhdr->src.addr[3],  (unsigned char)ethhdr->src.addr[4],  (unsigned char)ethhdr->src.addr[5],
                lwip_htons(ethhdr->type)));
-  if(ethhdr < 0x30000000 || ethhdr > 0x3FFFFFFF || ethhdr->type == NULL){
+  if((uint8_t*)ethhdr < (uint8_t*)ETHERNET_BUFFER_UPPER_LIMIT || (uint8_t*)ethhdr > (uint8_t*)ETHERNET_BUFFER_UPPER_LIMIT || ethhdr->type == NULL){
 	  return ERR_MEM;
   }
   type = ethhdr->type;
