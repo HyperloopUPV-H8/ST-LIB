@@ -66,10 +66,12 @@ public:
     }
 
     void parse(OrderProtocol* socket, void* data) {
+		byte* data_byte = (byte*)data;
+
     	received_socket = socket;
     	if(buffer != nullptr) free(buffer);
-    	char* temp = (char*)malloc(get_string_size(data));
-    	memcpy(temp, data+sizeof(id)+sizeof(message_size_t), get_string_size(data));
+    	char* temp = (char*)malloc(get_string_size(data_byte));
+    	memcpy(temp, data_byte+sizeof(id)+sizeof(message_size_t), get_string_size(data_byte));
     	rx_message = string(temp);
     	free(temp);
     }
@@ -90,8 +92,10 @@ public:
 
 private:
 
-    uint16_t get_string_size(void* buffer){
-    	return *(uint16_t*)(buffer + sizeof(id));
+    uint16_t get_string_size(void* buffer) {
+
+		uint16_t* buffer_uint16 = (uint16_t*)buffer;
+    	return *(uint16_t*)(buffer_uint16 + sizeof(id));
     }
 };
 

@@ -69,3 +69,4 @@ using std::vector;
 using std::queue;
 using std::map;
 using std::stringstream;
+using std::byte;

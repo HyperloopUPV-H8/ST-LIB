@@ -198,10 +198,11 @@ public:
     }
 
     void parse(void* data) override {
-        data += sizeof(id);
+        byte* data_byte = (byte*)data;
+        data_byte += sizeof(id);
         for (unique_ptr<PacketValue<>>& value : values) {
-            value.get()->parse(data);
-            data += value.get()->get_size();
+            value.get()->parse(data_byte);
+            data_byte += value.get()->get_size();
         }
     }
 
