@@ -56,7 +56,7 @@ EXTERNC u32_t get_rtc_us();
 #define SUBSECONDS_PER_SECOND 32767
 #define TRANSFORMATION_FACTOR (SUBSECONDS_PER_SECOND/999999.0)
 #define SNTP_COMP_ROUNDTRIP 1
-#define SNTP_UPDATE_DELAY 3600000
+#define SNTP_UPDATE_DELAY 60000
 
 void set_time(uint32_t sec, uint32_t us){
 	struct timeval tv;
