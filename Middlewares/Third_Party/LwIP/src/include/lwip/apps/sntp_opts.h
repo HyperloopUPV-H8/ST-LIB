@@ -40,6 +40,37 @@
 #include "lwip/opt.h"
 #include "lwip/prot/iana.h"
 
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
+
+EXTERNC void set_time(uint32_t sec, uint32_t us);
+EXTERNC void set_rtc(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year);
+EXTERNC u32_t get_rtc_s();
+EXTERNC u32_t get_rtc_us();
+
+#define SNTP_STARTUP_DELAY 0
+#define SNTP_SET_SYSTEM_TIME_US(sec,us) set_time(sec,us)
+#define SUBSECONDS_PER_SECOND 32767
+#define TRANSFORMATION_FACTOR (SUBSECONDS_PER_SECOND/999999.0)
+#define SNTP_COMP_ROUNDTRIP 1
+#define SNTP_UPDATE_DELAY 3600000
+
+void set_time(uint32_t sec, uint32_t us){
+	struct timeval tv;
+	tv.tv_sec = sec;
+	tv.tv_usec = us;
+	time_t nowtime = sec;
+	struct tm *nowtm = localtime(&nowtime);
+	uint32_t subsecond = (uint32_t)(TRANSFORMATION_FACTOR * tv.tv_usec);
+	set_rtc(subsecond, nowtm->tm_sec, nowtm->tm_min, nowtm->tm_hour, nowtm->tm_mday, 1+nowtm->tm_mon, 1900+(nowtm->tm_year));
+}
+
+#define SNTP_GET_SYSTEM_TIME(sec, us) do {(sec) = get_rtc_s(); (us) = get_rtc_us(); } while (0)
+
+#undef EXTERNC
 /**
  * @defgroup sntp_opts Options
  * @ingroup sntp
