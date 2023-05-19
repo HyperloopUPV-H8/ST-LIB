@@ -58,7 +58,7 @@ void HALAL::start(string ip, string subnet_mask, string gateway, UART::Periphera
 #endif
 
 #ifdef HAL_ETH_MODULE_ENABLED
-	//Ethernet::start(ip, subnet_mask, gateway);
+	Ethernet::start(ip, subnet_mask, gateway);
 #endif
 
 #ifdef HAL_TIM_MODULE_ENABLED
