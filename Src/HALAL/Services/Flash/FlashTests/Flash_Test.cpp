@@ -6,8 +6,8 @@
  */
 #include "Flash/FlashTests/Flash_Test.hpp"
 
-#define PI 					3.1415
-#define E  					2.7183
+#define NUMERIC_PI 		3.1415
+#define NUMERIC_E  			2.7183
 #define SQUARE_ROOT_OF_TWO 	1.4142
 
 namespace FlashTest{
@@ -43,7 +43,7 @@ namespace FlashTest{
 		uint8_t float_byte_array[4];
 		uint32_t addr = FLASH_SECTOR4_START_ADDRESS;
 
-		float_2_bytes(float_byte_array, PI);
+		float_2_bytes(float_byte_array, NUMERIC_PI);
 		return Flash::write((uint32_t *)float_byte_array, addr,(uint32_t) 1);
 	}
 
@@ -54,7 +54,7 @@ namespace FlashTest{
 
 		float result = bytes_2_float(float_byte_array);
 
-		return result * 10000 == PI * 10000;
+		return result * 10000 == NUMERIC_PI * 10000;
 	}
 
    bool	test3_writing_multiple_float(){
@@ -63,10 +63,10 @@ namespace FlashTest{
 	   uint32_t offset1 = 0x04;
 	   uint32_t offset2 = 0x20;
 
-	   float_2_bytes(float_byte_array, PI);
+	   float_2_bytes(float_byte_array, NUMERIC_PI);
 	   Flash::write((uint32_t *)float_byte_array, addr,(uint32_t) 1);
 
-	   float_2_bytes(float_byte_array, E);
+	   float_2_bytes(float_byte_array, NUMERIC_E);
 	   Flash::write((uint32_t *)float_byte_array, addr + offset1,(uint32_t) 1);
 
 	   float_2_bytes(float_byte_array, SQUARE_ROOT_OF_TWO);
@@ -74,11 +74,11 @@ namespace FlashTest{
 
 	   Flash::read(addr, (uint32_t *)float_byte_array, 1);
 	   float first_result = bytes_2_float(float_byte_array);
-	   bool first_write = first_result * 10000 == PI * 10000;
+	   bool first_write = first_result * 10000 == NUMERIC_PI * 10000;
 
 	   Flash::read(addr + offset1, (uint32_t *)float_byte_array, 1);
 	   float second_result = bytes_2_float(float_byte_array);
-	   bool second_write = second_result * 100000 == E * 100000;
+	   bool second_write = second_result * 100000 == NUMERIC_E * 100000;
 
 	   Flash::read(addr + offset2, (uint32_t *)float_byte_array, 1);
 	   float third_result = bytes_2_float(float_byte_array);

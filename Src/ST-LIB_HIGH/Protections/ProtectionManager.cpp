@@ -6,7 +6,7 @@ StateMachine* ProtectionManager::general_state_machine = nullptr;
 Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, ProtectionManager::to_fault};
 Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
 
-void ProtectionManager::set_id(BoardID board_id){
+void ProtectionManager::set_id(Boards::ID board_id){
 	add_protection((void*)nullptr,Boundary<void, ProtectionType::ERROR_HANDLER>());
     ProtectionManager::board_id = board_id;
 }
@@ -81,7 +81,7 @@ void ProtectionManager::check_high_frequency_protections(){
     }
 }
 
-BoardID ProtectionManager::board_id = NOBOARD;
+Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;
 size_t ProtectionManager::message_size = 0;
 char* ProtectionManager::message = nullptr;
 ProtectionManager::state_id ProtectionManager::fault_state_id = 255;

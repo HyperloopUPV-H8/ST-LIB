@@ -101,27 +101,7 @@ bool FDCAN::transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN:
 	return true;
 }
 
-void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs){
-	if (not FDCAN::handle_to_fdcan.contains(hfdcan)) {
-		printf("Warning: message received from an unknown FDCAN");
-		return;
-	}
-
-	if (FDCAN::handle_to_fdcan[hfdcan]->rx_queue.size() >= FDCAN::handle_to_fdcan[hfdcan]->rx_queue_max_size) {
-		return; // TODO: WARNING RX_QUEUE FULL
-	}
-
-	FDCAN::DLC dlc = FDCAN::handle_to_fdcan[hfdcan]->dlc;
-
-	vector<uint8_t> data_buffer(FDCAN::dlc_to_len[dlc]);
-
-	FDCAN_RxHeaderTypeDef header_buffer = FDCAN_RxHeaderTypeDef();
-	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN::handle_to_fdcan[hfdcan]->rx_location, &header_buffer, data_buffer.data());
-
-
-	FDCAN::Packet packet_buffer = {data_buffer, header_buffer.Identifier, (FDCAN::DLC)header_buffer.DataLength};
-	FDCAN::handle_to_fdcan[hfdcan]->rx_queue.push(packet_buffer);
-}
+// void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs){}
 
 bool FDCAN::read(uint8_t id, FDCAN::Packet* data){
 	if (not FDCAN::registered_fdcan.contains(id)) {
@@ -129,42 +109,13 @@ bool FDCAN::read(uint8_t id, FDCAN::Packet* data){
 		return false;
 	}
 
-	if (FDCAN::registered_fdcan[id]->rx_queue.empty()) {
-		data->rx_data.clear();
-		data->data_length = FDCAN::DLC::BYTES_0;
-		data->identifier = 0;
+	if(!FDCAN::received_test(id)) {
 		return false;
 	}
+	FDCAN_RxHeaderTypeDef header_buffer = FDCAN_RxHeaderTypeDef();
+	HAL_FDCAN_GetRxMessage(FDCAN::registered_fdcan.at(id)->hfdcan, FDCAN::registered_fdcan.at(id)->rx_location, &header_buffer, data->rx_data.data());
 
-	FDCAN::Packet packet = FDCAN::registered_fdcan[id]->rx_queue.front();
-
-	data->rx_data = packet.rx_data;
-	data->identifier = packet.identifier;
-	data->data_length = packet.data_length;
-
-	FDCAN::registered_fdcan[id]->rx_queue.pop();
-
-	return true;
-}
-
-bool FDCAN::wait_and_read(uint8_t id, FDCAN::Packet* data){
-	if (not FDCAN::registered_fdcan.contains(id)) {
-		ErrorHandler("There is no FDCAN registered with id: %d.", id);
-		return false;
-	}
-
-	//Wait until the arrival of a message.
-	while (FDCAN::registered_fdcan[id]->rx_queue.empty()) {
-	}
-
-	FDCAN::Packet packet = FDCAN::registered_fdcan[id]->rx_queue.front();
-
-	data->rx_data = packet.rx_data;
-	data->identifier = packet.identifier;
-	data->data_length = packet.data_length;
-
-	FDCAN::registered_fdcan[id]->rx_queue.pop();
-
+	data->identifier = header_buffer.Identifier;
 	return true;
 }
 
@@ -174,11 +125,7 @@ bool FDCAN::received_test(uint8_t id){
 		return false;
 	}
 
-	if (FDCAN::registered_fdcan[id]->rx_queue.empty()) {
-		return false;
-	}
-
-	return true;
+	return !((FDCAN::registered_fdcan.at(id)->hfdcan->Instance->RXF0S & FDCAN_RXF0S_F0FL) == 0U);
 }
 
 void FDCAN::init(FDCAN::Instance* fdcan){
@@ -220,4 +167,3 @@ void FDCAN::init(FDCAN::Instance* fdcan){
 
 }
 #endif
-
