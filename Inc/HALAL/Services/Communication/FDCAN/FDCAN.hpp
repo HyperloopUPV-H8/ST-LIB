@@ -112,9 +112,6 @@ public:
 
     static bool read(uint8_t id, FDCAN::Packet* data);
 
-    //The use of this method is highly discouraged.
-    static bool wait_and_read(uint8_t id, FDCAN::Packet* data);
-
     /**
 	 * @brief This method is used to check if the FDCAN have received any new packet.
 	 *
