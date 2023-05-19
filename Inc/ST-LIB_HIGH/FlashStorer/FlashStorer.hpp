@@ -6,7 +6,7 @@
 #include "Flash/Flash.hpp"
 #include "FlashVariable.hpp"
 
-#define FLASH_STORER_MAX_SIZE		((uint32_t)(1028*4))
+#define FLASH_STORER_MAX_SIZE		((uint32_t)(1028*64))
 #define FLASH_STORER_START_ADDRESS	(FLASH_STORER_MAX_ADDRESS - FLASH_STORER_MAX_SIZE)
 #define FLASH_STORER_MAX_ADDRESS	((uint32_t)0x080DFFF0U)
 
