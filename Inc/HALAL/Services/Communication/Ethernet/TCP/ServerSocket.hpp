@@ -59,12 +59,12 @@ public:
 		}
 
 		uint8_t* order_buffer = order.build();
-		if(order.size > tcp_sndbuf(client_control_block)){
+		if(order.get_size() > tcp_sndbuf(client_control_block)){
 			return false;
 		}
 
-		struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
-		pbuf_take(packet, order_buffer, order.size);
+		struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_POOL);
+		pbuf_take(packet, order_buffer, order.get_size());
 		tx_packet_buffer.push(packet);
 		send();
 		return true;
