@@ -1,6 +1,15 @@
 #pragma once
 
 #include "../ControlBlock.hpp"
+
+enum FilterDerivatorType{
+    None,
+    ForwardEuler,
+    BackwardEuler,
+    Trapezoidal,
+	Moving_Average
+};
+
 template<int N>
 class BDFDerivator : public ControlBlock<double,double>{
     public:
@@ -31,23 +40,36 @@ class BDFDerivator : public ControlBlock<double,double>{
             index %= (N+1);
             counter--;
         }
+
+        void reset(){
+        	output_value = 0;
+        	counter = 0.0;
+        	for(double& e : buffer){
+        		e = 0.0;
+        	}
+        }
 };
 
-class SimpleDerivator: public ControlBlock<double,double>{
+class SimpleDerivator : public ControlBlock<double,double>{
     public:
         double period;
         static constexpr int N = 2;
-        double k = 1;
         double buffer[N] = {0.0};
         int index = 0;
     public:
-        SimpleDerivator(double period): period(period){this->output_value = 0.0;}
-        SimpleDerivator(double period, double k): period(period), k(k){this->output_value = 0.0;}
-        void execute(){
+        SimpleDerivator(double period): ControlBlock<double,double>(0.0), period(period){}
+        void execute()override{
             buffer[index] = input_value;
-            output_value = k*buffer[((index-1)%(N+1) + (N+1))%(N+1)]/(period*buffer[index]);
+            output_value = (buffer[index] - buffer[((index-1)%(N) + (N))%(N)])/period;
             index++;
             index %= N;
             return;
+        }
+        void reset(){
+        	output_value = 0;
+            index = 0;
+            for(int i = 0; i < N; i++){
+                buffer[i] = 0.0;
+            }
         }
 };

@@ -63,6 +63,7 @@ void HALAL::start(string ip, string subnet_mask, string gateway, UART::Periphera
 
 #ifdef HAL_TIM_MODULE_ENABLED
 	Encoder::start();
+	SNTP::sntp_update();
 	Time::start_rtc();
 	TimerPeripheral::start();
 	Time::start();

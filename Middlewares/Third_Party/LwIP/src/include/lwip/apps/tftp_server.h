@@ -41,6 +41,7 @@
 #ifndef LWIP_HDR_APPS_TFTP_SERVER_H
 #define LWIP_HDR_APPS_TFTP_SERVER_H
 
+
 #include "lwip/apps/tftp_opts.h"
 #include "lwip/err.h"
 #include "lwip/pbuf.h"
@@ -83,6 +84,8 @@ struct tftp_context {
    * @returns &gt;= 0: Success; &lt; 0: Error
    */
   int (*write)(void* handle, struct pbuf* p);
+
+  void (*re)(void* handle);
 };
 
 err_t tftp_init(const struct tftp_context* ctx);

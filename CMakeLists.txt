@@ -28,12 +28,12 @@ option(BOARD "Board clock config" OFF)
 option(NUCLEO "Nucleo clock config" OFF)
 
 if(BOARD)
-  add_definitions(-DNUCLEO)
+  add_definitions(-DBOARD)
   add_definitions(-DHSE_VALUE=25000000)
 endif()
 
 if(NUCLEO)
-  add_definitions(-DBOARD)
+  add_definitions(-DNUCLEO)
   add_definitions(-DHSE_VALUE=8000000)
 endif()
 
@@ -44,7 +44,8 @@ target_compile_options(${LIBRARY} PUBLIC
   -mfloat-abi=hard
   -mthumb
   
-  -O0
+  -Og
+  -g3
   -ffunction-sections
   -fdata-sections
   -fno-exceptions

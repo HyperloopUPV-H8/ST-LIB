@@ -45,3 +45,7 @@ void HalfBridge::set_phase(float phase) {
 	positive_pwm.set_phase(phase);
 	negative_pwm.set_phase(-phase);
 }
+
+float HalfBridge::get_phase() {
+	return positive_pwm.phase;
+}
