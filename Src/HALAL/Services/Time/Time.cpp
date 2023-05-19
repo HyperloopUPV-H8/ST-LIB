@@ -201,7 +201,7 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 			.period = period_in_ms,
 			.tim = low_precision_timer,
 			.alarm = func,
-			.offset = low_precision_tick % period_in_ms
+			.offset = low_precision_tick
 	};
 
 	NVIC_DisableIRQ(TIM7_IRQn);
@@ -215,7 +215,7 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, void(*func)())
 			.period = period_in_ms,
 			.tim = low_precision_timer,
 			.alarm = func,
-			.offset = low_precision_tick % period_in_ms
+			.offset = low_precision_tick
 	};
 
 	NVIC_DisableIRQ(TIM7_IRQn);
@@ -259,6 +259,7 @@ void Time::high_precision_timer_callback(TIM_HandleTypeDef* tim){
 void Time::mid_precision_timer_callback(){
 	for(pair<const uint8_t,Time::Alarm>& pair : Time::mid_precision_alarms_by_id){
 		Time::Alarm& alarm = pair.second;
+		if(alarm.offset == Time::mid_precision_tick) continue;
 		if((Time::mid_precision_tick - alarm.offset) % alarm.period == 0){
 			alarm.alarm();
 		}
@@ -269,6 +270,7 @@ void Time::mid_precision_timer_callback(){
 void Time::low_precision_timer_callback(){
 	for(auto& pair : Time::low_precision_alarms_by_id){
 		Time::Alarm& alarm = pair.second;
+		if(alarm.offset == Time::low_precision_tick) continue;
 		if((Time::low_precision_tick - alarm.offset) % alarm.period == 0){
 			alarm.alarm();
 		}
