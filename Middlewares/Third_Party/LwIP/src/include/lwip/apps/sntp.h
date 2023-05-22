@@ -34,6 +34,7 @@
  * Author: Frédéric Bernon, Simon Goldschmidt
  *
  */
+
 #ifndef LWIP_HDR_APPS_SNTP_H
 #define LWIP_HDR_APPS_SNTP_H
 
