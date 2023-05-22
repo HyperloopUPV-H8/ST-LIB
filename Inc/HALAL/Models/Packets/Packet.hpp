@@ -147,33 +147,6 @@ public:
     }
 };
 
-template<class... Types> struct has_container;
-
-template<class Type, class... Types>
-struct has_container<Type, Types...>{
-public:
-    static constexpr bool value = Container<Type> || has_container<Types...>::value;
-};
-
-template<>
-struct has_container<>{
-public:
-    static constexpr bool value = false;
-};
-
-template<class... Types> struct total_sizeof;
-
-template<class Type, class... Types>
-struct total_sizeof<Type,Types...>{
-public:
-    static constexpr size_t value = sizeof(Type) + total_sizeof<Types...>::value;
-};
-
-template<>
-struct total_sizeof<>{
-public:
-    static constexpr size_t value = 0;
-};
 
 #if __cpp_deduction_guides >= 201606
 template<class... Types>

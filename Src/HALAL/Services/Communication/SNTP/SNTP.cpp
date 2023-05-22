@@ -6,11 +6,6 @@
  */
 
 #include "Communication/SNTP/SNTP.hpp"
-#include <lwip/ip_addr.h>
-#include "sntp_opts.h"
-#include "sntp.h"
-#include "IPV4/IPV4.hpp"
-#include "Time/Time.hpp"
 
 #define SUBSECONDS_PER_SECOND 32767
 #define TRANSFORMATION_FACTOR (SUBSECONDS_PER_SECOND/999999.0)
@@ -60,4 +55,14 @@ u32_t get_rtc_s(){
 u32_t get_rtc_us(){
 	Time::RTCData rtc_time = Time::get_rtc_data();
 	return rtc_time.counter/TRANSFORMATION_FACTOR;
+}
+
+void set_time(uint32_t sec, uint32_t us) {
+	struct timeval tv;
+	tv.tv_sec = sec;
+	tv.tv_usec = us;
+	time_t nowtime = sec;
+	struct tm *nowtm = localtime(&nowtime);
+	uint32_t subsecond = (uint32_t)(TRANSFORMATION_FACTOR * tv.tv_usec);
+	set_rtc(subsecond, nowtm->tm_sec, nowtm->tm_min, nowtm->tm_hour, nowtm->tm_mday, 1+nowtm->tm_mon, 1900+(nowtm->tm_year));
 }
