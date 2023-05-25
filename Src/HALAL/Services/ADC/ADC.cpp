@@ -91,11 +91,6 @@ void ADC::turn_on(uint8_t id){
 }
 
 float ADC::get_value(uint8_t id) {
-	if (not active_instances.contains(id)) {
-		ErrorHandler("No ADC registered with id %u", id);
-		return 0.0f;
-	}
-
 	Instance& instance = active_instances[id];
 	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
 	if(instance.peripheral->handle == &hadc3) {
@@ -107,11 +102,6 @@ float ADC::get_value(uint8_t id) {
 }
 
 uint16_t ADC::get_int_value(uint8_t id) {
-	if (not active_instances.contains(id)) {
-		ErrorHandler("No ADC registered with id %u", id);
-		return 0;
-	}
-
 	Instance& instance = active_instances[id];
 	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
 

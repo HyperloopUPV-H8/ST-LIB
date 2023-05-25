@@ -5,7 +5,7 @@ LinearSensor::LinearSensor(Pin &pin, double slope, double offset, double *value)
 : pin(pin), slope(slope), offset(offset), value(value){
 	id = ADC::inscribe(pin);
 
-	Sensor::adc_id_list.insert(Sensor::adc_id_list.begin(),id);
+	Sensor::adc_id_list.push_back(id);
 }
 
 LinearSensor::LinearSensor(Pin &pin, double slope, double offset, double &value):LinearSensor::LinearSensor(pin,slope,offset,&value){}
