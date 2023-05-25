@@ -21,9 +21,10 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin) {
 	}
 }
 
-optional<uint8_t> ExternalInterrupt::inscribe(Pin& pin, function<void()>&& action, TRIGGER trigger) {
+uint8_t ExternalInterrupt::inscribe(Pin& pin, function<void()>&& action, TRIGGER trigger) {
 	if (not instances.contains(pin.gpio_pin)) {
-		return nullopt;
+		ErrorHandler(" The pin %s is already used or isn t available for EXTI usage", pin.to_string().c_str());
+		return 0;
 	}
 
 	if (trigger == RISING) {
@@ -57,10 +58,10 @@ void ExternalInterrupt::turn_on(uint8_t id) {
 	instance.is_on = true;
 }
 
-optional<bool> ExternalInterrupt::get_pin_value(uint8_t id) {
+bool ExternalInterrupt::get_pin_value(uint8_t id) {
 	if (not service_ids.contains(id)) {
 		ErrorHandler("ID %d is not registered as an active instance", id);
-		return nullopt;
+		return false;
 	}
 
 	Pin& pin = service_ids[id];

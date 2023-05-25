@@ -104,7 +104,7 @@ public:
     static FDCAN::Instance instance2;
     static FDCAN::Instance instance3;
 
-    static optional<uint8_t> inscribe(FDCAN::Peripheral& fdcan);
+    static uint8_t inscribe(FDCAN::Peripheral& fdcan);
 
     static void start();
 

@@ -13,9 +13,11 @@ unordered_map<uint8_t, SPI::Instance*> SPI::registered_spi = {};
 
 uint16_t SPI::id_counter = 0;
 
-optional<uint8_t> SPI::inscribe(SPI::Peripheral& spi){
+uint8_t SPI::inscribe(SPI::Peripheral& spi){
 	if ( !SPI::available_spi.contains(spi)){
-		return nullopt;
+		ErrorHandler(" The SPI peripheral %d is already used or does not exists.", (uint16_t)spi);
+
+		return 0;
 	}
 
 	SPI::Instance* spi_instance = SPI::available_spi[spi];

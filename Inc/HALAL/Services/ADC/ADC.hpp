@@ -64,11 +64,11 @@ public:
 		Instance(Peripheral* peripheral, uint32_t channel);
 	};
 
-	static optional<uint8_t> inscribe(Pin pin);
+	static uint8_t inscribe(Pin pin);
 	static void start();
 	static void turn_on(uint8_t id);
 	static float get_value(uint8_t id);
-	static optional<uint16_t> get_int_value(uint8_t id);
+	static uint16_t get_int_value(uint8_t id);
 
 	static Peripheral peripherals[3];
 

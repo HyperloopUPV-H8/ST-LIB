@@ -13,10 +13,11 @@ map<uint8_t, pair<Pin, Pin>> Encoder::registered_encoder = {};
 
 uint8_t Encoder::id_counter = 0;
 
-optional<uint8_t> Encoder::inscribe(Pin& pin1, Pin& pin2){
+uint8_t Encoder::inscribe(Pin& pin1, Pin& pin2){
 	pair<Pin, Pin> doublepin = {pin1, pin2};
 	if (not Encoder::pin_timer_map.contains(doublepin)) {
-		return nullopt;
+		ErrorHandler(" The pin %s and the pin %s are already used or aren't configurated for encoder usage", pin1.to_string().c_str(), pin2.to_string().c_str());
+		return 0;
 	}
 
 	Pin::inscribe(pin1, ALTERNATIVE);
@@ -78,10 +79,10 @@ void Encoder::reset(uint8_t id){
 	timer->handle->Instance->CNT = UINT16_MAX / 2;
 }
 
-optional<uint32_t> Encoder::get_counter(uint8_t id){
+uint32_t Encoder::get_counter(uint8_t id){
 	if (not Encoder::registered_encoder.contains(id)) {
 		ErrorHandler("No encoder registered with id %u", id);
-		return nullopt;
+		return 0;
 	}
 
 	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
@@ -89,10 +90,10 @@ optional<uint32_t> Encoder::get_counter(uint8_t id){
 	return timer->handle->Instance->CNT;
 }
 
-optional<bool> Encoder::get_direction(uint8_t id){
+bool Encoder::get_direction(uint8_t id){
 	if (not Encoder::registered_encoder.contains(id)) {
 		ErrorHandler("No encoder registered with id %u", id);
-		return nullopt;
+		return false;
 	}
 
 	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];

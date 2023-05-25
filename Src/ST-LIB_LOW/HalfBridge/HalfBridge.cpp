@@ -12,11 +12,7 @@ HalfBridge::HalfBridge(Pin& positive_pwm_pin, Pin& positive_pwm_negated_pin,
 	positive_pwm = DualPhasedPWM(positive_pwm_pin, positive_pwm_negated_pin);
 	negative_pwm = DualPhasedPWM(negative_pwm_pin, negative_pwm_negated_pin);
 
-	optional<uint8_t> enable_id = DigitalOutputService::inscribe(enable_pin);
-	if (not enable_id) {
-		ErrorHandler("Unable to inscribe the HalfBridge enable pin in %s", enable_pin.to_string());
-	}
-	HalfBridge::enable = enable_id.value();
+	HalfBridge::enable = DigitalOutputService::inscribe(enable_pin);
 }
 
 void HalfBridge::turn_on() {

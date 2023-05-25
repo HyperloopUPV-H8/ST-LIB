@@ -82,8 +82,8 @@ public:
 	 * @param uart I2C peripheral to register.
 	 * @return uint8_t Id of the service.
 	 */
-	static optional<uint8_t> inscribe(I2C::Peripheral &i2c);
-	static optional<uint8_t> inscribe(I2C::Peripheral &i2c, uint8_t address);
+	static uint8_t inscribe(I2C::Peripheral &i2c);
+	static uint8_t inscribe(I2C::Peripheral &i2c, uint8_t address);
 
 	/**
 	 * @brief This method initializes all registered I2Cs. The peripherals
