@@ -29,9 +29,10 @@ InputCapture::Instance::Instance(Pin& pin, TimerPeripheral* peripheral, uint32_t
 
 	}
 
-optional<uint8_t> InputCapture::inscribe(Pin& pin){
+uint8_t InputCapture::inscribe(Pin& pin){
  	if (not available_instances.contains(pin)) {
- 		return nullopt;
+		ErrorHandler(" The pin %s is already used or isn t available for InputCapture usage", pin.to_string().c_str());
+ 		return 0;
  	}
 
 	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
@@ -81,19 +82,19 @@ void InputCapture::turn_off(uint8_t id){
 
 }
 
-optional<uint32_t> InputCapture::read_frequency(uint8_t id) {
+uint32_t InputCapture::read_frequency(uint8_t id) {
 	if (not active_instances.contains(id)) {
 		ErrorHandler("ID %d is not registered as an active_instance", id);
-		return nullopt;
+		return 0;
 	}
 	Instance instance = active_instances[id];
 	return instance.frequency;
 }
 
-optional<uint8_t> InputCapture::read_duty_cycle(uint8_t id) {
+uint8_t InputCapture::read_duty_cycle(uint8_t id) {
 	if (not active_instances.contains(id)) {
 		ErrorHandler("ID %d is not registered as an active_instance", id);
-		return nullopt;
+		return 0;
 	}
 	Instance instance = active_instances[id];
 	return instance.duty_cycle;

@@ -73,10 +73,10 @@ void State::register_all_timed_actions(){
 			timed_action.id = Time::register_low_precision_alarm(timed_action.period, timed_action.action);
 			break;
 		case MID_PRECISION:
-			timed_action.id = Time::register_mid_precision_alarm(timed_action.period, timed_action.action).value();
+			timed_action.id = Time::register_mid_precision_alarm(timed_action.period, timed_action.action);
 			break;
 		case HIGH_PRECISION:
-			timed_action.id = Time::register_high_precision_alarm(timed_action.period, timed_action.action).value();
+			timed_action.id = Time::register_high_precision_alarm(timed_action.period, timed_action.action);
 			break;
 		default:
 			ErrorHandler("Cannot register timed action with erroneus alarm precision, Alarm Precision Type: %d", timed_action.alarm_precision);

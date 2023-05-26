@@ -61,11 +61,11 @@ TimedAction* State::register_new_timed_action(function<void()> action, chrono::d
 			break;
 		case MID_PRECISION:
 			timed_action.period = microseconds;
-			timed_action.id = Time::register_mid_precision_alarm(microseconds, action).value();
+			timed_action.id = Time::register_mid_precision_alarm(microseconds, action);
 			break;
 		case HIGH_PRECISION:
 			timed_action.period = microseconds;
-			timed_action.id = Time::register_high_precision_alarm(microseconds, action).value();
+			timed_action.id = Time::register_high_precision_alarm(microseconds, action);
 			break;
 		default:
 			ErrorHandler("Alarm Precision Type does not exist, AlarmType: %d", precision_type);

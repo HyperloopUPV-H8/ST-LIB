@@ -100,10 +100,10 @@ void Time::stop_timer(TIM_HandleTypeDef* handle){
 	HAL_TIM_Base_Stop_IT(handle);
 }
 
-optional<uint8_t> Time::register_high_precision_alarm(uint32_t period_in_us, function<void()> func){
+uint8_t Time::register_high_precision_alarm(uint32_t period_in_us, function<void()> func){
 	if(available_high_precision_timers.size() == 0) {
 		ErrorHandler("There are no available high precision timers left");
-		return nullopt;
+		return 0;
 	}
 
 	TIM_HandleTypeDef* tim = Time::available_high_precision_timers.top();
@@ -152,11 +152,11 @@ bool Time::unregister_high_precision_alarm(uint8_t id){
 	return true;
 }
 
-optional<uint8_t> Time::register_mid_precision_alarm(uint32_t period_in_us, function<void()> func){
+uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void()> func){
 	if(std::find_if(TimerPeripheral::timers.begin(),TimerPeripheral::timers.end(), [&](TimerPeripheral& tim) -> bool {
 		return tim.handle == &htim23 && (tim.is_occupied());}) !=  TimerPeripheral::timers.end()){
 		ErrorHandler("htim 23 cannot be used as mid precision timer and PWM or Input Capture Simultaneously");
-		return nullopt;
+		return 0;
 	}
 
 	Time::Alarm alarm = {

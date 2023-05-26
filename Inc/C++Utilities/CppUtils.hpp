@@ -27,7 +27,6 @@
 #include <memory>
 #include <random>
 #include <typeinfo>
-#include <optional>
 #include <forward_list>
 #include <ostream>
 #include <cstring>
@@ -41,7 +40,6 @@ namespace chrono = std::chrono;
 namespace placeholders = std::placeholders;
 
 using std::map;
-using std::optional;
 using std::array;
 using std::span;
 using std::pair;
@@ -59,7 +57,6 @@ using std::integral_constant;
 using std::snprintf;
 using std::make_unique;
 using std::unique_ptr;
-using std::string;
 using std::unordered_map;
 using std::vector;
 using std::queue;

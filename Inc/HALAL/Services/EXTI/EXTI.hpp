@@ -33,10 +33,10 @@ public:
 	static map<uint16_t, Instance> instances;
 	static uint8_t id_counter;
 
-	static optional<uint8_t> inscribe(Pin& pin, function<void()>&& action, TRIGGER trigger=RISING);
+	static uint8_t inscribe(Pin& pin, function<void()>&& action, TRIGGER trigger=RISING);
 	static void start();
 	static void turn_on(uint8_t id);
 	static void turn_off(uint8_t id);
-	static optional<bool> get_pin_value(uint8_t id);
+	static bool get_pin_value(uint8_t id);
 };
 #endif
