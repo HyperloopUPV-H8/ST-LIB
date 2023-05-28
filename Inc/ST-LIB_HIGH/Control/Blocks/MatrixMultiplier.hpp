@@ -21,6 +21,13 @@ public:
 	        }
 	    }
 	}
+
+	void reset(){
+	    for (int i = 0; i < U; i++) {
+	        for (int j = 0; j < W; j++)
+	        	result[i][j] = 0.0;
+	    }
+	}
 };
 
 //CTAD
@@ -44,6 +51,12 @@ public:
             for (int k = 0; k < V; k++)
                 result[i] += A[i][k] * B[k];
         }
+    }
+
+    void reset(){
+    	for(int i = 0; i < U; i++){
+    		result[i] = 0.0;
+    	}
     }
 };
 
@@ -69,6 +82,12 @@ public:
                 result[j] += A[k] * B[k][j];
         }
     }
+
+    void reset(){
+    	for(int i = 0; i < V; i++){
+    		result[i] = 0.0;
+    	}
+    }
 };
 
 //CTAD
@@ -90,6 +109,10 @@ public:
         result = 0;
         for (int k = 0; k < U; k++)
             result += A[k] * B[k];
+    }
+
+    void reset(){
+    	result = 0;
     }
 };
 
