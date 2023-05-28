@@ -2,7 +2,7 @@
 #include "Sensors/Sensor/Sensor.hpp"
 
 
-DigitalSensor::DigitalSensor(Pin &pin, PinState *value) : pin(pin), id(DigitalInput::inscribe(pin)), value(value){}
+DigitalSensor::DigitalSensor(Pin &pin, PinState *value) : id(DigitalInput::inscribe(pin)), value(value){}
 
 DigitalSensor::DigitalSensor(Pin &pin, PinState &value) : DigitalSensor::DigitalSensor(pin,&value){}
 

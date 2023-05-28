@@ -1,7 +1,7 @@
 #include "Sensors/SensorInterrupt/SensorInterrupt.hpp"
 #include "Sensors/Sensor/Sensor.hpp"
 
-SensorInterrupt::SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState *value) : pin(pin), value(value) {
+SensorInterrupt::SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState *value) : value(value) {
 	id = ExternalInterrupt::inscribe(pin, std::forward<std::function<void()>>(action));
 
 	Sensor::EXTI_id_list.insert(Sensor::EXTI_id_list.begin(),id);
