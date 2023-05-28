@@ -2,7 +2,7 @@
 #include "Sensors/Sensor/Sensor.hpp"
 
 
-LookupSensor::LookupSensor(Pin &pin, double *table, int table_size, double *value) : pin(pin), table(table), table_size(table_size), value(value){
+LookupSensor::LookupSensor(Pin &pin, double *table, int table_size, double *value) : table(table), table_size(table_size), value(value){
 	id = ADC::inscribe(pin);
 
 	Sensor::adc_id_list.insert(Sensor::adc_id_list.begin(),id);

@@ -14,13 +14,13 @@
 
 class DigitalSensor{
 public:
+	DigitalSensor() = default;
 	DigitalSensor(Pin &pin, PinState *value);
 	DigitalSensor(Pin &pin, PinState &value);
 	void read();
 	uint8_t get_id();
 
 protected:
-	Pin &pin;
 	uint8_t id;
 	PinState *value;
 };
