@@ -15,7 +15,6 @@
 #include "Control/Blocks/Adder.hpp"
 #include "Control/Blocks/Derivator.hpp"
 #include "Control/Blocks/Integrator.hpp"
-#include "Control/Blocks/LevitationPositionCalculator.hpp"
 #include "Control/Blocks/MovingAverage.hpp"
 #include "Control/Blocks/PI.hpp"
 #include "Control/Blocks/PID.hpp"
