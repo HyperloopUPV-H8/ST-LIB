@@ -167,7 +167,7 @@ struct Boundary<double, TIME_ACCUMULATION> : public BoundaryInterface{
 	double bound;
 	float time_limit;
 	float frequency;
-	Boundary(double bound, float time_limit, float frequency, Boundary<float, Protector>*& external_pointer): bound(bound),time_limit(time_limit),frequency(frequency), moving_order(frequency*time_limit/100){
+	Boundary(double bound, float time_limit, float frequency, Boundary<double, Protector>*& external_pointer): bound(bound),time_limit(time_limit),frequency(frequency), moving_order(frequency*time_limit/100){
 		external_pointer = this;
 	};
 	Boundary(double* src, Boundary<double, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100){}
