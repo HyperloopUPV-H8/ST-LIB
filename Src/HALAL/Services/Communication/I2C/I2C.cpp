@@ -60,7 +60,7 @@ bool I2C::transmit_next_packet(uint8_t id, I2CPacket &packet) {
 	if (hdma_i2c2_tx.State != 0x01U) {
 	}
 
-	if (HAL_I2C_Master_Transmit_DMA(i2c->hi2c, packet.get_id(),
+	if (HAL_I2C_Master_Transmit_DMA(i2c->hi2c, packet.get_id()<<1,
 			packet.get_data(), packet.get_size()) != HAL_OK) {
 		ErrorHandler("I2C Error during memory read DMA!\n\r");
 		return false;
@@ -81,7 +81,7 @@ bool I2C::transmit_next_packet_polling(uint8_t id, I2CPacket &packet) {
 		return false;
 	}
 
-	if (HAL_I2C_Master_Transmit(i2c->hi2c, packet.get_id(), packet.get_data(),
+	if (HAL_I2C_Master_Transmit(i2c->hi2c, packet.get_id()<<1, packet.get_data(),
 			packet.get_size(), 1000) != HAL_OK) {
 		ErrorHandler("Error during I2C transmission \n\r");
 		return false;
@@ -104,7 +104,7 @@ bool I2C::receive_next_packet(uint8_t id, I2CPacket &packet) {
 
 	*packet.get_data() = 0;
 
-	if (HAL_I2C_Master_Receive_DMA(i2c->hi2c, packet.get_id(),
+	if (HAL_I2C_Master_Receive_DMA(i2c->hi2c, packet.get_id()<<1,
 			packet.get_data(), packet.get_size()) != HAL_OK) {
 		ErrorHandler("I2C Error during memory write DMA!\n\r");
 		return false;
@@ -129,8 +129,8 @@ bool I2C::receive_next_packet_polling(uint8_t id, I2CPacket &packet) {
 
 	*packet.get_data() = 0;
 
-	if (HAL_I2C_Master_Receive(i2c->hi2c, packet.get_id(), packet.get_data(),
-			packet.get_size(), 1000) != HAL_OK) {
+	if (HAL_I2C_Master_Receive(i2c->hi2c, packet.get_id()<<1, packet.get_data(),
+			packet.get_size(), 5) != HAL_OK) {
 		ErrorHandler("I2C Error during receive!\n\r");
 		return false;
 	}
@@ -168,7 +168,7 @@ bool I2C::read_from(uint8_t id, I2CPacket &packet, uint16_t mem_addr,
 		return false;
 	}
 
-	if (HAL_I2C_Mem_Read_DMA(i2c->hi2c, packet.get_id(), mem_addr, 1,
+	if (HAL_I2C_Mem_Read_DMA(i2c->hi2c, packet.get_id()<<1, mem_addr, 1,
 			packet.get_data(), packet.get_size())) {
 		ErrorHandler("I2C Error during memory read DMA!\n\r");
 		return false;
@@ -192,7 +192,7 @@ bool I2C::write_to(uint8_t id, I2CPacket &packet, uint16_t mem_addr,
 		return false;
 	}
 
-	if (HAL_I2C_Mem_Write_DMA(i2c->hi2c, packet.get_id(), mem_addr, mem_size,
+	if (HAL_I2C_Mem_Write_DMA(i2c->hi2c, packet.get_id()<<1, mem_addr, mem_size,
 			packet.get_data(), packet.get_size())) {
 		ErrorHandler("I2C Error during memory write DMA!\n\r");
 		return false;
