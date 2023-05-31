@@ -21,6 +21,7 @@
 
 class EncoderSensor{
 public:
+	EncoderSensor() = default;
 	EncoderSensor(Pin pin1, Pin pin2, double* position, double* direction, double* speed, double* acceleration);
 	void start();
 	void read();
@@ -28,8 +29,6 @@ public:
 	void get_arrays(double ret[][N_FRAMES]);
 
 protected:
-	Pin pin1;
-	Pin pin2;
 	uint8_t id;
 	double* position;
 	double* direction;

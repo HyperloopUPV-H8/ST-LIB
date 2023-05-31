@@ -6,6 +6,7 @@
  */
 #pragma once
 #include "PinModel/Pin.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_GPIO_MODULE_ENABLED
 class DigitalInput{
@@ -14,6 +15,6 @@ public:
 	static uint8_t id_counter;
 
 	static uint8_t inscribe(Pin& pin);
-	static optional<PinState> read_pin_state(uint8_t id);
+	static PinState read_pin_state(uint8_t id);
 };
 #endif

@@ -19,7 +19,7 @@ private:
 public:
     template<class Type, ProtectionType... Protector, template<class,ProtectionType> class Boundaries>
     Protection(Type* src, Boundaries<Type,Protector>... protectors) {
-        boundaries.push_back(unique_ptr<BoundaryInterface>(new Boundary<Type,Protector>(src,protectors)...));
+        (boundaries.push_back(unique_ptr<BoundaryInterface>(new Boundary<Type,Protector>(src,protectors))), ...);
     }
 
     void set_name(char* name) {

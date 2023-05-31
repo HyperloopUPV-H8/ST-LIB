@@ -90,7 +90,7 @@ public :
 	* @return optional<uint8_t> Returns id of the alarm if succesful, nullopt if it is able
 	* to register the timer correctly (probably because there aren't any timer available).
 	*/
-	static optional<uint8_t> register_high_precision_alarm(uint32_t period_in_us, function<void()> func);
+	static uint8_t register_high_precision_alarm(uint32_t period_in_us, function<void()> func);
 
 	static bool unregister_high_precision_alarm(uint8_t id);
 
@@ -114,7 +114,7 @@ public :
 	* @return void
 	*/
 
-	static optional<uint8_t> register_mid_precision_alarm(uint32_t period_in_us, function<void()> func);
+	static uint8_t register_mid_precision_alarm(uint32_t period_in_us, function<void()> func);
 	static bool unregister_mid_precision_alarm(uint8_t id);
 
 	static void set_timeout(int milliseconds, function<void()> callback);

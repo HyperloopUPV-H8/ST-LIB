@@ -63,3 +63,7 @@ void PWM::set_frequency(uint32_t frequency) {
 uint32_t PWM::get_frequency() {
 	return frequency;
 }
+
+float PWM::get_duty_cycle(){
+	return duty_cycle;
+}

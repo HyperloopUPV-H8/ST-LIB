@@ -73,10 +73,10 @@ void State::register_all_timed_actions(){
 			timed_action.id = Time::register_low_precision_alarm(timed_action.period, timed_action.action);
 			break;
 		case MID_PRECISION:
-			timed_action.id = Time::register_mid_precision_alarm(timed_action.period, timed_action.action).value();
+			timed_action.id = Time::register_mid_precision_alarm(timed_action.period, timed_action.action);
 			break;
 		case HIGH_PRECISION:
-			timed_action.id = Time::register_high_precision_alarm(timed_action.period, timed_action.action).value();
+			timed_action.id = Time::register_high_precision_alarm(timed_action.period, timed_action.action);
 			break;
 		default:
 			ErrorHandler("Cannot register timed action with erroneus alarm precision, Alarm Precision Type: %d", timed_action.alarm_precision);
@@ -96,7 +96,7 @@ void State::register_all_timed_actions(){
  */
 StateMachine::StateMachine(uint8_t initial_state) :
 	initial_state(initial_state), current_state(initial_state) {
-	states[initial_state] = State();
+	states[initial_state];
 }
 
 /**
@@ -256,6 +256,8 @@ void StateMachine::force_change_state(uint8_t new_state) {
 		ErrorHandler("The state %d is not added to the state machine", new_state);
 		return;
 	}
+
+	if(current_state == new_state) return;
 
 	states[current_state].unregister_all_timed_actions();
 

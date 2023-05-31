@@ -98,7 +98,7 @@ public:
      * @param spi SPI peripheral to register.
      * @return uint8_t Id of the service.
      */
-    static optional<uint8_t> inscribe(SPI::Peripheral& spi);
+    static uint8_t inscribe(SPI::Peripheral& spi);
 
     /**
      * @brief Method that initializes all enrolled SPI peripherals

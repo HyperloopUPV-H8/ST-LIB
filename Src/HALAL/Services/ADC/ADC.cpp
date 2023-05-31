@@ -42,9 +42,10 @@ bool ADC::Peripheral::is_registered() {
 ADC::Instance::Instance(ADC::Peripheral* peripheral, uint32_t channel) :
 		peripheral(peripheral), channel(channel) {}
 
-optional<uint8_t> ADC::inscribe(Pin pin) {
+uint8_t ADC::inscribe(Pin pin) {
 	if (not available_instances.contains(pin)) {
-		return nullopt;
+		ErrorHandler("Pin %s is already used or isn t available for ADC usage", pin.to_string().c_str());
+		return 0;
 	}
 
 	Pin::inscribe(pin, ANALOG);
@@ -100,9 +101,10 @@ float ADC::get_value(uint8_t id) {
 	}
 }
 
-optional<uint16_t> ADC::get_int_value(uint8_t id) {
+uint16_t ADC::get_int_value(uint8_t id) {
 	Instance& instance = active_instances[id];
 	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
+
 	if(instance.peripheral->handle == &hadc3) {
 		return raw << 4;
 	}

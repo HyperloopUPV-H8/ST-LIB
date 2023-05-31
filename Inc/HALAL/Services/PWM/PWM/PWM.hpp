@@ -31,6 +31,7 @@ public:
 	void set_duty_cycle(float duty_cycle);
 	void set_frequency(uint32_t frequency);
 	uint32_t get_frequency();
+	float get_duty_cycle();
 
 	friend class DualPWM;
 	friend class PhasedPWM;

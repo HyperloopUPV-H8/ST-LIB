@@ -12,13 +12,13 @@
 
 class SensorInterrupt{
 public:
+	SensorInterrupt() = default;
 	SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState *value);
 	SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState &value);
 	void read();
 	uint8_t get_id();
 
 protected:
-	Pin &pin;
 	uint8_t id;
 	PinState *value;
 };

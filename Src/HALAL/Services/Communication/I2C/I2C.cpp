@@ -12,10 +12,10 @@ unordered_map<uint8_t, I2C::Instance*> I2C::active_i2c;
 
 uint16_t I2C::id_counter = 0;
 
-optional<uint8_t> I2C::inscribe(I2C::Peripheral &i2c, uint8_t address) {
+uint8_t I2C::inscribe(I2C::Peripheral &i2c, uint8_t address) {
 	if (!I2C::available_i2cs.contains(i2c)) {
-		ErrorHandler("This I2C is not available on the runes files");
-		return nullopt;
+		ErrorHandler("The I2C %d is not available on the runes files", (uint16_t)i2c);
+		return 0;
 	}
 
 	I2C::Instance *i2c_instance = I2C::available_i2cs[i2c];
@@ -34,7 +34,7 @@ optional<uint8_t> I2C::inscribe(I2C::Peripheral &i2c, uint8_t address) {
 	return id;
 }
 
-optional<uint8_t> I2C::inscribe(I2C::Peripheral &i2c) {
+uint8_t I2C::inscribe(I2C::Peripheral &i2c) {
 	return I2C::inscribe(i2c, 0);
 }
 
