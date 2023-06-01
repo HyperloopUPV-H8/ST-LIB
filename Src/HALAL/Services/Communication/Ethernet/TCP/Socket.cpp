@@ -28,6 +28,10 @@ void Socket::operator=(Socket&& other){
 
 
 Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port):remote_ip(remote_ip), remote_port(remote_port){
+	if(not Ethernet::is_running) {
+		ErrorHandler("Cannot declare TCP socket before Ethernet::start()");
+		return;
+	}
 	state = INACTIVE;
 	EthernetNode remote_node(remote_ip, remote_port);
 

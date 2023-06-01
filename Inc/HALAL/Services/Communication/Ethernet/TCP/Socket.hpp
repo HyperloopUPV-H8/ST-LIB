@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Communication/Ethernet/EthernetNode.hpp"
+#include "Communication/Ethernet/Ethernet.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
 #include "Packets/OrderProtocol.hpp"

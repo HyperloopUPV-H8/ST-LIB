@@ -2,7 +2,7 @@
 #include "LinearSensor.hpp"
 #include "Control/Blocks/MovingAverage.hpp"
 
-template<std::integral Type,size_t N>
+template<class Type,size_t N>
 class FilteredLinearSensor : public LinearSensor<Type>{
 	MovingAverage<N>& filter;
 public:
@@ -17,8 +17,8 @@ public:
 
 //CTAD
 #if __cpp_deduction_guides >= 201606
-template<std::integral Type,size_t N>
+template<class Type,size_t N>
 FilteredLinearSensor(Pin& pin, Type slope, Type offset, Type* value, MovingAverage<N>& filter)->FilteredLinearSensor<Type,N>;
-template<std::integral Type,size_t N>
+template<class Type,size_t N>
 FilteredLinearSensor(Pin& pin, Type slope, Type offset, Type& value, MovingAverage<N>& filter)->FilteredLinearSensor<Type,N>;
 #endif

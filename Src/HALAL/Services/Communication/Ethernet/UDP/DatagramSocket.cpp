@@ -17,7 +17,10 @@ DatagramSocket::DatagramSocket(DatagramSocket&& other):udp_control_block(move(ot
 		{}
 
 DatagramSocket::DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port): local_ip(local_ip), local_port(local_port), remote_ip(remote_ip), remote_port(remote_port){
-
+		if(not Ethernet::is_running) {
+			ErrorHandler("Cannot declare UDP socket before Ethernet::start()");
+			return;
+		}
 		udp_control_block = udp_new();
 		err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
 
@@ -37,7 +40,7 @@ DatagramSocket::~DatagramSocket(){
 	close();
 }
 
-void DatagramSocket::operator =(DatagramSocket&& other){
+void DatagramSocket::operator=(DatagramSocket&& other){
 	udp_control_block = move(other.udp_control_block);
 	local_ip = move(other.local_ip);
 	local_port = move(other.local_port);
@@ -45,6 +48,7 @@ void DatagramSocket::operator =(DatagramSocket&& other){
 	remote_port = other.remote_port;
 	udp_disconnect(udp_control_block);
 	udp_connect(udp_control_block, &remote_ip.address, remote_port);
+	reconnect();
 }
 
 void DatagramSocket::reconnect(){

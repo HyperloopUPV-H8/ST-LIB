@@ -10,7 +10,7 @@
 #include "Sensors/Sensor/Sensor.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
-template<std::integral Type>
+template<class Type>
 class LinearSensor{
 public:
 	LinearSensor() = default;
@@ -26,7 +26,7 @@ protected:
 	Type *value;
 };
 
-template<std::integral Type>
+template<class Type>
 LinearSensor<Type>::LinearSensor(Pin &pin, Type slope, Type offset, Type *value)
 : slope(slope), offset(offset), value(value){
 	id = ADC::inscribe(pin);
@@ -34,7 +34,7 @@ LinearSensor<Type>::LinearSensor(Pin &pin, Type slope, Type offset, Type *value)
 	Sensor::adc_id_list.push_back(id);
 }
 
-template<std::integral Type>
+template<class Type>
 LinearSensor<Type>::LinearSensor(Pin &pin, Type slope, Type offset, Type &value):LinearSensor::LinearSensor(pin,slope,offset,&value){}
 
 template<std::integral Type>
@@ -44,7 +44,7 @@ void LinearSensor<Type>::read(){
 	*value = slope * (Type) val + offset;
 }
 
-template<std::integral Type>
+template<class Type>
 uint8_t LinearSensor<Type>::get_id(){
 	return id;
 }

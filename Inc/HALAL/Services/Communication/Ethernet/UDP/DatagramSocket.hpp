@@ -1,5 +1,6 @@
 #pragma once
 #include "Communication/Ethernet/EthernetNode.hpp"
+#include "Communication/Ethernet/Ethernet.hpp"
 #include "Packets/Packet.hpp"
 
 #ifdef HAL_ETH_MODULE_ENABLED
