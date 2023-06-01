@@ -36,9 +36,12 @@ public:
 
 
 	ServerSocket();
+	ServerSocket(ServerSocket&& other);
 	ServerSocket(IPV4 local_ip, uint32_t local_port);
 	ServerSocket(string local_ip, uint32_t local_port);
 	ServerSocket(EthernetNode local_node);
+
+	void operator=(ServerSocket&& other);
 
 	void close();
 

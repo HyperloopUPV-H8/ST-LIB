@@ -12,14 +12,14 @@
 class LinearSensor{
 public:
 	LinearSensor() = default;
-	LinearSensor(Pin &pin, double slope, double offset, double *value);
-	LinearSensor(Pin &pin, double slope, double offset, double &value);
+	LinearSensor(Pin &pin, float slope, float offset, float *value);
+	LinearSensor(Pin &pin, float slope, float offset, float &value);
 	void read();
 	uint8_t get_id();
 
 protected:
 	uint8_t id;
-	double slope;
-	double offset;
-	double *value;
+	float slope;
+	float offset;
+	float *value;
 };

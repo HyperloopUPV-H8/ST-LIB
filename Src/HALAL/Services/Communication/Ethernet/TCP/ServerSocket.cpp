@@ -35,6 +35,23 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 	OrderProtocol::sockets.push_back(this);
 }
 
+ServerSocket::ServerSocket(ServerSocket&& other) : local_ip(move(other.local_ip)), local_port(move(other.local_port)), server_control_block(move(other.server_control_block))
+, state(other.state){
+	listening_sockets[local_port] = this;
+	tx_packet_buffer = {};
+	rx_packet_buffer = {};
+}
+
+void ServerSocket::operator=(ServerSocket&& other){
+	local_ip = move(other.local_ip);
+	local_port = move(other.local_port);
+	server_control_block = move(other.server_control_block);
+	state = other.state;
+	listening_sockets[local_port] = this;
+	tx_packet_buffer = {};
+	rx_packet_buffer = {};
+}
+
 ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(IPV4(local_ip),local_port){}
 
 ServerSocket::ServerSocket(EthernetNode local_node) : ServerSocket(local_node.ip,local_node.port){};

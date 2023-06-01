@@ -27,10 +27,10 @@ void SNTP::sntp_update(string ip) {
 }
 
 void SNTP::sntp_update(){
-	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+//	sntp_setoperatingmode(SNTP_OPMODE_POLL);
 	IPV4 target(TARGET_IP);
-	sntp_setserver(0,&target.address);
-	sntp_init();
+//	sntp_setserver(0,&target.address);
+//	sntp_init();
 }
 
 void set_rtc(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year){
