@@ -48,7 +48,6 @@ void DatagramSocket::operator=(DatagramSocket&& other){
 	remote_port = other.remote_port;
 	udp_disconnect(udp_control_block);
 	udp_connect(udp_control_block, &remote_ip.address, remote_port);
-	reconnect();
 }
 
 void DatagramSocket::reconnect(){
