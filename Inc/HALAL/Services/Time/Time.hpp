@@ -38,6 +38,7 @@ private :
 		TIM_HandleTypeDef* tim;
 		function<void()> alarm;
 		uint64_t offset;
+		bool is_on = false;
 	};
 
 	static constexpr uint32_t HIGH_PRECISION_MAX_ARR = 4294967295;
@@ -52,6 +53,9 @@ private :
 	static unordered_map<TIM_HandleTypeDef*, Alarm> high_precision_alarms_by_timer;
 	static unordered_map<uint8_t, Alarm> low_precision_alarms_by_id;
 	static unordered_map<uint8_t, Alarm> mid_precision_alarms_by_id;
+
+	static stack<uint8_t> low_precision_erasable_ids;
+	static stack<uint8_t> mid_precision_erasable_ids;
 
 	static void stop_timer(TIM_HandleTypeDef* htim);
 	static void start_timer(TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
