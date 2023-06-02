@@ -162,6 +162,10 @@ bool Time::unregister_high_precision_alarm(uint8_t id){
 }
 
 uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void()> func){
+	if(mid_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
+		ErrorHandler("Cannot register mid precision alarm as all id's are already occupied");
+		return 0;
+	}
 	if(std::find_if(TimerPeripheral::timers.begin(),TimerPeripheral::timers.end(), [&](TimerPeripheral& tim) -> bool {
 		return tim.handle == &htim23 && (tim.is_occupied());}) !=  TimerPeripheral::timers.end()){
 		ErrorHandler("htim 23 cannot be used as mid precision timer and PWM or Input Capture Simultaneously");
@@ -187,9 +191,13 @@ uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void(
 		Time::mid_precision_registered = true;
 	}
 
+	while(mid_precision_alarms_by_id.contains(mid_precision_ids))
+		mid_precision_ids++;
+
 	alarm.alarm = func;
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
 	NVIC_EnableIRQ(TIM23_IRQn);
+
 
 	return mid_precision_ids++;
 }
@@ -209,6 +217,10 @@ bool Time::unregister_mid_precision_alarm(uint8_t id){
 }
 
 uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void()> func){
+	if(low_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
+		ErrorHandler("Cannot register low precision alarm as all id's are already occupied");
+		return 0;
+	}
 	Time::Alarm alarm = {
 			.period = period_in_ms,
 			.tim = low_precision_timer,
@@ -216,6 +228,9 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 			.offset = low_precision_tick,
 			.is_on = true
 	};
+
+	while(low_precision_alarms_by_id.contains(low_precision_ids))
+		low_precision_ids++;
 
 	NVIC_DisableIRQ(TIM7_IRQn);
 	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
@@ -224,6 +239,10 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 }
 
 uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, void(*func)()){
+	if(low_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
+		ErrorHandler("Cannot register low precision alarm as all id's are already occupied");
+		return 0;
+	}
 	Time::Alarm alarm = {
 			.period = period_in_ms,
 			.tim = low_precision_timer,
@@ -231,6 +250,9 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, void(*func)())
 			.offset = low_precision_tick,
 			.is_on = true
 	};
+
+	while(low_precision_alarms_by_id.contains(low_precision_ids))
+		low_precision_ids++;
 
 	NVIC_DisableIRQ(TIM7_IRQn);
 	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
@@ -253,6 +275,12 @@ bool Time::unregister_low_precision_alarm(uint8_t id){
 }
 
 void Time::set_timeout(int milliseconds, function<void()> callback){
+	if(low_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
+		ErrorHandler("Cannot register timeout as all low precision alarms id's are already occupied");
+		return;
+	}
+	while(low_precision_alarms_by_id.contains(low_precision_ids))
+		low_precision_ids++;
 	uint8_t id = low_precision_ids;
 	uint64_t tick_on_register = low_precision_tick;
 	Time::register_low_precision_alarm(milliseconds, [&,id,callback,tick_on_register](){
