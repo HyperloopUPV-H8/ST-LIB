@@ -6,13 +6,13 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 
 void State::enter() {
-	for (function<void()> action : on_enter_actions) {
+	for (function<void()>& action : on_enter_actions) {
 		action();
 	}
 }
 
 void State::exit() {
-	for (function<void()> action : on_exit_actions) {
+	for (function<void()>& action : on_exit_actions) {
 		action();
 	}
 }

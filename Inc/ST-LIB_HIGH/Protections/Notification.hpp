@@ -1,6 +1,7 @@
 #pragma once
 
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 #include "Packets/Order.hpp"
 #include "BoardID/BoardID.hpp"
 #include "Protection.hpp"
@@ -59,7 +60,10 @@ public:
     }
 
     void notify(){
-    	if(tx_message.empty()) ErrorHandler("Cannot notify empty notification");
+    	if(tx_message.empty()){
+    		ErrorHandler("Cannot notify empty notification");
+    		return;
+    	}
     	for(OrderProtocol* socket : OrderProtocol::sockets){
     		socket->send_order(*this);
     	}

@@ -15,7 +15,7 @@
 
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
-class ServerSocket : OrderProtocol{
+class ServerSocket : public OrderProtocol{
 public:
 
 	enum ServerState{
@@ -41,6 +41,7 @@ public:
 	ServerSocket(IPV4 local_ip, uint32_t local_port);
 	ServerSocket(string local_ip, uint32_t local_port);
 	ServerSocket(EthernetNode local_node);
+	~ServerSocket();
 
 	void operator=(ServerSocket&& other);
 

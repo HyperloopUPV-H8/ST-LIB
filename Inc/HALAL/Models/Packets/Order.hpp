@@ -27,6 +27,7 @@ public:
             orders[id]->process();
         }
     }
+
 protected:
     static map<uint16_t,Order*> orders;
 };

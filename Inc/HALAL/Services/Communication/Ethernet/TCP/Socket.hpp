@@ -15,7 +15,7 @@
 
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
-class Socket : OrderProtocol{
+class Socket : public OrderProtocol{
 public:
 	enum SocketState{
 		INACTIVE,
@@ -37,6 +37,7 @@ public:
 	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
 	Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port);
 	Socket(EthernetNode local_node, EthernetNode remote_node);
+	~Socket();
 
 	void operator=(Socket&& other);
 	void close();
