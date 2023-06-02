@@ -3,6 +3,7 @@
 #include "Clocks/Counter.hpp"
 #include "Clocks/Stopwatch.hpp"
 #include "Sensors/LinearSensor/LinearSensor.hpp"
+#include "Sensors/LinearSensor/FilteredLinearSensor.hpp"
 #include "StateMachine/StateMachine.hpp"
 #include "DigitalOutput/DigitalOutput.hpp"
 #include "HalfBridge/HalfBridge.hpp"

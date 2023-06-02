@@ -19,5 +19,7 @@
 #include "Control/Blocks/PI.hpp"
 #include "Control/Blocks/PID.hpp"
 #include "Control/Blocks/Saturator.hpp"
+#include "Control/Blocks/MatrixMultiplier.hpp"
+#include "Control/Blocks/MeanCalculator.hpp"
 #include "Control/ControlSystem.hpp"
 #include "FlashStorer/FlashStorer.hpp"

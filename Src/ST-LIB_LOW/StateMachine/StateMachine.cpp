@@ -96,7 +96,7 @@ void State::register_all_timed_actions(){
  */
 StateMachine::StateMachine(uint8_t initial_state) :
 	initial_state(initial_state), current_state(initial_state) {
-	states[initial_state] = State();
+	states[initial_state];
 }
 
 /**
@@ -256,6 +256,8 @@ void StateMachine::force_change_state(uint8_t new_state) {
 		ErrorHandler("The state %d is not added to the state machine", new_state);
 		return;
 	}
+
+  if(current_state == new_state) return;
 
 	unregister_all_timed_actions(current_state);
 	exit_state(current_state);
