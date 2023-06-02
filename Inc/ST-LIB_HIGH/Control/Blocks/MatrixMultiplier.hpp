@@ -98,7 +98,7 @@ MatrixMultiplier(float(&)[U], float(&)[U][V], float(&)[V])->MatrixMultiplier<1,U
 
 template<size_t U>
 class MatrixMultiplier<1,U,1> : public ControlBlock<float(*)[U], float(*)>{
-    float(&A)[U], (&B)[U], &result;
+    float(&A)[U], (&B)[U], (&result);
 public:
     MatrixMultiplier(float(&A)[U], float(&B)[U], float(&result)) :  A(A), B(B), result(result){
         this->input_value = &A;

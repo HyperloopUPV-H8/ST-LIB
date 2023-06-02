@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Communication/Ethernet/EthernetNode.hpp"
+#include "Communication/Ethernet/Ethernet.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
 #include "Packets/OrderProtocol.hpp"
@@ -32,11 +33,12 @@ public:
 	static unordered_map<EthernetNode,Socket*> connecting_sockets;
 
 	Socket();
+	Socket(Socket&& other);
 	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
 	Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port);
 	Socket(EthernetNode local_node, EthernetNode remote_node);
 
-
+	void operator=(Socket&& other);
 	void close();
 
 	void reconnect();
@@ -61,8 +63,8 @@ public:
 			return false;
 		}
 
-		struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.size, PBUF_POOL);
-		pbuf_take(packet, order_buffer, order.size);
+		struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_POOL);
+		pbuf_take(packet, order_buffer, order.get_size());
 		tx_packet_buffer.push(packet);
 		send();
 		return true;
