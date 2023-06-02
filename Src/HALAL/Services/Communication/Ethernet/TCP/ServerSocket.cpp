@@ -54,10 +54,14 @@ void ServerSocket::operator=(ServerSocket&& other){
 	listening_sockets[local_port] = this;
 	tx_packet_buffer = {};
 	rx_packet_buffer = {};
+	if(not (std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this) != OrderProtocol::sockets.end()))
+		OrderProtocol::sockets.push_back(this);
 }
 
 ServerSocket::~ServerSocket(){
-	OrderProtocol::sockets.erase(std::remove(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this), OrderProtocol::sockets.end());
+	auto it = std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this);
+	if(it == OrderProtocol::sockets.end()) return;
+	else OrderProtocol::sockets.erase(it);
 }
 
 ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(IPV4(local_ip),local_port){}
