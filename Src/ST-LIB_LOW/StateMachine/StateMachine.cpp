@@ -257,29 +257,15 @@ void StateMachine::force_change_state(uint8_t new_state) {
 		return;
 	}
 
-	if(current_state == new_state) return;
+  if(current_state == new_state) return;
 
-	states[current_state].unregister_all_timed_actions();
-
-	if (nested_state_machine.contains(current_state)) {
-		StateMachine* nested_sm = nested_state_machine[current_state];
-		nested_sm->states[nested_sm->current_state].unregister_all_timed_actions();
-	}
-
-	states[current_state].exit();
+	unregister_all_timed_actions(current_state);
+	exit_state(current_state);
 
 	current_state = new_state;
 
-	states[current_state].enter();
-
-	if (nested_state_machine.contains(current_state)) {
-		StateMachine* nested_sm = nested_state_machine[current_state];
-		nested_sm->current_state = nested_sm->initial_state;
-		nested_sm->is_on = true;
-		nested_sm->states[nested_sm->current_state].register_all_timed_actions();
-	}
-
-	states[current_state].register_all_timed_actions();
+	enter_state(current_state);
+	register_all_timed_actions(current_state);
 }
 
 void StateMachine::remove_cyclic_action(TimedAction* action) {
@@ -298,4 +284,42 @@ void StateMachine::remove_cyclic_action(TimedAction* action, uint8_t state) {
 	}
 
 	states[state].erase_timed_action(action);
+}
+
+
+
+void StateMachine::enter_state(state_id state) {
+	states[state].enter();
+
+	if (nested_state_machine.contains(state)) {
+		StateMachine* nested_sm = nested_state_machine[state];
+		nested_sm->enter_state(nested_sm->current_state);
+	}
+}
+
+void StateMachine::exit_state(state_id state) {
+	states[state].exit();
+
+	if (nested_state_machine.contains(state)) {
+		StateMachine* nested_sm = nested_state_machine[state];
+		nested_sm->exit_state(nested_sm->current_state);
+	}
+}
+
+void StateMachine::register_all_timed_actions(state_id state) {
+	states[state].register_all_timed_actions();
+
+	if (nested_state_machine.contains(current_state)) {
+		StateMachine* nested_sm = nested_state_machine[current_state];
+		nested_sm->states[nested_sm->current_state].register_all_timed_actions();
+	}
+}
+
+void StateMachine::unregister_all_timed_actions(state_id state) {
+	states[state].unregister_all_timed_actions();
+
+	if (nested_state_machine.contains(current_state)) {
+		StateMachine* nested_sm = nested_state_machine[current_state];
+		nested_sm->states[nested_sm->current_state].unregister_all_timed_actions();
+	}
 }
