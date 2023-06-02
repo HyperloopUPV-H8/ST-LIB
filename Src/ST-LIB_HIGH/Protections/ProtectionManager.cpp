@@ -7,7 +7,6 @@ Notification ProtectionManager::fault_notification = {ProtectionManager::fault_i
 Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
 
 void ProtectionManager::set_id(Boards::ID board_id){
-	add_protection((void*)nullptr,Boundary<void, ProtectionType::ERROR_HANDLER>());
     ProtectionManager::board_id = board_id;
 }
 

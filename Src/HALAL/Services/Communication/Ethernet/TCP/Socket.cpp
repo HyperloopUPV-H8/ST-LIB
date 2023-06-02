@@ -24,10 +24,14 @@ void Socket::operator=(Socket&& other){
 	state = other.state;
 	EthernetNode remote_node(other.remote_ip, other.remote_port);
 	connecting_sockets[remote_node] = this;
+	if(std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this) == OrderProtocol::sockets.end())
+		OrderProtocol::sockets.push_back(this);
 }
 
 Socket::~Socket(){
-	OrderProtocol::sockets.erase(std::remove(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this), OrderProtocol::sockets.end());
+	auto it = std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this);
+	if(it == OrderProtocol::sockets.end()) return;
+	else OrderProtocol::sockets.erase(it);
 }
 
 Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port):remote_ip(remote_ip), remote_port(remote_port){

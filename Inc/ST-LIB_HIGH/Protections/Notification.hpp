@@ -6,6 +6,7 @@
 #include "BoardID/BoardID.hpp"
 #include "Protection.hpp"
 #include "Time/Time.hpp"
+#include "Packets/OrderProtocol.hpp"
 
 class Notification : public Order{
 private:
