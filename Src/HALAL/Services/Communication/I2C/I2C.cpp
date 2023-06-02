@@ -82,8 +82,8 @@ bool I2C::transmit_next_packet_polling(uint8_t id, I2CPacket &packet) {
 	}
 
 	if (HAL_I2C_Master_Transmit(i2c->hi2c, packet.get_id()<<1, packet.get_data(),
-			packet.get_size(), 1000) != HAL_OK) {
-		ErrorHandler("Error during I2C transmission \n\r");
+			packet.get_size(), 50) != HAL_OK) {
+		//ErrorHandler("Error during I2C transmission \n\r");
 		return false;
 	}
 	return true;
@@ -130,8 +130,8 @@ bool I2C::receive_next_packet_polling(uint8_t id, I2CPacket &packet) {
 	*packet.get_data() = 0;
 
 	if (HAL_I2C_Master_Receive(i2c->hi2c, packet.get_id()<<1, packet.get_data(),
-			packet.get_size(), 5) != HAL_OK) {
-		ErrorHandler("I2C Error during receive!\n\r");
+			packet.get_size(), 50) != HAL_OK) {
+		//ErrorHandler("I2C Error during receive!\n\r");
 		return false;
 	}
 
@@ -225,6 +225,12 @@ bool I2C::is_busy(uint8_t id) {
 	}
 
 	return false;
+}
+
+void I2C::reset(uint8_t id) {
+	I2C::Instance *i2c = I2C::active_i2c[id];
+	HAL_I2C_DeInit(i2c->hi2c);
+	HAL_I2C_Init(i2c->hi2c);
 }
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hspi) {
