@@ -27,6 +27,7 @@ DatagramSocket::DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_i
 		if(error == ERR_OK){
 		   udp_recv(udp_control_block, receive_callback, nullptr);
 		   udp_connect(udp_control_block, &remote_ip.address, remote_port);
+		   Ethernet::update();
 		}
 		else{
 		   udp_remove(udp_control_block);
@@ -57,6 +58,7 @@ void DatagramSocket::reconnect(){
 	if(error == ERR_OK){
 	   udp_recv(udp_control_block, receive_callback, nullptr);
 	   udp_connect(udp_control_block, &remote_ip.address, remote_port);
+	   Ethernet::update();
 	}
 	else{
 	   udp_remove(udp_control_block);
