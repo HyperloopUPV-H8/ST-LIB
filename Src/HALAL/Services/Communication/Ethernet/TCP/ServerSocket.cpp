@@ -56,6 +56,10 @@ void ServerSocket::operator=(ServerSocket&& other){
 	rx_packet_buffer = {};
 }
 
+ServerSocket::~ServerSocket(){
+	OrderProtocol::sockets.erase(std::remove(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this), OrderProtocol::sockets.end());
+}
+
 ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(IPV4(local_ip),local_port){}
 
 ServerSocket::ServerSocket(EthernetNode local_node) : ServerSocket(local_node.ip,local_node.port){};

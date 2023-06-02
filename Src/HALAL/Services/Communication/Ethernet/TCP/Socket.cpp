@@ -26,6 +26,9 @@ void Socket::operator=(Socket&& other){
 	connecting_sockets[remote_node] = this;
 }
 
+Socket::~Socket(){
+	OrderProtocol::sockets.erase(std::remove(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this), OrderProtocol::sockets.end());
+}
 
 Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port):remote_ip(remote_ip), remote_port(remote_port){
 	if(not Ethernet::is_running) {

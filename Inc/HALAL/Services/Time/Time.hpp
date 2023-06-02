@@ -57,6 +57,7 @@ private :
 	static void start_timer(TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period);
 	static void init_timer(TIM_TypeDef* tim, TIM_HandleTypeDef* htim,uint32_t prescaler, uint32_t period, IRQn_Type interrupt_channel);
 	static void ConfigTimer(TIM_HandleTypeDef* tim, uint32_t period_in_us);
+	static bool is_valid_timer(TIM_HandleTypeDef* tim);
 
 public :
 	static TIM_HandleTypeDef* global_timer;

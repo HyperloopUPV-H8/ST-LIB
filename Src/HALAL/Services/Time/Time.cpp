@@ -80,6 +80,11 @@ void Time::start(){
 	Time::high_precision_timers.insert(&htim5);
 }
 
+bool Time::is_valid_timer(TIM_HandleTypeDef* tim){
+	if(tim == global_timer || tim == low_precision_timer || tim == mid_precision_timer || high_precision_timers.contains(tim)) return true;
+	return false;
+}
+
 
 // PUBLIC SERVICE METHODS
 
