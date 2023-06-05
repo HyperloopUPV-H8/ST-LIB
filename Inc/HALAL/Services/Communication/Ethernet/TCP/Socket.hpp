@@ -60,7 +60,7 @@ public:
 		}
 
 		uint8_t* order_buffer = order.build();
-		if(order.size > tcp_sndbuf(socket_control_block)){
+		if(order.get_size() > tcp_sndbuf(socket_control_block)){
 			return false;
 		}
 
