@@ -1,6 +1,6 @@
 #pragma once
 #define PROTECTIONTYPE_LENGTH 7
-
+#include "ErrorHandler/ErrorHandler.hpp"
 #include "Control/Blocks/MeanCalculator.hpp"
 
 enum ProtectionType : uint64_t {
@@ -143,15 +143,15 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 template<>
 struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ERROR_HANDLER;
-	static constexpr const char* format = "\"type\": \"ERROR_HANDLER\", \"data\": %s ";
+	static constexpr const char* format = "\"type\": \"ERROR_HANDLER\", \"data\": \"%s\"";
 	Boundary(void*){}
 	Boundary(void*, Boundary<void,ERROR_HANDLER>){}
 	Boundary() = default;
 	bool check_bounds() override{
-		return ErrorHandlerModel::error_triggered;
+		return not ErrorHandlerModel::error_triggered;
 	}
 	int get_string_size()override{
-		return BoundaryInterface::get_error_handler_string_size();
+		return snprintf(nullptr,0,format,BoundaryInterface::get_error_handler_string().c_str());
 	}
 	char* serialize(char* dst)override{
 		sprintf(dst,format,BoundaryInterface::get_error_handler_string().c_str());
