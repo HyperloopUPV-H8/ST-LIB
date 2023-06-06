@@ -18,6 +18,8 @@ public:
 	LinearSensor(Pin &pin, Type slope, Type offset, Type &value);
 	void read();
 	uint8_t get_id();
+	void set_offset(Type new_offset);
+	Type get_offset();
 
 protected:
 	uint8_t id;
@@ -47,5 +49,15 @@ void LinearSensor<Type>::read(){
 template<class Type>
 uint8_t LinearSensor<Type>::get_id(){
 	return id;
+}
+
+template<class Type>
+Type LinearSensor<Type>::get_offset(){
+	return offset;
+}
+
+template<class Type>
+void LinearSensor<Type>::set_offset(Type new_offset){
+	offset = new_offset;
 }
 
