@@ -1,5 +1,6 @@
 #pragma once
 #include "Communication/Ethernet/EthernetNode.hpp"
+#include "Communication/Ethernet/Ethernet.hpp"
 #include "Packets/Packet.hpp"
 
 #ifdef HAL_ETH_MODULE_ENABLED
@@ -15,9 +16,12 @@ public:
 	uint32_t remote_port;
 
 	DatagramSocket();
+	DatagramSocket(DatagramSocket&& other);
 	DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
 	DatagramSocket(EthernetNode local_node, EthernetNode remote_node);
 	~DatagramSocket();
+
+	void operator=(DatagramSocket&&);
 
 	bool send(Packet& packet){
 		uint8_t* packet_buffer = packet.build();
@@ -29,6 +33,8 @@ public:
 
 		return true;
 	}
+
+	void reconnect();
 
 	void close();
 

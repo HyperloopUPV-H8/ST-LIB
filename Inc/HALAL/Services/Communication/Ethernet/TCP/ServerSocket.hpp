@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Communication/Ethernet/EthernetNode.hpp"
+#include "Communication/Ethernet/Ethernet.hpp"
 #include "Packets/Packet.hpp"
 #include "Packets/Order.hpp"
 #include "Packets/OrderProtocol.hpp"
@@ -14,7 +15,7 @@
 
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
-class ServerSocket : OrderProtocol{
+class ServerSocket : public OrderProtocol{
 public:
 
 	enum ServerState{
@@ -36,9 +37,13 @@ public:
 
 
 	ServerSocket();
+	ServerSocket(ServerSocket&& other);
 	ServerSocket(IPV4 local_ip, uint32_t local_port);
 	ServerSocket(string local_ip, uint32_t local_port);
 	ServerSocket(EthernetNode local_node);
+	~ServerSocket();
+
+	void operator=(ServerSocket&& other);
 
 	void close();
 

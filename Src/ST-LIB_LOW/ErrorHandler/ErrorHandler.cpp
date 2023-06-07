@@ -43,7 +43,7 @@ void ErrorHandlerModel::ErrorHandlerTrigger(string format, ... ){
 	va_end(arg_copy);
 
 	description += string(buffer.get(), buffer.get() + size - 1) + " | Line: " + ErrorHandlerModel::line
-							+ " Function: \"" + ErrorHandlerModel::func + "\" File: " + ErrorHandlerModel::file ;
+							+ " Function: '" + ErrorHandlerModel::func + "' File: " + ErrorHandlerModel::file ;
 
 #ifdef HAL_TIM_MODULE_ENABLED
 	 description += " | TimeStamp: " + to_string(Time::get_global_tick());

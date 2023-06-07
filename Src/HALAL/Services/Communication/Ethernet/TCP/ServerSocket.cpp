@@ -16,6 +16,10 @@ unordered_map<uint32_t,ServerSocket*> ServerSocket::listening_sockets = {};
 ServerSocket::ServerSocket() = default;
 
 ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_ip),local_port(local_port){
+	if(not Ethernet::is_running) {
+		ErrorHandler("Cannot declare UDP socket before Ethernet::start()");
+		return;
+	}
 	tx_packet_buffer = {};
 	rx_packet_buffer = {};
 	state = INACTIVE;
@@ -33,6 +37,31 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 		ErrorHandler("Cannnot bind server socket, memory low");
 	}
 	OrderProtocol::sockets.push_back(this);
+}
+
+ServerSocket::ServerSocket(ServerSocket&& other) : server_control_block(move(other.server_control_block)), local_ip(move(other.local_ip)), local_port(move(other.local_port))
+, state(other.state){
+	listening_sockets[local_port] = this;
+	tx_packet_buffer = {};
+	rx_packet_buffer = {};
+}
+
+void ServerSocket::operator=(ServerSocket&& other){
+	local_ip = move(other.local_ip);
+	local_port = move(other.local_port);
+	server_control_block = move(other.server_control_block);
+	state = other.state;
+	listening_sockets[local_port] = this;
+	tx_packet_buffer = {};
+	rx_packet_buffer = {};
+	if(not (std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this) != OrderProtocol::sockets.end()))
+		OrderProtocol::sockets.push_back(this);
+}
+
+ServerSocket::~ServerSocket(){
+	auto it = std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this);
+	if(it == OrderProtocol::sockets.end()) return;
+	else OrderProtocol::sockets.erase(it);
 }
 
 ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(IPV4(local_ip),local_port){}

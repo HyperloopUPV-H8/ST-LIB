@@ -1,6 +1,6 @@
 #pragma once
 #define PROTECTIONTYPE_LENGTH 7
-
+#include "ErrorHandler/ErrorHandler.hpp"
 #include "Control/Blocks/MeanCalculator.hpp"
 
 enum ProtectionType : uint64_t {
@@ -143,15 +143,15 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 template<>
 struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ERROR_HANDLER;
-	static constexpr const char* format = "\"type\": \"ERROR_HANDLER\", \"data\": %s ";
+	static constexpr const char* format = "\"type\": \"ERROR_HANDLER\", \"data\": \"%s\"";
 	Boundary(void*){}
 	Boundary(void*, Boundary<void,ERROR_HANDLER>){}
 	Boundary() = default;
 	bool check_bounds() override{
-		return ErrorHandlerModel::error_triggered;
+		return not ErrorHandlerModel::error_triggered;
 	}
 	int get_string_size()override{
-		return BoundaryInterface::get_error_handler_string_size();
+		return snprintf(nullptr,0,format,BoundaryInterface::get_error_handler_string().c_str());
 	}
 	char* serialize(char* dst)override{
 		sprintf(dst,format,BoundaryInterface::get_error_handler_string().c_str());
@@ -167,11 +167,15 @@ struct Boundary<double, TIME_ACCUMULATION> : public BoundaryInterface{
 	double bound;
 	float time_limit;
 	float frequency;
-	Boundary(double bound, float time_limit, float frequency, Boundary<double, Protector>*& external_pointer): bound(bound),time_limit(time_limit),frequency(frequency), moving_order(frequency*time_limit/100){
+	Boundary<double,Protector>** external_pointer;
+	Boundary(double bound, float time_limit, float frequency, Boundary<double, Protector>*& external_pointer): bound(bound),time_limit(time_limit),frequency(frequency), moving_order(frequency*time_limit/100),
+			external_pointer(&external_pointer){
 		external_pointer = this;
 	};
-	Boundary(double* src, Boundary<double, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100){}
-	Boundary(double* src, double bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100){}
+	Boundary(double* src, Boundary<double, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100), external_pointer(boundary.external_pointer){
+		*external_pointer = this;
+	}
+	Boundary(double* src, double bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
 
 private:
 	MeanCalculator<100> mean_calculator;
@@ -230,11 +234,15 @@ struct Boundary<float, TIME_ACCUMULATION> : public BoundaryInterface{
 	float time_limit;
 	float frequency;
 	bool still_good = true;
-	Boundary(float bound, float time_limit, float frequency, Boundary<float, Protector>*& external_pointer): bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100){
+	Boundary<float,Protector>** external_pointer;
+	Boundary(float bound, float time_limit, float frequency, Boundary<float, Protector>*& external_pointer): bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100),
+			external_pointer(&external_pointer){
 		external_pointer = this;
 	};
-	Boundary(float* src, Boundary<float, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100){}
-	Boundary(float* src, float bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100){}
+	Boundary(float* src, Boundary<float, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100), external_pointer(boundary.external_pointer){
+		*external_pointer = this;
+	}
+	Boundary(float* src, float bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
 
 public:
 	MeanCalculator<100> mean_calculator;

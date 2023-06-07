@@ -153,6 +153,11 @@ private:
 	unordered_map<state_id, State> states;
 	unordered_map<state_id, unordered_map<state_id, function<bool()>>> transitions;
 	unordered_map<state_id, StateMachine*> nested_state_machine;
+
+	void enter_state(state_id new_state);
+	void exit_state(state_id old_state);
+	void register_all_timed_actions(state_id state);
+	void unregister_all_timed_actions(state_id state);
 };
 
 template<class TimeUnit>

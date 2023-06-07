@@ -13,18 +13,18 @@ public:
 	}
 
 	void execute() override{
-	    for (int i = 0; i < U; i++) {
-	        for (int j = 0; j < W; j++) {
+	    for (size_t i = 0; i < U; i++) {
+	        for (size_t j = 0; j < W; j++) {
 	            result[i][j] = 0;
-	            for (int k = 0; k < V; k++)
+	            for (size_t k = 0; k < V; k++)
 	                result[i][j] += A[i][k] * B[k][j];
 	        }
 	    }
 	}
 
 	void reset(){
-	    for (int i = 0; i < U; i++) {
-	        for (int j = 0; j < W; j++)
+	    for (size_t i = 0; i < U; i++) {
+	        for (size_t j = 0; j < W; j++)
 	        	result[i][j] = 0.0;
 	    }
 	}
@@ -46,15 +46,15 @@ public:
     }
 
     void execute() override{
-        for (int i = 0; i < U; i++) {
+        for (size_t i = 0; i < U; i++) {
             result[i] = 0;
-            for (int k = 0; k < V; k++)
+            for (size_t k = 0; k < V; k++)
                 result[i] += A[i][k] * B[k];
         }
     }
 
     void reset(){
-    	for(int i = 0; i < U; i++){
+    	for(size_t i = 0; i < U; i++){
     		result[i] = 0.0;
     	}
     }
@@ -76,15 +76,15 @@ public:
     }
 
     void execute() override{
-        for (int j = 0; j < V; j++) {
+        for (size_t j = 0; j < V; j++) {
             result[j] = 0;
-            for (int k = 0; k < U; k++)
+            for (size_t k = 0; k < U; k++)
                 result[j] += A[k] * B[k][j];
         }
     }
 
     void reset(){
-    	for(int i = 0; i < V; i++){
+    	for(size_t i = 0; i < V; i++){
     		result[i] = 0.0;
     	}
     }
@@ -107,7 +107,7 @@ public:
 
     void execute() override{
         result = 0;
-        for (int k = 0; k < U; k++)
+        for (size_t k = 0; k < U; k++)
             result += A[k] * B[k];
     }
 

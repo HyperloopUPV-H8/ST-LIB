@@ -12,7 +12,33 @@ unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
 
 Socket::Socket() = default;
 
+Socket::Socket(Socket&& other):remote_port(move(remote_port)), connection_control_block(move(other.connection_control_block)),
+	 state(other.state){
+	EthernetNode remote_node(other.remote_ip, other.remote_port);
+	connecting_sockets[remote_node] = this;
+}
+
+void Socket::operator=(Socket&& other){
+	connection_control_block = move(other.connection_control_block);
+	remote_port = move(remote_port);
+	state = other.state;
+	EthernetNode remote_node(other.remote_ip, other.remote_port);
+	connecting_sockets[remote_node] = this;
+	if(std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this) == OrderProtocol::sockets.end())
+		OrderProtocol::sockets.push_back(this);
+}
+
+Socket::~Socket(){
+	auto it = std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this);
+	if(it == OrderProtocol::sockets.end()) return;
+	else OrderProtocol::sockets.erase(it);
+}
+
 Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port):remote_ip(remote_ip), remote_port(remote_port){
+	if(not Ethernet::is_running) {
+		ErrorHandler("Cannot declare TCP socket before Ethernet::start()");
+		return;
+	}
 	state = INACTIVE;
 	EthernetNode remote_node(remote_ip, remote_port);
 

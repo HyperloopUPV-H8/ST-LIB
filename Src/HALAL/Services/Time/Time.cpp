@@ -30,6 +30,9 @@ unordered_map<uint8_t, Time::Alarm> Time::low_precision_alarms_by_id;
 unordered_map<uint8_t, Time::Alarm> Time::mid_precision_alarms_by_id;
 unordered_map<TIM_HandleTypeDef*, Time::Alarm> Time::high_precision_alarms_by_timer;
 
+stack<uint8_t> Time::low_precision_erasable_ids;
+stack<uint8_t> Time::mid_precision_erasable_ids;
+
 uint64_t Time::global_tick = 0;
 uint64_t Time::low_precision_tick = 0;
 uint64_t Time::mid_precision_tick = 0;
@@ -80,6 +83,11 @@ void Time::start(){
 	Time::high_precision_timers.insert(&htim5);
 }
 
+bool Time::is_valid_timer(TIM_HandleTypeDef* tim){
+	if(tim == global_timer || tim == low_precision_timer || tim == mid_precision_timer || high_precision_timers.contains(tim)) return true;
+	return false;
+}
+
 
 // PUBLIC SERVICE METHODS
 
@@ -113,6 +121,7 @@ uint8_t Time::register_high_precision_alarm(uint32_t period_in_us, function<void
 			.period = period_in_us,
 			.tim = tim,
 			.alarm = [&](){},
+			.is_on = true
 	};
 
 	NVIC_DisableIRQ(TIM5_IRQn);
@@ -140,12 +149,12 @@ bool Time::unregister_high_precision_alarm(uint8_t id){
 
 	NVIC_DisableIRQ(TIM5_IRQn);
 	NVIC_DisableIRQ(TIM24_IRQn);
-	Time::Alarm alarm = high_precision_alarms_by_id[id];
-	Time::available_high_precision_timers.push(alarm.tim);
+	Time::Alarm& alarm = high_precision_alarms_by_id[id];
 	Time::stop_timer(alarm.tim);
+	Time::available_high_precision_timers.push(alarm.tim);
 
-	Time::high_precision_alarms_by_id.erase(id);
 	Time::high_precision_alarms_by_timer.erase(alarm.tim);
+	Time::high_precision_alarms_by_id.erase(id);
 	NVIC_EnableIRQ(TIM5_IRQn);
 	NVIC_EnableIRQ(TIM24_IRQn);
 
@@ -153,6 +162,10 @@ bool Time::unregister_high_precision_alarm(uint8_t id){
 }
 
 uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void()> func){
+	if(mid_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
+		ErrorHandler("Cannot register mid precision alarm as all id's are already occupied");
+		return 0;
+	}
 	if(std::find_if(TimerPeripheral::timers.begin(),TimerPeripheral::timers.end(), [&](TimerPeripheral& tim) -> bool {
 		return tim.handle == &htim23 && (tim.is_occupied());}) !=  TimerPeripheral::timers.end()){
 		ErrorHandler("htim 23 cannot be used as mid precision timer and PWM or Input Capture Simultaneously");
@@ -163,7 +176,8 @@ uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void(
 			.period = period_in_us/Time::mid_precision_step_in_us,
 			.tim = Time::mid_precision_timer,
 			.alarm = [&](){},
-			.offset = Time::mid_precision_tick
+			.offset = Time::mid_precision_tick,
+			.is_on = true
 	};
 
 	NVIC_DisableIRQ(TIM23_IRQn);
@@ -177,9 +191,13 @@ uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void(
 		Time::mid_precision_registered = true;
 	}
 
+	while(mid_precision_alarms_by_id.contains(mid_precision_ids))
+		mid_precision_ids++;
+
 	alarm.alarm = func;
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
 	NVIC_EnableIRQ(TIM23_IRQn);
+
 
 	return mid_precision_ids++;
 }
@@ -190,19 +208,29 @@ bool Time::unregister_mid_precision_alarm(uint8_t id){
 	}
 
 	NVIC_DisableIRQ(TIM23_IRQn);
-	Time::mid_precision_alarms_by_id.erase(id);
+	Time::Alarm& alarm = Time::mid_precision_alarms_by_id[id];
+	alarm.is_on = false;
+	Time::mid_precision_erasable_ids.push(id);
 	NVIC_EnableIRQ(TIM23_IRQn);
 
 	return true;
 }
 
 uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void()> func){
+	if(low_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
+		ErrorHandler("Cannot register low precision alarm as all id's are already occupied");
+		return 0;
+	}
 	Time::Alarm alarm = {
 			.period = period_in_ms,
 			.tim = low_precision_timer,
 			.alarm = func,
-			.offset = low_precision_tick
+			.offset = low_precision_tick,
+			.is_on = true
 	};
+
+	while(low_precision_alarms_by_id.contains(low_precision_ids))
+		low_precision_ids++;
 
 	NVIC_DisableIRQ(TIM7_IRQn);
 	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
@@ -211,12 +239,20 @@ uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, function<void(
 }
 
 uint8_t Time::register_low_precision_alarm(uint32_t period_in_ms, void(*func)()){
+	if(low_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
+		ErrorHandler("Cannot register low precision alarm as all id's are already occupied");
+		return 0;
+	}
 	Time::Alarm alarm = {
 			.period = period_in_ms,
 			.tim = low_precision_timer,
 			.alarm = func,
-			.offset = low_precision_tick
+			.offset = low_precision_tick,
+			.is_on = true
 	};
+
+	while(low_precision_alarms_by_id.contains(low_precision_ids))
+		low_precision_ids++;
 
 	NVIC_DisableIRQ(TIM7_IRQn);
 	Time::low_precision_alarms_by_id[low_precision_ids] = alarm;
@@ -230,13 +266,21 @@ bool Time::unregister_low_precision_alarm(uint8_t id){
 	}
 
 	NVIC_DisableIRQ(TIM7_IRQn);
-	Time::low_precision_alarms_by_id.erase(id);
+	Time::Alarm& alarm = Time::low_precision_alarms_by_id[id];
+	alarm.is_on = false;
+	Time::low_precision_erasable_ids.push(id);
 	NVIC_EnableIRQ(TIM7_IRQn);
 
 	return true;
 }
 
 void Time::set_timeout(int milliseconds, function<void()> callback){
+	if(low_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
+		ErrorHandler("Cannot register timeout as all low precision alarms id's are already occupied");
+		return;
+	}
+	while(low_precision_alarms_by_id.contains(low_precision_ids))
+		low_precision_ids++;
 	uint8_t id = low_precision_ids;
 	uint64_t tick_on_register = low_precision_tick;
 	Time::register_low_precision_alarm(milliseconds, [&,id,callback,tick_on_register](){
@@ -259,23 +303,31 @@ void Time::high_precision_timer_callback(TIM_HandleTypeDef* tim){
 void Time::mid_precision_timer_callback(){
 	for(pair<const uint8_t,Time::Alarm>& pair : Time::mid_precision_alarms_by_id){
 		Time::Alarm& alarm = pair.second;
-		if(alarm.offset == Time::mid_precision_tick) continue;
+		if(alarm.is_on == false || alarm.offset == Time::mid_precision_tick) continue;
 		if((Time::mid_precision_tick - alarm.offset) % alarm.period == 0){
 			alarm.alarm();
 		}
 	}
 	Time::mid_precision_tick++;
+	while(not Time::mid_precision_erasable_ids.empty()){
+		Time::mid_precision_alarms_by_id.erase(Time::mid_precision_erasable_ids.top());
+		Time::mid_precision_erasable_ids.pop();
+	}
 }
 
 void Time::low_precision_timer_callback(){
 	for(auto& pair : Time::low_precision_alarms_by_id){
 		Time::Alarm& alarm = pair.second;
-		if(alarm.offset == Time::low_precision_tick) continue;
+		if(alarm.is_on == false || alarm.offset == Time::low_precision_tick) continue;
 		if((Time::low_precision_tick - alarm.offset) % alarm.period == 0){
 			alarm.alarm();
 		}
 	}
-	low_precision_tick += 1;
+	low_precision_tick++;
+	while(not Time::low_precision_erasable_ids.empty()) {
+		Time::low_precision_alarms_by_id.erase(Time::low_precision_erasable_ids.top());
+		Time::low_precision_erasable_ids.pop();
+	}
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* tim){

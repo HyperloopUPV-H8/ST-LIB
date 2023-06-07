@@ -6,23 +6,32 @@
  */
 
 #include "Communication/Ethernet/UDP/DatagramSocket.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_ETH_MODULE_ENABLED
 
 DatagramSocket::DatagramSocket() = default;
 
-DatagramSocket::DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port): local_ip(local_ip), local_port(local_port), remote_ip(remote_ip), remote_port(remote_port){
+DatagramSocket::DatagramSocket(DatagramSocket&& other):udp_control_block(move(other.udp_control_block)), local_ip(move(other.local_ip)) , local_port(move(other.local_port)) ,remote_ip(move(other.remote_ip)),
+		remote_port(move(remote_port))
+		{}
 
+DatagramSocket::DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port): local_ip(local_ip), local_port(local_port), remote_ip(remote_ip), remote_port(remote_port){
+		if(not Ethernet::is_running) {
+			ErrorHandler("Cannot declare UDP socket before Ethernet::start()");
+			return;
+		}
 		udp_control_block = udp_new();
 		err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
 
 		if(error == ERR_OK){
 		   udp_recv(udp_control_block, receive_callback, nullptr);
 		   udp_connect(udp_control_block, &remote_ip.address, remote_port);
+		   Ethernet::update();
 		}
 		else{
 		   udp_remove(udp_control_block);
-		   //TODO: Error Handler
+		   ErrorHandler("Error binding UDP socket");
 		}
 	}
 
@@ -30,6 +39,31 @@ DatagramSocket::DatagramSocket(EthernetNode local_node, EthernetNode remote_node
 
 DatagramSocket::~DatagramSocket(){
 	close();
+}
+
+void DatagramSocket::operator=(DatagramSocket&& other){
+	udp_control_block = move(other.udp_control_block);
+	local_ip = move(other.local_ip);
+	local_port = move(other.local_port);
+	remote_ip = other.remote_ip;
+	remote_port = other.remote_port;
+	udp_disconnect(udp_control_block);
+	udp_connect(udp_control_block, &remote_ip.address, remote_port);
+}
+
+void DatagramSocket::reconnect(){
+	udp_disconnect(udp_control_block);
+	err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
+
+	if(error == ERR_OK){
+	   udp_recv(udp_control_block, receive_callback, nullptr);
+	   udp_connect(udp_control_block, &remote_ip.address, remote_port);
+	   Ethernet::update();
+	}
+	else{
+	   udp_remove(udp_control_block);
+	   ErrorHandler("Error binding UDP socket");
+	}
 }
 
 void DatagramSocket::close(){
