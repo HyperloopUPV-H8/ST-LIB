@@ -20,6 +20,7 @@ public:
 	uint8_t get_id();
 	void set_offset(Type new_offset);
 	Type get_offset();
+	Type* get_value_pointer();
 
 protected:
 	uint8_t id;
@@ -59,5 +60,10 @@ Type LinearSensor<Type>::get_offset(){
 template<class Type>
 void LinearSensor<Type>::set_offset(Type new_offset){
 	offset = new_offset;
+}
+
+template<class Type>
+Type* LinearSensor<Type>::get_value_pointer(){
+	return value;
 }
 
