@@ -25,6 +25,7 @@ protected:
 	float* value;
 };
 
+template<size_t N>
 PT100<N>::PT100(Pin& pin, float* value, MovingAverage<N>& filter) : value(value), filter(&filter){
 	id = ADC::inscribe(pin);
 	Sensor::adc_id_list.push_back(id);
