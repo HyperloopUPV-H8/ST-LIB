@@ -51,3 +51,29 @@ void DualPWM::turn_off() {
     ErrorHandler("Dual PWM negative channel did not stop correctly", 0);
   }
 }
+
+void DualPWM::turn_on_positive() {
+  if (HAL_TIM_PWM_Start(peripheral->handle, channel) != HAL_OK) {
+	ErrorHandler("Dual PWM positive channel did not start correctly", 0);
+  }
+}
+
+void DualPWM::turn_on_negated() {
+  if (HAL_TIMEx_PWMN_Start(peripheral->handle, channel) != HAL_OK) {
+	ErrorHandler("Dual PWM negative channel did not start correctly", 0);
+  }
+}
+
+void DualPWM::turn_off_positive() {
+  if (HAL_TIM_PWM_Stop(peripheral->handle, channel) != HAL_OK) {
+	ErrorHandler("Dual PWM positive channel did not stop correctly", 0);
+  }
+}
+
+void DualPWM::turn_off_negated() {
+  if (HAL_TIMEx_PWMN_Stop(peripheral->handle, channel) != HAL_OK) {
+	ErrorHandler("Dual PWM negative channel did not stop correctly", 0);
+  }
+}
+
+

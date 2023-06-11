@@ -26,10 +26,11 @@ public:
 	void set_phase(float phase);
 	float get_phase();
 
+	DualPhasedPWM positive_pwm;
+	DualPhasedPWM negative_pwm;
 private:
 	bool is_dual;
 
-	DualPhasedPWM positive_pwm;
-	DualPhasedPWM negative_pwm;
+
 	uint8_t enable;
 };
