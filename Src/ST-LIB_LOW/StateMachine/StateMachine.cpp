@@ -331,3 +331,8 @@ void StateMachine::unregister_all_timed_actions(state_id state) {
 		nested_sm->states[nested_sm->current_state].unregister_all_timed_actions();
 	}
 }
+
+unordered_map<StateMachine::state_id, State>& StateMachine::get_states(){
+	return states;
+}
+

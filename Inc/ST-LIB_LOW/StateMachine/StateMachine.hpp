@@ -151,6 +151,7 @@ public:
 
 	void add_state_machine(StateMachine& state_machine, state_id state);
 
+	unordered_map<state_id, State>& get_states();
 
 private:
 	unordered_map<state_id, State> states;

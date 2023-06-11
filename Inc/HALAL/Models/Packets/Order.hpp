@@ -50,7 +50,7 @@ public:
     void parse(void* data) override {
         StackPacket<BufferLength,Types...>::parse(data);
     }
-    void parse(OrderProtocol* socket, void* data){
+    void parse(OrderProtocol* socket, void* data) override{
     	parse(data);
     }
     size_t get_size() override {
