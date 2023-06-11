@@ -23,7 +23,7 @@ class Integrator<IntegratorType::Trapezoidal> : public ControlBlock<double,doubl
         double ki;
         bool first_execution = true;
     public:
-        Integrator(double period, double ki):ControlBlock<double,double>(0.0), period(period), ki(ki){}
+        Integrator(double period, double ki):ControlBlock<double,double>(0.0), period(period), ki(ki){output_value = 0.0;}
         void execute() override	{
             buffer[index] = input_value;
             if(first_execution){
@@ -98,7 +98,7 @@ class Integrator<IntegratorType::BackwardEuler>: public ControlBlock<double,doub
         double ki;
         bool first_execution = true;
     public:
-        Integrator(double period, double ki):ControlBlock<double,double>(0.0), period(period), ki(ki) {}
+        Integrator(double period, double ki):ControlBlock<double,double>(0.0), period(period), ki(ki) {output_value = 0.0;}
         void execute() override	{
             buffer[index] = input_value;
             if(first_execution){
