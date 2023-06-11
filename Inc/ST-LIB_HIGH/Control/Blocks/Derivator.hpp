@@ -57,7 +57,7 @@ class SimpleDerivator : public ControlBlock<double,double>{
         double buffer[N] = {0.0};
         int index = 0;
     public:
-        SimpleDerivator(double period): ControlBlock<double,double>(0.0), period(period){}
+        SimpleDerivator(double period): ControlBlock<double,double>(0.0), period(period){ output_value = 0.0;}
         void execute()override{
             buffer[index] = input_value;
             output_value = (buffer[index] - buffer[((index-1)%(N) + (N))%(N)])/period;
