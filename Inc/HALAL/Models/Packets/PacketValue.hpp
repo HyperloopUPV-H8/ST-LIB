@@ -144,6 +144,33 @@ template<class Type,size_t N>
 PacketValue(Type(*)[N])->PacketValue<Type(&)[N]>;
 #endif
 
+template<class Type,size_t N, size_t M>
+class PacketValue<Type(&)[N][M]>: public PacketValue<> {
+public:
+    using value_type = Type;
+    Type(*src )[N][M] = nullptr;
+    PacketValue() = default;
+    PacketValue(Type(*src)[N][M]): src(src) {}
+    ~PacketValue() = default;
+    void* get_pointer() override {
+        return src;
+    }
+    size_t get_size() override {
+        return N*M*sizeof(Type);
+    }
+    void parse(void* data) override {
+        memcpy(src, data, get_size());
+    }
+    void copy_to(void* data) override {
+        memcpy(data, src, get_size());
+    }
+};
+
+#if __cpp_deduction_guides >= 201606
+template<class Type,size_t N, size_t M>
+PacketValue(Type(*)[N][M])->PacketValue<Type(&)[N][M]>;
+#endif
+
 
 template<class Type,size_t N> 
 class PacketValue<Type*(&)[N]>: public PacketValue<> {
