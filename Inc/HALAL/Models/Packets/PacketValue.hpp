@@ -117,7 +117,7 @@ public:
     }
 };
 
-template<class Type,size_t N> 
+template<class Type,size_t N>
 class PacketValue<Type(&)[N]>: public PacketValue<> {
 public:
     using value_type = Type;
@@ -140,12 +140,11 @@ public:
 };
 
 #if __cpp_deduction_guides >= 201606
-template<class Type,size_t N> 
+template<class Type,size_t N>
 PacketValue(Type(*)[N])->PacketValue<Type(&)[N]>;
 #endif
 
-
-template<class Type,size_t N> 
+template<class Type,size_t N>
 class PacketValue<Type*(&)[N]>: public PacketValue<> {
 public:
     using value_type = Type*;
