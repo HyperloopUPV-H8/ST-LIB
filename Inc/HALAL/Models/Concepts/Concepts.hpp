@@ -92,3 +92,9 @@ struct total_sizeof<>{
 public:
     static constexpr size_t value = 0;
 };
+
+template<class Type>
+concept Array = std::is_array<Type>::value;
+
+template<class Type>
+concept NotArray = not Array<Type>;
