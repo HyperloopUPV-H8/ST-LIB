@@ -9,9 +9,9 @@
 
 #ifdef HAL_TIM_MODULE_ENABLED
 
-typedef std::chrono::milliseconds ms;
-typedef std::chrono::microseconds us;
-typedef std::chrono::seconds s;
+using ms = std::chrono::milliseconds;
+using us = std::chrono::microseconds;
+using s  = std::chrono::seconds;
 
 enum AlarmType{
 	LOW_PRECISION,

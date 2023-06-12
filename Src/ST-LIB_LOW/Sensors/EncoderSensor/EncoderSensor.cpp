@@ -47,6 +47,10 @@ void EncoderSensor::read(){
 	}
 }
 
+void EncoderSensor::reset(){
+	Encoder::reset(id);
+}
+
 uint8_t EncoderSensor::get_id(){
 	return id;
 }
