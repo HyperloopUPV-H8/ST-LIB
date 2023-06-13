@@ -105,8 +105,8 @@ void Socket::process_data(){
 		struct pbuf* packet = rx_packet_buffer.front();
 		rx_packet_buffer.pop();
 		uint8_t* new_data = (uint8_t*)(packet->payload);
-		Order::process_data(this, new_data);
 		tcp_recved(socket_control_block, packet->tot_len);
+		Order::process_data(this, new_data);
 		pbuf_free(packet);
 	}
 }
