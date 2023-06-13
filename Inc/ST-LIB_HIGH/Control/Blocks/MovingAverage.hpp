@@ -3,8 +3,6 @@
 #include "stdio.h"
 #include "../ControlSystem.hpp"
 
-double computeMA(double input_value);
-
 template<size_t N>
 class MovingAverage : public ControlBlock<double,double> {
     private:
