@@ -50,7 +50,7 @@ private:
 	static constexpr uint16_t fault_id = 2;
 	static char* message;
 	static size_t message_size;
-	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}";
+	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}\0";
 
     static Boards::ID board_id;
     static vector<Protection> low_frequency_protections;
