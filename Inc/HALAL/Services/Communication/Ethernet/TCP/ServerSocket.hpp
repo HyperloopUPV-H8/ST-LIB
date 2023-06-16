@@ -77,6 +77,8 @@ public:
 
 	void send();
 
+	bool is_connected();
+
 private:
 
 	static err_t accept_callback(void* arg, struct tcp_pcb* incomming_control_block, err_t error);

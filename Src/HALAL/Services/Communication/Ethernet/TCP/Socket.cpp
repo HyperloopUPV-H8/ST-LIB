@@ -111,6 +111,10 @@ void Socket::process_data(){
 	}
 }
 
+bool Socket::is_connected(){
+	return state == Socket::SocketState::CONNECTED;
+}
+
 err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, err_t error){
 	IPV4 remote_ip;
 	remote_ip.address = client_control_block->remote_ip;
