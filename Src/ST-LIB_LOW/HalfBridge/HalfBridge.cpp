@@ -19,6 +19,7 @@ void HalfBridge::turn_on() {
 	positive_pwm.turn_on();
 	negative_pwm.turn_on();
 	DigitalOutputService::turn_on(enable); // enable at the end to avoid noise
+	DigitalOutputService::set_pin_state(enable, PinState::OFF);
 }
 
 void HalfBridge::turn_off() {
@@ -38,10 +39,10 @@ void HalfBridge::set_frequency(int32_t frequency) {
 }
 
 void HalfBridge::set_phase(float phase) {
-	positive_pwm.set_phase(phase);
-	negative_pwm.set_phase(-phase);
+	positive_pwm.set_phase(-phase);
+	negative_pwm.set_phase(phase);
 }
 
 float HalfBridge::get_phase() {
-	return positive_pwm.phase;
+	return negative_pwm.phase;
 }
