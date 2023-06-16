@@ -123,6 +123,10 @@ void ServerSocket::send(){
 	}
 }
 
+bool ServerSocket::is_connected(){
+	return state == ServerSocket::ServerState::ACCEPTED;
+}
+
 err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control_block, err_t error){
 	if(listening_sockets.contains(incomming_control_block->local_port)){
 		ServerSocket* server_socket = listening_sockets[incomming_control_block->local_port];
