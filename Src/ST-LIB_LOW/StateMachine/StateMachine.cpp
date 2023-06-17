@@ -4,17 +4,20 @@
 
 #include "StateMachine/StateMachine.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "StateMachine/StateOrder.hpp"
 
 void State::enter() {
 	for (function<void()>& action : on_enter_actions) {
 		action();
 	}
+	if(state_orders_ids.size() != 0) StateOrder::add_state_orders(state_orders_ids);
 }
 
 void State::exit() {
 	for (function<void()>& action : on_exit_actions) {
 		action();
 	}
+	if(state_orders_ids.size() != 0) StateOrder::remove_state_orders(state_orders_ids);
 }
 
 void State::unregister_timed_action(TimedAction* timed_action){
@@ -86,6 +89,11 @@ void State::register_all_timed_actions(){
 		timed_action.is_on = true;
 	}
 }
+
+void State::add_state_order(uint16_t id){
+	state_orders_ids.push_back(id);
+}
+
 
 /**
  * This is a constructor for a StateMachine object that initializes the initial state and creates a
@@ -324,3 +332,8 @@ void StateMachine::unregister_all_timed_actions(state_id state) {
 		nested_sm->states[nested_sm->current_state].unregister_all_timed_actions();
 	}
 }
+
+unordered_map<StateMachine::state_id, State>& StateMachine::get_states(){
+	return states;
+}
+
