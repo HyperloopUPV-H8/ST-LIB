@@ -21,7 +21,6 @@ void ProtectionManager::to_fault(){
 	    ProtectionManager::general_state_machine->force_change_state(fault_state_id);
 		for(OrderProtocol* socket : OrderProtocol::sockets){
 			socket->send_order(fault_order);
-			socket->send_order(fault_order);
 		}
 	}
 
