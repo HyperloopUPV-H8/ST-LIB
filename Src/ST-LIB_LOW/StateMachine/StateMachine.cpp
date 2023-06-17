@@ -257,7 +257,7 @@ void StateMachine::force_change_state(uint8_t new_state) {
 		return;
 	}
 
-  if(current_state == new_state) return;
+    if(current_state == new_state) return;
 
 	unregister_all_timed_actions(current_state);
 	exit_state(current_state);
@@ -303,6 +303,7 @@ void StateMachine::exit_state(state_id state) {
 	if (nested_state_machine.contains(state)) {
 		StateMachine* nested_sm = nested_state_machine[state];
 		nested_sm->exit_state(nested_sm->current_state);
+		nested_sm->current_state = nested_sm->initial_state;
 	}
 }
 

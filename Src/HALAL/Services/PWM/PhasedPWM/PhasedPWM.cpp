@@ -65,6 +65,7 @@ void PhasedPWM::set_duty_cycle(float duty_cycle) {
 void PhasedPWM::set_frequency(uint32_t frequency) {
 	TIM_TypeDef& timer = *peripheral->handle->Instance;
 	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / (timer.PSC+1)) / 2 / frequency;
+	this->frequency = frequency;
 	set_duty_cycle(duty_cycle);
 }
 

@@ -21,11 +21,13 @@ map<TIM_HandleTypeDef*, TIM_TypeDef*> TimerPeripheral::handle_to_timer= {
 
 
 TimerPeripheral::InitData::InitData(
-		TIM_TYPE type, uint32_t prescaler, uint32_t period, uint32_t deadtime) :
+		TIM_TYPE type, uint32_t prescaler, uint32_t period, uint32_t deadtime, uint32_t polarity, uint32_t negated_polarity) :
 		prescaler(prescaler),
 		period(period),
 		deadtime(deadtime),
-		type(type)
+		type(type),
+		polarity(polarity),
+		negated_polarity(negated_polarity)
 		{}
 
 TimerPeripheral::TimerPeripheral(
@@ -98,9 +100,8 @@ void TimerPeripheral::init() {
 		}
 
 		for (PWMData pwm_data : init_data.pwm_channels) {
-			sConfigOC.Pulse = 0;
-			sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-			sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+			sConfigOC.OCPolarity = init_data.polarity;
+			sConfigOC.OCNPolarity = init_data.negated_polarity;
 			sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
 			sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
 			sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;

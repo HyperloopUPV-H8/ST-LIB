@@ -75,6 +75,8 @@ public:
 
 	void process_data();
 
+	bool is_connected();
+
 	static err_t connect_callback(void* arg, struct tcp_pcb* client_control_block, err_t error);
 	static err_t receive_callback(void* arg, struct tcp_pcb* client_control_block, struct pbuf* packet_buffer, err_t error);
 	static err_t poll_callback(void* arg, struct tcp_pcb* client_control_block);
