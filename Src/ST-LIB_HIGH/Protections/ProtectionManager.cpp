@@ -19,11 +19,15 @@ void ProtectionManager::link_state_machine(StateMachine& general_state_machine, 
 void ProtectionManager::to_fault(){
     if(general_state_machine->current_state != fault_state_id){
 	    ProtectionManager::general_state_machine->force_change_state(fault_state_id);
-		for(OrderProtocol* socket : OrderProtocol::sockets){
-			socket->send_order(fault_order);
-		}
+	    propagate_fault();
 	}
 
+}
+
+void ProtectionManager::propagate_fault(){
+	for(OrderProtocol* socket : OrderProtocol::sockets){
+		socket->send_order(fault_order);
+	}
 }
 
 void ProtectionManager::check_protections() {

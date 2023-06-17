@@ -44,6 +44,7 @@ public:
 
     static void check_protections();
     static void check_high_frequency_protections();
+    static void propagate_fault();
 
 private:
 	static constexpr uint16_t warning_id = 1;
