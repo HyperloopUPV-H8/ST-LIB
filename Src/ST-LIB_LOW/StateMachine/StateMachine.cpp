@@ -4,7 +4,6 @@
 
 #include "StateMachine/StateMachine.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-#include "StateMachine/StateOrder.hpp"
 
 void State::enter() {
 	for (function<void()>& action : on_enter_actions) {
@@ -301,6 +300,7 @@ void StateMachine::enter_state(state_id state) {
 
 	if (nested_state_machine.contains(state)) {
 		StateMachine* nested_sm = nested_state_machine[state];
+		nested_sm->is_on = true;
 		nested_sm->enter_state(nested_sm->current_state);
 	}
 }
@@ -310,6 +310,7 @@ void StateMachine::exit_state(state_id state) {
 
 	if (nested_state_machine.contains(state)) {
 		StateMachine* nested_sm = nested_state_machine[state];
+		nested_sm->is_on = false;
 		nested_sm->exit_state(nested_sm->current_state);
 		nested_sm->current_state = nested_sm->initial_state;
 	}
