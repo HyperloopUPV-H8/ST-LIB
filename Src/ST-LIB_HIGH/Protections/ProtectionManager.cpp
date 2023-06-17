@@ -5,6 +5,7 @@
 StateMachine* ProtectionManager::general_state_machine = nullptr;
 Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, ProtectionManager::to_fault};
 Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
+StackOrder<0> ProtectionManager::fault_order(0,to_fault);
 
 void ProtectionManager::set_id(Boards::ID board_id){
     ProtectionManager::board_id = board_id;
@@ -16,8 +17,14 @@ void ProtectionManager::link_state_machine(StateMachine& general_state_machine, 
 }
 
 void ProtectionManager::to_fault(){
-    if(general_state_machine->current_state != fault_state_id)
+    if(general_state_machine->current_state != fault_state_id){
 	    ProtectionManager::general_state_machine->force_change_state(fault_state_id);
+		for(OrderProtocol* socket : OrderProtocol::sockets){
+			socket->send_order(fault_order);
+			socket->send_order(fault_order);
+		}
+	}
+
 }
 
 void ProtectionManager::check_protections() {
@@ -37,10 +44,10 @@ void ProtectionManager::check_protections() {
         serialize(protection, current_timestamp);
 
         switch(protection.fault_type){
-        case FaultType::WARNING:
+        case protections::FaultType::WARNING:
         	warning_notification.notify(message);
         	break;
-        case FaultType::FAULT:
+        case protections::FaultType::FAULT:
         	fault_notification.notify(message);
         	break;
         default:
@@ -68,9 +75,9 @@ void ProtectionManager::check_high_frequency_protections(){
         serialize(protection, current_timestamp);
 
         switch(protection.fault_type){
-        case FaultType::WARNING:
+        case protections::FaultType::WARNING:
         	warning_notification.notify(message);
-        case FaultType::FAULT:
+        case protections::FaultType::FAULT:
         	fault_notification.notify(message);
         default:
         	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");

@@ -60,6 +60,7 @@ private:
 
     static Notification fault_notification;
     static Notification warning_notification;
+    static StackOrder<0> fault_order;
 
     static int get_string_size(Protection& prot ,const Time::RTCData& timestamp){
     	return snprintf(nullptr,0,format,"","","") + prot.get_string_size() + Time::RTCData::get_string_size(timestamp);
