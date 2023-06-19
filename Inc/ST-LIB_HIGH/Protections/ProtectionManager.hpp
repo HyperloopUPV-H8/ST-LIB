@@ -11,15 +11,25 @@
 #define add_protection(src,...)  \
 		{\
             Protection& ref = ProtectionManager::_add_protection(src,__VA_ARGS__); \
-            ref.set_name((char*)malloc(sizeof(getname(src))-1)); \
-            sprintf(ref.get_name(),"%s",getname(src)+1); \
+            if (getname(src)[0] == '&'){ \
+            	ref.set_name((char*)malloc(sizeof(getname(src))-1));\
+            	sprintf(ref.get_name(),"%s",getname(src)+1); \
+            }else{\
+            	ref.set_name((char*)malloc(sizeof(getname(src))));\
+            	sprintf(ref.get_name(),"%s",getname(src)); \
+            }\
 		}\
 
 #define add_high_frequency_protection(src,...)  \
 		{\
             Protection& ref = ProtectionManager::_add_high_frequency_protection(src,__VA_ARGS__); \
-            ref.set_name((char*)malloc(sizeof(getname(src))-1)); \
-            sprintf(ref.get_name(),"%s",getname(src)+1); \
+            if (getname(src)[0] == '&'){ \
+            	ref.set_name((char*)malloc(sizeof(getname(src))-1)); \
+            	sprintf(ref.get_name(),"%s",getname(src)+1); \
+            }else{\
+            	ref.set_name((char*)malloc(sizeof(getname(src))));\
+            	sprintf(ref.get_name(),"%s",getname(src)); \
+            }\
 		}\
 
 class ProtectionManager {
@@ -42,9 +52,10 @@ public:
         return high_frequency_protections.back();
     }
 
+    static void add_standard_protections();
     static void check_protections();
     static void check_high_frequency_protections();
-    static void propagate_fault();
+    static void fault_and_propagate();
 
 private:
 	static constexpr uint16_t warning_id = 1;

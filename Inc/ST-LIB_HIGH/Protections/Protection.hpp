@@ -4,9 +4,9 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "Boundary.hpp"
 
-namespace protections{
+namespace Protections{
 enum FaultType{
-	FAULT,
+	FAULT = 0,
 	WARNING
 };
 }
@@ -17,7 +17,7 @@ private:
     char* name = nullptr;
     vector<unique_ptr<BoundaryInterface>> boundaries;
     BoundaryInterface* jumped_protection = nullptr;
-    static constexpr protections::FaultType fault_type = protections::FaultType::FAULT;
+    static constexpr Protections::FaultType fault_type = Protections::FaultType::FAULT;
 public:
     template<class Type, ProtectionType... Protector, template<class,ProtectionType> class Boundaries>
     Protection(Type* src, Boundaries<Type,Protector>... protectors) {
