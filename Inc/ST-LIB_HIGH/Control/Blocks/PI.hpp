@@ -10,6 +10,7 @@ class PI: public ControlBlock<double,double>{
         double error;
         Integrator<IntegratorMethod> integrator;
     public:
+        PI() = default;
         PI(double kp, double ki, double period): kp(kp), integrator(period,ki) {}
         void execute() override {
             integrator.input(this->input_value);
