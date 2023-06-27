@@ -72,7 +72,6 @@ public:
 
     void parse(OrderProtocol* socket, void* data) {
     	received_socket = socket;
-    	if(buffer != nullptr) free(buffer);
     	char* temp = (char*)malloc(get_string_size(data));
     	memcpy(temp, data+sizeof(id)+sizeof(message_size_t), get_string_size(data));
     	rx_message = string(temp);
