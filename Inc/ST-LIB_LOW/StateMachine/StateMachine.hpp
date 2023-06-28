@@ -123,12 +123,18 @@ public:
 	TimedAction* add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
 	template<class TimeUnit>
 	TimedAction* add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, vector<state_id> states);
+	template<class TimeUnit>
+	TimedAction* add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
 
 	template<class TimeUnit>
 	TimedAction* add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
 	template<class TimeUnit>
 	TimedAction* add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, vector<state_id> states);
+	template<class TimeUnit>
+	TimedAction* add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
 
+	template<class TimeUnit>
+	TimedAction* add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
 	template<class TimeUnit>
 	TimedAction* add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
 	template<class TimeUnit>
@@ -188,6 +194,11 @@ TimedAction* StateMachine::add_low_precision_cyclic_action(function<void()> acti
 }
 
 template<class TimeUnit>
+TimedAction* StateMachine::add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period) {
+	return add_low_precision_cyclic_action(action, period, current_state);
+}
+
+template<class TimeUnit>
 TimedAction* StateMachine::add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state) {
 	if (not states.contains(state)) {
 		ErrorHandler("The state %d is not added to the state machine", state);
@@ -215,6 +226,11 @@ TimedAction* StateMachine::add_mid_precision_cyclic_action(function<void()> acti
 }
 
 template<class TimeUnit>
+TimedAction* StateMachine::add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period) {
+	return add_mid_precision_cyclic_action(action, period, current_state);
+}
+
+template<class TimeUnit>
 TimedAction* StateMachine::add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state) {
 	if (not states.contains(state)) {
 		ErrorHandler("The state %d is not added to the state machine", state);
@@ -239,6 +255,11 @@ TimedAction* StateMachine::add_high_precision_cyclic_action(function<void()> act
 		timed_action = add_high_precision_cyclic_action(action, period, state);
 	}
 	return timed_action;
+}
+
+template<class TimeUnit>
+TimedAction* StateMachine::add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period) {
+	return add_high_precision_cyclic_action(action, period, current_state);
 }
 
 #endif
