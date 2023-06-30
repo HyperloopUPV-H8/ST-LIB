@@ -120,19 +120,25 @@ public:
 	void add_transition(state_id old_state, state_id new_state, function<bool()> transition);
 
 	template<class TimeUnit>
-	TimedAction* add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
-	template<class TimeUnit>
 	TimedAction* add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
+	template<class TimeUnit>
+	TimedAction* add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, vector<state_id> states);
+	template<class TimeUnit>
+	TimedAction* add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
 
 	template<class TimeUnit>
-	TimedAction* add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
-	template<class TimeUnit>
 	TimedAction* add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
+	template<class TimeUnit>
+	TimedAction* add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, vector<state_id> states);
+	template<class TimeUnit>
+	TimedAction* add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
 
 	template<class TimeUnit>
 	TimedAction* add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period);
 	template<class TimeUnit>
 	TimedAction* add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
+	template<class TimeUnit>
+	TimedAction* add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, vector<state_id> states);
 
 	void remove_cyclic_action(TimedAction* timed_action);
 	void remove_cyclic_action(TimedAction* timed_action, state_id state);
@@ -179,7 +185,16 @@ TimedAction* StateMachine::add_low_precision_cyclic_action(function<void()> acti
 }
 
 template<class TimeUnit>
-TimedAction* StateMachine::add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
+TimedAction* StateMachine::add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, vector<state_id> states) {
+	TimedAction* timed_action = nullptr;
+	for (state_id state : states) {
+		timed_action = add_low_precision_cyclic_action(action, period, state);
+	}
+	return timed_action;
+}
+
+template<class TimeUnit>
+TimedAction* StateMachine::add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period) {
 	return add_low_precision_cyclic_action(action, period, current_state);
 }
 
@@ -202,7 +217,16 @@ TimedAction* StateMachine::add_mid_precision_cyclic_action(function<void()> acti
 }
 
 template<class TimeUnit>
-TimedAction* StateMachine::add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
+TimedAction* StateMachine::add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, vector<state_id> states) {
+	TimedAction* timed_action = nullptr;
+	for (state_id state : states) {
+		timed_action = add_mid_precision_cyclic_action(action, period, state);
+	}
+	return timed_action;
+}
+
+template<class TimeUnit>
+TimedAction* StateMachine::add_mid_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period) {
 	return add_mid_precision_cyclic_action(action, period, current_state);
 }
 
@@ -225,7 +249,16 @@ TimedAction* StateMachine::add_high_precision_cyclic_action(function<void()> act
 }
 
 template<class TimeUnit>
-TimedAction* StateMachine::add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period){
+TimedAction* StateMachine::add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, vector<state_id> states) {
+	TimedAction* timed_action = nullptr;
+	for (state_id state : states) {
+		timed_action = add_high_precision_cyclic_action(action, period, state);
+	}
+	return timed_action;
+}
+
+template<class TimeUnit>
+TimedAction* StateMachine::add_high_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period) {
 	return add_high_precision_cyclic_action(action, period, current_state);
 }
 
