@@ -5,6 +5,8 @@
 #include "Sensors/LinearSensor/LinearSensor.hpp"
 #include "Sensors/LinearSensor/FilteredLinearSensor.hpp"
 #include "StateMachine/StateMachine.hpp"
+#include "StateMachine/HeapStateOrder.hpp"
+#include "StateMachine/StackStateOrder.hpp"
 #include "DigitalOutput/DigitalOutput.hpp"
 #include "HalfBridge/HalfBridge.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
@@ -16,8 +18,6 @@
 #include "Sensors/LookupSensor/LookupSensor.hpp"
 #include "Sensors/EncoderSensor/EncoderSensor.hpp"
 #include "Sensors/NTC/NTC.hpp"
-#include "StateMachine/HeapStateOrder.hpp"
-#include "StateMachine/StackStateOrder.hpp"
 
 
 class STLIB_LOW {
