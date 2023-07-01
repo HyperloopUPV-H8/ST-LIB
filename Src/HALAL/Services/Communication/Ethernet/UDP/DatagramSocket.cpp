@@ -27,10 +27,12 @@ DatagramSocket::DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_i
 		if(error == ERR_OK){
 		   udp_recv(udp_control_block, receive_callback, nullptr);
 		   udp_connect(udp_control_block, &remote_ip.address, remote_port);
+		   is_disconnected = false;
 		   Ethernet::update();
 		}
 		else{
 		   udp_remove(udp_control_block);
+		   is_disconnected = true;
 		   ErrorHandler("Error binding UDP socket");
 		}
 	}
@@ -38,7 +40,8 @@ DatagramSocket::DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_i
 DatagramSocket::DatagramSocket(EthernetNode local_node, EthernetNode remote_node): DatagramSocket(local_node.ip, local_node.port, remote_node.ip, remote_node.port){}
 
 DatagramSocket::~DatagramSocket(){
-	close();
+	if(not is_disconnected)
+		close();
 }
 
 void DatagramSocket::operator=(DatagramSocket&& other){
@@ -47,21 +50,23 @@ void DatagramSocket::operator=(DatagramSocket&& other){
 	local_port = move(other.local_port);
 	remote_ip = other.remote_ip;
 	remote_port = other.remote_port;
-	udp_disconnect(udp_control_block);
-	udp_connect(udp_control_block, &remote_ip.address, remote_port);
+	other.is_disconnected = true;
 }
 
 void DatagramSocket::reconnect(){
 	udp_disconnect(udp_control_block);
+	is_disconnected = true;
 	err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
 
 	if(error == ERR_OK){
 	   udp_recv(udp_control_block, receive_callback, nullptr);
 	   udp_connect(udp_control_block, &remote_ip.address, remote_port);
+	   is_disconnected = false;
 	   Ethernet::update();
 	}
 	else{
 	   udp_remove(udp_control_block);
+	   is_disconnected = true;
 	   ErrorHandler("Error binding UDP socket");
 	}
 }
@@ -69,6 +74,7 @@ void DatagramSocket::reconnect(){
 void DatagramSocket::close(){
 	udp_disconnect(udp_control_block);
 	udp_remove(udp_control_block);
+	is_disconnected = true;
 }
 
 void DatagramSocket::receive_callback(void *args, struct udp_pcb *udp_control_block, struct pbuf *packet_buffer, const ip_addr_t *remote_address, u16_t port){

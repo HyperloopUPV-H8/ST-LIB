@@ -97,6 +97,10 @@ void ProtectionManager::check_high_frequency_protections(){
     }
 }
 
+void ProtectionManager::warn(string message){
+	warning_notification.notify(message);
+}
+
 Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;
 size_t ProtectionManager::message_size = 0;
 char* ProtectionManager::message = nullptr;
