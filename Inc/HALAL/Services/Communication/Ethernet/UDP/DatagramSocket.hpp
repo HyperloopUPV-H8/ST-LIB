@@ -14,6 +14,7 @@ public:
 	uint32_t local_port;
 	IPV4 remote_ip;
 	uint32_t remote_port;
+	bool is_disconnected = true;
 
 	DatagramSocket();
 	DatagramSocket(DatagramSocket&& other);

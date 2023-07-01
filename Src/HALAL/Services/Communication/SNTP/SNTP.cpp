@@ -12,25 +12,25 @@
 #define TARGET_IP "192.168.0.9"
 
 void SNTP::sntp_update(uint8_t address_head, uint8_t address_second, uint8_t address_third, uint8_t address_last){
-	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-	ip4_addr_t* address;
-	IP_ADDR4(address,address_head,address_second,address_third,address_last);
-	sntp_setserver(0,address);
-	sntp_init();
+//	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+//	ip4_addr_t* address;
+//	IP_ADDR4(address,address_head,address_second,address_third,address_last);
+//	sntp_setserver(0,address);
+//	sntp_init();
 }
 
 void SNTP::sntp_update(string ip) {
-	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-	IPV4 target(ip);
-	sntp_setserver(0,&target.address);
-	sntp_init();
+//	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+//	IPV4 target(ip);
+//	sntp_setserver(0,&target.address);
+//	sntp_init();
 }
 
 void SNTP::sntp_update(){
-	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-	IPV4 target(TARGET_IP);
-	sntp_setserver(0,&target.address);
-	sntp_init();
+//	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+//	IPV4 target(TARGET_IP);
+//	sntp_setserver(0,&target.address);
+//	sntp_init();
 }
 
 void set_rtc(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year){

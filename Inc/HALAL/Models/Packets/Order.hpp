@@ -59,6 +59,10 @@ public:
     uint16_t get_id() override {
         return StackPacket<BufferLength,Types...>::get_id();
     }
+
+	void set_pointer(size_t index, void* pointer) override{
+		StackPacket<BufferLength,Types...>::set_pointer(index, pointer);
+	}
 };
 
 #if __cpp_deduction_guides >= 201606
@@ -99,4 +103,8 @@ public:
     uint16_t get_id() override {
         return HeapPacket::get_id();
     }
+    void set_pointer(size_t index, void* pointer) override{
+    	HeapPacket::set_pointer(index, pointer);
+	}
+
 };
