@@ -6,6 +6,9 @@
 #include "C++Utilities/CppUtils.hpp"
 #include "Time/Time.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "StateMachine/StateOrder.hpp"
+
+
 
 #ifdef HAL_TIM_MODULE_ENABLED
 
@@ -35,6 +38,8 @@ public:
 	vector<TimedAction> cyclic_actions;
 	vector<function<void()>> on_enter_actions = {};
 	vector<function<void()>> on_exit_actions = {};
+	vector<uint16_t> state_orders_ids = {};
+
 	void enter();
 	void exit();
 	template<class TimeUnit>
@@ -45,6 +50,7 @@ public:
 	void register_all_timed_actions();
 	void unregister_timed_action(TimedAction* timed_action);
 	void erase_timed_action(TimedAction* timed_action);
+	void add_state_order(uint16_t id);
 };
 
 template<class TimeUnit>
@@ -153,6 +159,10 @@ public:
 	void check_transitions();
 
 	void add_state_machine(StateMachine& state_machine, state_id state);
+
+	void refresh_state_orders();
+
+	unordered_map<state_id, State>& get_states();
 
 
 private:
