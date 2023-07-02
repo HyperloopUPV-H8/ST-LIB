@@ -14,8 +14,8 @@ template<class Type>
 class PWMSensor {
 protected:
 	uint8_t id;
-	Type *frequency;
 	Type *duty_cycle;
+	Type *frequency;
 
 public:
 	PWMSensor() = default;
@@ -27,7 +27,7 @@ public:
 
 template<class Type>
 PWMSensor<Type>::PWMSensor(Pin &pin, Type &frequency, Type &duty_cycle) :
-	duty_cycle(&duty_cycle), frequency(&frequency) {
+	frequency(&frequency), duty_cycle(&duty_cycle) {
 		id = InputCapture::inscribe(pin);
 }
 
