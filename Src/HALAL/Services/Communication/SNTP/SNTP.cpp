@@ -9,7 +9,7 @@
 
 #define SUBSECONDS_PER_SECOND 32767
 #define TRANSFORMATION_FACTOR (SUBSECONDS_PER_SECOND/999999.0)
-#define TARGET_IP "192.168.1.3"
+#define TARGET_IP "192.168.0.9"
 
 void SNTP::sntp_update(uint8_t address_head, uint8_t address_second, uint8_t address_third, uint8_t address_last){
 //	sntp_setoperatingmode(SNTP_OPMODE_POLL);

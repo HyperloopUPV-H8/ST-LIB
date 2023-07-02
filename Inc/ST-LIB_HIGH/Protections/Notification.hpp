@@ -12,6 +12,7 @@ class Notification : public Order{
 private:
 	typedef uint16_t message_size_t;
 	uint16_t id;
+	uint8_t end = 0x00;
     void(*callback)() = nullptr;
     string tx_message;
     message_size_t tx_message_size;
@@ -51,6 +52,7 @@ public:
     	memcpy(buffer,&id,sizeof(id));
     	memcpy(buffer + sizeof(id), &tx_message_size, sizeof(tx_message_size));
      	memcpy(buffer+sizeof(id)+sizeof(tx_message_size),tx_message.c_str(), tx_message.size());
+     	memcpy(buffer+sizeof(id)+sizeof(tx_message_size)+tx_message.size(),&end,sizeof(end));
     	return buffer;
     }
 
@@ -79,7 +81,7 @@ public:
     }
 
     size_t get_size() {
-    	size = sizeof(id) +  sizeof(tx_message_size) +  tx_message_size;
+    	size = sizeof(id) +  sizeof(tx_message_size) +  tx_message_size + sizeof(end);
     	return size;
     }
 
