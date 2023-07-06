@@ -36,6 +36,9 @@ class ProtectionManager {
 public:
 	typedef uint8_t state_id;
 
+	static const uint64_t notify_delay_in_nanoseconds = 100000000;
+	static uint64_t last_notify;
+
     static void set_id(Boards::ID id);
 
     static void link_state_machine(StateMachine& general_state_machine, state_id fault_id);
@@ -58,8 +61,8 @@ public:
     static void fault_and_propagate();
 
 private:
-	static constexpr uint16_t warning_id = 1;
-	static constexpr uint16_t fault_id = 2;
+	static constexpr uint16_t warning_id = 2;
+	static constexpr uint16_t fault_id = 3;
 	static char* message;
 	static size_t message_size;
 	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}";

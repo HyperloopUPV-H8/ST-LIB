@@ -7,7 +7,7 @@
 
 #include "HALAL/HALAL.hpp"
 
-void HALAL::start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
+void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral) {
 
 #ifdef HAL_ETH_MODULE_ENABLED
 	Ethernet::inscribe();
@@ -63,8 +63,8 @@ void HALAL::start(string ip, string subnet_mask, string gateway, UART::Periphera
 
 #ifdef HAL_TIM_MODULE_ENABLED
 	Encoder::start();
-	SNTP::sntp_update();
 	Time::start_rtc();
+	SNTP::sntp_update();
 	TimerPeripheral::start();
 	Time::start();
 #endif

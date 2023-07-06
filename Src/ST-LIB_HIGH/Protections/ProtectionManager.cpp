@@ -6,6 +6,7 @@ StateMachine* ProtectionManager::general_state_machine = nullptr;
 Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, nullptr};
 Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
 StackOrder<0> ProtectionManager::fault_order(Protections::FAULT,to_fault);
+uint64_t ProtectionManager::last_notify = 0;
 void *error_handler;
 
 
@@ -53,6 +54,7 @@ void ProtectionManager::check_protections() {
         message = (char*)malloc(get_string_size(protection, current_timestamp));
         serialize(protection, current_timestamp);
 
+        if(Time::get_global_tick() > last_notify + notify_delay_in_nanoseconds){
         switch(protection.fault_type){
         case Protections::FaultType::WARNING:
         	warning_notification.notify(message);
@@ -63,7 +65,8 @@ void ProtectionManager::check_protections() {
         default:
         	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
         }
-
+        last_notify = Time::get_global_tick();
+        }
     	free(message);
     }
 }
