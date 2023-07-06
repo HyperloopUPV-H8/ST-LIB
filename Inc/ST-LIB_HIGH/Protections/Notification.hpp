@@ -87,6 +87,10 @@ public:
     	return id;
     }
 
+    void set_pointer(size_t index, void* pointer) override{
+    	ErrorHandler("Notification does not suport this method!");
+    }
+
     ~Notification(){
     	if(buffer != nullptr) free(buffer);
     }

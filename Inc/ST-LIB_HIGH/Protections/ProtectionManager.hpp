@@ -58,6 +58,7 @@ public:
     static void add_standard_protections();
     static void check_protections();
     static void check_high_frequency_protections();
+    static void warn(string message);
     static void fault_and_propagate();
 
 private:

@@ -172,6 +172,8 @@ err_t Socket::poll_callback(void* arg, struct tcp_pcb* client_control_block){
 		}
 		if(socket->state == CLOSING){
 			socket->close();
+		}else if(socket->state == INACTIVE){
+			tcp_connect(socket->connection_control_block, &socket->remote_ip.address , socket->remote_port, connect_callback);
 		}
 		return ERR_OK;
 	}else{

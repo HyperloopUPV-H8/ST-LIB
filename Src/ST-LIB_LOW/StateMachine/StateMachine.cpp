@@ -342,4 +342,3 @@ unordered_map<StateMachine::state_id, State>& StateMachine::get_states(){
 void StateMachine::refresh_state_orders(){
 	if(states[current_state].state_orders_ids.size() != 0) StateOrder::add_state_orders(states[current_state].state_orders_ids);
 }
-
