@@ -160,6 +160,8 @@ public:
 
 	void add_state_machine(StateMachine& state_machine, state_id state);
 
+	void refresh_state_orders();
+
 	unordered_map<state_id, State>& get_states();
 
 

@@ -103,7 +103,8 @@ void State::add_state_order(uint16_t id){
  */
 StateMachine::StateMachine(uint8_t initial_state) :
 	initial_state(initial_state), current_state(initial_state) {
-	states[initial_state];
+	add_state(initial_state);
+	enter_state(initial_state);
 }
 
 /**
@@ -338,3 +339,6 @@ unordered_map<StateMachine::state_id, State>& StateMachine::get_states(){
 	return states;
 }
 
+void StateMachine::refresh_state_orders(){
+	if(states[current_state].state_orders_ids.size() != 0) StateOrder::add_state_orders(states[current_state].state_orders_ids);
+}
