@@ -45,6 +45,10 @@ Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remo
 	connection_control_block = tcp_new();
 	tcp_bind(connection_control_block, &local_ip.address, local_port);
 	tcp_nagle_disable(connection_control_block);
+	connection_control_block->so_options |= SOF_KEEPALIVE;
+	connection_control_block->keep_idle = 100;
+	connection_control_block->keep_intvl = 100;
+	connection_control_block->keep_cnt = 5;
 
 	connecting_sockets[remote_node] = this;
 	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
@@ -80,9 +84,8 @@ void Socket::reconnect(){
 	if(!connecting_sockets.contains(remote_node)){
 		connecting_sockets[remote_node] = this;
 	}
-	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
+	if(connection_control_block->state == CLOSED) tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
 }
-
 
 void Socket::send(){
 	pbuf* temporal_packet_buffer;

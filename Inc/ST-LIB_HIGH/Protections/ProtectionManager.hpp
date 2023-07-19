@@ -62,8 +62,8 @@ public:
     static void fault_and_propagate();
 
 private:
-	static constexpr uint16_t warning_id = 2;
-	static constexpr uint16_t fault_id = 3;
+	static constexpr uint16_t warning_id = 3;
+	static constexpr uint16_t fault_id = 2;
 	static char* message;
 	static size_t message_size;
 	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}";

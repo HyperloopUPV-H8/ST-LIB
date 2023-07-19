@@ -46,7 +46,7 @@ public:
 
 	bool send_order(Order& order) override{
 		if(state != CONNECTED){
-			reconnect();
+//			reconnect();
 			return false;
 		}
 		struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;

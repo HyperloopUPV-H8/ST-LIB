@@ -25,6 +25,10 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 	state = INACTIVE;
 	server_control_block = tcp_new();
 	tcp_nagle_disable(server_control_block);
+	server_control_block->so_options |= SOF_KEEPALIVE;
+	server_control_block->keep_idle = 100;
+	server_control_block->keep_intvl = 100;
+	server_control_block->keep_cnt = 15;
 	err_t error = tcp_bind(server_control_block, &local_ip.address, local_port);
 
 	if(error == ERR_OK){

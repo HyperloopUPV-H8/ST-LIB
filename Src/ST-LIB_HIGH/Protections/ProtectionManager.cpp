@@ -3,7 +3,7 @@
 #include "Protections/Notification.hpp"
 
 StateMachine* ProtectionManager::general_state_machine = nullptr;
-Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, nullptr};
+Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, to_fault};
 Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
 StackOrder<0> ProtectionManager::fault_order(Protections::FAULT,to_fault);
 uint64_t ProtectionManager::last_notify = 0;
