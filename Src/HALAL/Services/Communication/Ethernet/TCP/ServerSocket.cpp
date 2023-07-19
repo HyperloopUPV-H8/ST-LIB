@@ -102,11 +102,12 @@ void ServerSocket::process_data(){
 		rx_packet_buffer.pop();
 		uint8_t* new_data = (uint8_t*)(packet->payload);
 		tcp_recved(client_control_block, packet->tot_len);
-		Order::process_data(this, new_data);
+		if (not Order::process_data(this, new_data) && default_parser != nullptr){
+			default_parser(new_data, packet->tot_len);
+		}
 		pbuf_free(packet);
 	}
 }
-
 void ServerSocket::send(){
 	pbuf* temporal_packet_buffer;
 	err_t error = ERR_OK;

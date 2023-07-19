@@ -34,7 +34,7 @@ public:
 	ServerState state;
 	static uint8_t priority;
 	struct tcp_pcb* client_control_block;
-
+	static function<void(void*, size_t)> default_parser;
 
 	ServerSocket();
 	ServerSocket(ServerSocket&& other);
@@ -48,6 +48,10 @@ public:
 	void close();
 
 	void process_data();
+
+	static void set_default_parser(function<void(void*, size_t)> new_default_parser){
+		default_parser = new_default_parser;
+	}
 
 	bool send_order(Order& order) override{
 		if(state != ACCEPTED){
@@ -88,5 +92,7 @@ private:
 	static err_t send_callback(void *arg, struct tcp_pcb *client_control_block, u16_t len);
 
 };
+
+function<void(void*, size_t)> ServerSocket::default_parser = nullptr;
 
 #endif

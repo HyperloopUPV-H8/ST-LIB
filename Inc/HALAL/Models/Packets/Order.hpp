@@ -20,12 +20,15 @@ public:
     static void process_by_id(uint16_t id) {
         if (orders.find(id) != orders.end()) orders[id]->process();
     }
-    static void process_data(OrderProtocol* socket, void* data) {
+    static bool process_data(OrderProtocol* socket, void* data) {
         uint16_t id = Packet::get_id(data);
         if (orders.contains(id)) {
             orders[id]->parse(socket, data);
             orders[id]->process();
+            return true;
         }
+
+        return false;
     }
 
 protected:
