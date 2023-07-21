@@ -12,10 +12,11 @@
 
 uint8_t ServerSocket::priority = 1;
 unordered_map<uint32_t,ServerSocket*> ServerSocket::listening_sockets = {};
+function<void(void*, size_t)> ServerSocket::default_parser = nullptr;
 
 ServerSocket::ServerSocket() = default;
 
-ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_ip),local_port(local_port){
+ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port, char* name = "Unnamed Socket") : local_ip(local_ip),local_port(local_port), name(name){
 	if(not Ethernet::is_running) {
 		ErrorHandler("Cannot declare UDP socket before Ethernet::start()");
 		return;
@@ -26,9 +27,9 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 	server_control_block = tcp_new();
 	tcp_nagle_disable(server_control_block);
 	server_control_block->so_options |= SOF_KEEPALIVE;
-	server_control_block->keep_idle = 100;
-	server_control_block->keep_intvl = 100;
-	server_control_block->keep_cnt = 15;
+	server_control_block->keep_idle = 1000;
+	server_control_block->keep_intvl = 1000;
+	server_control_block->keep_cnt = 10;
 	err_t error = tcp_bind(server_control_block, &local_ip.address, local_port);
 
 	if(error == ERR_OK){
@@ -44,7 +45,7 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 }
 
 ServerSocket::ServerSocket(ServerSocket&& other) : server_control_block(move(other.server_control_block)), local_ip(move(other.local_ip)), local_port(move(other.local_port))
-, state(other.state){
+, state(other.state), name(move(other.name)){
 	listening_sockets[local_port] = this;
 	tx_packet_buffer = {};
 	rx_packet_buffer = {};
@@ -54,6 +55,7 @@ void ServerSocket::operator=(ServerSocket&& other){
 	local_ip = move(other.local_ip);
 	local_port = move(other.local_port);
 	server_control_block = move(other.server_control_block);
+	name = move(other.name);
 	state = other.state;
 	listening_sockets[local_port] = this;
 	tx_packet_buffer = {};
@@ -68,7 +70,7 @@ ServerSocket::~ServerSocket(){
 	else OrderProtocol::sockets.erase(it);
 }
 
-ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(IPV4(local_ip),local_port){}
+ServerSocket::ServerSocket(string local_ip, uint32_t local_port, char* name = "Unnamed Socket") : ServerSocket(IPV4(local_ip),local_port,name){}
 
 ServerSocket::ServerSocket(EthernetNode local_node) : ServerSocket(local_node.ip,local_node.port){};
 
@@ -106,7 +108,9 @@ void ServerSocket::process_data(){
 		rx_packet_buffer.pop();
 		uint8_t* new_data = (uint8_t*)(packet->payload);
 		tcp_recved(client_control_block, packet->tot_len);
-		Order::process_data(this, new_data);
+		if (not Order::process_data(this, new_data) && default_parser != nullptr){
+			default_parser(new_data, packet->tot_len);
+		}
 		pbuf_free(packet);
 	}
 }
@@ -192,7 +196,7 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 void ServerSocket::error_callback(void *arg, err_t error){
 	ServerSocket* server_socket = (ServerSocket*) arg;
 	server_socket->close();
-	ErrorHandler("Socket error: %d. Socket closed", error);
+	ErrorHandler("Socket error: %d. Socket closed, Socket: | %s |", error, server_socket->name);
 }
 
 err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_block){

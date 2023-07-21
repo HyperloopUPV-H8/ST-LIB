@@ -61,7 +61,7 @@ public:
     static void warn(string message);
     static void fault_and_propagate();
 
-private:
+public:
 	static constexpr uint16_t warning_id = 3;
 	static constexpr uint16_t fault_id = 2;
 	static char* message;

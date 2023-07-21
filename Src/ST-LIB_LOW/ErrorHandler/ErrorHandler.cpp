@@ -52,16 +52,16 @@ void ErrorHandlerModel::ErrorHandlerTrigger(string format, ... ){
 }
 
 void ErrorHandlerModel::ErrorHandlerUpdate(){
-	if (!ErrorHandlerModel::error_triggered) {
-		return;
-	}
+//	if (!ErrorHandlerModel::error_triggered) {
+//		return;
+//	}
 
 #ifdef HAL_UART_MODULE_ENABLED
-	if (!UART::printf_ready) {
-		return;
-	}
+//	if (!UART::printf_ready) {
+//		return;
+//	}
 
-	printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
+//	printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
 #endif
 
 }

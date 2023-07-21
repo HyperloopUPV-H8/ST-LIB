@@ -31,11 +31,12 @@ public:
 	queue<struct pbuf*> tx_packet_buffer;
 	queue<struct pbuf*> rx_packet_buffer;
 	static unordered_map<EthernetNode,Socket*> connecting_sockets;
+	char* name = "Unnamed Socket";
 
 	Socket();
 	Socket(Socket&& other);
-	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
-	Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port);
+	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port, char* name = "Unnamed Socket");
+	Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port, char* name = "Unnamed Socket");
 	Socket(EthernetNode local_node, EthernetNode remote_node);
 	~Socket();
 

@@ -27,6 +27,7 @@ public:
 	void read();
 	uint8_t get_id();
 	void get_arrays(double ret[][N_FRAMES]);
+	void reset_position();
 
 protected:
 	uint8_t id;

@@ -34,12 +34,13 @@ public:
 	ServerState state;
 	static uint8_t priority;
 	struct tcp_pcb* client_control_block;
-
+	static function<void(void*, size_t)> default_parser;
+	char* name = "Unnamed Socket";
 
 	ServerSocket();
 	ServerSocket(ServerSocket&& other);
-	ServerSocket(IPV4 local_ip, uint32_t local_port);
-	ServerSocket(string local_ip, uint32_t local_port);
+	ServerSocket(IPV4 local_ip, uint32_t local_port, char* name);
+	ServerSocket(string local_ip, uint32_t local_port, char* name);
 	ServerSocket(EthernetNode local_node);
 	~ServerSocket();
 
@@ -74,6 +75,10 @@ public:
 		send();
 		return true;
 	}
+
+	static void set_default_parser(function<void(void*, size_t)> new_default_parser){
+			default_parser = new_default_parser;
+		}
 
 	void send();
 

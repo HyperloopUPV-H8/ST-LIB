@@ -32,7 +32,7 @@ void EncoderSensor::read(){
 	time = time + delta_clock / NANO_SECOND;
 	last_clock_time = clock_time;
 
-	*position= ((int32_t)(counter - START_COUNTER)) * COUNTER_DISTANCE_IN_METERS;
+	*position= -1*((int32_t)(counter - START_COUNTER)) * COUNTER_DISTANCE_IN_METERS;
 	double delta_time = time - times[0];
 	double delta_position = *position - positions[0];
 
@@ -70,3 +70,18 @@ void EncoderSensor::update_arrays(){
 	times[N_FRAMES-1] = time;
 	speeds[N_FRAMES-1] = *speed;
 }
+
+void EncoderSensor::reset_position(){
+	Encoder::turn_off(id);
+	Encoder::reset(id);
+	for(int i = 1; i < N_FRAMES; i++){
+		positions[i-1] = 0;
+		times[i-1] = 0;
+		speeds[i-1] = 0;
+	}
+	*position = 0;
+	*speed = 0;
+	*acceleration = 0;
+	Encoder::turn_on(id);
+}
+

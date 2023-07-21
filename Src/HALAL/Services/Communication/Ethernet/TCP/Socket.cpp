@@ -13,7 +13,7 @@ unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
 Socket::Socket() = default;
 
 Socket::Socket(Socket&& other):remote_port(move(remote_port)), connection_control_block(move(other.connection_control_block)),
-	 state(other.state){
+	 state(other.state), name(move(other.name)){
 	EthernetNode remote_node(other.remote_ip, other.remote_port);
 	connecting_sockets[remote_node] = this;
 }
@@ -21,6 +21,7 @@ Socket::Socket(Socket&& other):remote_port(move(remote_port)), connection_contro
 void Socket::operator=(Socket&& other){
 	connection_control_block = move(other.connection_control_block);
 	remote_port = move(remote_port);
+	name = move(other.name);
 	state = other.state;
 	EthernetNode remote_node(other.remote_ip, other.remote_port);
 	connecting_sockets[remote_node] = this;
@@ -34,7 +35,7 @@ Socket::~Socket(){
 	else OrderProtocol::sockets.erase(it);
 }
 
-Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port):remote_ip(remote_ip), remote_port(remote_port){
+Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port, char* name ):remote_ip(remote_ip), remote_port(remote_port), name(name){
 	if(not Ethernet::is_running) {
 		ErrorHandler("Cannot declare TCP socket before Ethernet::start()");
 		return;
@@ -55,7 +56,7 @@ Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remo
 	OrderProtocol::sockets.push_back(this);
 }
 
-Socket::Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port):Socket(IPV4(local_ip),local_port,IPV4(remote_ip),remote_port){}
+Socket::Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port,char* name):Socket(IPV4(local_ip),local_port,IPV4(remote_ip),remote_port,name){}
 
 
 Socket::Socket(EthernetNode local_node, EthernetNode remote_node):Socket(local_node.ip, local_node.port, remote_node.ip, remote_node.port){}
@@ -201,7 +202,7 @@ void Socket::error_callback(void *arg, err_t error){
 	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
 	}
-	ErrorHandler("Client socket error: %d. Socket closed",error);
+	ErrorHandler("Client socket error: %d. Socket closed, Socket: | %s |",error,socket->name);
 }
 
 #endif
