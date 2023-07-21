@@ -29,7 +29,7 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port, char* name = "Unn
 	server_control_block->so_options |= SOF_KEEPALIVE;
 	server_control_block->keep_idle = 1000;
 	server_control_block->keep_intvl = 1000;
-	server_control_block->keep_cnt = 10;
+	server_control_block->keep_cnt = 15;
 	err_t error = tcp_bind(server_control_block, &local_ip.address, local_port);
 
 	if(error == ERR_OK){
