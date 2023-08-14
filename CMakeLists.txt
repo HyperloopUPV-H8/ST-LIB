@@ -1,15 +1,23 @@
 cmake_minimum_required (VERSION 3.4)
 project (ST-LIB)
 
+if(NOT DEFINED PROFILE)
+  message( SEND_ERROR "Profile not defined")
+endif()
+
+if(NOT DEFINED OPTIMIZATION)
+  message( SEND_ERROR "Optimization not defined")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(LIBRARY st-lib)
 
-file(GLOB_RECURSE SOURCE_C ${CMAKE_SOURCE_DIR}/ *.c)
-file(GLOB_RECURSE SOURCE_CPP ${CMAKE_SOURCE_DIR}/ *.cpp)
-file(GLOB_RECURSE SOURCE_H ${CMAKE_SOURCE_DIR}/ *.h)
-file(GLOB_RECURSE SOURCE_HPP ${CMAKE_SOURCE_DIR}/ *.hpp)
+file(GLOB_RECURSE SOURCE_C *.c)
+file(GLOB_RECURSE SOURCE_CPP *.cpp)
+file(GLOB_RECURSE SOURCE_H *.h)
+file(GLOB_RECURSE SOURCE_HPP *.hpp)
 
 add_library(${LIBRARY} STATIC
   ${SOURCE_H}
@@ -24,17 +32,16 @@ target_compile_definitions(${LIBRARY} PUBLIC
   -DDEBUG
 )
 
-option(BOARD "Board clock config" OFF)
-option(NUCLEO "Nucleo clock config" OFF)
-
-if(BOARD)
+if(DEFINED BOARD)
   add_definitions(-DBOARD)
   add_definitions(-DHSE_VALUE=25000000)
-endif()
 
-if(NUCLEO)
+elseif(DEFINED NUCLEO)
   add_definitions(-DNUCLEO)
   add_definitions(-DHSE_VALUE=8000000)
+
+else()
+  message( SEND_ERROR "Profile not selected. Select BOARD or NUCLEO")
 endif()
 
 
@@ -44,8 +51,8 @@ target_compile_options(${LIBRARY} PUBLIC
   -mfloat-abi=hard
   -mthumb
   
-  -Og
-  -g3
+  ${PROFILE}
+  ${OPTIMIZATION}
   -ffunction-sections
   -fdata-sections
   -fno-exceptions
