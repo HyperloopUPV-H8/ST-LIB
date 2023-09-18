@@ -159,7 +159,7 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 
 		server_socket->state = ACCEPTED;
 		server_socket->client_control_block = incomming_control_block;
-		server_socket->tx_packet_buffer = {};
+
 		server_socket->rx_packet_buffer = {};
 
 		tcp_setprio(incomming_control_block, priority);
@@ -169,6 +169,9 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 		tcp_sent(incomming_control_block, send_callback);
 		tcp_err(incomming_control_block, error_callback);
 		tcp_poll(incomming_control_block, poll_callback , 0);
+
+		server_socket->send(); //send buffered packets before erasing buffer
+		server_socket->tx_packet_buffer = {};
 
 		priority++;
 
