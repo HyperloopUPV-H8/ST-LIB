@@ -51,8 +51,9 @@ public:
 
 	/*
 	 * @brief puts the order data into the tx_packet_buffer so it can be sent when a connection is accepted
+	 * @return true if the data could be allocated in the buffer, false otherwise
 	 */
-	void queue_order(Order& order);
+	bool queue_order(Order& order);
 
 	/*
 	 * @brief puts the order data into the tx_packet_buffer and sends it
