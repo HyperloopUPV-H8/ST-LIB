@@ -49,6 +49,15 @@ public:
 
 	void process_data();
 
+	/*
+	 * @brief puts the order data into the tx_packet_buffer so it can be sent when a connection is accepted
+	 */
+	void queue_order(Order& order);
+
+	/*
+	 * @brief puts the order data into the tx_packet_buffer and sends it
+	 * @return true if the data was sent successfully, false otherwise
+	 */
 	bool send_order(Order& order) override{
 		if(state != ACCEPTED){
 			return false;
