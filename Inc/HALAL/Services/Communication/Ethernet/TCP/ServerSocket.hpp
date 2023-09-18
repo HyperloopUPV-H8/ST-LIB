@@ -26,7 +26,6 @@ public:
 	};
 
 	static unordered_map<uint32_t,ServerSocket*> listening_sockets;
-	static queue<ServerSocket*> sockets_to_flush;
 	struct tcp_pcb* server_control_block = nullptr;
 	queue<struct pbuf*> tx_packet_buffer;
 	queue<struct pbuf*> rx_packet_buffer;
