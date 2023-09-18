@@ -12,6 +12,7 @@
 
 uint8_t ServerSocket::priority = 1;
 unordered_map<uint32_t,ServerSocket*> ServerSocket::listening_sockets = {};
+queue<ServerSocket*> ServerSocket::sockets_to_flush = {};
 
 ServerSocket::ServerSocket() = default;
 
@@ -163,10 +164,9 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 		tcp_err(incomming_control_block, error_callback);
 		tcp_poll(incomming_control_block, poll_callback , 0);
 
-		server_socket->send(); //send buffered packets before erasing buffer
-		server_socket->tx_packet_buffer = {};
-
 		priority++;
+
+		sockets_to_flush.push(server_socket);
 
 		return ERR_OK;
 	}else

@@ -21,6 +21,11 @@ void STLIB::start(string ip, string subnet_mask, string gateaway,  UART::Periphe
 }
 
 void STLIB::update() {
+	while(!ServerSocket::sockets_to_flush.empty()){
+		ServerSocket* to_flush = ServerSocket::sockets_to_flush.front();
+		to_flush->send();
+		ServerSocket::sockets_to_flush.pop();
+	}
     Ethernet::update();
 	ErrorHandlerModel::ErrorHandlerUpdate();
 }
