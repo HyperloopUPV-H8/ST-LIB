@@ -15,6 +15,9 @@
 
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
+/**
+* @brief ServerSocket class
+*/
 class ServerSocket : public OrderProtocol{
 public:
 
@@ -45,18 +48,32 @@ public:
 
 	void operator=(ServerSocket&& other);
 
+	/**
+	* @brief ends the connection between the server and the client. 
+	*/
 	void close();
 
+	/**
+	* @brief process the data received by the client orders. It is meant to be called only by Lwip on the receive_callback
+	*
+	* reads all the data received by the server in the ethernet buffer, packet by packet.
+	* Then, for each packet, it processes it depending on the order id (default behavior is not process) and removes it from the buffer. 
+	* This makes so the receive_callback (and thus the Socket) can only process declared orders, and ignores all other packets. 
+	*/
 	void process_data();
 
-	/*
-	 * @brief puts the order data into the tx_packet_buffer so it can be sent when a connection is accepted
+	/**
+	 * @brief saves the order data into the tx_packet_buffer so it can be sent when a connection is accepted
+	 *
+	 * @param order the order to send, which contains the data and id of the message
 	 * @return true if the data could be allocated in the buffer, false otherwise
 	 */
 	bool queue_order(Order& order);
 
-	/*
-	 * @brief puts the order data into the tx_packet_buffer and sends it
+	/**
+	 * @brief puts the order data into the tx_packet_buffer and sends all the data in the buffer to the client
+	 *
+	 * @param order the order to send, which contains the data and id of the message
 	 * @return true if the data was sent successfully, false otherwise
 	 */
 	bool send_order(Order& order) override{
@@ -85,8 +102,14 @@ public:
 		return true;
 	}
 
+	/**
+	* @brief sends all the binary data saved in the tx_packet_buffer to the connected client. 
+	*/
 	void send();
 
+	/**
+	* @return true if a connection with the client was established, false otherwise
+	*/
 	bool is_connected();
 
 private:
