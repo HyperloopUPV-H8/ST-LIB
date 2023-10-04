@@ -68,7 +68,7 @@ public:
 	 * @param order the order to send, which contains the data and id of the message
 	 * @return true if the data could be allocated in the buffer, false otherwise
 	 */
-	bool queue_order(Order& order);
+	bool add_order_to_queue(Order& order);
 
 	/**
 	 * @brief puts the order data into the tx_packet_buffer and sends all the data in the buffer to the client

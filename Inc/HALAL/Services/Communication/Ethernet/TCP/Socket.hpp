@@ -52,7 +52,7 @@ public:
 	 * @brief puts the order data into the tx_packet_buffer so it can be sent when a connection is accepted
 	 * @return true if the data could be allocated in the buffer, false otherwise
 	 */
-	bool queue_order(Order& order);
+	bool add_order_to_queue(Order& order);
 
 	/*
 	 * @brief puts the order data into the tx_packet_buffer and sends it

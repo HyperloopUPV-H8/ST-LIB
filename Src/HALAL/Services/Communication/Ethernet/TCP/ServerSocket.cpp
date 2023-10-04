@@ -107,9 +107,9 @@ void ServerSocket::process_data(){
 	}
 }
 
-bool ServerSocket::queue_order(Order& order){
+bool ServerSocket::add_order_to_queue(Order& order){
 	if(state == ACCEPTED){
-		return false; //yet to decide if queue_order should send the order when used after the connection is accepted or just return false
+		return false; //yet to decide if add_order_to_queue should send the order when used after the connection is accepted or just return false
 	}
 	struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
 	if(next_memory_pointer_in_packet_buffer_pool == nullptr){
