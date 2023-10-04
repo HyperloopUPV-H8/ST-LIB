@@ -76,6 +76,7 @@ void Socket::close(){
 	}
 
   tcp_close(socket_control_block);
+  state = INACTIVE;
 }
 
 void Socket::reconnect(){
@@ -239,8 +240,9 @@ void Socket::error_callback(void *arg, err_t error){
 	Socket* socket = (Socket*) arg;
 	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
-	}
+	}else{
 	ErrorHandler("Client socket error: %d. Socket closed",error);
+	}
 }
 
 void Socket::connection_error_callback(void *arg, err_t error){
