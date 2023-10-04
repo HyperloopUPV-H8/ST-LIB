@@ -245,7 +245,7 @@ void Socket::error_callback(void *arg, err_t error){
 
 void Socket::connection_error_callback(void *arg, err_t error){
 	if(error == ERR_RST){
-		Socket* socket = arg;
+		Socket* socket = (Socket*)arg;
 		socket->pending_connection_reset = true;
 		return;
 	}
