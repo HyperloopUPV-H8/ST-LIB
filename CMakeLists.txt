@@ -46,13 +46,14 @@ source_group(DRIVERS_C
   ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_uart.c
   ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_uart_ex.c
   )
+file(GLOB_RECURSE SOURCE_C ${CMAKE_SOURCE_DIR}/ *.c)
 file(GLOB_RECURSE SOURCE_CPP ${CMAKE_SOURCE_DIR}/ *.cpp)
 file(GLOB_RECURSE SOURCE_H ${CMAKE_SOURCE_DIR}/ *.h)
 file(GLOB_RECURSE SOURCE_HPP ${CMAKE_SOURCE_DIR}/ *.hpp)
 
 add_library(${LIBRARY} STATIC
   ${SOURCE_H}
-  ${DRIVERS_C}
+  ${SOURCE_C}
   ${SOURCE_HPP}
   ${SOURCE_CPP}
 )
