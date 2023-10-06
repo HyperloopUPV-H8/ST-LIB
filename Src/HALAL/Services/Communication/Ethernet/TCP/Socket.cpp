@@ -93,19 +93,17 @@ void Socket::reset(){
 		connecting_sockets[remote_node] = this;
 	}
 	state = INACTIVE;
-	tcp_close(connection_control_block);
+	tcp_abort(connection_control_block);
+	connection_control_block = tcp_new();
 
-	tcp_pcb* aux_con_control_block = tcp_new();
-	tcp_bind(aux_con_control_block, &local_ip.address, local_port);
-	tcp_nagle_disable(aux_con_control_block);
-
-	tcp_arg(aux_con_control_block, this);
-	tcp_poll(aux_con_control_block,connection_poll_callback,1);
-	tcp_err(aux_con_control_block, connection_error_callback);
-
-	connection_control_block = aux_con_control_block;
+	tcp_bind(connection_control_block, &local_ip.address, local_port);
+	tcp_nagle_disable(connection_control_block);
+	tcp_arg(connection_control_block, this);
+	tcp_poll(connection_control_block,connection_poll_callback,1);
+	tcp_err(connection_control_block, connection_error_callback);
 
 	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
+
 }
 
 
@@ -240,8 +238,9 @@ void Socket::error_callback(void *arg, err_t error){
 	Socket* socket = (Socket*) arg;
 	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
+		socket->reset();
 	}else{
-	ErrorHandler("Client socket error: %d. Socket closed",error);
+		ErrorHandler("Client socket error: %d. Socket closed",error);
 	}
 }
 
@@ -259,6 +258,10 @@ err_t Socket::connection_poll_callback(void *arg, struct tcp_pcb* connection_con
 	if(socket->pending_connection_reset){
 		socket->reset();
 		socket->pending_connection_reset = false;
+		return ERR_ABRT;
+	}
+	else if(socket->connection_control_block->state == SYN_SENT){
+		socket->pending_connection_reset = true;
 	}
 	return ERR_OK;
 }
