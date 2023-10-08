@@ -107,6 +107,24 @@ void ServerSocket::process_data(){
 	}
 }
 
+bool ServerSocket::add_order_to_queue(Order& order){
+	if(state == ACCEPTED){
+		return false; //yet to decide if add_order_to_queue should send the order when used after the connection is accepted or just return false
+	}
+	struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
+	if(next_memory_pointer_in_packet_buffer_pool == nullptr){
+		memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], next_memory_pointer_in_packet_buffer_pool);
+		return false;
+	}
+
+	uint8_t* order_buffer = order.build();
+
+	struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_POOL);
+	pbuf_take(packet, order_buffer, order.get_size());
+	tx_packet_buffer.push(packet);
+	return true;
+}
+
 void ServerSocket::send(){
 	pbuf* temporal_packet_buffer;
 	err_t error = ERR_OK;
@@ -134,7 +152,7 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 
 		server_socket->state = ACCEPTED;
 		server_socket->client_control_block = incomming_control_block;
-		server_socket->tx_packet_buffer = {};
+
 		server_socket->rx_packet_buffer = {};
 
 		tcp_setprio(incomming_control_block, priority);
