@@ -2,54 +2,38 @@ cmake_minimum_required (VERSION 3.4)
 
 include(arm-none-eabi.cmake)
 
-
 project (ST-LIB)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(LIBRARY st-lib)
 
-source_group(DRIVERS_C 
-  ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/BSP/Components/lan8742/lan8742.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Source/Templates/system_stm32h7xx.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_adc.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_adc_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_cordic.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_cortex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_dma.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_dma_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_eth.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_eth_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_exti.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_fdcan.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_flash.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_flash_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_fmac.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_gpio.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_hsem.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_i2c.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_i2c_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_lptim.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_mdma.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_pwr.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_pwr_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_rcc.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_rcc_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_rtc.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_rtc_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_spi.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_spi_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_tim.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_tim_ex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_uart.c
-  ${CMAKE_CURRENT_SOURCE_DIR}Drivers/STM32H7xx_HAL_Driver/smt32h7xx_hal_uart_ex.c
-  )
+set(LIBRARY st-lib)
+  
 file(GLOB_RECURSE SOURCE_C ${CMAKE_SOURCE_DIR}/ *.c)
 file(GLOB_RECURSE SOURCE_CPP ${CMAKE_SOURCE_DIR}/ *.cpp)
 file(GLOB_RECURSE SOURCE_H ${CMAKE_SOURCE_DIR}/ *.h)
 file(GLOB_RECURSE SOURCE_HPP ${CMAKE_SOURCE_DIR}/ *.hpp)
+
+
+
+if(${NUCLEO})
+  add_definitions(-DNUCLEO)
+  add_definitions(-DHSE_VALUE=8000000)
+else()
+  add_definitions(-DBOARD)
+  add_definitions(-DHSE_VALUE=25000000)
+endif()
+
+if(${RELEASE})
+  set(OPTIMIZATION -O3)
+  set(DEBUG_CONFIGURATION -g0)
+else()
+  set(OPTIMIZATION -Og)
+  set(DEBUG_CONFIGURATION -g3)
+endif()
+
+
 
 add_library(${LIBRARY} STATIC
   ${SOURCE_H}
@@ -64,18 +48,7 @@ target_compile_definitions(${LIBRARY} PUBLIC
   -DDEBUG
 )
 
-option(BOARD "Board clock config" OFF)
-option(NUCLEO "Nucleo clock config" OFF)
-set(NUCLEO 1)
-if(BOARD)
-  add_definitions(-DBOARD)
-  add_definitions(-DHSE_VALUE=25000000)
-endif()
 
-if(NUCLEO)
-  add_definitions(-DNUCLEO)
-  add_definitions(-DHSE_VALUE=8000000)
-endif()
 
 
 target_compile_options(${LIBRARY} PUBLIC
@@ -125,12 +98,11 @@ target_include_directories(${LIBRARY} PUBLIC
   Inc/ST-LIB_LOW
   Inc/ST-LIB_HIGH
 )
-set(CMAKE_CROSSCOMPILING TRUE)
-IF(CMAKE_CROSSCOMPILING)
-  message(STATUS "Cross-compiling")
-ELSE()
-  message(STATUS "NOT Cross-compiling")
-ENDIF()
+message("\n\nCMAKE:\n")
+message(STATUS "[DEBUG, RELEASE]: RELEASE: " ${RELEASE})
+message(STATUS "Optimization value: " ${OPTIMIZATION})
+message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
+message(STATUS "[BOARD, NUCLEO] Config: NUCLEO: " ${NUCLEO})
 
 add_custom_command(TARGET ${LIBRARY}
   POST_BUILD
