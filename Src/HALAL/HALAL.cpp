@@ -57,7 +57,7 @@ void HALAL::start(string ip, string subnet_mask, string gateway, UART::Periphera
 	FDCAN::start();
 #endif
 
-#ifdef HAL_ETH_MODULE_ENABLED
+#ifdef STLIB_ETH
 	Ethernet::start(ip, subnet_mask, gateway);
 #endif
 
