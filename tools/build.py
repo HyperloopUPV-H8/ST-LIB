@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 import argparse
 import subprocess
@@ -15,10 +16,11 @@ args = parser.parse_args()
 
 class ConfigBuild:
     def find_repo_root(self):
-        current_directory = os.getcwd()
+        current_directory = str("/opt/ST-LIB/tools")
         repo = git.Repo(current_directory, search_parent_directories=True)
         git_root = repo.git.rev_parse("--show-toplevel")
         self.repo_root = git_root
+        print("\nSTLIB REPO: " + self.repo_root)
     def __init__(self):
         self.buildconfig = args.build_behaviour
         self.target = args.target
@@ -40,15 +42,27 @@ class ConfigBuild:
 
         output = self.repo_root + "/build/" + self.output_dir
         if self.buildconfig == "Release":
-                if self.target == "BOARD":
-                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=TRUE","-DNUCLEO=FALSE"])
+            if self.target == "BOARD":
+                if self.ethernet == "ON":
+                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=TRUE","-DNUCLEO=FALSE", "-DETHERNET=TRUE"])
                 else:
-                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=TRUE","-DNUCLEO=TRUE"])
+                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=TRUE","-DNUCLEO=FALSE", "-DETHERNET=FALSE"])
+            else:
+                if self.ethernet == "ON":
+                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=TRUE","-DNUCLEO=TRUE", "-DETHERNET=TRUE"])
+                else:
+                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=TRUE","-DNUCLEO=TRUE", "-DETHERNET=FALSE"])
         else:
             if self.target == "BOARD":
-                subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=FALSE", "-DNUCLEO=FALSE"])
+                if self.ethernet == "ON":
+                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=FALSE", "-DNUCLEO=FALSE", "-DETHERNET=TRUE"])
+                else:
+                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=FALSE", "-DNUCLEO=FALSE", "-DETHERNET=FALSE"])
             else:
-                subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=FALSE", "-DNUCLEO=TRUE"])                              
+                if self.ethernet == "ON":
+                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=FALSE", "-DNUCLEO=TRUE", "-DETHERNET=TRUE"])
+                else:
+                    subprocess.call(["cmake", self.repo_root, "-B", output, "-DRELEASE=FALSE", "-DNUCLEO=TRUE", "-DETHERNET=FALSE"])                                         
         threads = os.cpu_count()
         print( Fore.BLUE +  "\n\nCalling make with {} threads\n\n".format(threads))
         retval = subprocess.call(["make","-j",str(threads),"-C", output])
@@ -78,5 +92,6 @@ class ConfigBuild:
 
 obj = ConfigBuild()
 obj.build()
+
 
 
