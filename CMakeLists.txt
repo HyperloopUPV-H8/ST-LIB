@@ -34,6 +34,10 @@ else()
 endif()
 
 
+if(${ETHERNET})
+  set(ETH STLIB_ETH)
+endif()
+message(STATUS "ETHERNET [ON, OFF] Config: " ${ETH})
 
 add_library(${LIBRARY} STATIC
   ${SOURCE_H}
@@ -46,6 +50,7 @@ target_compile_definitions(${LIBRARY} PUBLIC
   -DUSE_HAL_DRIVER
   -DSTM32H723xx
   -DDEBUG
+  ${ETH}
 )
 
 
@@ -103,6 +108,7 @@ message(STATUS "[DEBUG, RELEASE]: RELEASE: " ${RELEASE})
 message(STATUS "Optimization value: " ${OPTIMIZATION})
 message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
 message(STATUS "[BOARD, NUCLEO] Config: NUCLEO: " ${NUCLEO})
+
 
 add_custom_command(TARGET ${LIBRARY}
   POST_BUILD
