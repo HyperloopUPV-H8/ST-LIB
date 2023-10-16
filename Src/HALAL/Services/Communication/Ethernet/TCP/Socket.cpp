@@ -10,6 +10,7 @@
 
 unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
 
+
 Socket::Socket() = default;
 
 Socket::Socket(Socket&& other):remote_port(move(remote_port)), connection_control_block(move(other.connection_control_block)),
@@ -40,6 +41,8 @@ Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remo
 		return;
 	}
 	state = INACTIVE;
+	tx_packet_buffer = {};
+	rx_packet_buffer = {};
 	EthernetNode remote_node(remote_ip, remote_port);
 
 	connection_control_block = tcp_new();
@@ -118,7 +121,12 @@ void Socket::send(){
 			tcp_output(socket_control_block);
 			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],temporal_packet_buffer);
 		}else{
-			ErrorHandler("Cannot write to client socket. Error code: %d",error);
+			if(error == ERR_MEM){
+				close();
+				ErrorHandler("Too many unacked messages on client socket, disconnecting...");
+			}else{
+				ErrorHandler("Cannot write to client socket. Error code: %d",error);
+			}
 		}
 	}
 }
@@ -174,6 +182,7 @@ err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, 
 		tcp_poll(client_control_block, poll_callback,0);
 		tcp_sent(client_control_block, send_callback);
 		tcp_err(client_control_block, error_callback);
+
 		return ERR_OK;
 	}else return ERROR;
 }
@@ -248,6 +257,8 @@ void Socket::connection_error_callback(void *arg, err_t error){
 	if(error == ERR_RST){
 		Socket* socket = (Socket*)arg;
 		socket->pending_connection_reset = true;
+		return;
+	}else if(error == ERR_ABRT){
 		return;
 	}
 	ErrorHandler("Connection socket error: %d. Couldn t start client socket ", error);

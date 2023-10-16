@@ -34,7 +34,7 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 		tcp_accept(server_control_block, accept_callback);
 	}else{
 		memp_free(MEMP_TCP_PCB, server_control_block);
-		ErrorHandler("Cannnot bind server socket, memory low");
+		ErrorHandler("Cannot bind server socket, memory low");
 	}
 	OrderProtocol::sockets.push_back(this);
 }
@@ -148,7 +148,6 @@ bool ServerSocket::is_connected(){
 err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control_block, err_t error){
 	if(listening_sockets.contains(incomming_control_block->local_port)){
 		ServerSocket* server_socket = listening_sockets[incomming_control_block->local_port];
-		listening_sockets.erase(incomming_control_block->local_port);
 
 		server_socket->state = ACCEPTED;
 		server_socket->client_control_block = incomming_control_block;
@@ -212,6 +211,7 @@ void ServerSocket::error_callback(void *arg, err_t error){
 err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_block){
 	ServerSocket* server_socket = (ServerSocket*)arg;
 	server_socket->client_control_block = client_control_block;
+
 
 	if(server_socket == nullptr){    //Polling non existing pcb, fatal error
 		tcp_abort(client_control_block);
