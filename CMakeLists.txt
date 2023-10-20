@@ -29,7 +29,7 @@ if(${RELEASE})
   set(OPTIMIZATION -O3)
   set(DEBUG_CONFIGURATION -g0)
 else()
-  set(OPTIMIZATION -Og)
+  set(OPTIMIZATION -O0)
   set(DEBUG_CONFIGURATION -g3)
 endif()
 
