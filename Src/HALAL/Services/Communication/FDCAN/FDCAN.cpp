@@ -117,6 +117,8 @@ bool FDCAN::read(uint8_t id, FDCAN::Packet* data){
 	HAL_FDCAN_GetRxMessage(FDCAN::registered_fdcan.at(id)->hfdcan, FDCAN::registered_fdcan.at(id)->rx_location, &header_buffer, data->rx_data.data());
 
 	data->identifier = header_buffer.Identifier;
+	data->data_length = static_cast<FDCAN::DLC>(header_buffer.DataLength);
+
 	return true;
 }
 
@@ -134,7 +136,7 @@ void FDCAN::init(FDCAN::Instance* fdcan){
 
 	handle->Instance = fdcan->instance;
 	handle->Init.FrameFormat = FDCAN_FRAME_FD_BRS;
-	handle->Init.Mode = FDCAN_MODE_NORMAL;
+	handle->Init.Mode = FDCAN_MODE_INTERNAL_LOOPBACK;
 	handle->Init.AutoRetransmission = ENABLE;
 	handle->Init.TransmitPause = DISABLE;
 	handle->Init.ProtocolException = DISABLE;
