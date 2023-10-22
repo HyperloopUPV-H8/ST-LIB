@@ -23,4 +23,5 @@ void STLIB::start(string ip, string subnet_mask, string gateaway,  UART::Periphe
 void STLIB::update() {
     Ethernet::update();
 	ErrorHandlerModel::ErrorHandlerUpdate();
+	Server::update_servers();
 }
