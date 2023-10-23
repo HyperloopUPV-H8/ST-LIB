@@ -165,7 +165,7 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 
 		server_socket->state = ACCEPTED;
 		server_socket->client_control_block = incomming_control_block;
-
+		server_socket->remote_ip = IPV4(incomming_control_block->remote_ip);
 		server_socket->rx_packet_buffer = {};
 
 		tcp_setprio(incomming_control_block, priority);
