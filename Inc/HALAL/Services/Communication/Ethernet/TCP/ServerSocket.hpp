@@ -25,7 +25,8 @@ public:
 		INACTIVE,
 		LISTENING,
 		ACCEPTED,
-		CLOSING
+		CLOSING,
+		CLOSED
 	};
 
 	static unordered_map<uint32_t,ServerSocket*> listening_sockets;

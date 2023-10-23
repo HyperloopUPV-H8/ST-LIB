@@ -102,9 +102,8 @@ void ServerSocket::close(){
     tcp_pcb_remove(&tcp_active_pcbs, client_control_block);
     tcp_free(client_control_block);
 
-    tcp_accept(server_control_block, accept_callback);
 	listening_sockets[local_port] = this;
-	state = LISTENING;
+	state = CLOSED;
 
 	priority--;
 

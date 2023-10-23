@@ -9,7 +9,7 @@
 
 vector<Server*> Server::running_servers = {};
 
-Server::Server(IPV4 local_ip, uint32_t local_port): local_ip(local_ip), local_port(local_port){
+Server::Server(IPV4 local_ip, uint32_t local_port): local_ip(local_ip), local_port(local_port), status(RUNNING){
 	open_connection = new ServerSocket(local_ip, local_port);
 	running_servers.push_back(this);
 }
@@ -31,10 +31,32 @@ void Server::update(){
 	}
 
 	for(auto& ss : running_connections){
-		if(!ss->is_connected()){
+		if(status == RUNNING && !ss->is_connected()){
 			ErrorHandler("ip %s disconnected, going to FAULT",ss->remote_ip.string_address.c_str());
+			status = CLOSING;
+			break;
 		}
 	}
+
+	if(status == CLOSING){
+		close_all();
+	}
+}
+
+void Server::broadcast_order(Order& order){
+	for(auto& ss : running_connections){
+		if(!ss->send_order(order)){
+			ErrorHandler("Couldn t put Order %d into buffer of ip's %s ServerSocket, buffer may be full or the ServerSocket may be ill formed",order.get_id(),ss->remote_ip.string_address.c_str());
+		}
+	}
+}
+
+void Server::close_all(){
+	for(auto& ss : running_connections){
+		ss->close();
+		running_connections.erase(find(running_connections.begin(),running_connections.end(),ss));
+	}
+	status = CLOSED;
 }
 
 uint32_t Server::connections_count(){
