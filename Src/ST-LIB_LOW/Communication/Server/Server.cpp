@@ -32,7 +32,7 @@ void Server::update(){
 
 	for(auto& ss : running_connections){
 		if(!ss->is_connected()){
-			ErrorHandler("ip disconnected, going to FAULT");
+			ErrorHandler("ip %s disconnected, going to FAULT",ss->remote_ip.string_address.c_str());
 		}
 	}
 }
