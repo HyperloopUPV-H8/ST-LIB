@@ -34,7 +34,6 @@ public:
 	queue<struct pbuf*> rx_packet_buffer;
 	IPV4 local_ip;
 	uint32_t local_port;
-	IPV4 remote_ip;
 	ServerState state;
 	static uint8_t priority;
 	struct tcp_pcb* client_control_block;

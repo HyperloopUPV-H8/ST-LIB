@@ -167,7 +167,6 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 		server_socket->client_control_block = incomming_control_block;
 
 		server_socket->rx_packet_buffer = {};
-		server_socket->remote_ip = IPV4(incomming_control_block->remote_ip);
 
 		tcp_setprio(incomming_control_block, priority);
 		tcp_nagle_disable(incomming_control_block);
@@ -179,8 +178,7 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 		tcp_err(incomming_control_block, error_callback);
 		tcp_poll(incomming_control_block, poll_callback , 0);
 
-		tcp_accept(server_socket->server_control_block, nullptr);
-
+		tcp_close(server_socket->server_control_block);
 		priority++;
 
 		return ERR_OK;
@@ -190,10 +188,6 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 
 err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_block, struct pbuf* packet_buffer, err_t error){
 	ServerSocket* server_socket = (ServerSocket*) arg;
-	if(client_control_block->remote_ip.addr != server_socket->remote_ip.address.addr){
-		return ERR_OK;
-	}
-
 	server_socket->client_control_block = client_control_block;
 
 	if(packet_buffer == nullptr){      //FIN has been received
@@ -212,6 +206,7 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 		server_socket->process_data();
 		return ERR_OK;
 	}
+
 	else if(server_socket->state == CLOSING){ 		//Socket is already closed
 		while(not server_socket->rx_packet_buffer.empty()){
 			pbuf_free(server_socket->rx_packet_buffer.front());
