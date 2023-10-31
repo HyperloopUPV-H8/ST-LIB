@@ -73,7 +73,7 @@ void FDCAN::start(){
 	}
 }
 
-bool FDCAN::transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN::DLC dlc){
+bool FDCAN::transmit(uint8_t id, uint32_t message_id, const char* data, FDCAN::DLC dlc){
 	if (not FDCAN::registered_fdcan.contains(id)) {
 		ErrorHandler("There is no registered FDCAN with id: %d.", id);
 		return false;
@@ -92,7 +92,7 @@ bool FDCAN::transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN:
 		instance->tx_header.DataLength = dlc;
 	}
 
-	HAL_StatusTypeDef error = HAL_FDCAN_AddMessageToTxFifoQ(instance->hfdcan, &instance->tx_header, data.data());
+	HAL_StatusTypeDef error = HAL_FDCAN_AddMessageToTxFifoQ(instance->hfdcan, &instance->tx_header, (uint8_t*)data);
 
 	if (error != HAL_OK) {
 		ErrorHandler("Error sending message with id: 0x%x by FDCAN %d", message_id, instance->fdcan_number);

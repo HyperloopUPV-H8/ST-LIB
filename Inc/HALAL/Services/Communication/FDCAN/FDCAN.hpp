@@ -108,7 +108,7 @@ public:
 
     static void start();
 
-    static bool transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN::DLC dlc = FDCAN::DLC::DEFAULT);
+    static bool transmit(uint8_t id, uint32_t message_id, const char* data, FDCAN::DLC dlc = FDCAN::DLC::DEFAULT);
 
     static bool read(uint8_t id, FDCAN::Packet* data);
 
