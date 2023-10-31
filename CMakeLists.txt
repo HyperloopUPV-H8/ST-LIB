@@ -37,7 +37,8 @@ endif()
 if(${ETHERNET})
   set(ETH STLIB_ETH)
 endif()
-message(STATUS "ETHERNET [ON, OFF] Config: " ${ETH})
+message("\n\nCMAKE:\n")
+message(STATUS "ETHERNET is ENABLED ?? " ${ETHERNET})
 
 add_library(${LIBRARY} STATIC
   ${SOURCE_H}
@@ -61,8 +62,8 @@ target_compile_options(${LIBRARY} PUBLIC
   -mfpu=fpv5-d16
   -mfloat-abi=hard
   -mthumb
-  -Og
-  -g3
+  ${OPTIMIZATION}
+  ${DEBUG_CONFIGURATION}
   -ffunction-sections
   -fdata-sections
   -fno-exceptions
@@ -103,7 +104,7 @@ target_include_directories(${LIBRARY} PUBLIC
   Inc/ST-LIB_LOW
   Inc/ST-LIB_HIGH
 )
-message("\n\nCMAKE:\n")
+
 message(STATUS "[DEBUG, RELEASE]: RELEASE: " ${RELEASE})
 message(STATUS "Optimization value: " ${OPTIMIZATION})
 message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
