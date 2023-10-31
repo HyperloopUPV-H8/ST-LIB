@@ -87,7 +87,7 @@ class ConfigBuild:
         print(Fore.CYAN +"\t\tBuild configuration: [DEBUG, RELEASE]: {} ".format(self.buildconfig).upper())
         print(Fore.CYAN +"\t\tTarget [BOARD,NUCLEO]: {} ".format(self.target))
         print(Fore.CYAN +"\t\tEthernet [ON,OFF]: {} \n\n".format(self.ethernet))          
-
+        print(Fore.RED)
 
 
 obj = ConfigBuild()
