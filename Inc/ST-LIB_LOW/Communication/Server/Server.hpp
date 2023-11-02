@@ -9,6 +9,10 @@
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
+#ifndef MAX_CONNECTIONS_TCP_SERVER
+	#define MAX_CONNECTIONS_TCP_SERVER 10
+#endif
+
 class Server{
 public:
 
@@ -19,7 +23,8 @@ public:
 	};
 
 	ServerSocket *open_connection;
-	vector<ServerSocket*> running_connections;
+	array<ServerSocket*,10> running_connections;
+	uint16_t running_connections_count;
 	IPV4 local_ip;
 	uint32_t local_port;
 	ServerState status;

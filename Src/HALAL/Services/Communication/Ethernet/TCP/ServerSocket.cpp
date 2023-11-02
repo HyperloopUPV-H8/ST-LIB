@@ -221,7 +221,7 @@ err_t ServerSocket::receive_callback(void* arg, struct tcp_pcb* client_control_b
 void ServerSocket::error_callback(void *arg, err_t error){
 	ServerSocket* server_socket = (ServerSocket*) arg;
 	server_socket->close();
-	//ErrorHandler("Socket error: %d. Socket closed", error);
+	ErrorHandler("Socket error: %d. Socket closed", error);
 }
 
 err_t ServerSocket::poll_callback(void *arg, struct tcp_pcb *client_control_block){
