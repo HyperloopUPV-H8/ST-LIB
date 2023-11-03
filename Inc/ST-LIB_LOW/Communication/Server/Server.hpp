@@ -23,7 +23,7 @@ public:
 	};
 
 	ServerSocket *open_connection;
-	array<ServerSocket*,10> running_connections;
+	array<ServerSocket*,MAX_CONNECTIONS_TCP_SERVER> running_connections;
 	uint16_t running_connections_count;
 	IPV4 local_ip;
 	uint32_t local_port;
