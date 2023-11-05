@@ -16,8 +16,9 @@ void STLIB::start(string ip, string subnet_mask, string gateway, UART::Periphera
 }
 
 void STLIB::update() {
-  #ifdef STLIB_ETH
-    Ethernet::update();
-  #endif
+#if defined USING_CMAKE && !defined STLIB_ETH
+#else
+	Ethernet::update();
+#endif
 	ErrorHandlerModel::ErrorHandlerUpdate();
 }

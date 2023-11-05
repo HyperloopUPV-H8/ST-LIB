@@ -52,6 +52,7 @@ target_compile_definitions(${LIBRARY} PUBLIC
   -DSTM32H723xx
   -DDEBUG
   ${ETH}
+  -DUSING_CMAKE
 )
 
 

@@ -9,8 +9,9 @@
 
 void HALAL::start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
 
-#ifdef STLIB_ETH
-	Ethernet::inscribe();
+#if defined USING_CMAKE && !defined STLIB_ETH
+#else
+	Ethernet::start(ip, subnet_mask, gateway);
 #endif
 
 	HAL_Init();
@@ -57,7 +58,8 @@ void HALAL::start(string ip, string subnet_mask, string gateway, UART::Periphera
 	FDCAN::start();
 #endif
 
-#ifdef STLIB_ETH
+#if defined USING_CMAKE && !defined STLIB_ETH
+#else
 	Ethernet::start(ip, subnet_mask, gateway);
 #endif
 
