@@ -180,6 +180,9 @@ uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void(
 			.is_on = true
 	};
 
+	while(mid_precision_alarms_by_id.contains(mid_precision_ids))
+		mid_precision_ids++;
+
 	NVIC_DisableIRQ(TIM23_IRQn);
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
 
@@ -191,15 +194,12 @@ uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void(
 		Time::mid_precision_registered = true;
 	}
 
-	while(mid_precision_alarms_by_id.contains(mid_precision_ids))
-		mid_precision_ids++;
-
 	alarm.alarm = func;
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
 	NVIC_EnableIRQ(TIM23_IRQn);
 
 
-	return mid_precision_ids++;
+	return mid_precision_ids;
 }
 
 bool Time::unregister_mid_precision_alarm(uint8_t id){
