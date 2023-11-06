@@ -26,4 +26,5 @@ void STLIB::update() {
 	Ethernet::update();
 #endif
 	ErrorHandlerModel::ErrorHandlerUpdate();
+	Server::update_servers();
 }
