@@ -11,7 +11,7 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 
 #if defined USING_CMAKE && !defined STLIB_ETH
 #else
-	Ethernet::start(ip, subnet_mask, gateway);
+	Ethernet::inscribe();
 #endif
 
 	HAL_Init();
