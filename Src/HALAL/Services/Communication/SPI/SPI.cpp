@@ -25,10 +25,14 @@ uint8_t SPI::inscribe(SPI::Peripheral& spi){
     Pin::inscribe(*spi_instance->SCK, ALTERNATIVE);
     Pin::inscribe(*spi_instance->MOSI, ALTERNATIVE);
     Pin::inscribe(*spi_instance->MISO, ALTERNATIVE);
-    Pin::inscribe(*spi_instance->SS, OUTPUT);
+    if(spi_instance->mode == SPI_MODE_MASTER){
+        Pin::inscribe(*spi_instance->SS, OUTPUT);
+    }
 
     uint8_t id = SPI::id_counter++;
 
+    DMA::inscribe_stream(spi_instance->hdma_rx);
+    DMA::inscribe_stream(spi_instance->hdma_tx);
     SPI::registered_spi[id] = spi_instance;
 
     return id;
@@ -47,42 +51,49 @@ bool SPI::transmit(uint8_t id, uint8_t data){
 }
 
 bool SPI::transmit(uint8_t id, span<uint8_t> data) {
-    if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
-    	return false;
-    }
+	 if (!SPI::registered_spi.contains(id)){
+		ErrorHandler("No SPI registered with id %u", id);
+		return false;
+	 }
 
-    SPI::Instance* spi = SPI::registered_spi[id];
+	SPI::Instance* spi = SPI::registered_spi[id];
 
-    turn_off_chip_select(spi);
-    if (HAL_SPI_Transmit(spi->hspi, data.data(), data.size(), 10) != HAL_OK){
-    	turn_on_chip_select(spi);
-        ErrorHandler("Error during transmission in %s", spi->name.c_str());
-    	return false;
-    }
-	turn_on_chip_select(spi);
-
-    return true;
+	 HAL_StatusTypeDef errorcode = HAL_SPI_Transmit_DMA(spi->hspi, data.data(), data.size());
+	 switch(errorcode){
+	 	 case HAL_OK:
+		 	 return true;
+		 break;
+	 	 case HAL_BUSY:
+	 		 return false;
+	 	 break;
+	 	 default:
+	 		 ErrorHandler("Error while transmiting and receiving with spi DMA. Errorcode %u",(uint8_t)errorcode);
+	 		 return false;
+	 	 break;
+	 }
 }
 
 bool SPI::receive(uint8_t id, span<uint8_t> data) {
-        if (!SPI::registered_spi.contains(id)){
-            ErrorHandler("No SPI registered with id %u", id);
-            return false;
-        }
+	 if (!SPI::registered_spi.contains(id)){
+		ErrorHandler("No SPI registered with id %u", id);
+		return false;
+	 }
 
+	SPI::Instance* spi = SPI::registered_spi[id];
 
-        SPI::Instance* spi = SPI::registered_spi[id];
-
-    	turn_off_chip_select(spi);
-        if (HAL_SPI_Receive(spi->hspi, data.data(), data.size(), 10) != HAL_OK) {
-        	turn_on_chip_select(spi);
-            ErrorHandler("Error during receive in %s", spi->name.c_str());
-        	return false;
-        }
-    	turn_on_chip_select(spi);
-
-        return true;
+	 HAL_StatusTypeDef errorcode = HAL_SPI_Receive_DMA(spi->hspi, data.data(), data.size());
+	 switch(errorcode){
+	 	 case HAL_OK:
+		 	 return true;
+		 break;
+	 	 case HAL_BUSY:
+	 		 return false;
+	 	 break;
+	 	 default:
+	 		 ErrorHandler("Error while transmiting and receiving with spi DMA. Errorcode %u",(uint8_t)errorcode);
+	 		 return false;
+	 	 break;
+	 }
     };
 
 bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data){
@@ -91,25 +102,22 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
 		return false;
 	 }
 
-
 	SPI::Instance* spi = SPI::registered_spi[id];
 
-	turn_off_chip_select(spi);
-	if (HAL_SPI_Transmit(spi->hspi, command_data.data(), command_data.size(), 10) != HAL_OK){
-    	turn_on_chip_select(spi);
-    	ErrorHandler("Error during transmission in %s", spi->name.c_str());
-		return false;
-	}
+	 HAL_StatusTypeDef errorcode = HAL_SPI_TransmitReceive_DMA(spi->hspi, command_data.data(), receive_data.data(), command_data.size());
+	 switch(errorcode){
+	 	 case HAL_OK:
+		 	 return true;
+		 break;
+	 	 case HAL_BUSY:
+	 		 return false;
+	 	 break;
+	 	 default:
+	 		 ErrorHandler("Error while transmiting and receiving with spi DMA. Errorcode %u",(uint8_t)errorcode);
+	 		 return false;
+	 	 break;
+	 }
 
-	if (HAL_SPI_Receive(spi->hspi, receive_data.data(), receive_data.size(), 10) != HAL_OK) {
-    	turn_on_chip_select(spi);
-    	ErrorHandler("Error during receive in %s", spi->name.c_str());
-		return false;
-	}
-
-	turn_on_chip_select(spi);
-
-	return true;
 }
 
 void SPI::chip_select_on(uint8_t id){
@@ -168,7 +176,6 @@ void SPI::init(SPI::Instance* spi){
 	spi->hspi->Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
 	spi->hspi->Init.IOSwap = SPI_IO_SWAP_DISABLE;
 
-
 	if (HAL_SPI_Init(spi->hspi) != HAL_OK){
 		ErrorHandler("Unable to init %s", spi->name);
 		return;
@@ -178,6 +185,23 @@ void SPI::init(SPI::Instance* spi){
 }
 
 
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
+
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi){
+
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi){
+
+}
+
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+
+}
+
 void SPI::turn_on_chip_select(SPI::Instance* spi) {
 	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
 }
@@ -185,5 +209,7 @@ void SPI::turn_on_chip_select(SPI::Instance* spi) {
 void SPI::turn_off_chip_select(SPI::Instance* spi) {
 	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
 }
+
+
 
 #endif

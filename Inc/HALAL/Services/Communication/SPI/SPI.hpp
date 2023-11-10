@@ -10,6 +10,7 @@
 #include "PinModel/Pin.hpp"
 #include "Packets/RawPacket.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
+#include "DMA/DMA.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_SPI_MODULE_ENABLED
@@ -36,6 +37,8 @@ private:
 
         SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
         SPI_TypeDef* instance; /**< HAL spi instance. */
+        DMA::Stream hdma_tx; /**< HAL DMA handler for writting */
+        DMA::Stream hdma_rx; /**< HAL DMA handler for reading */
 
         uint32_t baud_rate_prescaler; /**< SPI baud prescaler.*/
         uint32_t mode = SPI_MODE_MASTER; /**< SPI mode. */
