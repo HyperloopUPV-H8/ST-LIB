@@ -24,6 +24,10 @@ public:
 	static void inscribe();
 	static void start(string local_ip, string subnet_mask, string gateway);
 	static void start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway);
+
+	/**
+	 * @brief handles the received messages by ethernet
+	 */
 	static void update();
 
 private:
