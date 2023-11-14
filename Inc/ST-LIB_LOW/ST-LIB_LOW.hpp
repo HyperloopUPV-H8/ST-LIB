@@ -19,6 +19,7 @@
 #include "Sensors/EncoderSensor/EncoderSensor.hpp"
 #include "Sensors/PWMSensor/PWMSensor.hpp"
 #include "Sensors/NTC/NTC.hpp"
+#include "Communication/Server/Server.hpp"
 
 class STLIB_LOW {
 public:
