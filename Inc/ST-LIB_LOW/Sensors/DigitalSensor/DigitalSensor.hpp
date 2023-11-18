@@ -19,7 +19,7 @@ public:
 	DigitalSensor(Pin &pin, PinState &value);
 	void read();
 	uint8_t get_id();
-
+	uint8_t get_value();
 protected:
 	uint8_t id;
 	PinState *value;

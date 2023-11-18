@@ -15,3 +15,14 @@ void DigitalSensor::read(){
 uint8_t DigitalSensor::get_id(){
 	return id;
 }
+
+uint8_t DigitalSensor::get_value(){
+	read();
+	if(value != nullptr)
+	{
+		if(*value == PinState::ON)
+			return 1;
+		else
+			return 0;
+	}
+}
