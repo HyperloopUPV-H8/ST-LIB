@@ -284,8 +284,6 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 				spi->state = SPI::WAITING_PACKET; //prepares the next received packet
 				spi->SPIPacketID = 0;
 				spi->available_end = 0;
-				int i = 0; //esto funciona
-				//while(i < 100){i++;}
 				HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIPacketID, 2);
 			}
 			break;
