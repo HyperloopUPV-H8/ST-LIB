@@ -8,12 +8,14 @@
 #pragma once
 
 #include "PinModel/Pin.hpp"
-#include "Packets/RawPacket.hpp"
+#include "Packets/SPIPacket.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
 #include "DMA/DMA.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_SPI_MODULE_ENABLED
+
+#define MASTER_SPI_CHECK_DELAY 100000000 //how often the master should check if the slave is ready, in nanoseconds
 
 //TODO: Hay que hacer el Chip select funcione a traves de un GPIO en vez de a traves del periferico.
 
@@ -22,11 +24,21 @@
  * 
  */
 class SPI{
-private:
+public:
+	/**
+	 * @brief Possible states of the SPI class
+	 */
+    enum SPIstate{
+    	IDLE = 0,
+		STARTING_PACKET,
+    	WAITING_PACKET,
+		PROCESSING_PACKET,
+    };
+
     /**
-     * @brief Struct which defines all data refering to SPI peripherals. It is
-     *        declared private in order to prevent unwanted use. Only 
-     *        predefined instances should be used.
+     * @brief Struct which defines all data referring to SPI peripherals. DO NOT MODIFY ON RUN TIME.
+     * declared public so HAL callbacks can directly access the instance
+     * NOT intended to be modified after the inscribe of the spi, configuration should be made in Runes.hpp
      *           
      */
     struct Instance{
@@ -50,14 +62,16 @@ private:
        
         bool initialized = false; /**< Peripheral has already been initialized */
         string name;
+        SPIstate state = IDLE; /**< State of the spi on the packet communication*/
+        uint16_t available_end = 0; /**< variable that checks for what packet id is the other end ready*/
+        uint16_t SPIPacketID = 0; /**< SPIPacket being processed, if any*/
+        uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
     };
-
 
 
     static void turn_on_chip_select(SPI::Instance* spi);
     static void turn_off_chip_select(SPI::Instance* spi);
 
-public:
     /**
      * @brief Enum that abstracts the use of the Instance struct to facilitate the mocking of the HALAL.
      *
@@ -73,9 +87,14 @@ public:
 
     static uint16_t id_counter;
     
-    static unordered_map<uint8_t, SPI::Instance* > registered_spi;
+    static map<uint8_t, SPI::Instance* > registered_spi;
 
     static unordered_map<SPI::Peripheral, SPI::Instance*> available_spi;
+
+    /**
+     * @brief map used in HAL callbacks to obtain the instance of the respective handler
+     */
+    static map<SPI_HandleTypeDef*, SPI::Instance*> registered_spi_by_handler;
 
     /**
      * @brief SPI 3 wrapper enum of the STM32H723.
@@ -155,6 +174,12 @@ public:
 	 * 			    Returns false if a problem has occurred.
 	 */
     static bool transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
+
+    static void packet_update();
+
+    static bool master_transmit_packet(uint8_t id, SPIPacket packet);
+
+    static void slave_listen_packets(uint8_t id);
 
     /**
      * @brief This method sets chip select to high level.
