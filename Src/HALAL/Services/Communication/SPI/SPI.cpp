@@ -277,6 +277,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	case SPI::PROCESSING_PACKET:
 		{
 			SPIPacket *packet = SPIPacket::SPIPacketsByID[spi->SPIPacketID];
+			spi->packet_count++; //counts when a packet has successfully been received.
 			if(spi->mode == SPI_MODE_MASTER){ //ends communication
 				SPI::turn_on_chip_select(spi);
 				spi->state = SPI::IDLE;

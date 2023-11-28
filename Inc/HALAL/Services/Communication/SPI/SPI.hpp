@@ -15,7 +15,7 @@
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
-#define MASTER_SPI_CHECK_DELAY 100000000 //how often the master should check if the slave is ready, in nanoseconds
+#define MASTER_SPI_CHECK_DELAY 100000 //how often the master should check if the slave is ready, in nanoseconds
 
 //TODO: Hay que hacer el Chip select funcione a traves de un GPIO en vez de a traves del periferico.
 
@@ -66,6 +66,7 @@ public:
         uint16_t available_end = 0; /**< variable that checks for what packet id is the other end ready*/
         uint16_t SPIPacketID = 0; /**< SPIPacket being processed, if any*/
         uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
+        uint64_t packet_count = 0; /**< packet completed counter for debugging*/
     };
 
 
