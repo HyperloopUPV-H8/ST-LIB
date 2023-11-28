@@ -305,7 +305,7 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 	if((hspi->ErrorCode & HAL_SPI_ERROR_UDR) != 0){
 		ErrorHandler("Underrun error, slave is not communicating fast enough");
 	}else{
-		ErrorHandler("");
+		ErrorHandler("SPI error number %u",hspi->ErrorCode);
 	}
 
 }
