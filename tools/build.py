@@ -95,7 +95,10 @@ class ConfigBuild:
         if is_windows:
             lib_ori = replace_forward_slashes(lib_ori)
             lib_dir = replace_forward_slashes(lib_dir)
-        subprocess.call([move_cmd,lib_ori,lib_dir],shell=True)
+        if is_windows:
+            subprocess.call([move_cmd,lib_ori,lib_dir],shell=True)
+        else:
+            subprocess.call([move_cmd,lib_ori,lib_dir])
         self.printConfiguration()
         exit()
 
