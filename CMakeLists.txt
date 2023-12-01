@@ -72,7 +72,7 @@ target_compile_options(${LIBRARY} PUBLIC
   $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
 
   -Wno-psabi
-  -specs=/usr/lib/arm-none-eabi/lib/nosys.specs
+  -specs=nosys.specs
 )
 
 target_include_directories(${LIBRARY} PUBLIC
@@ -111,15 +111,4 @@ message(STATUS "Optimization value: " ${OPTIMIZATION})
 message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
 message(STATUS "[BOARD, NUCLEO] Config: NUCLEO: " ${NUCLEO})
 
-
-add_custom_command(TARGET ${LIBRARY}
-  POST_BUILD
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND ls -lh libst-lib.a
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND echo ""
-  )
 
