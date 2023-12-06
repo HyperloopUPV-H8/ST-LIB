@@ -10,8 +10,8 @@
 #ifdef HAL_SPI_MODULE_ENABLED
 
 
-map<uint8_t, SPI::Instance*> SPI::registered_spi = {};
-map<SPI_HandleTypeDef*, SPI::Instance*> SPI::registered_spi_by_handler = {};
+map<uint8_t, SPI::Instance*> SPI::registered_spi {};
+map<SPI_HandleTypeDef*, SPI::Instance*> SPI::registered_spi_by_handler {};
 
 uint16_t SPI::id_counter = 0;
 
