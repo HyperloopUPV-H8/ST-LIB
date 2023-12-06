@@ -7,4 +7,4 @@
 
 #include "HALAL/Models/Packets/SPIPacket.hpp"
 
-map<uint16_t, SPIPacket*> SPIPacket::SPIPacketsByID = {};
+map<uint16_t, SPIPacket*> SPIPacket::SPIPacketsByID {};
