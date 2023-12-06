@@ -52,12 +52,11 @@ class ConfigBuild:
                     return file
     def build(self):
         try:
-            os.makedirs(self.repo_root + "/build/" + self.output_dir)
+            os.makedirs(os.path.join(self.repo_root,"build" ,self.output_dir))
         except FileExistsError:
             pass
 
-        output = self.repo_root + "/build/" + self.output_dir
-
+        output = os.path.join(self.repo_root,"build" ,self.output_dir)
         self.cmake_args.append("cmake")
         self.cmake_args.append(self.repo_root)
         self.cmake_args.append("-B")
@@ -87,14 +86,11 @@ class ConfigBuild:
         
         print(Fore.GREEN + "\nBuild completed successfully!!\n" + Fore.YELLOW)
         try:
-            os.makedirs(self.repo_root + "/build/" + self.output_dir + "/lib")
+            os.makedirs(os.path.join(self.repo_root,"build" ,self.output_dir,"lib"))
         except FileExistsError:
             pass
-        lib_ori = self.repo_root + "/build/" + self.output_dir  + "/" + self.find_file(self.repo_root + "/build/" + self.output_dir)
-        lib_dir = self.repo_root + "/build/" + self.output_dir + "/lib"
-        if is_windows:
-            lib_ori = replace_forward_slashes(lib_ori)
-            lib_dir = replace_forward_slashes(lib_dir)
+        lib_ori = os.path.join(self.repo_root,"build" ,self.output_dir,self.find_file(self.repo_root + "/build/" + self.output_dir))
+        lib_dir = os.path.join(self.repo_root,"build" ,self.output_dir,"lib")
         if is_windows:
             subprocess.call([move_cmd,lib_ori,lib_dir],shell=True)
         else:
