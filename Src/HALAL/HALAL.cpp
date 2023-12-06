@@ -9,8 +9,9 @@
 
 void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral) {
 
-#ifdef HAL_ETH_MODULE_ENABLED
-	//Ethernet::inscribe();
+#if defined USING_CMAKE && !defined STLIB_ETH
+#else
+	Ethernet::inscribe();
 #endif
 
 	HAL_Init();
@@ -57,8 +58,9 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 	FDCAN::start();
 #endif
 
-#ifdef HAL_ETH_MODULE_ENABLED
-	//Ethernet::start(ip, subnet_mask, gateway);
+#if defined USING_CMAKE && !defined STLIB_ETH
+#else
+	Ethernet::start(ip, subnet_mask, gateway);
 #endif
 
 #ifdef HAL_TIM_MODULE_ENABLED
