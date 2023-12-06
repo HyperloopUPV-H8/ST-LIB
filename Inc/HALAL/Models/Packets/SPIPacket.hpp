@@ -25,7 +25,7 @@ public:
 	 */
 	SPIPacket(uint16_t id, uint16_t master_data_size, uint16_t slave_data_size) : id(id), master_data_size(master_data_size), slave_data_size(slave_data_size){
 		if(id == 0){
-			ErrorHandler("Used reserved ID 0 on SPIPacket");
+			ErrorHandler("Cannot use 0 as the SPIPacketID, as it is reserved to the no packet ready signal");
 		}
 		if(master_data_size > slave_data_size){
 			greater_data_size = master_data_size+2;
@@ -44,7 +44,7 @@ public:
 	SPIPacket(uint16_t id, uint8_t* master_data, uint8_t* slave_data, uint16_t shared_data_size) :
 		id(id), master_data(master_data), master_data_size(shared_data_size), slave_data(slave_data), slave_data_size(shared_data_size){
 		if(id == 0){
-			ErrorHandler("Used reserved ID 0 on SPIPacket");
+			ErrorHandler("Cannot use 0 as the SPIPacketID, as it is reserved to the no packet ready signal");
 		}
 
 	}
