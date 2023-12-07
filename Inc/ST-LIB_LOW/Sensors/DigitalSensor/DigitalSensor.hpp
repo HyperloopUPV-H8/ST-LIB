@@ -15,14 +15,15 @@
 class DigitalSensor{
 public:
 	DigitalSensor() = default;
-	DigitalSensor(Pin &pin, PinState *value);
-	DigitalSensor(Pin &pin, PinState &value);
+	DigitalSensor(Pin &pin, PinState value);
+	//DigitalSensor(Pin &pin, PinState &value);
 	void read();
 	uint8_t get_id();
-
+	//USED for shutup
+	uint16_t get_value();
 protected:
 	uint8_t id;
-	PinState *value;
+	PinState value;
 };
 
 
