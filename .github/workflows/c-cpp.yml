@@ -22,8 +22,9 @@ jobs:
         run: pip install GitPython colorama
       - name: Set up ST-LIB
         run: cp -r ../* /opt/
-      - run: ls ..
+      - name: Display ST-LIB
         working-directory: /opt/ST-LIB/
+        run: ls 
       - name: Invoking python
         working-directory: /opt/ST-LIB/tools
         run: python3 build.py -eth ON -t NUCLEO -bb ${{matrix.build_type}}
