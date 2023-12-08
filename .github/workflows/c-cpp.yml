@@ -27,5 +27,6 @@ jobs:
         run: cp -r ../* /opt/
       - run: ls ..
         working-directory: /opt/ST-LIB/tools
-      - name: "Invoking python"
+      - name: Invoking python
+        working-directory: /opt/ST-LIB/tools
         run: python3 build.py -eth ON -t NUCLEO -bb ${{matrix.build_type}}
