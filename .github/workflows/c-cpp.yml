@@ -2,7 +2,7 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "main" ,"development"]
+    branches: [ "main" ,"development","feature/automated_build_template_project"]
   pull_request:
     branches: [ "main","development" ]
   workflow_call:
