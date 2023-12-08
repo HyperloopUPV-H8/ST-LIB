@@ -8,10 +8,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
-    matrix:
-      config:[Debug, Release]
+      matrix: 
+        build_type: [Debug, Release]
+    runs-on: ubuntu-latest
+
 
     steps:
       - uses: actions/checkout@v3
@@ -19,5 +20,5 @@ jobs:
       - run: arm-none-eabi-gcc --version
       - name: Install dependencies
         run: pip install GitPython colorama
-      - name: "Invoke Cmake"
-        run: python3 tools/build.py -eth ON -t NUCLEO -bb ${{ matrix.config}}
+      - name: "Invoking python"
+        run: python3 tools/build.py -eth ON -t NUCLEO -bb ${{matrix.build_type}}
