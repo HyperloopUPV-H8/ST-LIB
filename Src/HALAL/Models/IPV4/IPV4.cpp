@@ -27,6 +27,11 @@ IPV4::IPV4(const char* address) {
 	IP_ADDR4(&(this->address), ip_bytes[0], ip_bytes[1], ip_bytes[2], ip_bytes[3]);
 }
 
+IPV4::IPV4(ip_addr_t address) : address(address){
+	string_address = std::to_string((u8_t) address.addr) + "." + std::to_string((u8_t) (address.addr >> 8))+ "."
+			+ std::to_string((uint8_t) (address.addr >> 16)) + "." + std::to_string((uint8_t) (address.addr >> 24));
+}
+
 IPV4::IPV4() = default;
 
 void IPV4::operator =(const char* address){

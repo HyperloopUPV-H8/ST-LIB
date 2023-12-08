@@ -3,8 +3,16 @@
 #include "Protections/Notification.hpp"
 
 StateMachine* ProtectionManager::general_state_machine = nullptr;
-Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, ProtectionManager::to_fault};
+Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, nullptr};
 Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
+StackOrder<0> ProtectionManager::fault_order(Protections::FAULT,to_fault);
+uint64_t ProtectionManager::last_notify = 0;
+void *error_handler;
+
+
+void ProtectionManager::add_standard_protections(){
+	add_protection(error_handler, Boundary<void,ERROR_HANDLER>(error_handler));
+}
 
 void ProtectionManager::set_id(Boards::ID board_id){
     ProtectionManager::board_id = board_id;
@@ -16,8 +24,17 @@ void ProtectionManager::link_state_machine(StateMachine& general_state_machine, 
 }
 
 void ProtectionManager::to_fault(){
-    if(general_state_machine->current_state != fault_state_id)
-	    ProtectionManager::general_state_machine->force_change_state(fault_state_id);
+    if(general_state_machine->current_state != fault_state_id){
+	    fault_and_propagate();
+	}
+
+}
+
+void ProtectionManager::fault_and_propagate(){
+	ProtectionManager::general_state_machine->force_change_state(fault_state_id);
+	for(OrderProtocol* socket : OrderProtocol::sockets){
+		socket->send_order(fault_order);
+	}
 }
 
 void ProtectionManager::check_protections() {
@@ -29,24 +46,27 @@ void ProtectionManager::check_protections() {
         	ErrorHandler("Protection Manager does not have General State Machine Linked");
         	return;
         }
-
-        ProtectionManager::to_fault();
+        if(protection.fault_type == Protections::FAULT){
+            ProtectionManager::to_fault();
+        }
 
         Time::RTCData current_timestamp = Time::get_rtc_data();
         message = (char*)malloc(get_string_size(protection, current_timestamp));
         serialize(protection, current_timestamp);
 
+        if(Time::get_global_tick() > last_notify + notify_delay_in_nanoseconds){
         switch(protection.fault_type){
-        case FaultType::WARNING:
+        case Protections::FaultType::WARNING:
         	warning_notification.notify(message);
         	break;
-        case FaultType::FAULT:
+        case Protections::FaultType::FAULT:
         	fault_notification.notify(message);
         	break;
         default:
         	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
         }
-
+        last_notify = Time::get_global_tick();
+        }
     	free(message);
     }
 }
@@ -68,9 +88,9 @@ void ProtectionManager::check_high_frequency_protections(){
         serialize(protection, current_timestamp);
 
         switch(protection.fault_type){
-        case FaultType::WARNING:
+        case Protections::FaultType::WARNING:
         	warning_notification.notify(message);
-        case FaultType::FAULT:
+        case Protections::FaultType::FAULT:
         	fault_notification.notify(message);
         default:
         	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
@@ -78,6 +98,10 @@ void ProtectionManager::check_high_frequency_protections(){
 
     	free(message);
     }
+}
+
+void ProtectionManager::warn(string message){
+	warning_notification.notify(message);
 }
 
 Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;

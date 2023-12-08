@@ -10,6 +10,7 @@
 
 unordered_map<EthernetNode,Socket*> Socket::connecting_sockets = {};
 
+
 Socket::Socket() = default;
 
 Socket::Socket(Socket&& other):remote_port(move(remote_port)), connection_control_block(move(other.connection_control_block)),
@@ -34,17 +35,22 @@ Socket::~Socket(){
 	else OrderProtocol::sockets.erase(it);
 }
 
-Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port):remote_ip(remote_ip), remote_port(remote_port){
+Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port): local_ip(local_ip), local_port(local_port),remote_ip(remote_ip), remote_port(remote_port){
 	if(not Ethernet::is_running) {
 		ErrorHandler("Cannot declare TCP socket before Ethernet::start()");
 		return;
 	}
 	state = INACTIVE;
+	tx_packet_buffer = {};
+	rx_packet_buffer = {};
 	EthernetNode remote_node(remote_ip, remote_port);
 
 	connection_control_block = tcp_new();
 	tcp_bind(connection_control_block, &local_ip.address, local_port);
 	tcp_nagle_disable(connection_control_block);
+	tcp_arg(connection_control_block, this);
+	tcp_poll(connection_control_block,connection_poll_callback,1);
+	tcp_err(connection_control_block, connection_error_callback);
 
 	connecting_sockets[remote_node] = this;
 	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
@@ -73,6 +79,7 @@ void Socket::close(){
 	}
 
   tcp_close(socket_control_block);
+  state = INACTIVE;
 }
 
 void Socket::reconnect(){
@@ -81,6 +88,25 @@ void Socket::reconnect(){
 		connecting_sockets[remote_node] = this;
 	}
 	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
+}
+
+void Socket::reset(){
+	EthernetNode remote_node(remote_ip, remote_port);
+	if(!connecting_sockets.contains(remote_node)){
+		connecting_sockets[remote_node] = this;
+	}
+	state = INACTIVE;
+	tcp_abort(connection_control_block);
+	connection_control_block = tcp_new();
+
+	tcp_bind(connection_control_block, &local_ip.address, local_port);
+	tcp_nagle_disable(connection_control_block);
+	tcp_arg(connection_control_block, this);
+	tcp_poll(connection_control_block,connection_poll_callback,1);
+	tcp_err(connection_control_block, connection_error_callback);
+
+	tcp_connect(connection_control_block, &remote_ip.address , remote_port, connect_callback);
+
 }
 
 
@@ -95,7 +121,12 @@ void Socket::send(){
 			tcp_output(socket_control_block);
 			memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],temporal_packet_buffer);
 		}else{
-			ErrorHandler("Cannot write to client socket. Error code: %d",error);
+			if(error == ERR_MEM){
+				close();
+				ErrorHandler("Too many unacked messages on client socket, disconnecting...");
+			}else{
+				ErrorHandler("Cannot write to client socket. Error code: %d",error);
+			}
 		}
 	}
 }
@@ -109,6 +140,24 @@ void Socket::process_data(){
 		Order::process_data(this, new_data);
 		pbuf_free(packet);
 	}
+}
+
+bool Socket::add_order_to_queue(Order& order){
+	if(state == Socket::SocketState::CONNECTED){
+		return false;
+	}
+	struct memp* next_memory_pointer_in_packet_buffer_pool = (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
+	if(next_memory_pointer_in_packet_buffer_pool == nullptr){
+		memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], next_memory_pointer_in_packet_buffer_pool);
+		return false;
+	}
+
+	uint8_t* order_buffer = order.build();
+
+	struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_POOL);
+	pbuf_take(packet, order_buffer, order.get_size());
+	Socket::tx_packet_buffer.push(packet);
+	return true;
 }
 
 bool Socket::is_connected(){
@@ -133,6 +182,7 @@ err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, 
 		tcp_poll(client_control_block, poll_callback,0);
 		tcp_sent(client_control_block, send_callback);
 		tcp_err(client_control_block, error_callback);
+
 		return ERR_OK;
 	}else return ERROR;
 }
@@ -172,6 +222,8 @@ err_t Socket::poll_callback(void* arg, struct tcp_pcb* client_control_block){
 		}
 		if(socket->state == CLOSING){
 			socket->close();
+		}else if(socket->state == INACTIVE){
+			tcp_connect(socket->connection_control_block, &socket->remote_ip.address , socket->remote_port, connect_callback);
 		}
 		return ERR_OK;
 	}else{
@@ -195,8 +247,35 @@ void Socket::error_callback(void *arg, err_t error){
 	Socket* socket = (Socket*) arg;
 	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
+		socket->reset();
+	}else{
+		ErrorHandler("Client socket error: %d. Socket closed",error);
 	}
-	ErrorHandler("Client socket error: %d. Socket closed",error);
+}
+
+void Socket::connection_error_callback(void *arg, err_t error){
+	if(error == ERR_RST){
+		Socket* socket = (Socket*) arg;
+
+		socket->pending_connection_reset = true;
+		return;
+	}else if(error == ERR_ABRT){
+		return;
+	}
+	ErrorHandler("Connection socket error: %d. Couldn t start client socket ", error);
+}
+
+err_t Socket::connection_poll_callback(void *arg, struct tcp_pcb* connection_control_block){
+	Socket* socket = (Socket*) arg;
+	if(socket->pending_connection_reset){
+		socket->reset();
+		socket->pending_connection_reset = false;
+		return ERR_ABRT;
+	}
+	else if(socket->connection_control_block->state == SYN_SENT){
+		socket->pending_connection_reset = true;
+	}
+	return ERR_OK;
 }
 
 #endif
