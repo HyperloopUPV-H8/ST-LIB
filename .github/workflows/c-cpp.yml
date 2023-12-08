@@ -1,0 +1,21 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install dependencies
+    - run: pip install GitPython colorama
+    - run: arm-none-eabi-gcc --version
+    - uses: actions/checkout@v3
+    - run: mkdir ./build && cmake -B ./build
+    - name: make 
+      run: make -C ./build
