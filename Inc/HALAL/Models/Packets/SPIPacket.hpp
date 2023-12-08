@@ -4,6 +4,7 @@
  *  Created on: 15 nov. 2023
  *      Author: ricardo
  */
+
 #pragma once
 
 #include "ErrorHandler/ErrorHandler.hpp"
