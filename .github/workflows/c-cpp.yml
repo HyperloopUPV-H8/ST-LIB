@@ -29,3 +29,8 @@ jobs:
       - name: Invoking python
         working-directory: /opt/ST-LIB/tools
         run: python3 build.py -eth ON -t NUCLEO -bb ${{matrix.build_type}}
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: library
+          path: /opt/ST-LIB/tools/build/${{matrix.build_type}}/lib/libst-lib.a
