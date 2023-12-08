@@ -33,4 +33,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: library
-          path: /opt/ST-LIB/tools/build/${{matrix.build_type}}/lib/libst-lib.a
+          path: /opt/ST-LIB/build/${{matrix.build_type}}/lib/libst-lib.a
