@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: pip install GitPython colorama
     - name: Install compiler
-      run: apt install arm-none-eabi-gcc
+      run: sudo apt install arm-none-eabi-gcc
     - name: check compiler version
       run: arm-none-eabi-gcc --version
     - name: "Invoke Cmake"
