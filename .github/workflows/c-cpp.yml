@@ -13,12 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - uses: carlosperate/arm-none-eabi-gcc-action@v1
+    - run: arm-none-eabi-gcc --version
     - name: Install dependencies
       run: pip install GitPython colorama
-    - name: Install compiler
-      run: sudo apt install arm-none-eabi-gcc
-    - name: check compiler version
-      run: arm-none-eabi-gcc --version
     - name: "Invoke Cmake"
       run: mkdir ./build && cmake -B ./build
     - name: make 
