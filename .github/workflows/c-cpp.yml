@@ -2,7 +2,7 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "main" ,"test_build_action"]
+    branches: [ "main" ,"test_build_action","test_automated_build"]
   pull_request:
     branches: [ "main" ]
 
@@ -18,6 +18,4 @@ jobs:
     - name: Install dependencies
       run: pip install GitPython colorama
     - name: "Invoke Cmake"
-      run: mkdir ./build && cmake -B ./build
-    - name: make 
-      run: make -C ./build
+      run: python3 tools/build.py -eth ON -t NUCLEO -bb Debug
