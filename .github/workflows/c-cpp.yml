@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: pip install GitPython colorama
       - name: Set up ST-LIB
-        run: cp -r ../* /opt/
+        run: ls && cp -r ../* /opt/
       - name: Display ST-LIB
         working-directory: /opt/ST-LIB/
         run: ls 
