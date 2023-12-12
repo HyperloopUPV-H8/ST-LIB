@@ -35,7 +35,7 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 		tcp_accept(server_control_block, accept_callback);
 	}else{
 		memp_free(MEMP_TCP_PCB, server_control_block);
-		ErrorHandler("Cannot bind server socket, memory low");
+		ErrorHandler("Cannot bind server socket, error %d",(int16_t)error);
 	}
 	OrderProtocol::sockets.push_back(this);
 }

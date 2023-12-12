@@ -42,6 +42,10 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 	ADC::start();
 #endif
 
+#ifdef HAL_FMAC_MODULE_ENABLED
+	MultiplierAccelerator::start();
+#endif
+
 #ifdef HAL_I2C_MODULE_ENABLED
 	I2C::start();
 #endif
