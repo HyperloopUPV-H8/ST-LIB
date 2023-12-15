@@ -11,15 +11,16 @@ MultiplierAccelerator::FMACMemoryLayout MultiplierAccelerator::MemoryLayout;
 
 void MultiplierAccelerator::IIR_software_in_software_out_inscribe(uint8_t IIRFiltersSize, uint8_t FFiltersSize, uint8_t IIRInSize, uint8_t FInSize, uint8_t OutSize){
 	MemoryLayout.IIRFilterCoeffs = new int16_t[IIRFiltersSize];
-	MemoryLayout.IIRFiltersSize = IIRFiltersSize;
+	MemoryLayout.IIRFiltersSize = (uint16_t) IIRFiltersSize;
 	MemoryLayout.FFilterCoeffs = new int16_t[FFiltersSize];
-	MemoryLayout.FFiltersSize = FFiltersSize;
+	MemoryLayout.FFiltersSize = (uint16_t) FFiltersSize;
 	MemoryLayout.IIRInValues = new int16_t[IIRInSize];
-	MemoryLayout.IIRInSize = IIRInSize;
+	MemoryLayout.IIRInSize = (uint16_t) IIRInSize;
 	MemoryLayout.FInValues = new int16_t[FInSize];
-	MemoryLayout.FInSize = FInSize;
+	MemoryLayout.FInSize = (uint16_t) FInSize;
 	MemoryLayout.OutValues = new int16_t[OutSize];
-	MemoryLayout.OutSize = OutSize;
+	MemoryLayout.AuxiliarOutValues = new int16_t[OutSize];
+	MemoryLayout.OutSize = (uint16_t) OutSize;
 	Instance.mode = IIR;
 
 	MultiplierAccelerator::inscribe();
@@ -27,11 +28,12 @@ void MultiplierAccelerator::IIR_software_in_software_out_inscribe(uint8_t IIRFil
 
 void MultiplierAccelerator::FIR_software_in_software_out_inscribe(uint8_t FFiltersSize, uint8_t FInSize, uint8_t OutSize){
 	MemoryLayout.FFilterCoeffs = new int16_t[FFiltersSize]{0};
-	MemoryLayout.FFiltersSize = FFiltersSize;
+	MemoryLayout.FFiltersSize = (uint16_t) FFiltersSize;
 	MemoryLayout.FInValues = new int16_t[FInSize]{0};
-	MemoryLayout.FInSize = FInSize;
+	MemoryLayout.FInSize = (uint16_t) FInSize;
 	MemoryLayout.OutValues = new int16_t[OutSize]{0};
-	MemoryLayout.OutSize = OutSize;
+	MemoryLayout.AuxiliarOutValues = new int16_t[OutSize]{0};
+	MemoryLayout.OutSize = (uint16_t) OutSize;
 	Instance.mode = FIR;
 
 	MultiplierAccelerator::inscribe();
@@ -75,7 +77,7 @@ void MultiplierAccelerator::start(){
 			sFmacConfig.R = 0;
 
 			/* Configure the FMAC */
-			if (HAL_FMAC_FilterConfig_DMA(Instance.hfmac, &sFmacConfig) != HAL_OK){
+			if (HAL_FMAC_FilterConfig(Instance.hfmac, &sFmacConfig) != HAL_OK){
 				ErrorHandler("Error while defining the filter memory layout of the FMAC");
 			}
 
@@ -87,27 +89,47 @@ void MultiplierAccelerator::start(){
 }
 
 void MultiplierAccelerator::software_preload(int16_t* preload_data){
-	if (HAL_FMAC_FilterPreload_DMA(Instance.hfmac, preload_data, MemoryLayout.FFiltersSize, NULL, 0) != HAL_OK)
+	if (HAL_FMAC_FilterPreload(Instance.hfmac, preload_data, (uint8_t) MemoryLayout.FInSize, NULL, 0) != HAL_OK)
 	{
 		ErrorHandler("");
 	}
 }
 
 void MultiplierAccelerator::software_preload(int16_t* preload_data, int16_t* preload_secondary_data){
-	if (HAL_FMAC_FilterPreload_DMA(Instance.hfmac, preload_data, MemoryLayout.FInSize, preload_secondary_data, MemoryLayout.IIRInSize) != HAL_OK){
+	if (HAL_FMAC_FilterPreload(Instance.hfmac, preload_data, (uint8_t) MemoryLayout.FInSize, preload_secondary_data, (uint8_t) MemoryLayout.IIRInSize) != HAL_OK){
 		ErrorHandler("");
 	}
 
 }
 
 void MultiplierAccelerator::software_process(int16_t* calculated_data){
-	if(HAL_FMAC_FilterStart(Instance.hfmac, calculated_data, (uint16_t*) &MemoryLayout.OutSize) != HAL_OK){
+	if(HAL_FMAC_FilterStart(Instance.hfmac, calculated_data, &MemoryLayout.OutSize) != HAL_OK){
 		ErrorHandler("");
 	}
 }
+
+void MultiplierAccelerator::software_load(int16_t* input_data){
+	if(HAL_FMAC_AppendFilterData(Instance.hfmac, input_data, &MemoryLayout.FInSize)){
+		ErrorHandler("");
+	}
+}
+
+void MultiplierAccelerator::software_end_process(){
+	if(HAL_FMAC_FilterStop(Instance.hfmac) != HAL_OK){
+		ErrorHandler("");
+	}
+}
+
 
 bool MultiplierAccelerator::is_ready(){
 	return Instance.hfmac->State == HAL_FMAC_STATE_READY;
 }
 
+void HAL_FMAC_OutputDataReadyCallback(FMAC_HandleTypeDef *hfmac){
+	//HAL_FMAC_ConfigFilterOutputBuffer(MultiplierAccelerator::Instance.hfmac, MultiplierAccelerator::MemoryLayout.OutValues, &MultiplierAccelerator::MemoryLayout.OutSize);
+}
+
+void HAL_FMAC_GetDataCallback(FMAC_HandleTypeDef *hfmac){
+
+}
 

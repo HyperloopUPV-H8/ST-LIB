@@ -25,15 +25,16 @@ public:
 
 	struct FMACMemoryLayout{
 		int16_t *IIRFilterCoeffs;
-		uint8_t IIRFiltersSize;
+		uint16_t IIRFiltersSize;
 		int16_t *FFilterCoeffs;
-		uint8_t FFiltersSize;
+		uint16_t FFiltersSize;
 		int16_t *IIRInValues;
-		uint8_t IIRInSize;
+		uint16_t IIRInSize;
 		int16_t *FInValues;
-		uint8_t FInSize;
+		uint16_t FInSize;
 		int16_t *OutValues;
-		uint8_t OutSize;
+		int16_t *AuxiliarOutValues;
+		uint16_t OutSize;
 	};
 
 	struct FMACInstance{
@@ -55,6 +56,8 @@ public:
 	static void software_preload(int16_t* preload_data);
 	static void software_preload(int16_t* preload_data, int16_t* preload_secondary_data);
 	static void software_process(int16_t* calculated_data);
+	static void software_load(int16_t* input_data);
+	static void software_end_process();
 	static bool is_ready();
 
 private:

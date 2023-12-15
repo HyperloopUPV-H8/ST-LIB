@@ -30,6 +30,10 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 	DMA::start();
 #endif
 
+#ifdef HAL_FMAC_MODULE_ENABLED
+	MultiplierAccelerator::start();
+#endif
+
 #ifdef HAL_CORDIC_MODULE_ENABLED
 	CORDIC_HandleTypeDef hcordic;
 	hcordic.Instance = CORDIC;
@@ -40,10 +44,6 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 
 #ifdef HAL_ADC_MODULE_ENABLED
 	ADC::start();
-#endif
-
-#ifdef HAL_FMAC_MODULE_ENABLED
-	MultiplierAccelerator::start();
 #endif
 
 #ifdef HAL_I2C_MODULE_ENABLED

@@ -7,6 +7,14 @@ from colorama import Fore
 parser = argparse.ArgumentParser(prog="ConfigBuild",
                                  description="Configures and builds the project")
 
+is_windows = "Windows" in platform.system()
+move_cmd = "move" if is_windows else "mv"
+python_interpreter = "python" if is_windows else "python3"
+
+## !!!!!! CHANGE THIS PATH TO YOUR ST-LIB PATH !!!!!!
+stlib_path = "D:/hyperloop/ST-LIB/tools/build.py" if is_windows else "/opt/ST-LIB/tools/build.py"
+## !!!!!! CHANGE THIS PATH TO YOUR ST-LIB PATH !!!!!!
+
 
 parser.add_argument('-bb','--build_behaviour',choices=['Release','Debug'],required=True)
 parser.add_argument('-target','--target',choices=['NUCLEO','BOARD'],required=True)
