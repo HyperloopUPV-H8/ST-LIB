@@ -112,14 +112,3 @@ message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
 message(STATUS "[BOARD, NUCLEO] Config: NUCLEO: " ${NUCLEO})
 
 
-add_custom_command(TARGET ${LIBRARY}
-  POST_BUILD
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND ls -lh libst-lib.a
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND echo ""
-  )
-
