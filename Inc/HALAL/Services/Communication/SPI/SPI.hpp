@@ -176,10 +176,19 @@ public:
 	 */
     static bool transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
 
+    /**
+     * @brief update that has to be called in order for master to check if the slave is ready to send the packet. If it is not called periodically, the master_transmit_packet will not work. Not needed for dummy communication (not using packets)
+     */
     static void packet_update();
 
+    /**
+     * @brief master send packet method, which tries to send a single packet
+     */
     static bool master_transmit_packet(uint8_t id, SPIPacket packet);
 
+    /**
+     * @brief slave listen packets method. When called, the slave will start to listen packets until the state is set again to IDLE
+     */
     static void slave_listen_packets(uint8_t id);
 
     /**

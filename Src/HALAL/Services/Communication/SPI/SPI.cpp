@@ -24,9 +24,14 @@ uint8_t SPI::inscribe(SPI::Peripheral& spi){
 
 	SPI::Instance* spi_instance = SPI::available_spi[spi];
 
+	spi_instance->SCK->alternative_function = AF5;
+	spi_instance->MOSI->alternative_function = AF5;
+	spi_instance->MISO->alternative_function = AF5;
+
     Pin::inscribe(*spi_instance->SCK, ALTERNATIVE);
     Pin::inscribe(*spi_instance->MOSI, ALTERNATIVE);
     Pin::inscribe(*spi_instance->MISO, ALTERNATIVE);
+
     if(spi_instance->mode == SPI_MODE_MASTER){
         Pin::inscribe(*spi_instance->SS, OUTPUT);
     }
@@ -144,10 +149,19 @@ bool SPI::master_transmit_packet(uint8_t id, SPIPacket packet){
 
 void SPI::packet_update(){
 	for(auto iter: SPI::registered_spi){
-		if(iter.second->SPIPacketID != 0 && iter.second->available_end != iter.second->SPIPacketID && iter.second->state == STARTING_PACKET && iter.second->mode == SPI_MODE_MASTER && Time::get_global_tick() - iter.second->last_end_check > MASTER_SPI_CHECK_DELAY){
-			turn_off_chip_select(iter.second);
-			HAL_SPI_TransmitReceive_DMA(iter.second->hspi, (uint8_t *)&iter.second->SPIPacketID, (uint8_t *)&iter.second->available_end, 2);
-			iter.second->last_end_check = Time::get_global_tick();
+		if(iter.second->mode == SPI_MODE_MASTER){
+			//if the master is trying to start a packet transaction (he is starting packet and the id of that packet is not 0)
+			if(iter.second->SPIPacketID != 0 && iter.second->state == STARTING_PACKET){
+				//when the slave available packet is not confirmed to be the same packet id that the master is asking
+				if(iter.second->available_end != iter.second->SPIPacketID ){
+					//enough time has passed since the last check to ask the slave again if it has the correct packet ID ready
+					if(Time::get_global_tick() - iter.second->last_end_check > MASTER_SPI_CHECK_DELAY){
+						turn_off_chip_select(iter.second);
+						HAL_SPI_TransmitReceive_DMA(iter.second->hspi, (uint8_t *)&iter.second->SPIPacketID, (uint8_t *)&iter.second->available_end, 2);
+						iter.second->last_end_check = Time::get_global_tick();
+					}
+				}
+			}
 		}
 	}
 }
@@ -304,6 +318,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi){
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 {
 	if((hspi->ErrorCode & HAL_SPI_ERROR_UDR) != 0){
+
 		ErrorHandler("Underrun error, slave is not communicating fast enough");
 	}else{
 		ErrorHandler("SPI error number %u",hspi->ErrorCode);

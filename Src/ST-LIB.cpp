@@ -23,9 +23,8 @@ void STLIB::start(string ip, string subnet_mask, string gateaway,  UART::Periphe
 void STLIB::update() {
 #if defined USING_CMAKE && !defined STLIB_ETH
 #else
-	Ethernet::update();
+	//Ethernet::update();
 #endif
 	ErrorHandlerModel::ErrorHandlerUpdate();
-  SPI::packet_update();
 	Server::update_servers();
 }
