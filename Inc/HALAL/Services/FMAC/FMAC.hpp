@@ -55,8 +55,8 @@ public:
 	
 	static void software_preload(int16_t* preload_data);
 	static void software_preload(int16_t* preload_data, int16_t* preload_secondary_data);
-	static void software_process(int16_t* calculated_data);
-	static void software_load(int16_t* input_data);
+	static void software_process(int16_t* calculated_data, uint16_t* output_size);
+	static void software_load(int16_t* input_data, uint16_t* input_size);
 	static void software_end_process();
 	static bool is_ready();
 

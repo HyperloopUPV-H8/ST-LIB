@@ -102,14 +102,14 @@ void MultiplierAccelerator::software_preload(int16_t* preload_data, int16_t* pre
 
 }
 
-void MultiplierAccelerator::software_process(int16_t* calculated_data){
-	if(HAL_FMAC_FilterStart(Instance.hfmac, calculated_data, &MemoryLayout.OutSize) != HAL_OK){
+void MultiplierAccelerator::software_process(int16_t* calculated_data, uint16_t* output_size){
+	if(HAL_FMAC_FilterStart(Instance.hfmac, calculated_data, output_size) != HAL_OK){
 		ErrorHandler("");
 	}
 }
 
-void MultiplierAccelerator::software_load(int16_t* input_data){
-	if(HAL_FMAC_AppendFilterData(Instance.hfmac, input_data, &MemoryLayout.FInSize)){
+void MultiplierAccelerator::software_load(int16_t* input_data, uint16_t* input_size){
+	if(HAL_FMAC_AppendFilterData(Instance.hfmac, input_data, input_size)){
 		ErrorHandler("");
 	}
 }
