@@ -108,6 +108,9 @@ void ProtectionManager::warn(string message){
 }
 
 void ProtectionManager::notify(Protection& protection){
+    if(protection.jumped_protection->Protector == ERROR_HANDLER){
+        protection.jumped_protection->update_error_handler_message(protection.jumped_protection->get_error_handler_string());
+    }
     for(OrderProtocol* socket : OrderProtocol::sockets){
         socket->send_order(*protection.jumped_protection->message);
     }
