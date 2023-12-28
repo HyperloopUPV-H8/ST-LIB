@@ -2,9 +2,15 @@
 #define PROTECTIONTYPE_LENGTH 7
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "Control/Blocks/MeanCalculator.hpp"
+#include "HALAL/Models/Packets/Order.hpp"
+#include "HALAL/Services/Time/RTC.hpp"
 
-enum ProtectionType : uint64_t {
-    BELOW = std::numeric_limits<uint64_t>::max() - PROTECTIONTYPE_LENGTH + 1,
+using type_id_t = void(*)();
+template<typename>
+void type_id() {}
+
+enum ProtectionType : uint8_t {
+    BELOW = 0,
     ABOVE,
     OUT_OF_RANGE,
     EQUALS,
@@ -16,16 +22,22 @@ enum ProtectionType : uint64_t {
 struct BoundaryInterface{
 public:
     virtual bool check_bounds() = 0;
-	virtual char* serialize(char* dst) = 0;
-	virtual int get_string_size() = 0;
+	HeapOrder* message;
 
+	void update_name(char* n){
+		name = n;
+	}
 protected:
+	static const map<type_id_t,uint8_t> format_look_up;
 	static int get_error_handler_string_size(){
 		return ErrorHandlerModel::description.size();
 	}
 	static string get_error_handler_string(){
 		return ErrorHandlerModel::description;
 	}
+	//this will store the name of the variable
+	char* name;
+	static constexpr size_t NAME_MAX_LEN = 30;
 };
 
 template<class Type, ProtectionType Protector> struct Boundary;
@@ -33,110 +45,121 @@ template<class Type, ProtectionType Protector> struct Boundary;
 template<class Type>
 struct Boundary<Type, BELOW> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = BELOW;
-	static constexpr const char* format = "\"type\": \"LOWER_BOUND\", \"data\": { \"value\": %s, \"bound\": %s }";
 	Type* src = nullptr;
 	Type boundary;
-	Boundary(Type boundary): boundary(boundary){};
-	Boundary(Type* src, Boundary<Type, Protector> boundary): src(src),boundary(boundary.boundary){}
+	// we have to do this because we cannot take address of rvalue (ProtectionType::BELOW)
+	uint8_t boundary_type_id = Protector;
+	uint8_t format_id;
+	Boundary(Type boundary):boundary(boundary)
+	{
+		
+	}
+	Boundary(Type* src, Boundary<Type, Protector> boundary): 
+		src(src),boundary(boundary.boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
+
+		{
+			name = (char*)malloc(NAME_MAX_LEN);
+			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,name,&this->boundary,this->src,
+				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+		}
+
+
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
 	bool check_bounds()override{
 		if(*src < boundary) return false;
 		return true;
-	}
-	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(boundary).c_str());
-	}
-	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src).c_str(), to_string(boundary).c_str());
-		return dst;
 	}
 };
 
 template<class Type>
 struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ABOVE;
-	static constexpr const char* format = "\"type\": \"UPPER_BOUND\", \"data\": { \"value\": %s, \"bound\": %s }";
 	Type* src = nullptr;
 	Type boundary;
+	uint8_t boundary_type_id = Protector;
+	uint8_t format_id;
 	Boundary(Type boundary): boundary(boundary){};
-	Boundary(Type* src, Boundary<Type, Protector> boundary): src(src),boundary(boundary.boundary){}
+	Boundary(Type* src, Boundary<Type, Protector> boundary): 
+		src(src),boundary(boundary.boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
+
+		{
+			message = new HeapOrder(uint16_t{111},&boundary_type_id,&format_id,&this->boundary,this->src,
+				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+		}
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
 	bool check_bounds()override{
 		if(*src > boundary) return false;
 		return true;
-	}
-	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(boundary).c_str());
-	}
-	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src).c_str(), to_string(boundary).c_str());
-		return dst;
 	}
 };
 
 template<class Type>
 struct Boundary<Type, EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = EQUALS;
-	static constexpr const char* format = "\"type\": \"EQUALS\", \"data\": { \"value\": %s }";
 	Type* src = nullptr;
 	Type boundary;
+	uint8_t boundary_type_id = Protector;
+	uint8_t format_id;
 	Boundary(Type boundary): boundary(boundary){};
-	Boundary(Type* src, Boundary<Type, Protector> boundary): src(src),boundary(boundary.boundary){}
+	Boundary(Type* src, Boundary<Type, Protector> boundary): 
+		src(src),boundary(boundary.boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
+
+		{
+			message = new HeapOrder(uint16_t{111},&boundary_type_id,&format_id,&this->boundary,this->src,
+				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+		}
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
 	bool check_bounds()override{
 		if(*src == boundary) return false;
 		return true;
-	}
-	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(boundary).c_str());
-	}
-	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src).c_str(), to_string(boundary).c_str());
-		return dst;
 	}
 };
 
 template<class Type>
 struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = NOT_EQUALS;
-	static constexpr const char* format = "\"type\": \"NOT_EQUALS\", \"data\": { \"value\": %s, \"want\": %s }";
 	Type* src = nullptr;
 	Type boundary;
+	uint8_t boundary_type_id = Protector;
+	uint8_t format_id;
 	Boundary(Type boundary): boundary(boundary){};
-	Boundary(Type* src, Boundary<Type, Protector> boundary): src(src),boundary(boundary.boundary){}
+	Boundary(Type* src, Boundary<Type, Protector> boundary): 
+		src(src),boundary(boundary.boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
+
+		{
+			message = new HeapOrder(uint16_t{111},&boundary_type_id,&format_id,&this->boundary,this->src,
+				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+		}
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
 	bool check_bounds()override{
 		if(*src != boundary) return false;
 		return true;
-	}
-	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(boundary).c_str());
-	}
-	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src).c_str(), to_string(boundary).c_str());
-		return dst;
 	}
 };
 
 template<class Type>
 struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = OUT_OF_RANGE;
-	static constexpr const char* format = "\"type\": \"OUT_OF_BOUNDS\", \"data\": { \"value\": %s, \"bounds\": [%s, %s] }";
 	Type* src = nullptr;
 	Type lower_boundary, upper_boundary;
+	uint8_t boundary_type_id = Protector;
+	uint8_t format_id;
 	Boundary(Type lower_boundary, Type upper_boundary): lower_boundary(lower_boundary), upper_boundary(upper_boundary){};
-	Boundary(Type* src, Boundary<Type, Protector> boundary): src(src),lower_boundary(boundary.lower_boundary),upper_boundary(boundary.upper_boundary){}
+	Boundary(Type* src, Boundary<Type, Protector> boundary): 
+	src(src),lower_boundary(boundary.lower_boundary),upper_boundary(boundary.upper_boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
+	{
+		message = new HeapOrder(uint16_t{111},&boundary_type_id,&format_id,&this->lower_boundary,&this->upper_boundary,this->src,
+			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+	}
 	Boundary(Type* src, Type lower_boundary, Type upper_boundary): src(src), lower_boundary(lower_boundary), upper_boundary(upper_boundary){}
 	bool check_bounds()override{
 		if(*src < lower_boundary || *src > upper_boundary) return false;
 		return true;
-	}
-	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(lower_boundary).c_str(), to_string(upper_boundary).c_str());
-	}
-	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src).c_str(), to_string(lower_boundary).c_str(), to_string(upper_boundary).c_str());
-		return dst;
 	}
 };
 
@@ -150,112 +173,51 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 	bool check_bounds() override{
 		return not ErrorHandlerModel::error_triggered;
 	}
-	int get_string_size()override{
+	int get_string_size(){
 		return snprintf(nullptr,0,format,BoundaryInterface::get_error_handler_string().c_str());
 	}
-	char* serialize(char* dst)override{
+	char* serialize(char* dst){
 		sprintf(dst,format,BoundaryInterface::get_error_handler_string().c_str());
 		return dst;
 	}
 };
 
-template<>
-struct Boundary<double, TIME_ACCUMULATION> : public BoundaryInterface{
-	static constexpr ProtectionType Protector = TIME_ACCUMULATION;
-	static constexpr const char* format = "\"type\": \"TIME_ACCUMULATION\", \"data\": { \"value\": %s, \"bound\": %s,\"timelimit\": %s }";
-	double* src = nullptr;
-	double bound;
-	float time_limit;
-	float frequency;
-	Boundary(double bound, float time_limit, float frequency, Boundary<double, Protector>*& external_pointer): bound(bound),time_limit(time_limit),frequency(frequency), moving_order(frequency*time_limit/100),
+
+
+template<typename Type>
+//requires(std::is_floating_point_v<Type>)
+struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
+	static constexpr ProtectionType Protector = TIME_ACCUMULATION;	
+	Boundary(Type bound, float time_limit, float frequency, Boundary<Type, Protector>*& external_pointer): bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100),
 			external_pointer(&external_pointer){
 		external_pointer = this;
 	};
-	Boundary(double* src, Boundary<double, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100), external_pointer(boundary.external_pointer){
+	Boundary(Type* src, Boundary<Type, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100), external_pointer(boundary.external_pointer){
 		*external_pointer = this;
+		format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
+		message = new HeapOrder(uint16_t{111},&boundary_type_id,&format_id,&this->bound,this->src,&this->time_limit,&this->frequency,
+			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 	}
-	Boundary(double* src, double bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
+	Boundary(Type* src, Type bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
+	uint8_t boundary_type_id = Protector;
+	uint8_t format_id{};
+	Type* src = nullptr;
+	Type bound;
+	float time_limit;
+	float frequency;
+	bool still_good = true;
+	Boundary<Type,Protector>** external_pointer;
 
-	Boundary<double,Protector>** external_pointer;
-
-private:
 	MeanCalculator<100> mean_calculator;
-	vector<double> mean_moving_average;
+	vector<Type> mean_moving_average;
 	uint16_t moving_order = 0;
 	uint16_t moving_last = -1;
 	uint16_t moving_first = 0;
 	uint16_t moving_counter = 0;
-	double accumulator = 0;
-	bool still_good = true;
-public:
-	bool check_accumulation(double value){
-		if(!still_good) return false;
-		mean_calculator.input(abs(value));
-		if(mean_calculator.output_value == 0){
-			return true;
-		}
-		mean_calculator.reset();
-		if(moving_counter < moving_order) {
-			moving_last++;
-			mean_moving_average[moving_last] = mean_calculator.output_value;
-			accumulator += mean_calculator.output_value;
-			moving_counter++;
-		}
-		accumulator -= mean_moving_average[moving_first] / moving_order;
-		moving_first = (moving_first + 1) % moving_order;
-		moving_last = (moving_last + 1) % moving_counter;
-		mean_moving_average[moving_last] = mean_calculator.output_value;
-		accumulator += mean_moving_average[moving_last] / moving_order;
-		if(accumulator > bound){
-			still_good = false;
-			return false;
-		} 
-		return true;
-	}
+	Type accumulator{};
 
-	bool check_bounds() override{
-		return still_good;
-	}
-
-	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(time_limit).c_str());
-	}
-	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src).c_str(), to_string(time_limit).c_str());
-		return dst;
-	}
-};
-
-template<>
-struct Boundary<float, TIME_ACCUMULATION> : public BoundaryInterface {
-	static constexpr ProtectionType Protector = TIME_ACCUMULATION;
-	static constexpr const char* format = "\"type\": \"TIME_ACCUMULATION\", \"data\": { \"value\": %s, \"bound\": %s,\"timelimit\": %s }";
-	
-	Boundary(float bound, float time_limit, float frequency, Boundary<float, Protector>*& external_pointer): bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100),
-			external_pointer(&external_pointer){
-		external_pointer = this;
-	};
-	Boundary(float* src, Boundary<float, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100), external_pointer(boundary.external_pointer){
-		*external_pointer = this;
-	}
-	Boundary(float* src, float bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
-
-	float* src = nullptr;
-	float bound;
-	float time_limit;
-	float frequency;
-	bool still_good = true;
-	Boundary<float,Protector>** external_pointer;
-
-	MeanCalculator<100> mean_calculator;
-	vector<float> mean_moving_average;
-	uint16_t moving_order = 0;
-	uint16_t moving_last = -1;
-	uint16_t moving_first = 0;
-	uint16_t moving_counter = 0;
-	float accumulator = 0;
-
-	bool check_accumulation(float value){
+	bool check_accumulation(Type value){
 		if(!still_good) return false;
 		mean_calculator.input(abs(value));
 		mean_calculator.execute();
@@ -284,14 +246,6 @@ struct Boundary<float, TIME_ACCUMULATION> : public BoundaryInterface {
 
 	bool check_bounds() override{
 		return still_good;
-	}
-
-	int get_string_size()override{
-		return snprintf(nullptr,0,format,to_string(*src).c_str(), to_string(bound).c_str() ,to_string(time_limit).c_str());
-	}
-	char* serialize(char* dst)override{
-		sprintf(dst, format, to_string(*src).c_str(),to_string(bound).c_str() ,to_string(time_limit).c_str());
-		return dst;
 	}
 };
 
