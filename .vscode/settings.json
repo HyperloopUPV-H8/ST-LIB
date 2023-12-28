@@ -10,7 +10,7 @@
         "**/build": true,
         "**/cmake_install.cmake": true,
         "**/CMakeFiles": true,
-        "**/CMakeLists.txt": true,
+        "**/CMakeLists.txt": false,
         "**/compile_commands.json": true,
         "**/Debug": true,
         "**/libst-lib.a": true,

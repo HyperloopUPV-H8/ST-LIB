@@ -39,8 +39,8 @@
 namespace chrono = std::chrono;
 namespace placeholders = std::placeholders;
 
-using std::map;
 using std::array;
+using std::map;
 using std::span;
 using std::pair;
 using std::function;
@@ -57,13 +57,9 @@ using std::integral_constant;
 using std::snprintf;
 using std::make_unique;
 using std::unique_ptr;
-using std::unordered_map;
-using std::vector;
-using std::queue;
 using std::hash;
 using std::unordered_map;
 using std::vector;
 using std::queue;
-using std::map;
 using std::stringstream;
 using std::move;

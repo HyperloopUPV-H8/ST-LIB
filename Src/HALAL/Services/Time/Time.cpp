@@ -180,6 +180,9 @@ uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void(
 			.is_on = true
 	};
 
+	while(mid_precision_alarms_by_id.contains(mid_precision_ids))
+		mid_precision_ids++;
+
 	NVIC_DisableIRQ(TIM23_IRQn);
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
 
@@ -191,15 +194,12 @@ uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void(
 		Time::mid_precision_registered = true;
 	}
 
-	while(mid_precision_alarms_by_id.contains(mid_precision_ids))
-		mid_precision_ids++;
-
 	alarm.alarm = func;
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
 	NVIC_EnableIRQ(TIM23_IRQn);
 
 
-	return mid_precision_ids++;
+	return mid_precision_ids;
 }
 
 bool Time::unregister_mid_precision_alarm(uint8_t id){
@@ -274,10 +274,10 @@ bool Time::unregister_low_precision_alarm(uint8_t id){
 	return true;
 }
 
-void Time::set_timeout(int milliseconds, function<void()> callback){
+uint8_t Time::set_timeout(int milliseconds, function<void()> callback){
 	if(low_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
 		ErrorHandler("Cannot register timeout as all low precision alarms id's are already occupied");
-		return;
+		return 255;
 	}
 	while(low_precision_alarms_by_id.contains(low_precision_ids))
 		low_precision_ids++;
@@ -290,6 +290,14 @@ void Time::set_timeout(int milliseconds, function<void()> callback){
 		callback();
 		Time::unregister_low_precision_alarm(id);
 	});
+	return id;
+}
+
+void Time::cancel_timeout(uint8_t id){
+	//we can take advantage of the fact that if we try to 
+	//unregister an alarm that is not registered, it will return false
+	//instead of going HardFault or ErrorHandler
+	Time::unregister_low_precision_alarm(id);
 }
 
 void Time::global_timer_callback(){

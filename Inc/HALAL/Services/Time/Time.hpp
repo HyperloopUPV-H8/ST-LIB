@@ -122,8 +122,22 @@ public :
 	static uint8_t register_mid_precision_alarm(uint32_t period_in_us, function<void()> func);
 	static bool unregister_mid_precision_alarm(uint8_t id);
 
-	static void set_timeout(int milliseconds, function<void()> callback);
 
+	/**
+	 * @brief Creates a timeout that will execute a function after a specified time
+	 * 
+	 * @param milliseconds the time to wait before executing
+	 * @param callback the function to be executed
+	 * @return uint8_t the id of the order, if it didnot succeed it will return 255
+	 */
+	[[nodiscard]]static uint8_t set_timeout(int milliseconds, function<void()> callback);
+
+	/**
+	 * @brief Cancels a timeout by derigstering the alarm bound to it
+	 * 
+	 * @param id The id of the timeout to cancel
+	 */
+	static void cancel_timeout(uint8_t id);
 #ifdef HAL_RTC_MODULE_ENABLED
 	struct RTCData{
 		uint16_t counter;

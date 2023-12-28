@@ -22,7 +22,8 @@ class Integrator<IntegratorType::Trapezoidal> : public ControlBlock<double,doubl
         double integral = 0.0;
         double ki;
         bool first_execution = true;
-    public:
+        
+        Integrator() = default;
         Integrator(double period, double ki):ControlBlock<double,double>(0.0), period(period), ki(ki){output_value = 0.0;}
         void execute() override	{
             buffer[index] = input_value;

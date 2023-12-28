@@ -23,3 +23,7 @@
 #include "Control/Blocks/MeanCalculator.hpp"
 #include "Control/ControlSystem.hpp"
 #include "FlashStorer/FlashStorer.hpp"
+
+namespace STLIB_HIGH {
+	void start();
+}

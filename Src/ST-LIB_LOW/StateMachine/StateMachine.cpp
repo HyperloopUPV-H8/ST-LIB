@@ -9,12 +9,14 @@ void State::enter() {
 	for (function<void()>& action : on_enter_actions) {
 		action();
 	}
+	if(state_orders_ids.size() != 0) StateOrder::add_state_orders(state_orders_ids);
 }
 
 void State::exit() {
 	for (function<void()>& action : on_exit_actions) {
 		action();
 	}
+	if(state_orders_ids.size() != 0) StateOrder::remove_state_orders(state_orders_ids);
 }
 
 void State::unregister_timed_action(TimedAction* timed_action){
@@ -87,6 +89,11 @@ void State::register_all_timed_actions(){
 	}
 }
 
+void State::add_state_order(uint16_t id){
+	state_orders_ids.push_back(id);
+}
+
+
 /**
  * This is a constructor for a StateMachine object that initializes the initial state and creates a
  * State object for it.
@@ -96,7 +103,8 @@ void State::register_all_timed_actions(){
  */
 StateMachine::StateMachine(uint8_t initial_state) :
 	initial_state(initial_state), current_state(initial_state) {
-	states[initial_state];
+	add_state(initial_state);
+	enter_state(initial_state);
 }
 
 /**
@@ -293,6 +301,7 @@ void StateMachine::enter_state(state_id state) {
 
 	if (nested_state_machine.contains(state)) {
 		StateMachine* nested_sm = nested_state_machine[state];
+		nested_sm->is_on = true;
 		nested_sm->enter_state(nested_sm->current_state);
 	}
 }
@@ -302,6 +311,7 @@ void StateMachine::exit_state(state_id state) {
 
 	if (nested_state_machine.contains(state)) {
 		StateMachine* nested_sm = nested_state_machine[state];
+		nested_sm->is_on = false;
 		nested_sm->exit_state(nested_sm->current_state);
 		nested_sm->current_state = nested_sm->initial_state;
 	}
@@ -323,4 +333,12 @@ void StateMachine::unregister_all_timed_actions(state_id state) {
 		StateMachine* nested_sm = nested_state_machine[current_state];
 		nested_sm->states[nested_sm->current_state].unregister_all_timed_actions();
 	}
+}
+
+unordered_map<StateMachine::state_id, State>& StateMachine::get_states(){
+	return states;
+}
+
+void StateMachine::refresh_state_orders(){
+	if(states[current_state].state_orders_ids.size() != 0) StateOrder::add_state_orders(states[current_state].state_orders_ids);
 }

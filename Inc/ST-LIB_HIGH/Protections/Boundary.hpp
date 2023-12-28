@@ -167,7 +167,6 @@ struct Boundary<double, TIME_ACCUMULATION> : public BoundaryInterface{
 	double bound;
 	float time_limit;
 	float frequency;
-	Boundary<double,Protector>** external_pointer;
 	Boundary(double bound, float time_limit, float frequency, Boundary<double, Protector>*& external_pointer): bound(bound),time_limit(time_limit),frequency(frequency), moving_order(frequency*time_limit/100),
 			external_pointer(&external_pointer){
 		external_pointer = this;
@@ -176,6 +175,8 @@ struct Boundary<double, TIME_ACCUMULATION> : public BoundaryInterface{
 		*external_pointer = this;
 	}
 	Boundary(double* src, double bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
+
+	Boundary<double,Protector>** external_pointer;
 
 private:
 	MeanCalculator<100> mean_calculator;
@@ -226,15 +227,10 @@ public:
 };
 
 template<>
-struct Boundary<float, TIME_ACCUMULATION> : public BoundaryInterface{
+struct Boundary<float, TIME_ACCUMULATION> : public BoundaryInterface {
 	static constexpr ProtectionType Protector = TIME_ACCUMULATION;
 	static constexpr const char* format = "\"type\": \"TIME_ACCUMULATION\", \"data\": { \"value\": %s, \"bound\": %s,\"timelimit\": %s }";
-	float* src = nullptr;
-	float bound;
-	float time_limit;
-	float frequency;
-	bool still_good = true;
-	Boundary<float,Protector>** external_pointer;
+	
 	Boundary(float bound, float time_limit, float frequency, Boundary<float, Protector>*& external_pointer): bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100),
 			external_pointer(&external_pointer){
 		external_pointer = this;
@@ -244,7 +240,13 @@ struct Boundary<float, TIME_ACCUMULATION> : public BoundaryInterface{
 	}
 	Boundary(float* src, float bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
 
-public:
+	float* src = nullptr;
+	float bound;
+	float time_limit;
+	float frequency;
+	bool still_good = true;
+	Boundary<float,Protector>** external_pointer;
+
 	MeanCalculator<100> mean_calculator;
 	vector<float> mean_moving_average;
 	uint16_t moving_order = 0;
@@ -252,7 +254,7 @@ public:
 	uint16_t moving_first = 0;
 	uint16_t moving_counter = 0;
 	float accumulator = 0;
-public:
+
 	bool check_accumulation(float value){
 		if(!still_good) return false;
 		mean_calculator.input(abs(value));
