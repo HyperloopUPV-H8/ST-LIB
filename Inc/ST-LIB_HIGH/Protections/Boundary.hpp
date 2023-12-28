@@ -26,7 +26,9 @@ public:
 
 	void update_name(char* n){
 		name = n;
+		string_len = name.size();
 	}
+
 protected:
 	static const map<type_id_t,uint8_t> format_look_up;
 	static int get_error_handler_string_size(){
@@ -38,6 +40,8 @@ protected:
 	//this will store the name of the variable
 	string name;
 	static constexpr size_t NAME_MAX_LEN = 30;
+	uint8_t format_id;
+	size_t string_len;
 };
 
 template<class Type, ProtectionType Protector> struct Boundary;
@@ -49,18 +53,18 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 	Type boundary;
 	// we have to do this because we cannot take address of rvalue (ProtectionType::BELOW)
 	uint8_t boundary_type_id = Protector;
-	uint8_t format_id;
+	
 	Boundary(Type boundary):boundary(boundary)
 	{
 		
 	}
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
-		src(src),boundary(boundary.boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
-
+		src(src),boundary(boundary.boundary)
 		{
+			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			// we have to preallocate space, otherwise the might get moved around, invalidating the pointer, better safe than sorry
 			name.reserve(NAME_MAX_LEN);
-			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&name,&this->boundary,this->src,
+			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->boundary,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		}
@@ -79,14 +83,14 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	Type* src = nullptr;
 	Type boundary;
 	uint8_t boundary_type_id = Protector;
-	uint8_t format_id;
+	
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
-		src(src),boundary(boundary.boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
-
+		src(src),boundary(boundary.boundary)
 		{
+			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			name.reserve(NAME_MAX_LEN);
-			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&name,&this->boundary,this->src,
+			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->boundary,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		}
@@ -103,13 +107,14 @@ struct Boundary<Type, EQUALS> : public BoundaryInterface{
 	Type* src = nullptr;
 	Type boundary;
 	uint8_t boundary_type_id = Protector;
-	uint8_t format_id;
+	
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
-		src(src),boundary(boundary.boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
+		src(src),boundary(boundary.boundary)
 		{			
+			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			name.reserve(NAME_MAX_LEN);
-			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&name,&this->boundary,this->src,
+			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->boundary,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		}
@@ -126,14 +131,14 @@ struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 	Type* src = nullptr;
 	Type boundary;
 	uint8_t boundary_type_id = Protector;
-	uint8_t format_id;
+	
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
-		src(src),boundary(boundary.boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
-
+		src(src),boundary(boundary.boundary)
 		{
+			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			name.reserve(NAME_MAX_LEN);			
-			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&name,&this->boundary,this->src,
+			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->boundary,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		}
@@ -150,13 +155,14 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 	Type* src = nullptr;
 	Type lower_boundary, upper_boundary;
 	uint8_t boundary_type_id = Protector;
-	uint8_t format_id;
+	
 	Boundary(Type lower_boundary, Type upper_boundary): lower_boundary(lower_boundary), upper_boundary(upper_boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
-	src(src),lower_boundary(boundary.lower_boundary),upper_boundary(boundary.upper_boundary),format_id{BoundaryInterface::format_look_up.at(type_id<Type>)}
+	src(src),lower_boundary(boundary.lower_boundary),upper_boundary(boundary.upper_boundary)
 	{
+		format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 		name.reserve(NAME_MAX_LEN);
-		message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&name,&this->lower_boundary,&this->upper_boundary,this->src,
+		message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->lower_boundary,&this->upper_boundary,this->src,
 			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 	}
@@ -200,7 +206,7 @@ struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 		*external_pointer = this;
 		format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 		name.reserve(NAME_MAX_LEN);
-		message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&name,&this->bound,this->src,&this->time_limit,&this->frequency,
+		message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->bound,this->src,&this->time_limit,&this->frequency,
 			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 	}
