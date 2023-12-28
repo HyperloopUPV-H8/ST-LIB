@@ -28,20 +28,24 @@ public:
 		name = n;
 		string_len = name.size();
 	}
-
+	virtual void update_error_handler_message( [[maybe_unused]] const char* err_message){
+	}
+	ProtectionType Protector = ERROR_HANDLER;
+	static const char* get_error_handler_string(){
+		return ErrorHandlerModel::description.c_str();
+	}
 protected:
 	static const map<type_id_t,uint8_t> format_look_up;
 	static int get_error_handler_string_size(){
 		return ErrorHandlerModel::description.size();
 	}
-	static string get_error_handler_string(){
-		return ErrorHandlerModel::description;
-	}
+
 	//this will store the name of the variable
 	string name;
-	static constexpr size_t NAME_MAX_LEN = 30;
+	//max variable name
+	static constexpr uint8_t NAME_MAX_LEN = 30;
 	uint8_t format_id;
-	size_t string_len;
+	uint8_t string_len;
 };
 
 template<class Type, ProtectionType Protector> struct Boundary;
@@ -176,20 +180,27 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 template<>
 struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ERROR_HANDLER;
-	static constexpr const char* format = "\"type\": \"ERROR_HANDLER\", \"data\": \"%s\"";
 	Boundary(void*){}
-	Boundary(void*, Boundary<void,ERROR_HANDLER>){}
+	Boundary(void*, Boundary<void,ERROR_HANDLER>)
+	{
+		error_handler_string.reserve(ERROR_HANDLER_MSG_MAX_LEN);
+		message = new HeapOrder(uint16_t{111},&boundary_type_id,&string_len,&name,&error_handler_string_len,&error_handler_string,
+			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+	}
 	Boundary() = default;
 	bool check_bounds() override{
 		return not ErrorHandlerModel::error_triggered;
 	}
-	int get_string_size(){
-		return snprintf(nullptr,0,format,BoundaryInterface::get_error_handler_string().c_str());
+	void update_error_handler_message(const char* err_message)override{
+		error_handler_string = err_message;
+		error_handler_string_len = error_handler_string.size();
 	}
-	char* serialize(char* dst){
-		sprintf(dst,format,BoundaryInterface::get_error_handler_string().c_str());
-		return dst;
-	}
+	private:
+		uint8_t boundary_type_id = Protector;
+		string error_handler_string;
+		uint16_t error_handler_string_len;
+		static constexpr uint16_t ERROR_HANDLER_MSG_MAX_LEN = 255;
 };
 
 
