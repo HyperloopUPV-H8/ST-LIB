@@ -78,15 +78,6 @@ private:
     static Notification warning_notification;
     static StackOrder<0> fault_order;
 
-    static int get_string_size(Protection& prot ,const Time::RTCData& timestamp){
-    	return snprintf(nullptr,0,format,"","","") + prot.get_string_size() + Time::RTCData::get_string_size(timestamp);
-    }
-
-    static char* serialize(Protection& prot, const Time::RTCData& timestamp){
-    	sprintf(message,format,to_string(board_id).c_str(),timestamp.serialize().c_str(),string(prot.serialize(message)).c_str());
-    	return message;
-    }
-
     static void to_fault();
 };
 
