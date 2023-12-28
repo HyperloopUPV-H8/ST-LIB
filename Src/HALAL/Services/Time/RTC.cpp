@@ -1,7 +1,7 @@
 #include "HALAL/Services/Time/RTC.hpp"
 
 RTC_HandleTypeDef hrtc;
-RTCData global_RTC;
+RTCData Global_RTC::global_RTC;
 
 void Global_RTC::start_rtc(){
 	RTC_TimeTypeDef sTime = { 0 };
