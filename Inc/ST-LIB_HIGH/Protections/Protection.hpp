@@ -41,15 +41,5 @@ public:
         }
         return true;
     }
-
-    char* serialize(char* dst) {
-    	sprintf(dst,format,name,string(jumped_protection->serialize(dst)).c_str());
-    	return dst;
-    }
-
-    int get_string_size(){
-    	return jumped_protection->get_string_size() + snprintf(nullptr,0,format, name, "");
-    }
-
     friend class ProtectionManager;
 };
