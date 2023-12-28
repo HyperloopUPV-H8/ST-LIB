@@ -34,11 +34,11 @@ void SNTP::sntp_update(){
 }
 
 void set_rtc(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year){
-	Time::set_rtc_data(counter, second, minute, hour, day, month, year);
+	Global_RTC::set_rtc_data(counter, second, minute, hour, day, month, year);
 }
 
 u32_t get_rtc_s(){
-	Time::RTCData rtc_time = Time::get_rtc_data();
+	RTCData rtc_time = Global_RTC::get_rtc_timestamp();
 	time_t nowtime = 0;
 	struct tm *nowtm;
 	nowtm = gmtime(&nowtime);
@@ -53,7 +53,7 @@ u32_t get_rtc_s(){
 }
 
 u32_t get_rtc_us(){
-	Time::RTCData rtc_time = Time::get_rtc_data();
+	RTCData rtc_time = Global_RTC::get_rtc_timestamp();
 	return rtc_time.counter/TRANSFORMATION_FACTOR;
 }
 
