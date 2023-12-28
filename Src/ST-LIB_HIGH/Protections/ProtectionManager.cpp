@@ -10,6 +10,19 @@ uint64_t ProtectionManager::last_notify = 0;
 void *error_handler;
 
 
+void ProtectionManager::initialize(){
+    for (Protection& protection: low_frequency_protections) {
+        for(auto& boundary : protection.boundaries){
+            boundary->update_name(protection.get_name());
+        }
+    }
+    for (Protection& protection: high_frequency_protections) {
+        for(auto& boundary : protection.boundaries){
+            boundary->update_name(protection.get_name());
+        }
+    }
+}
+
 void ProtectionManager::add_standard_protections(){
 	add_protection(error_handler, Boundary<void,ERROR_HANDLER>(error_handler));
 }
@@ -50,7 +63,6 @@ void ProtectionManager::check_protections() {
             ProtectionManager::to_fault();
         }
         Global_RTC::update_rtc_data();
-
         
         if(Time::get_global_tick() > last_notify + notify_delay_in_nanoseconds){
             ProtectionManager::notify(protection);
@@ -96,8 +108,6 @@ void ProtectionManager::warn(string message){
 }
 
 void ProtectionManager::notify(Protection& protection){
-
-    protection.jumped_protection->update_name(protection.get_name());
     for(OrderProtocol* socket : OrderProtocol::sockets){
         socket->send_order(*protection.jumped_protection->message);
     }

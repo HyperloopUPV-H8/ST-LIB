@@ -54,7 +54,10 @@ public:
     	high_frequency_protections.push_back(Protection(src,protectors...));
         return high_frequency_protections.back();
     }
-
+    /**
+     * @brief call on startup to initialize the names of the protections
+    */
+    static void initialize();
     static void add_standard_protections();
     static void check_protections();
     static void check_high_frequency_protections();
