@@ -5,15 +5,15 @@
 #include "Boundary.hpp"
 
 namespace Protections{
-enum FaultType{
+enum FaultType : uint8_t{
 	FAULT = 0,
-	WARNING
+	WARNING,
+    OK
 };
 }
 
 class Protection{
 private:
-	static constexpr const char* format = "\"protection\" : {\"name\":\"%s\", %s}";
     char* name = nullptr;
     vector<unique_ptr<BoundaryInterface>> boundaries;
     BoundaryInterface* jumped_protection = nullptr;
