@@ -189,7 +189,7 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 
 
 template<typename Type>
-//requires(std::is_floating_point_v<Type>)
+requires(std::is_floating_point_v<Type>)
 struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 	static constexpr ProtectionType Protector = TIME_ACCUMULATION;	
 	Boundary(Type bound, float time_limit, float frequency, Boundary<Type, Protector>*& external_pointer): bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100),
