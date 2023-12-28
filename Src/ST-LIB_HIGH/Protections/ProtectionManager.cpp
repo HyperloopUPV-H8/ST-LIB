@@ -68,7 +68,6 @@ void ProtectionManager::check_protections() {
             ProtectionManager::notify(protection);
         last_notify = Time::get_global_tick();
         }
-    	free(message);
     }
 }
 
@@ -82,24 +81,11 @@ void ProtectionManager::check_high_frequency_protections(){
         	return;
         }
 
-        ProtectionManager::to_fault();
-
+        if(protection.fault_type == Protections::FAULT){
+            ProtectionManager::to_fault();
+        }
         Global_RTC::update_rtc_data();
-        for(OrderProtocol* socket : OrderProtocol::sockets){
-        	socket->send_order(*protection.jumped_protection->message);
-        }
-        switch(protection.fault_type){
-        case Protections::FaultType::WARNING:
-        	warning_notification.notify(message);
-            break;
-        case Protections::FaultType::FAULT:
-        	fault_notification.notify(message);
-            break;
-        default:
-        	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
-        }
-
-    	free(message);
+        ProtectionManager::notify(protection);
     }
 }
 
