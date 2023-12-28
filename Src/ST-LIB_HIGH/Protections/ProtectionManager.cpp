@@ -49,22 +49,11 @@ void ProtectionManager::check_protections() {
         if(protection.fault_type == Protections::FAULT){
             ProtectionManager::to_fault();
         }
+        Global_RTC::update_rtc_data();
 
-        Time::RTCData current_timestamp = Time::get_rtc_data();
-        message = (char*)malloc(get_string_size(protection, current_timestamp));
-        serialize(protection, current_timestamp);
-
+        
         if(Time::get_global_tick() > last_notify + notify_delay_in_nanoseconds){
-        switch(protection.fault_type){
-        case Protections::FaultType::WARNING:
-        	warning_notification.notify(message);
-        	break;
-        case Protections::FaultType::FAULT:
-        	fault_notification.notify(message);
-        	break;
-        default:
-        	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
-        }
+            ProtectionManager::notify(protection);
         last_notify = Time::get_global_tick();
         }
     	free(message);
@@ -83,15 +72,17 @@ void ProtectionManager::check_high_frequency_protections(){
 
         ProtectionManager::to_fault();
 
-        Time::RTCData current_timestamp = Time::get_rtc_data();
-        message = (char*)malloc(get_string_size(protection, current_timestamp));
-        serialize(protection, current_timestamp);
-
+        Global_RTC::update_rtc_data();
+        for(OrderProtocol* socket : OrderProtocol::sockets){
+        	socket->send_order(*protection.jumped_protection->message);
+        }
         switch(protection.fault_type){
         case Protections::FaultType::WARNING:
         	warning_notification.notify(message);
+            break;
         case Protections::FaultType::FAULT:
         	fault_notification.notify(message);
+            break;
         default:
         	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
         }
@@ -102,6 +93,14 @@ void ProtectionManager::check_high_frequency_protections(){
 
 void ProtectionManager::warn(string message){
 	warning_notification.notify(message);
+}
+
+void ProtectionManager::notify(Protection& protection){
+
+    protection.jumped_protection->update_name(protection.get_name());
+    for(OrderProtocol* socket : OrderProtocol::sockets){
+        socket->send_order(*protection.jumped_protection->message);
+    }
 }
 
 Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;
