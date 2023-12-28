@@ -65,7 +65,7 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 
 #ifdef HAL_TIM_MODULE_ENABLED
 	Encoder::start();
-	Time::start_rtc();
+	Global_RTC::start_rtc();
 	SNTP::sntp_update();
 	TimerPeripheral::start();
 	Time::start();
