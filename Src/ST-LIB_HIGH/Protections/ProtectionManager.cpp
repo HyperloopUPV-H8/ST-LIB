@@ -94,7 +94,7 @@ void ProtectionManager::warn(string message){
 }
 
 void ProtectionManager::notify(Protection& protection){
-    if(protection.jumped_protection->Protector == ERROR_HANDLER){
+    if(protection.jumped_protection->boundary_type_id == ERROR_HANDLER){
         protection.jumped_protection->update_error_handler_message(protection.jumped_protection->get_error_handler_string());
     }
     for(OrderProtocol* socket : OrderProtocol::sockets){
