@@ -9,6 +9,14 @@ using type_id_t = void(*)();
 template<typename>
 void type_id() {}
 
+namespace Protections{
+enum FaultType : uint8_t{
+	FAULT = 0,
+	WARNING,
+    OK
+};
+}
+
 enum ProtectionType : uint8_t {
     BELOW = 0,
     ABOVE,
@@ -21,7 +29,7 @@ enum ProtectionType : uint8_t {
 
 struct BoundaryInterface{
 public:
-    virtual bool check_bounds() = 0;
+    virtual Protections::FaultType check_bounds() = 0;
 	HeapOrder* message;
 
 	void update_name(char* n){
@@ -57,18 +65,17 @@ template<class Type, ProtectionType Protector> struct Boundary;
 template<class Type>
 struct Boundary<Type, BELOW> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = BELOW;
+	bool has_warning_level{false};
 	Type* src = nullptr;
 	Type boundary;
-	// we have to do this because we cannot take address of rvalue (ProtectionType::BELOW)
-	
-	
-	Boundary(Type boundary):boundary(boundary)
-	{
-		
-	}
+	Type warning_level;
+
+	Boundary(Type warning_level, Type boundary): has_warning_level{true}, boundary(boundary), warning_level(warning_level){};
+	Boundary(Type boundary):boundary(boundary){}
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
 		src(src),boundary(boundary.boundary)
 		{
+			// we have to do this because we cannot take address of rvalue (ProtectionType::BELOW)
 			boundary_type_id = Protector;
 			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			// we have to preallocate space, otherwise the might get moved around, invalidating the pointer, better safe than sorry
@@ -80,22 +87,26 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 
 
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
-	bool check_bounds()override{
-		if(*src < boundary) return false;
-		return true;
+	Protections::FaultType check_bounds()override{
+		if(*src < boundary) return Protections::FAULT;
+		if(has_warning_level && *src < warning_level) return Protections::WARNING;
+		return Protections::OK;
 	}
 };
 
 template<class Type>
 struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ABOVE;
+	bool has_warning_level{false};
 	Type* src = nullptr;
 	Type boundary;
-	
-	
+	Type warning_level;
+
+	Boundary(Type warning_level, Type boundary): has_warning_level{true}, boundary(boundary), warning_level(warning_level){};
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
-		src(src),boundary(boundary.boundary)
+		has_warning_level(boundary.has_warning_level),
+		src(src),boundary(boundary.boundary),warning_level(boundary.warning_level)
 		{
 			boundary_type_id = Protector;
 			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
@@ -105,9 +116,10 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		}
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
-	bool check_bounds()override{
-		if(*src > boundary) return false;
-		return true;
+	Protections::FaultType check_bounds()override{
+		if(*src > boundary) return Protections::FAULT;
+		if(has_warning_level && *src > warning_level) return Protections::WARNING;
+		return Protections::OK;
 	}
 };
 
@@ -116,7 +128,6 @@ struct Boundary<Type, EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = EQUALS;
 	Type* src = nullptr;
 	Type boundary;
-	
 	
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
@@ -130,9 +141,9 @@ struct Boundary<Type, EQUALS> : public BoundaryInterface{
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		}
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
-	bool check_bounds()override{
-		if(*src == boundary) return false;
-		return true;
+	Protections::FaultType check_bounds()override{
+		if(*src == boundary) return Protections::FAULT;
+		return Protections::OK;
 	}
 };
 
@@ -141,8 +152,6 @@ struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = NOT_EQUALS;
 	Type* src = nullptr;
 	Type boundary;
-	
-	
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
 		src(src),boundary(boundary.boundary)
@@ -155,9 +164,9 @@ struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		}
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
-	bool check_bounds()override{
-		if(*src != boundary) return false;
-		return true;
+	Protections::FaultType check_bounds()override{
+		if(*src != boundary) return Protections::FAULT;
+		return Protections::OK;
 	}
 };
 
@@ -180,9 +189,9 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 	}
 	Boundary(Type* src, Type lower_boundary, Type upper_boundary): src(src), lower_boundary(lower_boundary), upper_boundary(upper_boundary){}
-	bool check_bounds()override{
-		if(*src < lower_boundary || *src > upper_boundary) return false;
-		return true;
+	Protections::FaultType check_bounds()override{
+		if(*src < lower_boundary || *src > upper_boundary) return Protections::FAULT;
+		return Protections::OK;
 	}
 };
 
@@ -199,8 +208,8 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 	}
 	Boundary() = default;
-	bool check_bounds() override{
-		return not ErrorHandlerModel::error_triggered;
+	Protections::FaultType check_bounds() override{
+		return not ErrorHandlerModel::error_triggered ? Protections::OK : Protections::FAULT;
 	}
 	void update_error_handler_message(const char* err_message)override{
 		error_handler_string = err_message;
@@ -281,8 +290,8 @@ struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 		return true;
 	}
 
-	bool check_bounds() override{
-		return still_good;
+	Protections::FaultType check_bounds() override{
+		return still_good ? Protections::OK : Protections::FAULT;
 	}
 };
 
