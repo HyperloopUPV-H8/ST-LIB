@@ -68,9 +68,9 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 	bool has_warning_level{false};
 	Type* src = nullptr;
 	Type boundary;
-	Type warning_level;
+	Type warning_threshold;
 
-	Boundary(Type warning_level, Type boundary): has_warning_level{true}, boundary(boundary), warning_level(warning_level){};
+	Boundary(Type warning_threshold, Type boundary): has_warning_level{true}, boundary(boundary), warning_threshold(warning_threshold){};
 	Boundary(Type boundary):boundary(boundary){}
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
 		src(src),boundary(boundary.boundary)
@@ -83,13 +83,13 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->boundary,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
-		}
+			}
 
 
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
 	Protections::FaultType check_bounds()override{
 		if(*src < boundary) return Protections::FAULT;
-		if(has_warning_level && *src < warning_level) return Protections::WARNING;
+		if(has_warning_level && *src < warning_threshold) return Protections::WARNING;
 		return Protections::OK;
 	}
 };
@@ -100,13 +100,13 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	bool has_warning_level{false};
 	Type* src = nullptr;
 	Type boundary;
-	Type warning_level;
+	Type warning_threshold;
 
-	Boundary(Type warning_level, Type boundary): has_warning_level{true}, boundary(boundary), warning_level(warning_level){};
+	Boundary(Type warning_threshold, Type boundary): has_warning_level{true}, boundary(boundary), warning_threshold(warning_threshold){};
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
 		has_warning_level(boundary.has_warning_level),
-		src(src),boundary(boundary.boundary),warning_level(boundary.warning_level)
+		src(src),boundary(boundary.boundary),warning_threshold(boundary.warning_threshold)
 		{
 			boundary_type_id = Protector;
 			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
@@ -118,7 +118,7 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
 	Protections::FaultType check_bounds()override{
 		if(*src > boundary) return Protections::FAULT;
-		if(has_warning_level && *src > warning_level) return Protections::WARNING;
+		if(has_warning_level && *src > warning_threshold) return Protections::WARNING;
 		return Protections::OK;
 	}
 };
