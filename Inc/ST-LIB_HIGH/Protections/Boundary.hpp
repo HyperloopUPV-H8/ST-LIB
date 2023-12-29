@@ -34,10 +34,10 @@ public:
 	}
 	virtual void update_error_handler_message( [[maybe_unused]] const char* err_message){
 	}
-	ProtectionType Protector = ERROR_HANDLER;
 	static const char* get_error_handler_string(){
 		return ErrorHandlerModel::description.c_str();
 	}
+	uint8_t boundary_type_id{};
 protected:
 	static const map<type_id_t,uint8_t> format_look_up;
 	static int get_error_handler_string_size(){
@@ -60,7 +60,7 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 	Type* src = nullptr;
 	Type boundary;
 	// we have to do this because we cannot take address of rvalue (ProtectionType::BELOW)
-	uint8_t boundary_type_id = Protector;
+	
 	
 	Boundary(Type boundary):boundary(boundary)
 	{
@@ -69,6 +69,7 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
 		src(src),boundary(boundary.boundary)
 		{
+			boundary_type_id = Protector;
 			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			// we have to preallocate space, otherwise the might get moved around, invalidating the pointer, better safe than sorry
 			name.reserve(NAME_MAX_LEN);
@@ -90,12 +91,13 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ABOVE;
 	Type* src = nullptr;
 	Type boundary;
-	uint8_t boundary_type_id = Protector;
+	
 	
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
 		src(src),boundary(boundary.boundary)
 		{
+			boundary_type_id = Protector;
 			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			name.reserve(NAME_MAX_LEN);
 			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->boundary,this->src,
@@ -114,12 +116,13 @@ struct Boundary<Type, EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = EQUALS;
 	Type* src = nullptr;
 	Type boundary;
-	uint8_t boundary_type_id = Protector;
+	
 	
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
 		src(src),boundary(boundary.boundary)
-		{			
+		{		
+			boundary_type_id = Protector;	
 			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			name.reserve(NAME_MAX_LEN);
 			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->boundary,this->src,
@@ -138,12 +141,13 @@ struct Boundary<Type, NOT_EQUALS> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = NOT_EQUALS;
 	Type* src = nullptr;
 	Type boundary;
-	uint8_t boundary_type_id = Protector;
+	
 	
 	Boundary(Type boundary): boundary(boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
 		src(src),boundary(boundary.boundary)
 		{
+			boundary_type_id = Protector;
 			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			name.reserve(NAME_MAX_LEN);			
 			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->boundary,this->src,
@@ -162,12 +166,13 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = OUT_OF_RANGE;
 	Type* src = nullptr;
 	Type lower_boundary, upper_boundary;
-	uint8_t boundary_type_id = Protector;
+	
 	
 	Boundary(Type lower_boundary, Type upper_boundary): lower_boundary(lower_boundary), upper_boundary(upper_boundary){};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
 	src(src),lower_boundary(boundary.lower_boundary),upper_boundary(boundary.upper_boundary)
 	{
+		boundary_type_id = Protector;
 		format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 		name.reserve(NAME_MAX_LEN);
 		message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->lower_boundary,&this->upper_boundary,this->src,
@@ -187,6 +192,7 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 	Boundary(void*){}
 	Boundary(void*, Boundary<void,ERROR_HANDLER>)
 	{
+		boundary_type_id = Protector;
 		error_handler_string.reserve(ERROR_HANDLER_MSG_MAX_LEN);
 		message = new HeapOrder(uint16_t{111},&boundary_type_id,&string_len,&name,&error_handler_string_len,&error_handler_string,
 			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
@@ -205,7 +211,7 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 		error_handler_string_len = error_handler_string.size();
 	}
 	private:
-		uint8_t boundary_type_id = Protector;
+		
 		string error_handler_string;
 		uint16_t error_handler_string_len;
 		static constexpr uint16_t ERROR_HANDLER_MSG_MAX_LEN = 255;
@@ -223,6 +229,7 @@ struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 	};
 	Boundary(Type* src, Boundary<Type, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100), external_pointer(boundary.external_pointer){
 		*external_pointer = this;
+		boundary_type_id = Protector;
 		format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 		name.reserve(NAME_MAX_LEN);
 		message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->bound,this->src,&this->time_limit,&this->frequency,
@@ -230,7 +237,7 @@ struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 	}
 	Boundary(Type* src, Type bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
-	uint8_t boundary_type_id = Protector;
+	
 	uint8_t format_id{};
 	Type* src = nullptr;
 	Type bound;
