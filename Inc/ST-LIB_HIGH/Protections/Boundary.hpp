@@ -26,6 +26,10 @@ public:
 
 	void update_name(char* n){
 		name = n;
+		if(strlen(n) > NAME_MAX_LEN){
+			ErrorHandler("Variable name is too long, max length is %d",NAME_MAX_LEN);
+			return;
+		}
 		string_len = name.size();
 	}
 	virtual void update_error_handler_message( [[maybe_unused]] const char* err_message){
@@ -43,7 +47,7 @@ protected:
 	//this will store the name of the variable
 	string name;
 	//max variable name
-	static constexpr uint8_t NAME_MAX_LEN = 30;
+	static constexpr uint8_t NAME_MAX_LEN = 40;
 	uint8_t format_id;
 	uint8_t string_len;
 };
@@ -194,6 +198,10 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 	}
 	void update_error_handler_message(const char* err_message)override{
 		error_handler_string = err_message;
+		if(strlen(err_message) > ERROR_HANDLER_MSG_MAX_LEN){
+			ErrorHandler("Error Handler message is too long, max length is %d",ERROR_HANDLER_MSG_MAX_LEN);
+			return;
+		}
 		error_handler_string_len = error_handler_string.size();
 	}
 	private:
