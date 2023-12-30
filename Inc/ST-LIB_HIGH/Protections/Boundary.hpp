@@ -73,6 +73,7 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 	Boundary(Type warning_threshold, Type boundary): has_warning_level{true}, boundary(boundary), warning_threshold(warning_threshold){};
 	Boundary(Type boundary):boundary(boundary){}
 	Boundary(Type* src, Boundary<Type, Protector> boundary): 
+		has_warning_level(boundary.has_warning_level),
 		src(src),boundary(boundary.boundary)
 		{
 			// we have to do this because we cannot take address of rvalue (ProtectionType::BELOW)
@@ -80,10 +81,17 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 			format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 			// we have to preallocate space, otherwise the might get moved around, invalidating the pointer, better safe than sorry
 			name.reserve(NAME_MAX_LEN);
+			if(this->has_warning_level){
+				warning_threshold = boundary.warning_threshold;
+				message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->warning_threshold,&this->boundary,this->src,
+				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+			}else{
 			message = new HeapOrder(uint16_t{111},&format_id,&boundary_type_id,&string_len,&name,&this->boundary,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 			}
+		}
 
 
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
