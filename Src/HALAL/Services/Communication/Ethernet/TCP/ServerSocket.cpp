@@ -77,8 +77,6 @@ ServerSocket::~ServerSocket(){
 
 }
 
-ServerSocket::ServerSocket(string local_ip, uint32_t local_port) : ServerSocket(IPV4(local_ip),local_port){}
-
 ServerSocket::ServerSocket(EthernetNode local_node) : ServerSocket(local_node.ip,local_node.port){};
 
 void ServerSocket::close(){

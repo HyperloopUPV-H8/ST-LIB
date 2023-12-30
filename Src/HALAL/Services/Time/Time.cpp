@@ -274,10 +274,10 @@ bool Time::unregister_low_precision_alarm(uint8_t id){
 	return true;
 }
 
-void Time::set_timeout(int milliseconds, function<void()> callback){
+uint8_t Time::set_timeout(int milliseconds, function<void()> callback){
 	if(low_precision_alarms_by_id.size() == std::numeric_limits<uint8_t>::max()){
 		ErrorHandler("Cannot register timeout as all low precision alarms id's are already occupied");
-		return;
+		return 255;
 	}
 	while(low_precision_alarms_by_id.contains(low_precision_ids))
 		low_precision_ids++;
@@ -290,6 +290,14 @@ void Time::set_timeout(int milliseconds, function<void()> callback){
 		callback();
 		Time::unregister_low_precision_alarm(id);
 	});
+	return id;
+}
+
+void Time::cancel_timeout(uint8_t id){
+	//we can take advantage of the fact that if we try to 
+	//unregister an alarm that is not registered, it will return false
+	//instead of going HardFault or ErrorHandler
+	Time::unregister_low_precision_alarm(id);
 }
 
 void Time::global_timer_callback(){
