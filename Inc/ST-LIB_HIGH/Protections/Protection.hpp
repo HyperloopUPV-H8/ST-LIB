@@ -9,15 +9,15 @@
 class Protection{
 private:
     char* name = nullptr;
-    vector<unique_ptr<BoundaryInterface>> boundaries;
+    vector<shared_ptr<BoundaryInterface>> boundaries;
     BoundaryInterface* fault_protection = nullptr;
     static constexpr Protections::FaultType fault_type = Protections::FaultType::FAULT;
     uint8_t triggered_protecions_idx[4]{};
 public:
-    vector<BoundaryInterface*> warnings_triggered;
+    vector<shared_ptr<BoundaryInterface>> warnings_triggered;
     template<class Type, ProtectionType... Protector, template<class,ProtectionType> class Boundaries>
     Protection(Type* src, Boundaries<Type,Protector>... protectors) {
-        (boundaries.push_back(unique_ptr<BoundaryInterface>(new Boundary<Type,Protector>(src,protectors))), ...);
+        (boundaries.push_back(shared_ptr<BoundaryInterface>(new Boundary<Type,Protector>(src,protectors))), ...);
     }
 
     void set_name(char* name) {
@@ -32,8 +32,8 @@ public:
         uint8_t warning_count = 0;
         //to save the index of the triggered warning
         uint8_t idx = 0;
-        for(unique_ptr<BoundaryInterface>& bound: boundaries){
-            auto fault_type = bound.get()->check_bounds();
+        for(shared_ptr<BoundaryInterface>& bound: boundaries){
+            auto fault_type = bound->check_bounds();
             idx++;
             switch(fault_type){
                 // in case a Protection has more than one boundary, give priority to fault messages
@@ -54,7 +54,7 @@ public:
         }
         if(warning_count){
             for(uint8_t i = 0; i < warning_count; i++){
-                warnings_triggered.push_back(boundaries[triggered_protecions_idx[i]].get());
+                warnings_triggered.push_back(boundaries[triggered_protecions_idx[i]]);
             }
             return Protections::WARNING;
         }
