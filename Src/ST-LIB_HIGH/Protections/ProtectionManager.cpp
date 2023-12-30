@@ -101,13 +101,13 @@ void ProtectionManager::notify(Protection& protection){
         protection.fault_protection->update_error_handler_message(protection.fault_protection->get_error_handler_string());
     }
     for(OrderProtocol* socket : OrderProtocol::sockets){
-        socket->send_order(*protection.fault_protection->message);
+        if(protection.fault_protection)
+            socket->send_order(*protection.fault_protection->message);
         for(auto& warning : protection.warnings_triggered){
             if(warning->boundary_type_id == ERROR_HANDLER){
                 warning->update_error_handler_message(warning->get_error_handler_string());
             }
             socket->send_order(*warning->message);
-            delete warning;
         }
         protection.warnings_triggered.clear();
     }
