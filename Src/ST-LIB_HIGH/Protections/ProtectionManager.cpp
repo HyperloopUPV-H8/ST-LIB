@@ -102,12 +102,12 @@ void ProtectionManager::notify(Protection& protection){
     }
     for(OrderProtocol* socket : OrderProtocol::sockets){
         if(protection.fault_protection)
-            socket->send_order(*protection.fault_protection->message);
+            socket->send_order(*protection.fault_protection->fault_message);
         for(auto& warning : protection.warnings_triggered){
             if(warning->boundary_type_id == ERROR_HANDLER){
                 warning->update_error_handler_message(warning->get_error_handler_string());
             }
-            socket->send_order(*warning->message);
+            socket->send_order(*warning->warn_message);
         }
         protection.warnings_triggered.clear();
     }
