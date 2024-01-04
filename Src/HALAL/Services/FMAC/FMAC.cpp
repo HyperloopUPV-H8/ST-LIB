@@ -41,7 +41,7 @@ void MultiplierAccelerator::start(){
 	if(Instance.mode != MultiplierAccelerator::None){
 		Instance.hfmac->Instance = FMAC;
 		if(HAL_FMAC_Init(Instance.hfmac)!= HAL_OK){
-			ErrorHandler("A");
+			ErrorHandler("Error while initialising the FMAC");
 		}
 
 		FMAC_FilterConfigTypeDef sFmacConfig;
