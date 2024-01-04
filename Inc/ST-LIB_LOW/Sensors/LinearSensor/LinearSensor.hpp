@@ -74,4 +74,3 @@ requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 Type* LinearSensor<Type>::get_value_pointer(){
 	return value;
 }
-

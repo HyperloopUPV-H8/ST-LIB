@@ -67,14 +67,6 @@ public:
 	ServerSocket(IPV4 local_ip, uint32_t local_port);
 
 	/**
-	 * @brief ServerSocket constructor that receives the server ip on the net as a string.
-	 *
-	 * @param local_ip the server ip on the ipv4 format "aaa.bbb.ccc.ddd" as a string.
-	 * @param local_port the port number that the server listens for connections.
-	 */
-	ServerSocket(string local_ip, uint32_t local_port);
-
-	/**
 	 * @brief ServerSocket constructor that uses the EthernetNode class as a parameter
 	 *
 	 * @param local_node the EthernetNode to listen to
