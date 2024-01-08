@@ -10,6 +10,19 @@ uint64_t ProtectionManager::last_notify = 0;
 void *error_handler;
 
 
+void ProtectionManager::initialize(){
+    for (Protection& protection: low_frequency_protections) {
+        for(auto& boundary : protection.boundaries){
+            boundary->update_name(protection.get_name());
+        }
+    }
+    for (Protection& protection: high_frequency_protections) {
+        for(auto& boundary : protection.boundaries){
+            boundary->update_name(protection.get_name());
+        }
+    }
+}
+
 void ProtectionManager::add_standard_protections(){
 	add_protection(error_handler, Boundary<void,ERROR_HANDLER>(error_handler));
 }
@@ -39,35 +52,25 @@ void ProtectionManager::fault_and_propagate(){
 
 void ProtectionManager::check_protections() {
     for (Protection& protection: low_frequency_protections) {
-        if (protection.check_state()) {
+        auto protection_status = protection.check_state();
+        if (protection_status == Protections::OK) {
             continue;
         }
         if(general_state_machine == nullptr){
         	ErrorHandler("Protection Manager does not have General State Machine Linked");
         	return;
         }
-        if(protection.fault_type == Protections::FAULT){
+        //ensure we only go to FAULT if a FAULT was triggered, and not only a WARNING
+        if(protection.fault_type == Protections::FAULT &&
+          protection_status == Protections::FAULT){
             ProtectionManager::to_fault();
         }
-
-        Time::RTCData current_timestamp = Time::get_rtc_data();
-        message = (char*)malloc(get_string_size(protection, current_timestamp));
-        serialize(protection, current_timestamp);
-
+        Global_RTC::update_rtc_data();
+        
         if(Time::get_global_tick() > last_notify + notify_delay_in_nanoseconds){
-        switch(protection.fault_type){
-        case Protections::FaultType::WARNING:
-        	warning_notification.notify(message);
-        	break;
-        case Protections::FaultType::FAULT:
-        	fault_notification.notify(message);
-        	break;
-        default:
-        	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
-        }
+            ProtectionManager::notify(protection);
         last_notify = Time::get_global_tick();
         }
-    	free(message);
     }
 }
 
@@ -81,27 +84,34 @@ void ProtectionManager::check_high_frequency_protections(){
         	return;
         }
 
-        ProtectionManager::to_fault();
-
-        Time::RTCData current_timestamp = Time::get_rtc_data();
-        message = (char*)malloc(get_string_size(protection, current_timestamp));
-        serialize(protection, current_timestamp);
-
-        switch(protection.fault_type){
-        case Protections::FaultType::WARNING:
-        	warning_notification.notify(message);
-        case Protections::FaultType::FAULT:
-        	fault_notification.notify(message);
-        default:
-        	ErrorHandler("Protection has not a Fault Type that can be handled correctly by the ProtectionManager");
+        if(protection.fault_type == Protections::FAULT){
+            ProtectionManager::to_fault();
         }
-
-    	free(message);
+        Global_RTC::update_rtc_data();
+        ProtectionManager::notify(protection);
     }
 }
 
 void ProtectionManager::warn(string message){
 	warning_notification.notify(message);
+}
+
+void ProtectionManager::notify(Protection& protection){
+    if(protection.fault_protection->boundary_type_id == ERROR_HANDLER){
+        protection.fault_protection->update_error_handler_message(protection.fault_protection->get_error_handler_string());
+    }
+    for(OrderProtocol* socket : OrderProtocol::sockets){
+        if(protection.fault_protection)
+            socket->send_order(*protection.fault_protection->fault_message);
+        for(auto& warning : protection.warnings_triggered){
+            if(warning->boundary_type_id == ERROR_HANDLER){
+                warning->update_error_handler_message(warning->get_error_handler_string());
+            }
+            socket->send_order(*warning->warn_message);
+        }
+        protection.warnings_triggered.clear();
+    }
+
 }
 
 Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;

@@ -14,7 +14,7 @@
 #ifdef HAL_TIM_MODULE_ENABLED
 
 #include "C++Utilities/CppUtils.hpp"
-
+#include "HALAL/Services/Time/RTC.hpp"
 // HIGH RESOLUTION TIMERS
 extern TIM_HandleTypeDef htim2;		// Used for the global timer (3,36nS step)
 
@@ -138,31 +138,6 @@ public :
 	 * @param id The id of the timeout to cancel
 	 */
 	static void cancel_timeout(uint8_t id);
-#ifdef HAL_RTC_MODULE_ENABLED
-	struct RTCData{
-		uint16_t counter;
-		uint8_t second;
-		uint8_t minute;
-		uint8_t hour;
-		uint8_t day;
-		uint8_t month;
-		uint16_t year;
-
-		string serialize() const {
-			return "\"counter\": " + to_string(counter) + ",\"second\": " + to_string(second) + ",\"minute\": " + to_string(minute) + ",\"hour\": " + to_string(hour) + ",\"day\": " + to_string(day) + ",\"month\": " + to_string(month) + ",\"year\": " + to_string(year);
-		}
-
-		static size_t get_string_size(const RTCData& to_serialize){
-			return to_serialize.serialize().size();
-		}
-	};
-
-	static void start_rtc();
-	static RTCData get_rtc_data();
-	static void set_rtc_data(uint16_t counter, uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t month, uint16_t year);
-
-	static RTC_HandleTypeDef hrtc;
-#endif
 };
 
 #endif

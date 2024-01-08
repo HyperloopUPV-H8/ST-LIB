@@ -54,13 +54,16 @@ public:
     	high_frequency_protections.push_back(Protection(src,protectors...));
         return high_frequency_protections.back();
     }
-
+    /**
+     * @brief call on startup to initialize the names of the protections
+    */
+    static void initialize();
     static void add_standard_protections();
     static void check_protections();
     static void check_high_frequency_protections();
     static void warn(string message);
     static void fault_and_propagate();
-
+    static void notify(Protection& protection);
 private:
 	static constexpr uint16_t warning_id = 2;
 	static constexpr uint16_t fault_id = 3;
@@ -77,15 +80,6 @@ private:
     static Notification fault_notification;
     static Notification warning_notification;
     static StackOrder<0> fault_order;
-
-    static int get_string_size(Protection& prot ,const Time::RTCData& timestamp){
-    	return snprintf(nullptr,0,format,"","","") + prot.get_string_size() + Time::RTCData::get_string_size(timestamp);
-    }
-
-    static char* serialize(Protection& prot, const Time::RTCData& timestamp){
-    	sprintf(message,format,to_string(board_id).c_str(),timestamp.serialize().c_str(),string(prot.serialize(message)).c_str());
-    	return message;
-    }
 
     static void to_fault();
 };
