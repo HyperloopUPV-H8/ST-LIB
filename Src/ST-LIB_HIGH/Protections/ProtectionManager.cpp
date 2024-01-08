@@ -52,14 +52,17 @@ void ProtectionManager::fault_and_propagate(){
 
 void ProtectionManager::check_protections() {
     for (Protection& protection: low_frequency_protections) {
-        if (protection.check_state()) {
+        auto protection_status = protection.check_state();
+        if (protection_status == Protections::OK) {
             continue;
         }
         if(general_state_machine == nullptr){
         	ErrorHandler("Protection Manager does not have General State Machine Linked");
         	return;
         }
-        if(protection.fault_type == Protections::FAULT){
+        //ensure we only go to FAULT if a FAULT was triggered, and not only a WARNING
+        if(protection.fault_type == Protections::FAULT &&
+          protection_status == Protections::FAULT){
             ProtectionManager::to_fault();
         }
         Global_RTC::update_rtc_data();
@@ -94,12 +97,21 @@ void ProtectionManager::warn(string message){
 }
 
 void ProtectionManager::notify(Protection& protection){
-    if(protection.jumped_protection->boundary_type_id == ERROR_HANDLER){
-        protection.jumped_protection->update_error_handler_message(protection.jumped_protection->get_error_handler_string());
+    if(protection.fault_protection->boundary_type_id == ERROR_HANDLER){
+        protection.fault_protection->update_error_handler_message(protection.fault_protection->get_error_handler_string());
     }
     for(OrderProtocol* socket : OrderProtocol::sockets){
-        socket->send_order(*protection.jumped_protection->message);
+        if(protection.fault_protection)
+            socket->send_order(*protection.fault_protection->fault_message);
+        for(auto& warning : protection.warnings_triggered){
+            if(warning->boundary_type_id == ERROR_HANDLER){
+                warning->update_error_handler_message(warning->get_error_handler_string());
+            }
+            socket->send_order(*warning->warn_message);
+        }
+        protection.warnings_triggered.clear();
     }
+
 }
 
 Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;

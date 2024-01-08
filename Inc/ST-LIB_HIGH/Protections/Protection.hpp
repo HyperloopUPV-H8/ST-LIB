@@ -4,24 +4,20 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "Boundary.hpp"
 
-namespace Protections{
-enum FaultType : uint8_t{
-	FAULT = 0,
-	WARNING,
-    OK
-};
-}
+
 
 class Protection{
 private:
     char* name = nullptr;
-    vector<unique_ptr<BoundaryInterface>> boundaries;
-    BoundaryInterface* jumped_protection = nullptr;
+    vector<shared_ptr<BoundaryInterface>> boundaries;
+    BoundaryInterface* fault_protection = nullptr;
     static constexpr Protections::FaultType fault_type = Protections::FaultType::FAULT;
+    uint8_t triggered_protecions_idx[4]{};
 public:
+    vector<shared_ptr<BoundaryInterface>> warnings_triggered;
     template<class Type, ProtectionType... Protector, template<class,ProtectionType> class Boundaries>
     Protection(Type* src, Boundaries<Type,Protector>... protectors) {
-        (boundaries.push_back(unique_ptr<BoundaryInterface>(new Boundary<Type,Protector>(src,protectors))), ...);
+        (boundaries.push_back(shared_ptr<BoundaryInterface>(new Boundary<Type,Protector>(src,protectors))), ...);
     }
 
     void set_name(char* name) {
@@ -32,14 +28,37 @@ public:
         return name;
     }
 
-    bool check_state() {
-        for(unique_ptr<BoundaryInterface>& bound: boundaries){
-            if(not bound.get()->check_bounds()){
-                jumped_protection = bound.get();
-                return false;
+    Protections::FaultType check_state() {
+        uint8_t warning_count = 0;
+        //to save the index of the triggered warning
+        uint8_t idx = 0;
+        for(shared_ptr<BoundaryInterface>& bound: boundaries){
+            auto fault_type = bound->check_bounds();
+            idx++;
+            switch(fault_type){
+                // in case a Protection has more than one boundary, give priority to fault messages
+                case Protections::FAULT:
+                    fault_protection = bound.get();
+                    // adding the fault_protection to the vector is not desired,
+                    // the fault signal should propagate as fast as possible
+                    return Protections::FAULT;
+                case Protections::WARNING:
+                    //warnings are non fatal, but we cannot waste time, we need to check if any
+                    //faults were triggered
+                    triggered_protecions_idx[warning_count] = idx-1;
+                    warning_count++;
+                    break;
+                default:
+                    break;
             }
         }
-        return true;
+        if(warning_count){
+            for(uint8_t i = 0; i < warning_count; i++){
+                warnings_triggered.push_back(boundaries[triggered_protecions_idx[i]]);
+            }
+            return Protections::WARNING;
+        }
+        return Protections::OK;
     }
     friend class ProtectionManager;
 };

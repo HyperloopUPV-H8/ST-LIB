@@ -57,6 +57,7 @@ using std::integral_constant;
 using std::snprintf;
 using std::make_unique;
 using std::unique_ptr;
+using std::shared_ptr;
 using std::hash;
 using std::unordered_map;
 using std::vector;
