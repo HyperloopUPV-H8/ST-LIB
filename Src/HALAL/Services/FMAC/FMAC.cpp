@@ -78,7 +78,7 @@ void MultiplierAccelerator::start(){
 }
 
 void MultiplierAccelerator::software_preload(int16_t* preload_data, uint8_t amount_to_preload, int16_t* preload_feedback_data, uint8_t amount_to_feedback_preload){
-#ifdef FMAC_ERROR_CHECK
+#if FMAC_ERROR_CHECK != 0
 	if(amount_to_preload > MemoryLayout.FInSize || amount_to_preload > MemoryLayout.FeedbackInSize){
 		ErrorHandler("Error while preloading data, cannot preload more data than the structure can hold");
 	}

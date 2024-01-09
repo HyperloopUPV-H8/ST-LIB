@@ -10,7 +10,9 @@
 #include "DMA/DMA.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
-#define FMAC_ERROR_CHECK
+#ifndef FMAC_ERROR_CHECK
+#define FMAC_ERROR_CHECK 0
+#endif
 
 
 #ifdef HAL_FMAC_MODULE_ENABLED
