@@ -89,7 +89,7 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 			name.reserve(NAME_MAX_LEN);
 			if(this->has_warning_level){
 				warning_threshold = boundary.warning_threshold;
-				warn_message = new HeapOrder(uint16_t{1000},&format_id,&boundary_type_id,&name,&this->warning_threshold,&this->boundary,this->src,
+				warn_message = new HeapOrder(uint16_t{1000},&format_id,&boundary_type_id,&name,&this->warning_threshold,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 			}
@@ -133,7 +133,7 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 			name.reserve(NAME_MAX_LEN);
 			if(this->has_warning_level){
 				warning_threshold = boundary.warning_threshold;
-				warn_message = new HeapOrder(uint16_t{2111},&format_id,&boundary_type_id,&name,&this->warning_threshold,&this->boundary,this->src,
+				warn_message = new HeapOrder(uint16_t{2111},&format_id,&boundary_type_id,&name,&this->warning_threshold,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 			}
