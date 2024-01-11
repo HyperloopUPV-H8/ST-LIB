@@ -104,15 +104,17 @@ void ProtectionManager::notify(Protection& protection){
         if(protection.fault_protection)
             socket->send_order(*protection.fault_protection->fault_message);
         for(auto& warning : protection.warnings_triggered){
-            if(warning->boundary_type_id == ERROR_HANDLER){
-                warning->update_error_handler_message(warning->get_error_handler_string());
-            }
             socket->send_order(*warning->warn_message);
         }
+        for(auto& ok : protection.oks_triggered){
+            socket->send_order(*ok->ok_message);
+        }
+        protection.oks_triggered.clear();
         protection.warnings_triggered.clear();
     }
 
 }
+
 
 Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;
 size_t ProtectionManager::message_size = 0;
