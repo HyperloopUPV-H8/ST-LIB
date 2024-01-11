@@ -50,14 +50,21 @@ public:
                     //faults were triggered
                     if(bound->warning_already_triggered)
                         break;
+                    bound->warning_already_triggered = true;
                     triggered_protecions_idx[warning_count] = idx-1;
                     warning_count++;
                     break;
                 case Protections::OK:
+                    if(bound->warning_already_triggered){
+                        bound->back_to_normal = true;
+                    }
+                    bound->warning_already_triggered = false;
                     if(bound->back_to_normal){
                         triggered_oks_idx[oks_count] = idx-1;
                         oks_count++;
+                        bound->back_to_normal = false;
                     }
+                    
                     break;
                 default:
                     ErrorHandler("INVALID Protection::STATE type");

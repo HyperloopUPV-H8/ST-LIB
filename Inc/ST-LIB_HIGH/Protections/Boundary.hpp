@@ -49,6 +49,7 @@ public:
 	uint8_t boundary_type_id{};
 		//used to send messages only on raising/failing edges
 	bool warning_already_triggered{false};
+	bool warning_is_up{false};
 	bool back_to_normal{false};
 protected:
 	static const map<type_id_t,uint8_t> format_look_up;
@@ -112,20 +113,7 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 	Protections::FaultType check_bounds()override{
 		if(*src < boundary) return Protections::FAULT;
 		if(has_warning_level && *src < warning_threshold){
-			if(not warning_already_triggered){
-				warning_already_triggered = true;
-				back_to_normal = false;
-			}
-			 return Protections::WARNING;
-		}
-		if(back_to_normal)
-		{
-			//back implies coming from somewhre, if we are already normal we are not BACK from normal :)
-			back_to_normal = false;
-		}
-		if(warning_already_triggered){
-			warning_already_triggered = false;
-			back_to_normal = true;
+			return Protections::WARNING;
 		}
 		return Protections::OK;
 	}
