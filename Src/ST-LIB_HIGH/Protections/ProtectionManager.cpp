@@ -65,18 +65,12 @@ void ProtectionManager::check_protections() {
         }
         Global_RTC::update_rtc_data();
         ProtectionManager::notify(protection);
-        if(Time::get_global_tick() > last_notify + notify_delay_in_nanoseconds){
-            
-        last_notify = Time::get_global_tick();
-        }
+
     }
 }
 
 void ProtectionManager::check_high_frequency_protections(){
     for (Protection& protection: high_frequency_protections) {
-        if (protection.check_state()) {
-            continue;
-        }
         if(general_state_machine == nullptr){
         	ErrorHandler("Protection Manager does not have General State Machine Linked");
         	return;
@@ -107,12 +101,10 @@ void ProtectionManager::notify(Protection& protection){
         for(auto& ok : protection.oks_triggered){
             socket->send_order(*ok->ok_message);
         }
-        if(not protection.oks_triggered.empty())
-            protection.oks_triggered.clear();
-        if(not protection.warnings_triggered.empty() )
-            protection.warnings_triggered.clear();
-    }
 
+    }
+    protection.oks_triggered.clear();
+        protection.warnings_triggered.clear();
 }
 
 
