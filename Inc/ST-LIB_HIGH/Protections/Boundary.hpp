@@ -160,20 +160,7 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	Protections::FaultType check_bounds()override{
 		if(*src > boundary) return Protections::FAULT;
 		if(has_warning_level && *src > warning_threshold){
-			if(not warning_already_triggered){
-				warning_already_triggered = true;
-				back_to_normal = false;
-			}
 			 return Protections::WARNING;
-		}
-		if(back_to_normal)
-		{
-			//back implies coming from somewhre, if we are already normal we are not BACK from normal :)
-			back_to_normal = false;
-		}
-		if(warning_already_triggered){
-			warning_already_triggered = false;
-			back_to_normal = true;
 		}
 		return Protections::OK;
 	}
@@ -265,20 +252,7 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 	Protections::FaultType check_bounds()override{
 		if(*src < lower_boundary || *src > upper_boundary) return Protections::FAULT;
 		if(has_warning_level && *src < lower_boundary || *src > upper_boundary){
-			if(not warning_already_triggered){
-				warning_already_triggered = true;
-				back_to_normal = false;
-			}
 				return Protections::WARNING;
-		}
-		if(back_to_normal)
-		{
-			//back implies coming from somewhre, if we are already normal we are not BACK from normal :)
-			back_to_normal = false;
-		}
-		if(warning_already_triggered){
-			warning_already_triggered = false;
-			back_to_normal = true;
 		}
 		return Protections::OK;
 	}
@@ -395,16 +369,7 @@ struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 			still_good = Protections::FAULT;
 			return Protections::FAULT;
 		}else if(has_warning_level && accumulator > warning_threshold){
-			if(not warning_already_triggered){
-				warning_already_triggered = true;
-				back_to_normal = false;
-			}
 			return Protections::WARNING;
-		}
-		if(back_to_normal)
-		{
-			//back implies coming from somewhre, if we are already normal we are not BACK from normal :)
-			back_to_normal = false;
 		}
 		return Protections::OK;
 		
