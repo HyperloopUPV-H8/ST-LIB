@@ -24,6 +24,7 @@ uint8_t SPI::inscribe(SPI::Peripheral& spi){
 
 	SPI::Instance* spi_instance = SPI::available_spi[spi];
 
+	//this three lines don t do nothing yet, as the alternative_function on a pin is hardcoded on the hal_msp.c
 	spi_instance->SCK->alternative_function = AF5;
 	spi_instance->MOSI->alternative_function = AF5;
 	spi_instance->MISO->alternative_function = AF5;
@@ -266,11 +267,29 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 			if(spi->available_end == spi->SPIPacketID){
 				spi->state = SPI::PROCESSING_PACKET;
 				SPI::turn_off_chip_select(spi);
-				HAL_SPI_TransmitReceive_DMA(hspi, &packet->master_data[2], &packet->slave_data[2], packet->greater_data_size-2);
+				HAL_SPI_TransmitReceive_DMA(hspi, packet->master_data, packet->slave_data, packet->payload_size-PAYLOAD_OVERHEAD);
 
 			}else{
-				spi->last_end_check = Time::get_global_tick();
-				SPI::turn_on_chip_select(spi);
+				switch(spi->available_end){
+					case NO_PACKET_ID:
+					{
+						spi->last_end_check = Time::get_global_tick();
+						SPI::turn_on_chip_select(spi);
+					}
+					break;
+					case ERROR_PACKET_ID:
+					{
+						spi->last_end_check = Time::get_global_tick();
+						SPI::turn_on_chip_select(spi);
+					}
+					break;
+					default:
+					{
+						spi->last_end_check = Time::get_global_tick();
+						SPI::turn_on_chip_select(spi);
+					}
+					break;
+				}
 			}
 		}else{
 			ErrorHandler("Used master transmit packet on a slave spi");
@@ -281,7 +300,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	{
 		SPIPacket *packet = SPIPacket::SPIPacketsByID[spi->SPIPacketID];
 		if(spi->mode == SPI_MODE_SLAVE){ //prepares the packet on the slave
-			HAL_SPI_TransmitReceive_DMA(hspi, packet->slave_data, packet->master_data, packet->greater_data_size);
+			HAL_SPI_TransmitReceive_DMA(hspi, packet->MISO_payload, packet->MOSI_payload, packet->payload_size);
 			spi->state = SPI::PROCESSING_PACKET;
 		}else{
 			ErrorHandler("Used slave process packets on a master spi");
@@ -297,12 +316,24 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 				spi->state = SPI::IDLE;
 			}else{
 				spi->state = SPI::WAITING_PACKET; //prepares the next received packet
-				spi->SPIPacketID = 0;
-				spi->available_end = 0;
+				spi->SPIPacketID = NO_PACKET_ID;
+				spi->available_end = NO_PACKET_ID;
 				HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIPacketID, 2);
 			}
 			break;
 		}
+	case SPI::ERROR_RECOVERY:
+	{
+		if(spi->mode == SPI_MODE_MASTER){
+			//TODO
+		}else{
+		spi->state = SPI::WAITING_PACKET; //prepares the next received packet
+		spi->SPIPacketID = NO_PACKET_ID;
+		spi->available_end = NO_PACKET_ID;
+		HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIPacketID, 2);
+		}
+		break;
+	}
 	default:
 		ErrorHandler("Unknown spi state: %d",spi->state);
 		break;
@@ -317,9 +348,9 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi){
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 {
-	if((hspi->ErrorCode & HAL_SPI_ERROR_UDR) != 0){
 
-		ErrorHandler("Underrun error, slave is not communicating fast enough");
+	if((hspi->ErrorCode & HAL_SPI_ERROR_UDR) != 0){
+		SPI::spi_recover(SPI::registered_spi_by_handler[hspi], hspi);
 	}else{
 		ErrorHandler("SPI error number %u",hspi->ErrorCode);
 	}
@@ -332,6 +363,15 @@ void SPI::turn_on_chip_select(SPI::Instance* spi) {
 
 void SPI::turn_off_chip_select(SPI::Instance* spi) {
 	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::OFF);
+}
+
+void SPI::spi_recover(SPI::Instance* spi, SPI_HandleTypeDef* hspi){
+	HAL_SPI_Abort(hspi);
+	spi->error_count = spi->error_count + 1;
+	spi->SPIPacketID = ERROR_PACKET_ID;
+	spi->available_end = ERROR_PACKET_ID;
+	spi->state = ERROR_RECOVERY;
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t*)&spi->SPIPacketID, 2);
 }
 
 

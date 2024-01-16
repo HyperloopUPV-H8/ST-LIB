@@ -9,11 +9,19 @@
 
 #include "ErrorHandler/ErrorHandler.hpp"
 
+#define PAYLOAD_OVERHEAD 2
+
+#define NO_PACKET_ID 0
+#define ERROR_PACKET_ID 1
+
 
 class SPIPacket{
 public:
 	static map<uint16_t, SPIPacket*> SPIPacketsByID;
 	uint16_t id;
+	uint8_t* MISO_payload;
+	uint8_t* MOSI_payload;
+	uint16_t payload_size;
 	uint8_t* master_data;
 	uint16_t master_data_size;
 	uint8_t* slave_data;
@@ -29,16 +37,18 @@ public:
 			ErrorHandler("Cannot use 0 as the SPIPacketID, as it is reserved to the no packet ready signal");
 		}
 		if(master_data_size > slave_data_size){
-			greater_data_size = master_data_size+2;
+			payload_size = master_data_size+PAYLOAD_OVERHEAD;
 		}else{
-			greater_data_size = slave_data_size+2;
+			payload_size = slave_data_size+PAYLOAD_OVERHEAD;
 		}
-		master_data = new uint8_t[greater_data_size];
-		slave_data = new uint8_t[greater_data_size];
-		master_data[0] = (uint8_t) id;
-		master_data[1] = (uint8_t) (id>>8);
-		slave_data[0] = (uint8_t) id;
-		slave_data[1] = (uint8_t) (id>>8);
+		MISO_payload = new uint8_t[payload_size]{0};
+		MOSI_payload = new uint8_t[payload_size]{0};
+		master_data = &MOSI_payload[PAYLOAD_OVERHEAD];
+		slave_data = &MISO_payload[PAYLOAD_OVERHEAD];
+		MISO_payload[0] = (uint8_t) id;
+		MISO_payload[1] = (uint8_t) (id>>8);
+		MOSI_payload[0] = (uint8_t) id;
+		MOSI_payload[1] = (uint8_t) (id>>8);
 		SPIPacket::SPIPacketsByID[id] = this;
 	}
 

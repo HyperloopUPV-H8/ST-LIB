@@ -33,6 +33,7 @@ public:
 		STARTING_PACKET,
     	WAITING_PACKET,
 		PROCESSING_PACKET,
+		ERROR_RECOVERY,
     };
 
     /**
@@ -67,6 +68,7 @@ public:
         uint16_t SPIPacketID = 0; /**< SPIPacket being processed, if any*/
         uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
         uint64_t packet_count = 0; /**< packet completed counter for debugging*/
+        uint64_t error_count = 0; /**< packet error counter for debugging*/
     };
 
 
@@ -204,6 +206,13 @@ public:
 	 * @param spi Id of the SPI
 	 */
     static void chip_select_off(uint8_t id);
+
+
+    /**
+     * @brief Recovers SPI from any error so it starts working again
+     */
+    static void spi_recover(uint8_t id);
+    static void spi_recover(SPI::Instance* spi, SPI_HandleTypeDef* hspi);
 
 
 private:
