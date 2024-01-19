@@ -299,7 +299,10 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	case SPI::WAITING_PACKET:
 	{
 		SPIPacket *packet = SPIPacket::SPIPacketsByID[spi->SPIPacketID];
-		if(spi->mode == SPI_MODE_SLAVE){ //prepares the packet on the slave
+		if(packet == 0x0){
+			SPI::spi_recover(spi, hspi);
+		}
+		else if(spi->mode == SPI_MODE_SLAVE){ //prepares the packet on the slave
 			HAL_SPI_TransmitReceive_DMA(hspi, packet->MISO_payload, packet->MOSI_payload, packet->payload_size);
 			spi->state = SPI::PROCESSING_PACKET;
 		}else{
