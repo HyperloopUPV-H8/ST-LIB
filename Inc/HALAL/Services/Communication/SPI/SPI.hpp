@@ -71,10 +71,6 @@ public:
         uint64_t error_count = 0; /**< packet error counter for debugging*/
     };
 
-
-    static void turn_on_chip_select(SPI::Instance* spi);
-    static void turn_off_chip_select(SPI::Instance* spi);
-
     /**
      * @brief Enum that abstracts the use of the Instance struct to facilitate the mocking of the HALAL.
      *
@@ -117,6 +113,12 @@ public:
 	static SPI::Instance instance5;
 	static SPI::Instance instance6;
 
+
+
+    /*=========================================
+     * User functions for configuration of the SPI
+     ==========================================*/
+
     /**
      * @brief Registers a new SPI.
      * 
@@ -131,6 +133,12 @@ public:
      *  	  must be enrolled before initializing.
      */
     static void start();
+
+
+
+    /*=========================================
+     * User functions for dummy mode
+     ==========================================*/
 
     /**@brief	Transmits 1 byte by SPI.
      * 
@@ -178,15 +186,17 @@ public:
 	 */
     static bool transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
 
-    /**
-     * @brief update that has to be called in order for master to check if the slave is ready to send the packet. If it is not called periodically, the master_transmit_packet will not work. Not needed for dummy communication (not using packets)
-     */
-    static void packet_update();
+
+
+    /*=============================================
+     * User functions for packet mode
+     ==============================================*/
 
     /**
      * @brief master send packet method, which tries to send a single packet
      */
     static bool master_transmit_packet(uint8_t id, SPIPacket packet);
+    static bool master_transmit_packet(uint8_t id, SPIPacket *packet);
 
     /**
      * @brief slave listen packets method. When called, the slave will start to listen packets until the state is set again to IDLE
@@ -194,22 +204,54 @@ public:
     static void slave_listen_packets(uint8_t id);
 
     /**
-     * @brief This method sets chip select to high level.
+     * @brief method that needs to be called periodically by the master code for proper communication. Can be called at any speed, but the faster it is called, the faster the packets will resolve.
+     *
+     * this update has to be called by the code in order for master to check if the slave is ready to send the packet.
+     * If it is not called periodically, the master_transmit_packet will not work. Not needed for dummy communication (not using packets)
+     */
+    static void packet_update();
+
+
+
+    /*=============================================
+     * SPI Module Functions for HAL (cannot be private)
+     ==============================================*/
+
+    /**
+     * @brief master packet that checks the state of the slave, used on the callback of the SPI module and handled automatically by packet_update method (as long as it is called).
+     */
+    static void master_check_available_end(SPI::Instance* spi);
+
+    /**
+     * @brief This method sets chip select to high level, and is used automatically by the SPI module
+     *
+     * The high level signal on SPI on chip select marks a slave to not process anything.
+     * For more information read the chip_select_off method.
      *
      * @param spi Id of the SPI
      */
     static void chip_select_on(uint8_t id);
 
     /**
-	 * @brief This method sets chip select to low level.
+	 * @brief This method sets chip select to low level, and is used automatically by the SPI module.
+	 *
+	 * The low level signal on SPI on chip select marks the slave connected to it to start processing data, and is marked by the master
+	 * The slave on the ST-LIB doesn t use this configuration yet and is instead active all the time, so for now it can only function as a single point to point configuration
+	 * to have multiple ST-LIB SPI slaves on a single SPI interface you may need to implement an EXTI on the slave that deactivates it while its on.
+	 * This method is still used to communicate to any slave that is not coded with the ST-LIB, as those follow the common rules of the SPI
 	 *
 	 * @param spi Id of the SPI
 	 */
     static void chip_select_off(uint8_t id);
 
 
+    static void turn_on_chip_select(SPI::Instance* spi);
+    static void turn_off_chip_select(SPI::Instance* spi);
+
+
+
     /**
-     * @brief Recovers SPI from any error so it starts working again
+     * @brief Recovers SPI from any error so it starts working again, and counts the error
      */
     static void spi_recover(uint8_t id);
     static void spi_recover(SPI::Instance* spi, SPI_HandleTypeDef* hspi);

@@ -9,15 +9,21 @@
 
 #include "ErrorHandler/ErrorHandler.hpp"
 
-#define PAYLOAD_OVERHEAD 2
+
+#define SPI_ID_SIZE 2
+#define PAYLOAD_OVERHEAD SPI_ID_SIZE
 
 #define NO_PACKET_ID 0
 #define ERROR_PACKET_ID 1
 
 
-class SPIPacket{
+class SPIPacketBase{
+
+};
+
+class SPIPacket : SPIPacketBase{
 public:
-	static map<uint16_t, SPIPacket*> SPIPacketsByID;
+	static map<uint16_t, SPIPacketBase*> SPIPacketsByID;
 	uint16_t id;
 	uint8_t* MISO_payload;
 	uint8_t* MOSI_payload;
@@ -27,6 +33,7 @@ public:
 	uint8_t* slave_data;
 	uint16_t slave_data_size;
 	uint16_t greater_data_size;
+    void(*callback)(void) = nullptr;
 
 	/**
 	 * @brief constructor of SPIPacket. The SPIPacket uses the first byte of the data arrays to coordinate the packet id, and builds the arrays with 1 more byte of space.
@@ -52,14 +59,14 @@ public:
 		SPIPacket::SPIPacketsByID[id] = this;
 	}
 
-	SPIPacket(uint16_t id, uint8_t* master_data, uint8_t* slave_data, uint16_t shared_data_size) :
-		id(id), master_data(master_data), master_data_size(shared_data_size), slave_data(slave_data), slave_data_size(shared_data_size){
-		if(id == 0){
-			ErrorHandler("Cannot use 0 as the SPIPacketID, as it is reserved to the no packet ready signal");
-		}
 
-	}
+    void set_callback(void(*callback)(void)) {
+        this->callback = callback;
+    }
 
+    void process_callback(){
+    	 if (callback != nullptr) callback();
+    }
 };
 
 

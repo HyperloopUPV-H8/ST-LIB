@@ -148,23 +148,23 @@ bool SPI::master_transmit_packet(uint8_t id, SPIPacket packet){
 	return true;
 }
 
-void SPI::packet_update(){
-	for(auto iter: SPI::registered_spi){
-		if(iter.second->mode == SPI_MODE_MASTER){
-			//if the master is trying to start a packet transaction (he is starting packet and the id of that packet is not 0)
-			if(iter.second->SPIPacketID != 0 && iter.second->state == STARTING_PACKET){
-				//when the slave available packet is not confirmed to be the same packet id that the master is asking
-				if(iter.second->available_end != iter.second->SPIPacketID ){
-					//enough time has passed since the last check to ask the slave again if it has the correct packet ID ready
-					if(Time::get_global_tick() - iter.second->last_end_check > MASTER_SPI_CHECK_DELAY){
-						turn_off_chip_select(iter.second);
-						HAL_SPI_TransmitReceive_DMA(iter.second->hspi, (uint8_t *)&iter.second->SPIPacketID, (uint8_t *)&iter.second->available_end, 2);
-						iter.second->last_end_check = Time::get_global_tick();
-					}
-				}
-			}
-		}
+bool SPI::master_transmit_packet(uint8_t id, SPIPacket *packet){
+	 if (!SPI::registered_spi.contains(id)){
+		ErrorHandler("No SPI registered with id %u", id);
+		return false;
+	 }
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+
+	if(spi->state != SPI::IDLE){
+		return false;
 	}
+
+	spi->state = SPI::STARTING_PACKET;
+	spi->SPIPacketID = packet->id;
+	SPI::chip_select_off(id);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIPacketID, (uint8_t *)&spi->available_end, 2);
+	return true;
 }
 
 void SPI::slave_listen_packets(uint8_t id){
@@ -180,8 +180,34 @@ void SPI::slave_listen_packets(uint8_t id){
 	}
 
 	spi->state = SPI::WAITING_PACKET;
-	spi->available_end = 0;
+	spi->available_end = NO_PACKET_ID;
 	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIPacketID, 2);
+}
+
+
+void SPI::packet_update(){
+	for(auto iter: SPI::registered_spi){
+		if(iter.second->mode == SPI_MODE_MASTER){
+			//if the master is trying to start a packet transaction (he is starting packet and the id of that packet is not 0)
+			if(iter.second->SPIPacketID != 0 && iter.second->state == STARTING_PACKET){
+				//when the slave available packet is not confirmed to be the same packet id that the master is asking
+				if(iter.second->available_end != iter.second->SPIPacketID ){
+					//enough time has passed since the last check to ask the slave again if it has the correct packet ID ready
+					if(Time::get_global_tick() - iter.second->last_end_check > MASTER_SPI_CHECK_DELAY){
+						master_check_available_end(iter.second);
+						iter.second->last_end_check = Time::get_global_tick();
+					}
+				}
+			}
+		}
+	}
+}
+
+
+void SPI::master_check_available_end(SPI::Instance* spi){
+	SPI::turn_off_chip_select(spi);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIPacketID, (uint8_t *)&spi->available_end, 2);
+
 }
 
 void SPI::chip_select_on(uint8_t id){
@@ -280,13 +306,13 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 					case ERROR_PACKET_ID:
 					{
 						spi->last_end_check = Time::get_global_tick();
+						spi->error_count++;
 						SPI::turn_on_chip_select(spi);
 					}
 					break;
 					default:
 					{
-						spi->last_end_check = Time::get_global_tick();
-						SPI::turn_on_chip_select(spi);
+						ErrorHandler("Received unexpected ID from the master packet check on the slave %d",spi->available_end);
 					}
 					break;
 				}
@@ -316,12 +342,14 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 			spi->packet_count++; //counts when a packet has successfully been received.
 			if(spi->mode == SPI_MODE_MASTER){ //ends communication
 				SPI::turn_on_chip_select(spi);
+				packet->process_callback();
 				spi->state = SPI::IDLE;
-			}else{
-				spi->state = SPI::WAITING_PACKET; //prepares the next received packet
+			}else{ //prepares the next received packet
 				spi->SPIPacketID = NO_PACKET_ID;
 				spi->available_end = NO_PACKET_ID;
+				packet->process_callback();
 				HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIPacketID, 2);
+				spi->state = SPI::WAITING_PACKET;
 			}
 			break;
 		}
