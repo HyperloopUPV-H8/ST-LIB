@@ -195,8 +195,8 @@ public:
     /**
      * @brief master send packet method, which tries to send a single packet
      */
-    static bool master_transmit_packet(uint8_t id, SPIPacket packet);
-    static bool master_transmit_packet(uint8_t id, SPIPacket *packet);
+    static bool master_transmit_packet(uint8_t id, SPIBasePacket &packet);
+    static bool master_transmit_packet(uint8_t id, SPIBasePacket *packet);
 
     /**
      * @brief slave listen packets method. When called, the slave will start to listen packets until the state is set again to IDLE

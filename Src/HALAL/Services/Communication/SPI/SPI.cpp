@@ -129,7 +129,7 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
 
 }
 
-bool SPI::master_transmit_packet(uint8_t id, SPIPacket packet){
+bool SPI::master_transmit_packet(uint8_t id, SPIBasePacket& packet){
 	 if (!SPI::registered_spi.contains(id)){
 		ErrorHandler("No SPI registered with id %u", id);
 		return false;
@@ -148,7 +148,7 @@ bool SPI::master_transmit_packet(uint8_t id, SPIPacket packet){
 	return true;
 }
 
-bool SPI::master_transmit_packet(uint8_t id, SPIPacket *packet){
+bool SPI::master_transmit_packet(uint8_t id, SPIBasePacket *packet){
 	 if (!SPI::registered_spi.contains(id)){
 		ErrorHandler("No SPI registered with id %u", id);
 		return false;
@@ -288,10 +288,11 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 		break;
 	case SPI::STARTING_PACKET:
 	{
-		SPIPacket *packet = SPIPacket::SPIPacketsByID[spi->SPIPacketID];
+		SPIBasePacket *packet = SPIBasePacket::SPIPacketsByID[spi->SPIPacketID];
 		if(spi->mode == SPI_MODE_MASTER){ //checks if the packet is ready on slave
 			if(spi->available_end == spi->SPIPacketID){
 				spi->state = SPI::PROCESSING_PACKET;
+				packet->master_prepare_buffer();
 				SPI::turn_off_chip_select(spi);
 				HAL_SPI_TransmitReceive_DMA(hspi, packet->master_data, packet->slave_data, packet->payload_size-PAYLOAD_OVERHEAD);
 
@@ -312,7 +313,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 					break;
 					default:
 					{
-						ErrorHandler("Received unexpected ID from the master packet check on the slave %d",spi->available_end);
+						ErrorHandler("Received unexpected ID on the master packet check from the slave %d",spi->available_end);
 					}
 					break;
 				}
@@ -324,11 +325,12 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	}
 	case SPI::WAITING_PACKET:
 	{
-		SPIPacket *packet = SPIPacket::SPIPacketsByID[spi->SPIPacketID];
+		SPIBasePacket *packet = SPIBasePacket::SPIPacketsByID[spi->SPIPacketID];
 		if(packet == 0x0){
 			SPI::spi_recover(spi, hspi);
 		}
 		else if(spi->mode == SPI_MODE_SLAVE){ //prepares the packet on the slave
+			packet->slave_prepare_buffer();
 			HAL_SPI_TransmitReceive_DMA(hspi, packet->MISO_payload, packet->MOSI_payload, packet->payload_size);
 			spi->state = SPI::PROCESSING_PACKET;
 		}else{
@@ -338,16 +340,16 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	}
 	case SPI::PROCESSING_PACKET:
 		{
-			SPIPacket *packet = SPIPacket::SPIPacketsByID[spi->SPIPacketID];
+			SPIBasePacket *packet = SPIBasePacket::SPIPacketsByID[spi->SPIPacketID];
 			spi->packet_count++; //counts when a packet has successfully been received.
 			if(spi->mode == SPI_MODE_MASTER){ //ends communication
 				SPI::turn_on_chip_select(spi);
-				packet->process_callback();
+				packet->master_process_callback();
 				spi->state = SPI::IDLE;
 			}else{ //prepares the next received packet
 				spi->SPIPacketID = NO_PACKET_ID;
 				spi->available_end = NO_PACKET_ID;
-				packet->process_callback();
+				packet->slave_process_callback();
 				HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIPacketID, 2);
 				spi->state = SPI::WAITING_PACKET;
 			}
