@@ -8,7 +8,7 @@
 #pragma once
 
 #include "PinModel/Pin.hpp"
-#include "Packets/SPIPacket.hpp"
+#include "Packets/SPIOrder.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
 #include "DMA/DMA.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
