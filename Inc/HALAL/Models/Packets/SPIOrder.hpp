@@ -13,7 +13,7 @@
 
 #define NO_ORDER_ID 0
 #define ERROR_ORDER_ID 1
-#define CASTED_ERROR_ORDER_ID 100000000
+#define CASTED_ERROR_ORDER_ID (uint16_t) 0x100000000
 
 
 /**

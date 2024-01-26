@@ -67,4 +67,20 @@ public:
     }
 };
 
+template<>
+class SPIPacket<0> : public SPIBasePacket{
+public:
+    size_t& size = SPIBasePacket::size;
+    SPIPacket() {
+    	size = 0;
+    }
+
+    void parse(void* data) override {
+    }
+
+    uint8_t* build() override {
+        return nullptr;
+    }
+};
+
 
