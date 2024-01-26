@@ -299,21 +299,18 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 			}else{
 				switch(spi->available_end){
 					case NO_ORDER_ID:
+					default:
 					{
 						spi->last_end_check = Time::get_global_tick();
 						SPI::turn_on_chip_select(spi);
 					}
 					break;
+
 					case ERROR_ORDER_ID:
 					{
 						spi->last_end_check = Time::get_global_tick();
 						spi->error_count++;
 						SPI::turn_on_chip_select(spi);
-					}
-					break;
-					default:
-					{
-						ErrorHandler("Received unexpected ID on the master Order check from the slave %d",spi->available_end);
 					}
 					break;
 				}
@@ -401,8 +398,8 @@ void SPI::turn_off_chip_select(SPI::Instance* spi) {
 void SPI::spi_recover(SPI::Instance* spi, SPI_HandleTypeDef* hspi){
 	HAL_SPI_Abort(hspi);
 	spi->error_count = spi->error_count + 1;
-	spi->SPIOrderID = ERROR_ORDER_ID;
-	spi->available_end = ERROR_ORDER_ID;
+	spi->SPIOrderID = CASTED_ERROR_ORDER_ID;
+	spi->available_end = CASTED_ERROR_ORDER_ID;
 	spi->state = ERROR_RECOVERY;
 	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t*)&spi->SPIOrderID, 2);
 }

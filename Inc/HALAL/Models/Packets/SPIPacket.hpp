@@ -9,6 +9,7 @@
 
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "PacketValue.hpp"
+#include "DataStructures/StackTuple.hpp"
 
 
 #define SPI_ID_SIZE 2
@@ -16,6 +17,7 @@
 
 #define NO_ORDER_ID 0
 #define ERROR_ORDER_ID 1
+#define CASTED_ERROR_ORDER_ID 100000000
 
 
 class SPIBaseOrder{
@@ -82,9 +84,7 @@ public:
 	 * @brief constructor of SPIOrder. The SPIOrder uses the first byte of the data arrays to coordinate the Order id, and builds the arrays with 1 more byte of space.
 	 *
 	 */
-	SPIBinaryOrder(uint16_t id, uint16_t master_data_size, uint16_t slave_data_size) : SPIBaseOrder(id, master_data_size, slave_data_size)
-	{}
-
+	SPIBinaryOrder(uint16_t id, uint16_t master_data_size, uint16_t slave_data_size) : SPIBaseOrder(id, master_data_size, slave_data_size){}
 };
 
 class SPIWordOrder : public SPIBaseOrder{
@@ -101,20 +101,79 @@ public:
 		master_array = (uint32_t*)SPIBaseOrder::master_data;
 		slave_array = (uint32_t*)SPIBaseOrder::slave_data;
 	}
-
 };
 
-/*
-template<size_t BufferLength,class... Types> requires NotCallablePack<Types*...>
-class SPIStackOrder : public SPIBaseOrder{
-	OrderValue<>* values[sizeof...(Types)];
+class SPIBasePacket{
+public:
+	uint8_t *buffer;
+	size_t size;
+	virtual void parse(void* data) = 0;
+	virtual uint8_t* build() = 0;
+};
 
-	SPIStackOrder(){
-        for (OrderValue<>* value : values) {
-        	value->set_pointer();
+template<size_t BufferLength, class... Types>
+class SPIPacket : public SPIBasePacket{
+public:
+    PacketValue<>* values[sizeof...(Types)];
+    uint8_t buffer[BufferLength];
+    stack_tuple<PacketValue<Types>...> packetvalue_warehouse;
+    size_t& size = SPIBasePacket::size;
+    SPIPacket(Types*... values) : packetvalue_warehouse{PacketValue<Types>(values)...}{
+        int i = 0;
+        packetvalue_warehouse.for_each([this, &i](auto& value) {
+            this->values[i++] = &value;
+        });
+        size = BufferLength;
+        SPIBasePacket::buffer = buffer;
+    }
+
+    void parse(void* data) override {
+        for (PacketValue<>* value : values) {
+            value->parse(data);
+            data += value->get_size();
         }
+    }
+
+    uint8_t* build() override {
+        uint8_t* data = buffer;
+        for (PacketValue<>* value : values) {
+            value->copy_to(data);
+            data += value->get_size();
+        }
+        return buffer;
+    }
+};
+
+
+
+class SPIStackOrder : public SPIBaseOrder{
+public:
+	SPIBasePacket& master_packet;
+	SPIBasePacket& slave_packet;
+
+	SPIStackOrder(uint16_t id, SPIBasePacket& master_packet, SPIBasePacket& slave_packet) :
+	master_packet(master_packet), slave_packet(slave_packet),
+	SPIBaseOrder(id, (uint16_t)master_packet.size, (uint16_t)slave_packet.size){
+
 	}
 
-};*/
+	void master_prepare_buffer() override{
+		memcpy(SPIBaseOrder::master_data, master_packet.build(), master_packet.size);
+	}
 
+	void slave_prepare_buffer() override{
+		memcpy(SPIBaseOrder::slave_data, slave_packet.build(), slave_packet.size);
+	}
+
+	void master_process_callback() override{
+		slave_packet.parse(SPIBaseOrder::slave_data);
+		if (callback != nullptr) callback();
+	}
+
+	void slave_process_callback() override{
+		master_packet.parse(SPIBaseOrder::master_data);
+		if (callback != nullptr) callback();
+	}
+
+};
 
