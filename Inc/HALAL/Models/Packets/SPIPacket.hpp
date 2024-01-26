@@ -14,16 +14,16 @@
 #define SPI_ID_SIZE 2
 #define PAYLOAD_OVERHEAD SPI_ID_SIZE
 
-#define NO_PACKET_ID 0
-#define ERROR_PACKET_ID 1
+#define NO_ORDER_ID 0
+#define ERROR_ORDER_ID 1
 
 
-class SPIBasePacket{
+class SPIBaseOrder{
 public:
-	static map<uint16_t, SPIBasePacket*> SPIPacketsByID;
+	static map<uint16_t, SPIBaseOrder*> SPIOrdersByID;
 
 
-	uint16_t id; /**< Number of the packet ID, saved on the first two bytes of both payloads*/
+	uint16_t id; /**< Number of the Order ID, saved on the first two bytes of both payloads*/
 	uint8_t* MISO_payload; /**< Byte Buffer for the slave DMA output*/
 	uint8_t* MOSI_payload; /**< Byte Buffer for the master DMA output*/
 	uint16_t payload_size; /**< Size in bytes of both DMA buffers (both have to be the same)*/
@@ -51,9 +51,9 @@ public:
     }
 
 protected:
-	SPIBasePacket(uint16_t id, uint16_t master_data_size, uint16_t slave_data_size) :  id(id), master_data_size(master_data_size), slave_data_size(slave_data_size){
+	SPIBaseOrder(uint16_t id, uint16_t master_data_size, uint16_t slave_data_size) :  id(id), master_data_size(master_data_size), slave_data_size(slave_data_size){
 		if(id == 0){
-			ErrorHandler("Cannot use 0 as the SPIPacketID, as it is reserved to the no packet ready signal");
+			ErrorHandler("Cannot use 0 as the SPIOrderID, as it is reserved to the no Order ready signal");
 		}
 		if(master_data_size > slave_data_size){
 			payload_size = master_data_size+PAYLOAD_OVERHEAD;
@@ -68,49 +68,49 @@ protected:
 		MISO_payload[1] = (uint8_t) (id>>8);
 		MOSI_payload[0] = (uint8_t) id;
 		MOSI_payload[1] = (uint8_t) (id>>8);
-		SPIBasePacket::SPIPacketsByID[id] = this;
+		SPIBaseOrder::SPIOrdersByID[id] = this;
 	}
 
-	SPIBasePacket(SPIBasePacket& basepacket) = default;
-	virtual ~SPIBasePacket();
+	SPIBaseOrder(SPIBaseOrder& baseOrder) = default;
+	virtual ~SPIBaseOrder();
 
 };
 
-class SPIBinaryPacket : public SPIBasePacket{
+class SPIBinaryOrder : public SPIBaseOrder{
 public:
 	/**
-	 * @brief constructor of SPIPacket. The SPIPacket uses the first byte of the data arrays to coordinate the packet id, and builds the arrays with 1 more byte of space.
+	 * @brief constructor of SPIOrder. The SPIOrder uses the first byte of the data arrays to coordinate the Order id, and builds the arrays with 1 more byte of space.
 	 *
 	 */
-	SPIBinaryPacket(uint16_t id, uint16_t master_data_size, uint16_t slave_data_size) : SPIBasePacket(id, master_data_size, slave_data_size)
+	SPIBinaryOrder(uint16_t id, uint16_t master_data_size, uint16_t slave_data_size) : SPIBaseOrder(id, master_data_size, slave_data_size)
 	{}
 
 };
 
-class SPIWordPacket : public SPIBasePacket{
+class SPIWordOrder : public SPIBaseOrder{
 public:
 	/**
-	 * @brief constructor of SPIPacket. The SPIPacket uses the first byte of the data arrays to coordinate the packet id, and builds the arrays with 1 more byte of space.
+	 * @brief constructor of SPIOrder. The SPIOrder uses the first byte of the data arrays to coordinate the Order id, and builds the arrays with 1 more byte of space.
 	 *
 	 */
 	uint32_t* master_array;
 	uint32_t* slave_array;
 
-	SPIWordPacket(uint16_t id, uint16_t master_word_count, uint16_t slave_word_count) : SPIBasePacket(id, 4*master_word_count, 4*slave_word_count)
+	SPIWordOrder(uint16_t id, uint16_t master_word_count, uint16_t slave_word_count) : SPIBaseOrder(id, 4*master_word_count, 4*slave_word_count)
 	{
-		master_array = (uint32_t*)SPIBasePacket::master_data;
-		slave_array = (uint32_t*)SPIBasePacket::slave_data;
+		master_array = (uint32_t*)SPIBaseOrder::master_data;
+		slave_array = (uint32_t*)SPIBaseOrder::slave_data;
 	}
 
 };
 
 /*
 template<size_t BufferLength,class... Types> requires NotCallablePack<Types*...>
-class SPIStackPacket : public SPIBasePacket{
-	PacketValue<>* values[sizeof...(Types)];
+class SPIStackOrder : public SPIBaseOrder{
+	OrderValue<>* values[sizeof...(Types)];
 
-	SPIStackPacket(){
-        for (PacketValue<>* value : values) {
+	SPIStackOrder(){
+        for (OrderValue<>* value : values) {
         	value->set_pointer();
         }
 	}

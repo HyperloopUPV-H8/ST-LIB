@@ -30,9 +30,9 @@ public:
 	 */
     enum SPIstate{
     	IDLE = 0,
-		STARTING_PACKET,
-    	WAITING_PACKET,
-		PROCESSING_PACKET,
+		STARTING_ORDER,
+    	WAITING_ORDER,
+		PROCESSING_ORDER,
 		ERROR_RECOVERY,
     };
 
@@ -63,12 +63,12 @@ public:
        
         bool initialized = false; /**< Peripheral has already been initialized */
         string name;
-        SPIstate state = IDLE; /**< State of the spi on the packet communication*/
-        uint16_t available_end = 0; /**< variable that checks for what packet id is the other end ready*/
-        uint16_t SPIPacketID = 0; /**< SPIPacket being processed, if any*/
+        SPIstate state = IDLE; /**< State of the spi on the Order communication*/
+        uint16_t available_end = 0; /**< variable that checks for what Order id is the other end ready*/
+        uint16_t SPIOrderID = 0; /**< SPIOrder being processed, if any*/
         uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
-        uint64_t packet_count = 0; /**< packet completed counter for debugging*/
-        uint64_t error_count = 0; /**< packet error counter for debugging*/
+        uint64_t Order_count = 0; /**< Order completed counter for debugging*/
+        uint64_t error_count = 0; /**< Order error counter for debugging*/
     };
 
     /**
@@ -189,27 +189,27 @@ public:
 
 
     /*=============================================
-     * User functions for packet mode
+     * User functions for Order mode
      ==============================================*/
 
     /**
-     * @brief master send packet method, which tries to send a single packet
+     * @brief master send Order method, which tries to send a single Order
      */
-    static bool master_transmit_packet(uint8_t id, SPIBasePacket &packet);
-    static bool master_transmit_packet(uint8_t id, SPIBasePacket *packet);
+    static bool master_transmit_Order(uint8_t id, SPIBaseOrder &Order);
+    static bool master_transmit_Order(uint8_t id, SPIBaseOrder *Order);
 
     /**
-     * @brief slave listen packets method. When called, the slave will start to listen packets until the state is set again to IDLE
+     * @brief slave listen Orders method. When called, the slave will start to listen Orders until the state is set again to IDLE
      */
-    static void slave_listen_packets(uint8_t id);
+    static void slave_listen_Orders(uint8_t id);
 
     /**
-     * @brief method that needs to be called periodically by the master code for proper communication. Can be called at any speed, but the faster it is called, the faster the packets will resolve.
+     * @brief method that needs to be called periodically by the master code for proper communication. Can be called at any speed, but the faster it is called, the faster the Orders will resolve.
      *
-     * this update has to be called by the code in order for master to check if the slave is ready to send the packet.
-     * If it is not called periodically, the master_transmit_packet will not work. Not needed for dummy communication (not using packets)
+     * this update has to be called by the code in order for master to check if the slave is ready to send the Order.
+     * If it is not called periodically, the master_transmit_Order will not work. Not needed for dummy communication (not using Orders)
      */
-    static void packet_update();
+    static void Order_update();
 
 
 
@@ -218,7 +218,7 @@ public:
      ==============================================*/
 
     /**
-     * @brief master packet that checks the state of the slave, used on the callback of the SPI module and handled automatically by packet_update method (as long as it is called).
+     * @brief master Order that checks the state of the slave, used on the callback of the SPI module and handled automatically by Order_update method (as long as it is called).
      */
     static void master_check_available_end(SPI::Instance* spi);
 

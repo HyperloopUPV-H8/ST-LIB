@@ -129,7 +129,7 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
 
 }
 
-bool SPI::master_transmit_packet(uint8_t id, SPIBasePacket& packet){
+bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder& Order){
 	 if (!SPI::registered_spi.contains(id)){
 		ErrorHandler("No SPI registered with id %u", id);
 		return false;
@@ -141,14 +141,14 @@ bool SPI::master_transmit_packet(uint8_t id, SPIBasePacket& packet){
 		return false;
 	}
 
-	spi->state = SPI::STARTING_PACKET;
-	spi->SPIPacketID = packet.id;
+	spi->state = SPI::STARTING_ORDER;
+	spi->SPIOrderID = Order.id;
 	SPI::chip_select_off(id);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIPacketID, (uint8_t *)&spi->available_end, 2);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIOrderID, (uint8_t *)&spi->available_end, 2);
 	return true;
 }
 
-bool SPI::master_transmit_packet(uint8_t id, SPIBasePacket *packet){
+bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder *Order){
 	 if (!SPI::registered_spi.contains(id)){
 		ErrorHandler("No SPI registered with id %u", id);
 		return false;
@@ -160,14 +160,14 @@ bool SPI::master_transmit_packet(uint8_t id, SPIBasePacket *packet){
 		return false;
 	}
 
-	spi->state = SPI::STARTING_PACKET;
-	spi->SPIPacketID = packet->id;
+	spi->state = SPI::STARTING_ORDER;
+	spi->SPIOrderID = Order->id;
 	SPI::chip_select_off(id);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIPacketID, (uint8_t *)&spi->available_end, 2);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIOrderID, (uint8_t *)&spi->available_end, 2);
 	return true;
 }
 
-void SPI::slave_listen_packets(uint8_t id){
+void SPI::slave_listen_Orders(uint8_t id){
 	 if (!SPI::registered_spi.contains(id)){
 		ErrorHandler("No SPI registered with id %u", id);
 		return;
@@ -179,20 +179,20 @@ void SPI::slave_listen_packets(uint8_t id){
 		return;
 	}
 
-	spi->state = SPI::WAITING_PACKET;
-	spi->available_end = NO_PACKET_ID;
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIPacketID, 2);
+	spi->state = SPI::WAITING_ORDER;
+	spi->available_end = NO_ORDER_ID;
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIOrderID, 2);
 }
 
 
-void SPI::packet_update(){
+void SPI::Order_update(){
 	for(auto iter: SPI::registered_spi){
 		if(iter.second->mode == SPI_MODE_MASTER){
-			//if the master is trying to start a packet transaction (he is starting packet and the id of that packet is not 0)
-			if(iter.second->SPIPacketID != 0 && iter.second->state == STARTING_PACKET){
-				//when the slave available packet is not confirmed to be the same packet id that the master is asking
-				if(iter.second->available_end != iter.second->SPIPacketID ){
-					//enough time has passed since the last check to ask the slave again if it has the correct packet ID ready
+			//if the master is trying to start a Order transaction (he is starting Order and the id of that Order is not 0)
+			if(iter.second->SPIOrderID != 0 && iter.second->state == STARTING_ORDER){
+				//when the slave available Order is not confirmed to be the same Order id that the master is asking
+				if(iter.second->available_end != iter.second->SPIOrderID ){
+					//enough time has passed since the last check to ask the slave again if it has the correct Order ID ready
 					if(Time::get_global_tick() - iter.second->last_end_check > MASTER_SPI_CHECK_DELAY){
 						master_check_available_end(iter.second);
 						iter.second->last_end_check = Time::get_global_tick();
@@ -206,7 +206,7 @@ void SPI::packet_update(){
 
 void SPI::master_check_available_end(SPI::Instance* spi){
 	SPI::turn_off_chip_select(spi);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIPacketID, (uint8_t *)&spi->available_end, 2);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIOrderID, (uint8_t *)&spi->available_end, 2);
 
 }
 
@@ -284,27 +284,27 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	SPI::Instance* spi = SPI::registered_spi_by_handler[hspi];
 	switch(spi->state){
 	case SPI::IDLE:
-		//Does nothing as there is no packet handling on a direct send
+		//Does nothing as there is no Order handling on a direct send
 		break;
-	case SPI::STARTING_PACKET:
+	case SPI::STARTING_ORDER:
 	{
-		SPIBasePacket *packet = SPIBasePacket::SPIPacketsByID[spi->SPIPacketID];
-		if(spi->mode == SPI_MODE_MASTER){ //checks if the packet is ready on slave
-			if(spi->available_end == spi->SPIPacketID){
-				spi->state = SPI::PROCESSING_PACKET;
-				packet->master_prepare_buffer();
+		SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[spi->SPIOrderID];
+		if(spi->mode == SPI_MODE_MASTER){ //checks if the Order is ready on slave
+			if(spi->available_end == spi->SPIOrderID){
+				spi->state = SPI::PROCESSING_ORDER;
+				Order->master_prepare_buffer();
 				SPI::turn_off_chip_select(spi);
-				HAL_SPI_TransmitReceive_DMA(hspi, packet->master_data, packet->slave_data, packet->payload_size-PAYLOAD_OVERHEAD);
+				HAL_SPI_TransmitReceive_DMA(hspi, Order->master_data, Order->slave_data, Order->payload_size-PAYLOAD_OVERHEAD);
 
 			}else{
 				switch(spi->available_end){
-					case NO_PACKET_ID:
+					case NO_ORDER_ID:
 					{
 						spi->last_end_check = Time::get_global_tick();
 						SPI::turn_on_chip_select(spi);
 					}
 					break;
-					case ERROR_PACKET_ID:
+					case ERROR_ORDER_ID:
 					{
 						spi->last_end_check = Time::get_global_tick();
 						spi->error_count++;
@@ -313,45 +313,45 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 					break;
 					default:
 					{
-						ErrorHandler("Received unexpected ID on the master packet check from the slave %d",spi->available_end);
+						ErrorHandler("Received unexpected ID on the master Order check from the slave %d",spi->available_end);
 					}
 					break;
 				}
 			}
 		}else{
-			ErrorHandler("Used master transmit packet on a slave spi");
+			ErrorHandler("Used master transmit Order on a slave spi");
 		}
 		break;
 	}
-	case SPI::WAITING_PACKET:
+	case SPI::WAITING_ORDER:
 	{
-		SPIBasePacket *packet = SPIBasePacket::SPIPacketsByID[spi->SPIPacketID];
-		if(packet == 0x0){
+		SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[spi->SPIOrderID];
+		if(Order == 0x0){
 			SPI::spi_recover(spi, hspi);
 		}
-		else if(spi->mode == SPI_MODE_SLAVE){ //prepares the packet on the slave
-			packet->slave_prepare_buffer();
-			HAL_SPI_TransmitReceive_DMA(hspi, packet->MISO_payload, packet->MOSI_payload, packet->payload_size);
-			spi->state = SPI::PROCESSING_PACKET;
+		else if(spi->mode == SPI_MODE_SLAVE){ //prepares the Order on the slave
+			Order->slave_prepare_buffer();
+			HAL_SPI_TransmitReceive_DMA(hspi, Order->MISO_payload, Order->MOSI_payload, Order->payload_size);
+			spi->state = SPI::PROCESSING_ORDER;
 		}else{
-			ErrorHandler("Used slave process packets on a master spi");
+			ErrorHandler("Used slave process Orders on a master spi");
 		}
 		break;
 	}
-	case SPI::PROCESSING_PACKET:
+	case SPI::PROCESSING_ORDER:
 		{
-			SPIBasePacket *packet = SPIBasePacket::SPIPacketsByID[spi->SPIPacketID];
-			spi->packet_count++; //counts when a packet has successfully been received.
+			SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[spi->SPIOrderID];
+			spi->Order_count++; //counts when a Order has successfully been received.
 			if(spi->mode == SPI_MODE_MASTER){ //ends communication
 				SPI::turn_on_chip_select(spi);
-				packet->master_process_callback();
+				Order->master_process_callback();
 				spi->state = SPI::IDLE;
-			}else{ //prepares the next received packet
-				spi->SPIPacketID = NO_PACKET_ID;
-				spi->available_end = NO_PACKET_ID;
-				packet->slave_process_callback();
-				HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIPacketID, 2);
-				spi->state = SPI::WAITING_PACKET;
+			}else{ //prepares the next received Order
+				spi->SPIOrderID = NO_ORDER_ID;
+				spi->available_end = NO_ORDER_ID;
+				Order->slave_process_callback();
+				HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIOrderID, 2);
+				spi->state = SPI::WAITING_ORDER;
 			}
 			break;
 		}
@@ -360,10 +360,10 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 		if(spi->mode == SPI_MODE_MASTER){
 			//TODO
 		}else{
-		spi->state = SPI::WAITING_PACKET; //prepares the next received packet
-		spi->SPIPacketID = NO_PACKET_ID;
-		spi->available_end = NO_PACKET_ID;
-		HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIPacketID, 2);
+		spi->state = SPI::WAITING_ORDER; //prepares the next received Order
+		spi->SPIOrderID = NO_ORDER_ID;
+		spi->available_end = NO_ORDER_ID;
+		HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIOrderID, 2);
 		}
 		break;
 	}
@@ -401,10 +401,10 @@ void SPI::turn_off_chip_select(SPI::Instance* spi) {
 void SPI::spi_recover(SPI::Instance* spi, SPI_HandleTypeDef* hspi){
 	HAL_SPI_Abort(hspi);
 	spi->error_count = spi->error_count + 1;
-	spi->SPIPacketID = ERROR_PACKET_ID;
-	spi->available_end = ERROR_PACKET_ID;
+	spi->SPIOrderID = ERROR_ORDER_ID;
+	spi->available_end = ERROR_ORDER_ID;
 	spi->state = ERROR_RECOVERY;
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t*)&spi->SPIPacketID, 2);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t*)&spi->SPIOrderID, 2);
 }
 
 
