@@ -64,8 +64,8 @@ public:
         bool initialized = false; /**< Peripheral has already been initialized */
         string name;
         SPIstate state = IDLE; /**< State of the spi on the Order communication*/
-        uint16_t available_end = 0; /**< variable that checks for what Order id is the other end ready*/
-        uint16_t SPIOrderID = 0; /**< SPIOrder being processed, if any*/
+        uint16_t *available_end __ALIGNED(32) = new uint16_t[16]{0}; /**< variable that checks for what Order id is the other end ready*/
+        uint16_t *SPIOrderID __ALIGNED(32) = new uint16_t[16]{0}; /**< SPIOrder being processed, if any*/
         uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
         uint64_t Order_count = 0; /**< Order completed counter for debugging*/
         uint64_t error_count = 0; /**< Order error counter for debugging*/
@@ -223,6 +223,11 @@ public:
     static void master_check_available_end(SPI::Instance* spi);
 
     /**
+     * @brief slave updates the information on its buffer to check what ID is master asking on next query
+     */
+    static void slave_check_packet_ID(SPI::Instance* spi);
+
+    /**
      * @brief This method sets chip select to high level, and is used automatically by the SPI module
      *
      * The high level signal on SPI on chip select marks a slave to not process anything.
@@ -243,6 +248,13 @@ public:
 	 * @param spi Id of the SPI
 	 */
     static void chip_select_off(uint8_t id);
+
+    /**
+     *
+     */
+
+    static inline void spi_communicate_cache_data(SPI::Instance* spi, uint8_t* value_to_send, uint16_t size_to_send, uint8_t* value_to_receive, uint16_t aligned_size_to_receive);
+    static inline void spi_end_cache_data_communication(uint8_t* value_to_receive, uint16_t size_to_receive);
 
 
     static void turn_on_chip_select(SPI::Instance* spi);
