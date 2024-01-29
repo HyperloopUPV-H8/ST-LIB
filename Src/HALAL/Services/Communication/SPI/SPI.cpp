@@ -304,18 +304,16 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 				SPI::turn_off_chip_select(spi);
 
 				SPI::spi_communicate_cache_data(spi, Order->master_data, Order->payload_size-PAYLOAD_OVERHEAD, Order->rx_dma_buffer_holder, Order->aligned_payload_size);
-				//HAL_SPI_TransmitReceive_DMA(hspi, Order->master_data, Order->rx_dma_buffer_holder, Order->payload_size-PAYLOAD_OVERHEAD);
 			}else{
-				SCB_CleanDCache_by_Addr((uint32_t*) spi->SPIOrderID, 2);
+				spi->try_count++;
 				switch(*(spi->available_end)){
 					case NO_ORDER_ID:
-					default:
 					{
 						spi->last_end_check = Time::get_global_tick();
 						SPI::turn_on_chip_select(spi);
 					}
 					break;
-
+					default:
 					case ERROR_ORDER_ID:
 					{
 						spi->last_end_check = Time::get_global_tick();
@@ -353,8 +351,8 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 			SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[*(spi->SPIOrderID)];
 			SPI::spi_end_cache_data_communication(Order->rx_dma_buffer_holder, Order->payload_size);
 
-			spi->Order_count++; //counts when a Order has successfully been received.
 			if(spi->mode == SPI_MODE_MASTER){ //ends communication
+				spi->Order_count++;
 				SPI::turn_on_chip_select(spi);
 				Order->master_process_callback();
 				spi->state = SPI::IDLE;
@@ -363,6 +361,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 					SPI::spi_recover(spi,hspi);
 					return;
 				}
+				spi->Order_count++;
 				*(spi->SPIOrderID) = NO_ORDER_ID;
 				*(spi->available_end) = NO_ORDER_ID;
 				Order->slave_process_callback();
