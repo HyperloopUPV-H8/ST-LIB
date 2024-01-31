@@ -205,10 +205,8 @@ void SPI::Order_update(){
 
 
 void SPI::master_check_available_end(SPI::Instance* spi){
-	SCB_InvalidateDCache_by_Addr(spi->available_end, 32);
 	SPI::turn_off_chip_select(spi);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->SPIOrderID, (uint8_t *)spi->available_end, 2);
-
+	spi_communicate_cache_data(spi, (uint8_t *)spi->SPIOrderID, 2, (uint8_t *)spi->available_end, 32);
 }
 
 void SPI::slave_check_packet_ID(SPI::Instance* spi){
