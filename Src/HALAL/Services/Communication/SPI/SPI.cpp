@@ -142,9 +142,9 @@ bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder& Order){
 	}
 
 	spi->state = SPI::STARTING_ORDER;
-	spi->SPIOrderID = Order.id;
+	*(spi->SPIOrderID) = Order.id;
 	SPI::chip_select_off(id);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIOrderID, (uint8_t *)&spi->available_end, 2);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->SPIOrderID, (uint8_t *)spi->available_end, 2);
 	return true;
 }
 
@@ -161,9 +161,9 @@ bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder *Order){
 	}
 
 	spi->state = SPI::STARTING_ORDER;
-	spi->SPIOrderID = Order->id;
+	*(spi->SPIOrderID) = Order->id;
 	SPI::chip_select_off(id);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIOrderID, (uint8_t *)&spi->available_end, 2);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->SPIOrderID, (uint8_t *)spi->available_end, 2);
 	return true;
 }
 
@@ -180,8 +180,8 @@ void SPI::slave_listen_Orders(uint8_t id){
 	}
 
 	spi->state = SPI::WAITING_ORDER;
-	spi->available_end = NO_ORDER_ID;
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIOrderID, 2);
+	*(spi->available_end) = NO_ORDER_ID;
+	SPI::slave_check_packet_ID(spi);
 }
 
 
@@ -189,9 +189,9 @@ void SPI::Order_update(){
 	for(auto iter: SPI::registered_spi){
 		if(iter.second->mode == SPI_MODE_MASTER){
 			//if the master is trying to start a Order transaction (he is starting Order and the id of that Order is not 0)
-			if(iter.second->SPIOrderID != 0 && iter.second->state == STARTING_ORDER){
+			if(*iter.second->SPIOrderID != 0 && iter.second->state == STARTING_ORDER){
 				//when the slave available Order is not confirmed to be the same Order id that the master is asking
-				if(iter.second->available_end != iter.second->SPIOrderID ){
+				if(*iter.second->available_end != *iter.second->SPIOrderID ){
 					//enough time has passed since the last check to ask the slave again if it has the correct Order ID ready
 					if(Time::get_global_tick() - iter.second->last_end_check > MASTER_SPI_CHECK_DELAY){
 						master_check_available_end(iter.second);
@@ -206,8 +206,13 @@ void SPI::Order_update(){
 
 void SPI::master_check_available_end(SPI::Instance* spi){
 	SPI::turn_off_chip_select(spi);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->SPIOrderID, (uint8_t *)&spi->available_end, 2);
+	spi_communicate_cache_data(spi, (uint8_t *)spi->SPIOrderID, 2, (uint8_t *)spi->available_end, 32);
+}
 
+void SPI::slave_check_packet_ID(SPI::Instance* spi){
+	/*SCB_CleanInvalidateDCache_by_Addr((uint32_t*)spi->SPIOrderID, 32);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->available_end, (uint8_t *)spi->SPIOrderID, 2);*/
+	spi_communicate_cache_data(spi, (uint8_t *)spi->available_end, 2, (uint8_t *)spi->SPIOrderID, 32);
 }
 
 void SPI::chip_select_on(uint8_t id){
@@ -288,24 +293,25 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 		break;
 	case SPI::STARTING_ORDER:
 	{
-		SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[spi->SPIOrderID];
+		SPI::spi_end_cache_data_communication((uint8_t*)spi->available_end, 2);
+		SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[*(spi->SPIOrderID)];
 		if(spi->mode == SPI_MODE_MASTER){ //checks if the Order is ready on slave
-			if(spi->available_end == spi->SPIOrderID){
+			if(*(spi->available_end) == *(spi->SPIOrderID)){
 				spi->state = SPI::PROCESSING_ORDER;
 				Order->master_prepare_buffer();
 				SPI::turn_off_chip_select(spi);
-				HAL_SPI_TransmitReceive_DMA(hspi, Order->master_data, Order->slave_data, Order->payload_size-PAYLOAD_OVERHEAD);
 
+				SPI::spi_communicate_cache_data(spi, Order->master_data, Order->payload_size-PAYLOAD_OVERHEAD, Order->rx_dma_buffer_holder, Order->aligned_payload_size);
 			}else{
-				switch(spi->available_end){
+				spi->try_count++;
+				switch(*(spi->available_end)){
 					case NO_ORDER_ID:
-					default:
 					{
 						spi->last_end_check = Time::get_global_tick();
 						SPI::turn_on_chip_select(spi);
 					}
 					break;
-
+					default:
 					case ERROR_ORDER_ID:
 					{
 						spi->last_end_check = Time::get_global_tick();
@@ -322,13 +328,16 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	}
 	case SPI::WAITING_ORDER:
 	{
-		SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[spi->SPIOrderID];
+		SPI::spi_end_cache_data_communication((uint8_t*)spi->SPIOrderID, 2);
+		SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[*(spi->SPIOrderID)];
 		if(Order == 0x0){
 			SPI::spi_recover(spi, hspi);
+			return;
 		}
 		else if(spi->mode == SPI_MODE_SLAVE){ //prepares the Order on the slave
 			Order->slave_prepare_buffer();
-			HAL_SPI_TransmitReceive_DMA(hspi, Order->MISO_payload, Order->MOSI_payload, Order->payload_size);
+			SPI::spi_communicate_cache_data(spi, Order->MISO_payload, Order->payload_size, Order->rx_dma_buffer_holder, Order->aligned_payload_size);
+			//HAL_SPI_TransmitReceive_DMA(hspi, Order->MISO_payload, Order->rx_dma_buffer_holder, Order->payload_size);
 			spi->state = SPI::PROCESSING_ORDER;
 		}else{
 			ErrorHandler("Used slave process Orders on a master spi");
@@ -337,17 +346,24 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	}
 	case SPI::PROCESSING_ORDER:
 		{
-			SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[spi->SPIOrderID];
-			spi->Order_count++; //counts when a Order has successfully been received.
+			SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[*(spi->SPIOrderID)];
+			SPI::spi_end_cache_data_communication(Order->rx_dma_buffer_holder, Order->payload_size);
+
 			if(spi->mode == SPI_MODE_MASTER){ //ends communication
+				spi->Order_count++;
 				SPI::turn_on_chip_select(spi);
 				Order->master_process_callback();
 				spi->state = SPI::IDLE;
 			}else{ //prepares the next received Order
-				spi->SPIOrderID = NO_ORDER_ID;
-				spi->available_end = NO_ORDER_ID;
+				if(*(uint16_t*)Order->rx_dma_buffer_holder != *spi->SPIOrderID){
+					SPI::spi_recover(spi,hspi);
+					return;
+				}
+				spi->Order_count++;
+				*(spi->SPIOrderID) = NO_ORDER_ID;
+				*(spi->available_end) = NO_ORDER_ID;
 				Order->slave_process_callback();
-				HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIOrderID, 2);
+				SPI::slave_check_packet_ID(spi);
 				spi->state = SPI::WAITING_ORDER;
 			}
 			break;
@@ -358,9 +374,9 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 			//TODO
 		}else{
 		spi->state = SPI::WAITING_ORDER; //prepares the next received Order
-		spi->SPIOrderID = NO_ORDER_ID;
-		spi->available_end = NO_ORDER_ID;
-		HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t *)&spi->SPIOrderID, 2);
+		*(spi->SPIOrderID) = NO_ORDER_ID;
+		*(spi->available_end) = NO_ORDER_ID;
+		SPI::slave_check_packet_ID(spi);
 		}
 		break;
 	}
@@ -387,6 +403,16 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 
 }
 
+void SPI::spi_communicate_cache_data(SPI::Instance* spi, uint8_t* value_to_send, uint16_t size_to_send, uint8_t* value_to_receive, uint16_t aligned_size_to_receive){
+	SCB_CleanDCache_by_Addr((uint32_t*)value_to_send, size_to_send);
+	SCB_InvalidateDCache_by_Addr(value_to_receive, aligned_size_to_receive);
+	HAL_SPI_TransmitReceive_DMA(spi->hspi, value_to_send, value_to_receive, size_to_send);
+}
+
+void SPI::spi_end_cache_data_communication(uint8_t* value_to_receive, uint16_t size_to_receive){
+	SCB_InvalidateDCache_by_Addr(value_to_receive, size_to_receive);
+}
+
 void SPI::turn_on_chip_select(SPI::Instance* spi) {
 	HAL_GPIO_WritePin(spi->SS->port, spi->SS->gpio_pin, (GPIO_PinState)PinState::ON);
 }
@@ -398,10 +424,10 @@ void SPI::turn_off_chip_select(SPI::Instance* spi) {
 void SPI::spi_recover(SPI::Instance* spi, SPI_HandleTypeDef* hspi){
 	HAL_SPI_Abort(hspi);
 	spi->error_count = spi->error_count + 1;
-	spi->SPIOrderID = CASTED_ERROR_ORDER_ID;
-	spi->available_end = CASTED_ERROR_ORDER_ID;
+	*(spi->SPIOrderID) = CASTED_ERROR_ORDER_ID;
+	*(spi->available_end) = CASTED_ERROR_ORDER_ID;
 	spi->state = ERROR_RECOVERY;
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)&spi->available_end, (uint8_t*)&spi->SPIOrderID, 2);
+	SPI::slave_check_packet_ID(spi);
 }
 
 
