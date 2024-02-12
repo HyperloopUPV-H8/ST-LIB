@@ -64,8 +64,10 @@ public:
         bool initialized = false; /**< Peripheral has already been initialized */
         string name;
         SPIstate state = IDLE; /**< State of the spi on the Order communication*/
-        uint16_t *available_end __ALIGNED(32) = new uint16_t[16]{0}; /**< variable that checks for what Order id is the other end ready*/
-        uint16_t *SPIOrderID __ALIGNED(32) = new uint16_t[16]{0}; /**< SPIOrder being processed, if any*/
+        uint16_t __ALIGNED(32) available_end_heap[16];
+        uint16_t __ALIGNED(32) SPIOrder_heap[16];
+        uint16_t *available_end = &available_end_heap[0]; /**< variable that checks for what Order id is the other end ready*/
+        uint16_t *SPIOrderID  = &SPIOrder_heap[0]; /**< SPIOrder being processed, if any*/
         uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
         uint64_t Order_count = 0; /**< Order completed counter for debugging (success rate)*/
         uint64_t try_count = 0; /**< Tries from the master to communicate a packet with the slave for debugging (affected by how much the slave delays on preparing a packet)*/
