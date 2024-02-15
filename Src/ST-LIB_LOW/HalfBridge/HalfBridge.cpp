@@ -6,6 +6,7 @@
  */
 
 #include <HalfBridge/HalfBridge.hpp>
+bool HalfBridge::is_first_time = true;
 
 HalfBridge::HalfBridge(Pin& positive_pwm_pin, Pin& positive_pwm_negated_pin,
 		Pin& negative_pwm_pin, Pin& negative_pwm_negated_pin, Pin& enable_pin) : is_dual(true) {
@@ -29,6 +30,12 @@ void HalfBridge::turn_off() {
 }
 
 void HalfBridge::set_duty_cycle(float duty_cycle) {
+	if(is_first_time)
+	{
+		is_first_time = false;
+		positive_pwm.set_phase(0);
+		negative_pwm.set_phase(0);
+	}
 	positive_pwm.set_duty_cycle(duty_cycle);
 	negative_pwm.set_duty_cycle(duty_cycle);
 }

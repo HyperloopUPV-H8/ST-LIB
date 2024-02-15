@@ -30,7 +30,7 @@ public:
 	DualPhasedPWM negative_pwm;
 private:
 	bool is_dual;
-
+	static bool is_first_time;
 
 	uint8_t enable;
 };
