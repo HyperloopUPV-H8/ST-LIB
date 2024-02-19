@@ -9,7 +9,6 @@
 #pragma once
 #include "EXTI/EXTI.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-#include "HALAL/Services/InputCapture/InputCapture.hpp"
 template<class Type>
 class PWMSensor {
 protected:
