@@ -18,6 +18,7 @@ private:
     void write_sensors_configuration(TEMPERATURE_OPERACION_MODES temp_dis,
                 RC_OPERATION_MODE idle,ACCELERATION_OPERATION_MODES accel_mode);
     SensorConfigRegister read_sensor_configuration();
+    AccelerationConfigRegister read_acceleration_config();
     void write_acceleration_config(ACCELERATION_FULL_SCALE sf,ACCELERATION_ODR odr);
     uint8_t read_id();
     void soft_reset();

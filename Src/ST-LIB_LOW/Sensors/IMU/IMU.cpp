@@ -7,9 +7,7 @@ accel_x(accel_x),accel_y(accel_y),accel_z(accel_z),gyro_x(gyro_x),gyro_y(gyro_y)
     spi_instance = SPI::registered_spi[spi_id];
 }
 
-uint8_t IMU::read_pwm_mgmt0_fields(){
-        return read_register(PWR_MGMT0);
-}
+
 
 uint8_t IMU::read_register(uint8_t reg)
 {
@@ -30,7 +28,9 @@ bool IMU::write_register(uint8_t reg,uint8_t data){
     SPI::turn_on_chip_select(spi_instance);
     return read_register(reg) == data;
 }
-
+uint8_t IMU::read_pwm_mgmt0_fields(){
+        return read_register(PWR_MGMT0);
+}
 
 void IMU::write_sensors_configuration(	TEMPERATURE_OPERACION_MODES temp_dis,
 								 	 RC_OPERATION_MODE idle,
@@ -51,7 +51,10 @@ SensorConfigRegister IMU::read_sensor_configuration() {
 }
 
 
-//TODO AccelerationConfigRegister read_acceleration_config();
+AccelerationConfigRegister IMU::read_acceleration_config(){
+    AccelerationConfigRegister reg;
+    reg.value = read_register(ACCEL_CONFIG0);
+}
 
 
 void IMU::write_acceleration_config(ACCELERATION_FULL_SCALE sf,ACCELERATION_ODR odr)
@@ -86,4 +89,37 @@ void IMU::turn_on_sensors(){
 void IMU::turn_off_sensors(){
     write_sensors_configuration(TEMPERATURE_OFF,RC_ALLWAYS_ON,ACCELERATION_OFF);
     HAL_Delay(5);
+}
+
+
+double IMU::read_temp(){
+    int16_t raw = (read_register(TEMP_DATA1)<<8) | read_register(TEMP_DATA0);
+    return (raw/132.48) +25;
+}
+double IMU::read_accel_x(){
+	int16_t raw = (int16_t) (read_register(ACCEL_DATA_X1) << 8) | read_register(ACCEL_DATA_X0);
+	return  raw / accel_sensitivity;    
+}
+double IMU::read_accel_y(){
+	int16_t raw = (int16_t) (read_register(ACCEL_DATA_Y1) << 8) | read_register(ACCEL_DATA_Y0);
+	return  raw / accel_sensitivity;
+}
+
+double IMU::read_accel_z(){
+	int16_t raw = (int16_t) (read_register(ACCEL_DATA_Z1) << 8) | read_register(ACCEL_DATA_Z0);
+	return  raw / accel_sensitivity;
+}
+
+void IMU::start_imu(){
+	soft_reset();
+	HAL_Delay(10);
+
+	write_acceleration_config(ACCELERATION_8G, ACCELERATION_50HZ);
+	config_accel_antialias(ANTIALIAS_FREQ_536_HZ);
+}
+
+void IMU::read_imu_data(){
+	*accel_x = read_accel_x();
+	*accel_y = read_accel_y();
+	*accel_z = read_accel_z();
 }
