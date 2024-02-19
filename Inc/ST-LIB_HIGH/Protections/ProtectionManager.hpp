@@ -36,7 +36,7 @@ class ProtectionManager {
 public:
 	typedef uint8_t state_id;
 
-	static const uint64_t notify_delay_in_nanoseconds = 100000000;
+	static const uint64_t notify_delay_in_nanoseconds = 100'000'000;
 	static uint64_t last_notify;
 
     static void set_id(Boards::ID id);
