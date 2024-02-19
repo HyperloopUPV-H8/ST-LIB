@@ -15,7 +15,7 @@
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
-#define MASTER_SPI_CHECK_DELAY 100000 //how often the master should check if the slave is ready, in nanoseconds
+#define MASTER_SPI_CHECK_DELAY 10000 //how often the master should check if the slave is ready, in nanoseconds
 
 //TODO: Hay que hacer el Chip select funcione a traves de un GPIO en vez de a traves del periferico.
 

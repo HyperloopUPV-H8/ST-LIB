@@ -337,7 +337,6 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 		else if(spi->mode == SPI_MODE_SLAVE){ //prepares the Order on the slave
 			Order->slave_prepare_buffer();
 			SPI::spi_communicate_cache_data(spi, Order->MISO_payload, Order->payload_size, Order->rx_dma_buffer_holder, Order->aligned_payload_size);
-			//HAL_SPI_TransmitReceive_DMA(hspi, Order->MISO_payload, Order->rx_dma_buffer_holder, Order->payload_size);
 			spi->state = SPI::PROCESSING_ORDER;
 		}else{
 			ErrorHandler("Used slave process Orders on a master spi");
@@ -404,13 +403,18 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 }
 
 void SPI::spi_communicate_cache_data(SPI::Instance* spi, uint8_t* value_to_send, uint16_t size_to_send, uint8_t* value_to_receive, uint16_t aligned_size_to_receive){
+#ifdef STLIB_ETH
 	SCB_CleanDCache_by_Addr((uint32_t*)value_to_send, size_to_send);
 	SCB_InvalidateDCache_by_Addr(value_to_receive, aligned_size_to_receive);
+#endif
 	HAL_SPI_TransmitReceive_DMA(spi->hspi, value_to_send, value_to_receive, size_to_send);
 }
 
 void SPI::spi_end_cache_data_communication(uint8_t* value_to_receive, uint16_t size_to_receive){
+#ifdef STLIB_ETH
 	SCB_InvalidateDCache_by_Addr(value_to_receive, size_to_receive);
+
+#endif
 }
 
 void SPI::turn_on_chip_select(SPI::Instance* spi) {
