@@ -1,6 +1,6 @@
 #pragma once
 
-#include <CppImports.hpp>
+#include "CppImports.hpp"
 
 
 /**
@@ -43,7 +43,7 @@ public:
 	 * @brief checks the next variable to read without removing it from the buffer. Do not use on empty buffer.
 	 */
 	item_type peek(){
-		return buffer[head_index];
+		return buffer[mhead_index];
 	}
 
 	/**

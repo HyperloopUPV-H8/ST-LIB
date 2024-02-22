@@ -137,8 +137,8 @@ bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder& Order){
 
 	SPI::Instance* spi = SPI::registered_spi[id];
 
-	if(spi->state != SPI::IDLE || !SPIOrderQueue.is_empty()){
-		return SPIOrderQueue.push(Order->id);
+	if(spi->state != SPI::IDLE || !spi->SPIOrderQueue.is_empty()){
+		return spi->SPIOrderQueue.push(Order.id);
 	}
 
 	spi->state = SPI::STARTING_ORDER;
@@ -157,8 +157,8 @@ bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder *Order){
 
 	SPI::Instance* spi = SPI::registered_spi[id];
 
-	if(spi->state != SPI::IDLE || !SPIOrderQueue.is_empty()){
-		return SPIOrderQueue.push(Order->id);
+	if(spi->state != SPI::IDLE || !spi->SPIOrderQueue.is_empty()){
+		return spi->SPIOrderQueue.push(Order->id);
 	}
 
 	spi->state = SPI::STARTING_ORDER;
@@ -192,9 +192,9 @@ void SPI::Order_update(){
 		if(iter.second->mode == SPI_MODE_MASTER){
 			if(iter.second->state == SPI::IDLE){
 				if(!iter.second->SPIOrderQueue.is_empty()){
-					spi->state = SPI::STARTING_ORDER;
-					*(spi->SPIOrderID) = iter.second->SPIOrderQueue.pop();
-					master_check_available_end(spi);
+					iter.second->state = SPI::STARTING_ORDER;
+					*(iter.second->SPIOrderID) = iter.second->SPIOrderQueue.pop();
+					master_check_available_end(iter.second);
 				}
 			}
 
