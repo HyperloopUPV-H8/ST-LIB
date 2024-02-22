@@ -137,14 +137,15 @@ bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder& Order){
 
 	SPI::Instance* spi = SPI::registered_spi[id];
 
-	if(spi->state != SPI::IDLE){
-		return false;
+	if(spi->state != SPI::IDLE || !SPIOrderQueue.is_empty()){
+		return SPIOrderQueue.push(Order->id);
 	}
 
 	spi->state = SPI::STARTING_ORDER;
 	*(spi->SPIOrderID) = Order.id;
-	SPI::chip_select_off(id);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->SPIOrderID, (uint8_t *)spi->available_end, 2);
+	master_check_available_end(spi);
+	//SPI::chip_select_off(id);
+	//HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->SPIOrderID, (uint8_t *)spi->available_end, 2);
 	return true;
 }
 
@@ -156,14 +157,15 @@ bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder *Order){
 
 	SPI::Instance* spi = SPI::registered_spi[id];
 
-	if(spi->state != SPI::IDLE){
-		return false;
+	if(spi->state != SPI::IDLE || !SPIOrderQueue.is_empty()){
+		return SPIOrderQueue.push(Order->id);
 	}
 
 	spi->state = SPI::STARTING_ORDER;
 	*(spi->SPIOrderID) = Order->id;
-	SPI::chip_select_off(id);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->SPIOrderID, (uint8_t *)spi->available_end, 2);
+	master_check_available_end(spi);
+	//SPI::chip_select_off(id);
+	//HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->SPIOrderID, (uint8_t *)spi->available_end, 2);
 	return true;
 }
 
@@ -188,6 +190,14 @@ void SPI::slave_listen_Orders(uint8_t id){
 void SPI::Order_update(){
 	for(auto iter: SPI::registered_spi){
 		if(iter.second->mode == SPI_MODE_MASTER){
+			if(iter.second->state == SPI::IDLE){
+				if(!iter.second->SPIOrderQueue.is_empty()){
+					spi->state = SPI::STARTING_ORDER;
+					*(spi->SPIOrderID) = iter.second->SPIOrderQueue.pop();
+					master_check_available_end(spi);
+				}
+			}
+
 			//if the master is trying to start a Order transaction (he is starting Order and the id of that Order is not 0)
 			if(*iter.second->SPIOrderID != 0 && iter.second->state == STARTING_ORDER){
 				//when the slave available Order is not confirmed to be the same Order id that the master is asking
@@ -210,8 +220,6 @@ void SPI::master_check_available_end(SPI::Instance* spi){
 }
 
 void SPI::slave_check_packet_ID(SPI::Instance* spi){
-	/*SCB_CleanInvalidateDCache_by_Addr((uint32_t*)spi->SPIOrderID, 32);
-	HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->available_end, (uint8_t *)spi->SPIOrderID, 2);*/
 	spi_communicate_cache_data(spi, (uint8_t *)spi->available_end, 2, (uint8_t *)spi->SPIOrderID, 32);
 }
 

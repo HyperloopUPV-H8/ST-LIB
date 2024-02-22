@@ -17,6 +17,8 @@
 
 #define MASTER_SPI_CHECK_DELAY 10000 //how often the master should check if the slave is ready, in nanoseconds
 
+#define MASTER_MAXIMUM_QUEUE_LEN 10
+
 //TODO: Hay que hacer el Chip select funcione a traves de un GPIO en vez de a traves del periferico.
 
 /**
@@ -60,6 +62,7 @@ public:
         uint32_t clock_polarity = SPI_POLARITY_LOW; /**< SPI clock polarity. */
         uint32_t clock_phase = SPI_PHASE_1EDGE; /**< SPI clock phase. */
         uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
+
        
         bool initialized = false; /**< Peripheral has already been initialized */
         string name;
@@ -68,6 +71,7 @@ public:
         uint16_t __ALIGNED(32) SPIOrder_heap[16];
         uint16_t *available_end = &available_end_heap[0]; /**< variable that checks for what Order id is the other end ready*/
         uint16_t *SPIOrderID  = &SPIOrder_heap[0]; /**< SPIOrder being processed, if any*/
+        RingBuffer<uint16_t, MASTER_MAXIMUM_QUEUE_LEN> SPIOrderQueue;  /**< Queue of SPIOrders to process after this one*/
         uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
         uint64_t Order_count = 0; /**< Order completed counter for debugging (success rate)*/
         uint64_t try_count = 0; /**< Tries from the master to communicate a packet with the slave for debugging (affected by how much the slave delays on preparing a packet)*/
