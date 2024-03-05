@@ -18,18 +18,7 @@ private:
     void write_sensors_configuration(TEMPERATURE_OPERACION_MODES temp_dis,
                 RC_OPERATION_MODE idle,ACCELERATION_OPERATION_MODES accel_mode);
     SensorConfigRegister read_sensor_configuration();
-    void write_acceleration_config(ACCELERATION_FULL_SCALE sf,ACCELERATION_ODR odr);
-    uint8_t read_id();
-    void soft_reset();
-    void turn_on_sensors();
-    void turn_off_sensors();
-    void config_accel_antialias(uint16_t freq);
-    double read_temp();
-    double read_accel_x();
-    double read_accel_y();
-    double read_accel_z();
-    void start_imu();
-    void read_imu_data();
+
          //
          //          MEMBER VARIABLES
          //       
@@ -44,6 +33,6 @@ private:
     SPI::Instance* spi_instance;
     uint8_t rx_data[1]{};
 
-    double accel_sensitivity {16384};
-    double gyro_sensitivity  {16.4};
+    const double accel_sensitivity {16384};
+    const double gyro_sensitivity  {16.4};
 };
