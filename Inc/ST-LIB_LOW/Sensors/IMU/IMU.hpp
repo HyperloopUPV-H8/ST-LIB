@@ -2,6 +2,7 @@
 #include "HALAL/Services/Communication/SPI/SPI.hpp"
 
 #include "IMU/IMU_registers.hpp"
+#include "IMU/IMU_Antialias_freq.hpp"
 class IMU{
 public:
     IMU() =default;
