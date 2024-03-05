@@ -91,28 +91,6 @@ void IMU::turn_off_sensors(){
     HAL_Delay(5);
 }
 
-void IMU::config_accel_antialias(uint16_t freq){
-	turn_off_sensors();
-	AntialiasConfig config = ANTIALIAS_FREQ_TO_FILTER_CONFIG[freq];
-	AccelConfigStatic2Register config_static2;
-	AccelConfigStatic3Register config_static3;
-	AccelConfigStatic4Register config_static4;
-
-
-	config_static2.fields.ACCEL_AAF_DIS  = FILTER_ON;
-	config_static2.fields.ACCEL_AAF_DELT = config.AAF_DELT;
-	config_static2.fields._RESERVED = 0;
-
-	config_static3.fields.ACCEL_AAF_DELTSQR = config.AAF_DELTSQR & 0b0000000011111111;
-
-	config_static4.fields.ACCEL_AAF_BITSHIFT = config.AAF_BITSHIFT;
-	config_static4.fields.ACCEL_AAF_DELTSQR  = (config.AAF_DELTSQR & 0b0000111100000000) >> 8;
-
-	write_register(ACCEL_CONFIG_STATIC2, config_static2.value);
-	write_register(ACCEL_CONFIG_STATIC3, config_static3.value);
-	write_register(ACCEL_CONFIG_STATIC4, config_static4.value);
-	turn_on_sensors();    
-}
 
 double IMU::read_temp(){
     int16_t raw = (read_register(TEMP_DATA1)<<8) | read_register(TEMP_DATA0);
