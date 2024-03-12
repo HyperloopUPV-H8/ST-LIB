@@ -15,25 +15,14 @@ extern ADC_HandleTypeDef hadc3;
 uint8_t ADC::id_counter = 0;
 unordered_map<uint8_t, ADC::Instance> ADC::active_instances = {};
 
-void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc){
-	if(hadc == ADC::peripherals[0].handle){
-	//	SCB_CleanInvalidateDCache_by_Addr((uint32_t*)ADC::peripherals[0].dma_stream, 32);
-	}
-
-	if(hadc == ADC::peripherals[1].handle){
-	//	SCB_CleanInvalidateDCache_by_Addr((uint32_t*)ADC::peripherals[1].dma_stream, 32);
-	}
-	
-	if(hadc == ADC::peripherals[2].handle){
-	//	SCB_CleanInvalidateDCache_by_Addr((uint32_t*)ADC::peripherals[2].dma_stream, 32);
-	}
-}
 
 ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external_trigger, vector<uint32_t>& channels, DMA::Stream dma_stream, string name) :
 		adc(adc), resolution(resolution), external_trigger(external_trigger), channels(channels), dma_stream(dma_stream), name(name) {}
 
-ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data) :
-	handle(handle), dma_stream(dma_stream), timer(timer), init_data(init_data) {}
+ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, LowPowerTimer& timer, InitData& init_data) :
+	handle(handle), timer(timer), init_data(init_data) {
+	dma_data_buffer = (uint16_t*)MPUManager::allocate_non_cached_memory(2*ADC_BUF_LEN);
+}
 
 bool ADC::Peripheral::is_registered() {
 	return init_data.channels.size();
@@ -50,6 +39,7 @@ uint8_t ADC::inscribe(Pin pin) {
 
 	Pin::inscribe(pin, ANALOG);
 	active_instances[id_counter] = available_instances[pin];
+
 
 	InitData& init_data = active_instances[id_counter].peripheral->init_data;
 	DMA::inscribe_stream(init_data.dma_stream);
@@ -77,8 +67,8 @@ void ADC::turn_on(uint8_t id){
 	}
 
 	uint32_t buffer_length = peripheral->init_data.channels.size();
-	if (HAL_ADC_Start_DMA(peripheral->handle, (uint32_t*) peripheral->dma_stream, buffer_length) != HAL_OK) {
-		ErrorHandler("DMA - %d - of ADC - %d - did not start correctly", peripheral->dma_stream, id);
+	if (HAL_ADC_Start_DMA(peripheral->handle, (uint32_t*) peripheral->dma_data_buffer, buffer_length) != HAL_OK) {
+		ErrorHandler("DMA - %d - of ADC - %d - did not start correctly", peripheral->init_data.dma_stream, id);
 		return;
 	}
 
@@ -92,7 +82,7 @@ void ADC::turn_on(uint8_t id){
 
 float ADC::get_value(uint8_t id) {
 	Instance& instance = active_instances[id];
-	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
+	uint16_t raw = instance.peripheral->dma_data_buffer[instance.rank];
 	if(instance.peripheral->handle == &hadc3) {
 		return raw / MAX_12BIT * ADC_MAX_VOLTAGE;
 	}
@@ -103,7 +93,7 @@ float ADC::get_value(uint8_t id) {
 
 uint16_t ADC::get_int_value(uint8_t id) {
 	Instance& instance = active_instances[id];
-	uint16_t raw = instance.peripheral->dma_stream[instance.rank];
+	uint16_t raw = instance.peripheral->dma_data_buffer[instance.rank];
 
 	if(instance.peripheral->handle == &hadc3) {
 		return raw << 4;
@@ -169,4 +159,9 @@ void ADC::init(Peripheral& peripheral) {
 	  peripheral.timer.init();
 }
 
+
+
+void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc){
+
+}
 #endif

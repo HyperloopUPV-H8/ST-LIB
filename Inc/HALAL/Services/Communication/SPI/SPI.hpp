@@ -71,10 +71,9 @@ public:
         bool using_ready_slave = false;
         string name;
         SPIstate state = IDLE; /**< State of the spi on the Order communication*/
-        uint16_t __ALIGNED(32) available_end_heap[16];
-        uint16_t __ALIGNED(32) SPIOrder_heap[16];
-        uint16_t *available_end = &available_end_heap[0]; /**< variable that checks for what Order id is the other end ready*/
-        uint16_t *SPIOrderID  = &SPIOrder_heap[0]; /**< SPIOrder being processed, if any*/
+        uint8_t *rx_buffer;
+        uint16_t *available_end; /**< variable that checks for what Order id is the other end ready*/
+        uint16_t *SPIOrderID; /**< SPIOrder being processed, if any*/
         RingBuffer<uint16_t, MASTER_MAXIMUM_QUEUE_LEN> SPIOrderQueue;  /**< Queue of SPIOrders to process after this one*/
         uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
         uint64_t Order_count = 0; /**< Order completed counter for debugging (success rate)*/

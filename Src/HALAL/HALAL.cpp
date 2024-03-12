@@ -12,9 +12,8 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 #if !defined STLIB_ETH
 #else
 	Ethernet::inscribe();
-	MPUManager::start();
 #endif
-
+	MPUManager::start();
 	HAL_Init();
 	HALconfig::system_clock();
 	HALconfig::peripheral_clock();

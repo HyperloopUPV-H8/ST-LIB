@@ -12,7 +12,7 @@ class MPUManager{
 public:
 	static struct config{
 		bool using_cache = true;
-	}MPUConfig;
+	}MPUConfig;/**< MPU configuration defined un Runes.hpp*/
 
 	static void start(){
 		MPU_Region_InitTypeDef MPU_InitStruct = {0};
