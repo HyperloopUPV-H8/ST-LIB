@@ -12,6 +12,7 @@
 
 #define SPI_ID_SIZE 2
 #define PAYLOAD_OVERHEAD SPI_ID_SIZE
+#define PAYLOAD_TAIL SPI_ID_SIZE
 
 #define NO_ORDER_ID 0
 #define ERROR_ORDER_ID 1
@@ -29,8 +30,12 @@ public:
 	uint16_t id; /**< Number of the Order ID, saved on the first two bytes of both payloads, even if the values sent are unused*/
 	uint8_t* MISO_payload __ALIGNED(32); /**< Byte Buffer for the slave DMA output*/
 	uint8_t* MOSI_payload __ALIGNED(32); /**< Byte Buffer for the master DMA output*/
+	uint8_t* rx_dma_buffer_holder __ALIGNED(32); /**< will make as a rx_buffer to avoid data being corrupted while DMA is working on it. DO NOT access to it while DMA is running*/
+
 	uint16_t payload_size; /**< Size in bytes of both DMA buffers (both have to be the same)*/
 	uint16_t aligned_payload_size;
+	uint32_t CRC_index;
+
 	uint8_t* master_data; /**< Pointer to the master Byte buffer after the header (the space where the data is saved)*/
 	uint16_t master_data_size;
 	uint8_t* slave_data; /**< Pointer to the slave Byte buffer after the header (the space where the data is saved)*/
@@ -58,8 +63,6 @@ public:
     	if (callback != nullptr) callback();
     }
 
-    uint8_t* rx_dma_buffer_holder __ALIGNED(32); /**< will make as a rx_buffer to avoid data being corrupted while DMA is working on it. DO NOT access to it while DMA is running*/
-
 protected:
     /**
      * @brief the base constructor for all SPIOrders, that creates the structure used by the DMA to send and receive messages, along with having virtual functions
@@ -69,9 +72,9 @@ protected:
 			ErrorHandler("Cannot use 0 as the SPIOrderID, as it is reserved to the no Order ready signal");
 		}
 		if(master_data_size > slave_data_size){
-			payload_size = master_data_size+PAYLOAD_OVERHEAD;
+			payload_size = master_data_size+PAYLOAD_OVERHEAD+PAYLOAD_TAIL;
 		}else{
-			payload_size = slave_data_size+PAYLOAD_OVERHEAD;
+			payload_size = slave_data_size+PAYLOAD_OVERHEAD+PAYLOAD_TAIL;
 		}
 		aligned_payload_size = ALIGN_NUMBER_TO_32(payload_size);
 		MISO_payload = new uint8_t[aligned_payload_size]{0};
@@ -85,6 +88,14 @@ protected:
 		MOSI_payload[1] = (uint8_t) (id>>8);
 		rx_dma_buffer_holder[0] = (uint8_t) id;
 		rx_dma_buffer_holder[1] = (uint8_t) (id>>8);
+
+		CRC_index = payload_size - 2;
+		MISO_payload[CRC_index] = (uint8_t) id;
+		MISO_payload[CRC_index+1] = (uint8_t) (id>>8);
+		MOSI_payload[CRC_index] = (uint8_t) id;
+		MOSI_payload[CRC_index+1] = (uint8_t) (id>>8);
+		rx_dma_buffer_holder[CRC_index] = (uint8_t) id;
+		rx_dma_buffer_holder[CRC_index+1] = (uint8_t) (id>>8);
 		SPIBaseOrder::SPIOrdersByID[id] = this;
 	}
 

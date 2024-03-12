@@ -10,12 +10,15 @@
 #include "PinModel/Pin.hpp"
 #include "Packets/SPIOrder.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
+#include "DigitalInputService/DigitalInputService.hpp"
 #include "DMA/DMA.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
-#define MASTER_SPI_CHECK_DELAY 100000 //how often the master should check if the slave is ready, in nanoseconds
+#define MASTER_SPI_CHECK_DELAY 400000 //how often the master should check if the slave is ready, in nanoseconds
+
+#define MASTER_MAXIMUM_QUEUE_LEN 10
 
 //TODO: Hay que hacer el Chip select funcione a traves de un GPIO en vez de a traves del periferico.
 
@@ -47,6 +50,8 @@ public:
         Pin* MOSI; /**< MOSI pin. */
         Pin* MISO; /**< MISO pin. */
         Pin* SS; /**< Slave select pin. */
+        Pin* RS; /**< Ready Slave pin (optional)*/
+        uint8_t RShandler;
 
         SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
         SPI_TypeDef* instance; /**< HAL spi instance. */
@@ -60,14 +65,17 @@ public:
         uint32_t clock_polarity = SPI_POLARITY_LOW; /**< SPI clock polarity. */
         uint32_t clock_phase = SPI_PHASE_1EDGE; /**< SPI clock phase. */
         uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
+
        
         bool initialized = false; /**< Peripheral has already been initialized */
+        bool using_ready_slave = false;
         string name;
         SPIstate state = IDLE; /**< State of the spi on the Order communication*/
         uint16_t __ALIGNED(32) available_end_heap[16];
         uint16_t __ALIGNED(32) SPIOrder_heap[16];
         uint16_t *available_end = &available_end_heap[0]; /**< variable that checks for what Order id is the other end ready*/
         uint16_t *SPIOrderID  = &SPIOrder_heap[0]; /**< SPIOrder being processed, if any*/
+        RingBuffer<uint16_t, MASTER_MAXIMUM_QUEUE_LEN> SPIOrderQueue;  /**< Queue of SPIOrders to process after this one*/
         uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
         uint64_t Order_count = 0; /**< Order completed counter for debugging (success rate)*/
         uint64_t try_count = 0; /**< Tries from the master to communicate a packet with the slave for debugging (affected by how much the slave delays on preparing a packet)*/
@@ -129,6 +137,12 @@ public:
      * @return uint8_t Id of the service.
      */
     static uint8_t inscribe(SPI::Peripheral& spi);
+
+
+    /**
+     * @brief assigns the RS pin to the SPI.
+     */
+    static void assign_RS(uint8_t id, Pin& RSPin);
 
     /**
      * @brief Method that initializes all enrolled SPI peripherals
@@ -252,10 +266,6 @@ public:
 	 */
     static void chip_select_off(uint8_t id);
 
-    /**
-     *
-     */
-
     static inline void spi_communicate_cache_data(SPI::Instance* spi, uint8_t* value_to_send, uint16_t size_to_send, uint8_t* value_to_receive, uint16_t aligned_size_to_receive);
     static inline void spi_end_cache_data_communication(uint8_t* value_to_receive, uint16_t size_to_receive);
 
@@ -263,7 +273,24 @@ public:
     static void turn_on_chip_select(SPI::Instance* spi);
     static void turn_off_chip_select(SPI::Instance* spi);
 
+    /*
+     * @brief returns true if its KNOWN that the slave has the packet ready, and false if it is NOT KNOWN
+     *
+     * This function uses the optional RS to know if the slave is ready, and always returns false if the RS is not used.
+     */
+    static bool known_slave_ready(SPI::Instance* spi);
 
+
+    /**
+     * @brief function used by slave to signal using RS that it has the message ready
+     */
+    static void mark_slave_ready(SPI::Instance* spi);
+
+
+    /**
+     * @brief function used by slave to signal using RS that it is waiting a new message
+     */
+    static void mark_slave_waiting(SPI::Instance* spi);
 
     /**
      * @brief Recovers SPI from any error so it starts working again, and counts the error
