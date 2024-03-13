@@ -24,7 +24,7 @@ public:
 
 	void operator=(DatagramSocket&&);
 
-	bool send(Packet& packet){
+	bool send_packet(Packet& packet){
 		uint8_t* packet_buffer = packet.build();
 
 		struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.size, PBUF_RAM);
