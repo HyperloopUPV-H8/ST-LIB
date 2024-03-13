@@ -14,6 +14,9 @@
 #define PAYLOAD_OVERHEAD SPI_ID_SIZE
 #define PAYLOAD_TAIL SPI_ID_SIZE
 
+#define SPI_MAXIMUM_PAYLOAD_SIZE_BYTES 100
+#define SPI_MAXIMUM_PACKET_SIZE_BYTES (SPI_MAXIMUM_PAYLOAD_SIZE_BYTES + PAYLOAD_OVERHEAD + PAYLOAD_TAIL)
+
 #define NO_ORDER_ID 0
 #define ERROR_ORDER_ID 1
 #define CASTED_ERROR_ORDER_ID (uint16_t) 0b100000000
@@ -53,13 +56,13 @@ public:
     virtual void master_prepare_buffer(){/**< function used in SPI callback*/}
     virtual void slave_prepare_buffer(){/**< function used in SPI callback*/}
 
-    virtual void master_process_callback(){/**< function used in SPI callback*/
-    	load_rx_dma_buffer(slave_data, slave_data_size, 0);
+    virtual void master_process_callback(uint8_t* spi_buffer){/**< function used in SPI callback*/
+    	load_rx_dma_buffer(slave_data, spi_buffer, slave_data_size, 0);
     	if (callback != nullptr) callback();
     }
 
-    virtual void slave_process_callback(){/**< function used in SPI callback*/
-    	load_rx_dma_buffer(master_data, master_data_size, PAYLOAD_OVERHEAD);
+    virtual void slave_process_callback(uint8_t* spi_buffer){/**< function used in SPI callback*/
+    	load_rx_dma_buffer(master_data, spi_buffer, master_data_size, PAYLOAD_OVERHEAD);
     	if (callback != nullptr) callback();
     }
 
@@ -75,6 +78,9 @@ protected:
 			payload_size = master_data_size+PAYLOAD_OVERHEAD+PAYLOAD_TAIL;
 		}else{
 			payload_size = slave_data_size+PAYLOAD_OVERHEAD+PAYLOAD_TAIL;
+		}
+		if(payload_size > SPI_MAXIMUM_PAYLOAD_SIZE_BYTES){
+			ErrorHandler("Cannot declare SPIOrder %d as its size surpasses the maximum data size",id);
 		}
 		aligned_payload_size = ALIGN_NUMBER_TO_32(payload_size);
 		MISO_payload = new uint8_t[aligned_payload_size]{0};
@@ -102,8 +108,8 @@ protected:
 	SPIBaseOrder(SPIBaseOrder& baseOrder) = default;
 	virtual ~SPIBaseOrder();
 
-    void load_rx_dma_buffer(uint8_t* buffer, uint16_t buffer_size, uint8_t start_copy_byte){
-    	memcpy(buffer, rx_dma_buffer_holder + start_copy_byte, buffer_size);
+    void load_rx_dma_buffer(uint8_t* packet_buffer, uint8_t* spi_buffer, uint16_t buffer_size, uint8_t start_copy_byte){
+    	memcpy(packet_buffer, spi_buffer + start_copy_byte, buffer_size);
     }
 
 };
@@ -181,14 +187,14 @@ public:
 		memcpy(SPIBaseOrder::slave_data, slave_packet.build(), slave_packet.size);
 	}
 
-	void master_process_callback() override{
-		load_rx_dma_buffer(slave_data, slave_data_size, 0);
+	void master_process_callback(uint8_t* spi_buffer) override{
+		load_rx_dma_buffer(slave_data, spi_buffer, slave_data_size, 0);
 		slave_packet.parse(SPIBaseOrder::slave_data);
 		if (callback != nullptr) callback();
 	}
 
-	void slave_process_callback() override{
-		load_rx_dma_buffer(master_data, master_data_size, PAYLOAD_OVERHEAD);
+	void slave_process_callback(uint8_t* spi_buffer) override{
+		load_rx_dma_buffer(master_data, spi_buffer, master_data_size, PAYLOAD_OVERHEAD);
 		master_packet.parse(SPIBaseOrder::master_data);
 		if (callback != nullptr) callback();
 	}

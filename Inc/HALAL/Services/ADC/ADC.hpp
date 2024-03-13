@@ -52,13 +52,13 @@ public:
 	class Peripheral {
 	public:
 		ADC_HandleTypeDef* handle;
-		uint16_t* dma_stream;
+		uint16_t* dma_data_buffer;
 		LowPowerTimer timer;
 		InitData init_data;
 		bool is_on = false;
 
 		Peripheral() = default;
-		Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data);
+		Peripheral(ADC_HandleTypeDef* handle, LowPowerTimer& timer, InitData& init_data);
 
 		bool is_registered();
 	};
