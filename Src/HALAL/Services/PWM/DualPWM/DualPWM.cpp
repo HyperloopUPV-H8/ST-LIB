@@ -76,4 +76,21 @@ void DualPWM::turn_off_negated() {
   }
 }
 
+void DualPWM::set_duty_cycle(float duty_cycle){
+	uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(peripheral->handle) / 100.0 * duty_cycle;
+	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty);
+	this->duty_cycle = duty_cycle;
+}
+void DualPWM::set_frequency(uint32_t freq_in_hz){
+  	this->frequency = frequency;
+	TIM_TypeDef& timer = *peripheral->handle->Instance;
+	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / (timer.PSC+1)) / frequency;
+	set_duty_cycle(duty_cycle);
+}
+uint32_t DualPWM::get_frequency()const{
+  return frequency;
+}
+float DualPWM::get_duty_cycle()const{
+  return duty_cycle;
+}
 
