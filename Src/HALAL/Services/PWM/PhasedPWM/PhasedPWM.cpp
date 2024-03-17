@@ -79,3 +79,7 @@ void PhasedPWM::set_phase(float phase) {
 	this->phase = phase;
 	set_duty_cycle(duty_cycle);
 }
+
+float PhasedPWM::get_phase()const{
+	return phase;
+}
