@@ -67,3 +67,26 @@ uint32_t PWM::get_frequency() {
 float PWM::get_duty_cycle(){
 	return duty_cycle;
 }
+void PWM::set_dead_time(std::chrono::nanoseconds dead_time_ns)
+{
+	TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
+	
+	// per https://hasanyavuz.ozderya.net/?p=437
+	auto time = dead_time_ns.count();
+
+	if(time <= 127 * clock_period_ns){
+		sBreakDeadTimeConfig.DeadTime = time/127;
+	}else if (time >127 * clock_period_ns && time  <= 2 * clock_period_ns * 127)
+	{
+		sBreakDeadTimeConfig.DeadTime = time /(2 * clock_period_ns) - 64;
+	}else if(time > 2 * clock_period_ns * 127 && time <= 8 * clock_period_ns * 127){
+		sBreakDeadTimeConfig.DeadTime = time/(8 * clock_period_ns) -32;
+	}else if(time > time <= 8 * clock_period_ns * 127 && time <=16 * clock_period_ns*127){
+		sBreakDeadTimeConfig.DeadTime = time/(16 * clock_period_ns) -32;
+	}else{
+		ErrorHandler("Invalid dead time configuration");
+	}
+	HAL_TIMEx_ConfigBreakDeadTime(peripheral->handle,&sBreakDeadTimeConfig);
+	return;
+
+}

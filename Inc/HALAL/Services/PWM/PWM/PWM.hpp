@@ -32,6 +32,7 @@ public:
 	void set_frequency(uint32_t frequency);
 	uint32_t get_frequency();
 	float get_duty_cycle();
+	void set_dead_time(std::chrono::nanoseconds dead_time_ns);
 };
 
 #endif
