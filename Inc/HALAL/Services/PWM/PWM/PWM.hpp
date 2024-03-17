@@ -20,7 +20,8 @@ protected:
 	float duty_cycle;
 	uint32_t frequency;
 	bool is_on = false;
-
+	static constexpr float CLOCK_FREQ_MHZ_WITHOUT_PRESCALER = 275;
+	static constexpr float clock_period_ns = (1/CLOCK_FREQ_MHZ_WITHOUT_PRESCALER)*1'000;
 
 public:
 	PWM() = default;
