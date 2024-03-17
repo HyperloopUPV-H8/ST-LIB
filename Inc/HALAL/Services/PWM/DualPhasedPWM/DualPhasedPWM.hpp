@@ -10,7 +10,7 @@
 #include "PWM/PhasedPWM/PhasedPWM.hpp"
 #include "PWM/DualPWM/DualPWM.hpp"
 
-class DualPhasedPWM : public PhasedPWM, public DualPWM {
+class DualPhasedPWM : public PhasedPWM {
 private:
 	DualPhasedPWM() = default;
 public:
