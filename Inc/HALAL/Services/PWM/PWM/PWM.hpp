@@ -14,7 +14,7 @@
 #ifdef HAL_TIM_MODULE_ENABLED
 
 class PWM {
-private:
+protected:
 	TimerPeripheral* peripheral;
 	uint32_t channel;
 	float duty_cycle;
@@ -32,10 +32,6 @@ public:
 	void set_frequency(uint32_t frequency);
 	uint32_t get_frequency();
 	float get_duty_cycle();
-
-	friend class DualPWM;
-	friend class PhasedPWM;
-	friend class DualPhasedPWM;
 };
 
 #endif
