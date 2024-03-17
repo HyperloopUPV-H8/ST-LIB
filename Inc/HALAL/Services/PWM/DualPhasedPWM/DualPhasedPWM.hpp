@@ -16,5 +16,4 @@ private:
 public:
 	DualPhasedPWM(Pin& pin, Pin& pin_negated);
 
-	friend class HalfBridge;
 };
