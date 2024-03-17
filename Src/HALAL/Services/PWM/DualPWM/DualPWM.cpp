@@ -82,7 +82,7 @@ void DualPWM::set_duty_cycle(float duty_cycle){
 	this->duty_cycle = duty_cycle;
 }
 void DualPWM::set_frequency(uint32_t freq_in_hz){
-  	this->frequency = frequency;
+  	this->frequency = freq_in_hz;
 	TIM_TypeDef& timer = *peripheral->handle->Instance;
 	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / (timer.PSC+1)) / frequency;
 	set_duty_cycle(duty_cycle);
