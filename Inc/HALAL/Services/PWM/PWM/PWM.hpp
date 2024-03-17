@@ -14,7 +14,7 @@
 #ifdef HAL_TIM_MODULE_ENABLED
 
 class PWM {
-protected:
+private:
 	TimerPeripheral* peripheral;
 	uint32_t channel;
 	float duty_cycle;
