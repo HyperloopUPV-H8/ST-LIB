@@ -11,6 +11,7 @@
 
 PWM::PWM(Pin& pin) {
 	if (not TimerPeripheral::available_pwm.contains(pin)) {
+
 		ErrorHandler("Pin %s is not registered as an available PWM", pin.to_string());
 		return;
 	}
@@ -29,9 +30,13 @@ PWM::PWM(Pin& pin) {
 	timer.init_data.pwm_channels.push_back(pwm_data);
 
 	duty_cycle = 0;
+	is_initialized = true;
 }
 
 void PWM::turn_on() {
+  if(not is_initialized){
+	ErrorHandler("PWM was not initialized");
+  }
   if(is_on) return;
   if(HAL_TIM_PWM_Start(peripheral->handle, channel) != HAL_OK) {
     ErrorHandler("PWM did not turn on correctly", 0);
