@@ -80,7 +80,7 @@ void PWM::set_dead_time(std::chrono::nanoseconds dead_time_ns)
 	auto time = dead_time_ns.count();
 
 	if(time <= 127 * clock_period_ns){
-		sBreakDeadTimeConfig.DeadTime = time/127;
+		sBreakDeadTimeConfig.DeadTime = time/clock_period_ns;
 	}else if (time >127 * clock_period_ns && time  <= 2 * clock_period_ns * 127)
 	{
 		sBreakDeadTimeConfig.DeadTime = time /(2 * clock_period_ns) - 64 + 128;
