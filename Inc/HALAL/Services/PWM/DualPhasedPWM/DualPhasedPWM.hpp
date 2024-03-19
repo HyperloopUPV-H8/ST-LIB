@@ -15,5 +15,6 @@ private:
 	DualPhasedPWM() = default;
 public:
 	DualPhasedPWM(Pin& pin, Pin& pin_negated);
-
+	void set_duty_cycle(float duty);
+	void turn_on();
 };
