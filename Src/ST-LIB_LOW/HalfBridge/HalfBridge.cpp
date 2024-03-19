@@ -8,10 +8,10 @@
 #include <HalfBridge/HalfBridge.hpp>
 
 HalfBridge::HalfBridge(Pin& positive_pwm_pin, Pin& positive_pwm_negated_pin,
-		Pin& negative_pwm_pin, Pin& negative_pwm_negated_pin, Pin& enable_pin) : is_dual(true) {
-	positive_pwm = DualPhasedPWM(positive_pwm_pin, positive_pwm_negated_pin);
-	negative_pwm = DualPhasedPWM(negative_pwm_pin, negative_pwm_negated_pin);
-
+		Pin& negative_pwm_pin, Pin& negative_pwm_negated_pin, Pin& enable_pin) : is_dual(true),
+	positive_pwm{positive_pwm_pin, positive_pwm_negated_pin},
+	negative_pwm{negative_pwm_pin, negative_pwm_negated_pin}
+{
 	HalfBridge::enable = DigitalOutputService::inscribe(enable_pin);
 }
 
@@ -44,5 +44,5 @@ void HalfBridge::set_phase(float phase) {
 }
 
 float HalfBridge::get_phase() {
-	return negative_pwm.phase;
+	return negative_pwm.get_phase();;
 }

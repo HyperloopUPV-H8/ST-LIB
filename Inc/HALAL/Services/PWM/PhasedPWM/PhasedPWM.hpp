@@ -9,8 +9,8 @@
 
 #include "PWM/PWM/PWM.hpp"
 
-class PhasedPWM : virtual public PWM {
-private:
+class PhasedPWM :  public PWM {
+protected:
 	float phase;
 	PhasedPWM() = default;
 
@@ -18,9 +18,7 @@ public:
 	void set_duty_cycle(float duty_cycle);
 	void set_frequency(uint32_t frequency);
 	void set_phase(float phase);
-
+	float get_phase()const;
 	PhasedPWM(Pin& pin);
 
-	friend class DualPhasedPWM;
-	friend class HalfBridge;
 };

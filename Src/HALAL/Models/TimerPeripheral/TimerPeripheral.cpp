@@ -107,12 +107,15 @@ void TimerPeripheral::init() {
 			sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
 
 			if (pwm_data.mode == PHASED) {
-				sConfigOC.OCMode = TIM_OCMODE_ASSYMETRIC_PWM2;
+				//ASSYMETRIC_MODE_1 means one output per pair of registers (CCR1 - CCR2) for example
+				sConfigOC.OCMode = TIM_OCMODE_ASSYMETRIC_PWM1;
 				if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, pwm_data.channel) != HAL_OK) {
 					ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());
 				}
-				sConfigOC.OCMode = TIM_OCMODE_PWM2;
-				if (pwm_data.channel % 8) {
+				// if the channel number is even the pair is the previous channel, example,
+				// if channel is 2 then CCRX is CCR2 and the pair is CCR1
+				// note that TIM_CHANNEL_1 is not 1 is actually 0x00000000, therefore the %8
+				if (pwm_data.channel % 8 == 1) {
 					if (HAL_TIM_PWM_ConfigChannel(handle, &sConfigOC, pwm_data.channel-4) != HAL_OK) {
 						ErrorHandler("Unable to configure a PWM channel on %d", name.c_str());
 					}
