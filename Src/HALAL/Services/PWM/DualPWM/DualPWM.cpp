@@ -115,6 +115,7 @@ void DualPWM::set_dead_time(std::chrono::nanoseconds dead_time_ns)
 	sBreakDeadTimeConfig.LockLevel = 0;
 	sBreakDeadTimeConfig.BreakState = 1;
 	HAL_TIMEx_ConfigBreakDeadTime(peripheral->handle,&sBreakDeadTimeConfig);
+	peripheral->handle->Instance->BDTR |= TIM_BDTR_MOE;
 	return;
 
 }
