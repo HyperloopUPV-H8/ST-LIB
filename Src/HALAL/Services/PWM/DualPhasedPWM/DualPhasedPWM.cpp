@@ -9,7 +9,7 @@
 
 DualPhasedPWM::DualPhasedPWM(Pin& pin, Pin& pin_negated) {
 	if (not TimerPeripheral::available_dual_pwms.contains({pin, pin_negated})) {
-		ErrorHandler("Pins %s and %s are not registered as an available Dual PWM", pin.to_string(), pin_negated.to_string());
+		ErrorHandler("Pins %s and %s are not registered as an available Dual PHASED PWM", pin.to_string(), pin_negated.to_string());
 	}
 
 	TimerPeripheral& timer = TimerPeripheral::available_dual_pwms.at({pin, pin_negated}).first;

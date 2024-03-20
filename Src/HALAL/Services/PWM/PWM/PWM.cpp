@@ -103,6 +103,8 @@ void PWM::set_dead_time(std::chrono::nanoseconds dead_time_ns)
 	sBreakDeadTimeConfig.Break2Filter = 0;
 	sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
 	HAL_TIMEx_ConfigBreakDeadTime(peripheral->handle,&sBreakDeadTimeConfig);
+	peripheral->handle->Instance->BDTR |= TIM_BDTR_MOE;
+
 	return;
 
 }
