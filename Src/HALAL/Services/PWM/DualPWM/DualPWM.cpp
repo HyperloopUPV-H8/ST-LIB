@@ -112,8 +112,8 @@ void DualPWM::set_dead_time(std::chrono::nanoseconds dead_time_ns)
 	}else{
 		ErrorHandler("Invalid dead time configuration");
 	}
-	sBreakDeadTimeConfig.LockLevel = 0;
-	sBreakDeadTimeConfig.BreakState = 1;
+	//sBreakDeadTimeConfig.LockLevel = 0;
+	//sBreakDeadTimeConfig.BreakState = 1;
 	HAL_TIMEx_ConfigBreakDeadTime(peripheral->handle,&sBreakDeadTimeConfig);
 	return;
 

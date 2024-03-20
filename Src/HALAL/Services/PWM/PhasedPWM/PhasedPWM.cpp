@@ -45,15 +45,20 @@ PhasedPWM::PhasedPWM(Pin& pin) {
 void PhasedPWM::set_duty_cycle(float duty_cycle) {
 	this->duty_cycle = duty_cycle;
 	uint32_t arr = peripheral->handle->Instance->ARR;
-	float raw_duty = arr - (arr / 100.0 * duty_cycle);
-	float raw_phase = raw_duty * phase / 100.0;
+	float start_high = arr*(50.0 - duty_cycle)/50.0;
+	float end_high = arr*(100.0 - duty_cycle)/50.0 + 1;
+	if(start_high < 0){start_high = 0;}
+	if(end_high > arr){end_high = arr;}
+	start_high = start_high + arr * duty_cycle * phase / 10000.0;
+	end_high = end_high - arr * duty_cycle * phase / 10000.0;
 
-	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty + raw_phase);
+
+	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, start_high);
 
 	if (channel % 8 == 0) {
-		__HAL_TIM_SET_COMPARE(peripheral->handle, channel + 4, raw_duty - raw_phase);
+		__HAL_TIM_SET_COMPARE(peripheral->handle, channel + 4, end_high);
 	} else {
-		__HAL_TIM_SET_COMPARE(peripheral->handle, channel - 4, raw_duty - raw_phase);
+		__HAL_TIM_SET_COMPARE(peripheral->handle, channel - 4, end_high);
 	}
 }
 
