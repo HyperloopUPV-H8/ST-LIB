@@ -43,6 +43,13 @@ PhasedPWM::PhasedPWM(Pin& pin) {
  * that the PWM signal is high compared to the total period of the signal.
  */
 void PhasedPWM::set_duty_cycle(float duty_cycle) {
+	float raw_phase = phase;
+	if(raw_phase > 100.0){
+		raw_phase = raw_phase - 100.0;
+		__STLIB_TIM_SET_MODE(peripheral->handle, channel, STLIB_TIMER_CCMR_PWM_MODE_2)
+	}else{
+		__STLIB_TIM_SET_MODE(peripheral->handle, channel, STLIB_TIMER_CCMR_PWM_MODE_1)
+	}
 	this->duty_cycle = duty_cycle;
 	uint32_t arr = peripheral->handle->Instance->ARR;
 	float start_high = arr*(50.0 - duty_cycle)/50.0;

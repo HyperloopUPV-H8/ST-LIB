@@ -9,6 +9,30 @@
 
 #include "PWM/PWM/PWM.hpp"
 
+
+#define STLIB_TIMER_CCMR_REGISTER_MODE_MASK (0xFFFFFFFF - 16)
+#define STLIB_TIMER_CCMR_PWM_MODE_1 0x0
+#define STLIB_TIMER_CCMR_PWM_MODE_2 16
+#define __STLIB_TIM_SET_MODE(__HANDLE__, __CHANNEL__, __CCMR_PWM_MODE_COMPARE__) \
+	switch(__CHANNEL__){\
+	case TIM_CHANNEL_1: \
+	case TIM_CHANNEL_2: \
+		(__HANDLE__)->Instance->CCMR1 &= STLIB_TIMER_CCMR_REGISTER_MODE_MASK;\
+		(__HANDLE__)->Instance->CCMR1 |= __CCMR_PWM_MODE_COMPARE__;\
+	break;\
+	case TIM_CHANNEL_3: \
+	case TIM_CHANNEL_4: \
+		(__HANDLE__)->Instance->CCMR2 &= STLIB_TIMER_CCMR_REGISTER_MODE_MASK;\
+		(__HANDLE__)->Instance->CCMR2 |= __CCMR_PWM_MODE_COMPARE__;\
+	break;\
+	case TIM_CHANNEL_5: \
+	default:			\
+		(__HANDLE__)->Instance->CCMR3 &= STLIB_TIMER_CCMR_REGISTER_MODE_MASK;\
+		(__HANDLE__)->Instance->CCMR3 |= __CCMR_PWM_MODE_COMPARE__;\
+	break;\
+	}
+
+
 class PhasedPWM :  public PWM {
 protected:
 	float phase;
