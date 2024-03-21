@@ -33,6 +33,7 @@ PhasedPWM::PhasedPWM(Pin& pin) {
 
 	duty_cycle = 0;
 	phase = 0;
+	is_initialized = true;
 }
 
 /**
@@ -46,9 +47,9 @@ void PhasedPWM::set_duty_cycle(float duty_cycle) {
 	float raw_phase = phase;
 	if(raw_phase > 100.0){
 		raw_phase = raw_phase - 100.0;
-		__STLIB_TIM_SET_MODE(peripheral->handle, channel, STLIB_TIMER_CCMR_PWM_MODE_2)
-	}else{
 		__STLIB_TIM_SET_MODE(peripheral->handle, channel, STLIB_TIMER_CCMR_PWM_MODE_1)
+	}else{
+		__STLIB_TIM_SET_MODE(peripheral->handle, channel, STLIB_TIMER_CCMR_PWM_MODE_2)
 	}
 	this->duty_cycle = duty_cycle;
 	uint32_t arr = peripheral->handle->Instance->ARR;
@@ -56,8 +57,8 @@ void PhasedPWM::set_duty_cycle(float duty_cycle) {
 	float end_high = arr*(100.0 - duty_cycle)/50.0 + 1;
 	if(start_high < 0){start_high = 0;}
 	if(end_high > arr){end_high = arr;}
-	start_high = start_high + arr * duty_cycle * phase / 10000.0;
-	end_high = end_high - arr * duty_cycle * phase / 10000.0;
+	start_high = start_high + arr * duty_cycle * raw_phase / 5000.0;
+	end_high = end_high - arr * duty_cycle * raw_phase / 5000.0;
 
 
 	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, start_high);
