@@ -65,8 +65,9 @@ bool SPI::transmit(uint8_t id, span<uint8_t> data) {
 	 }
 
 	SPI::Instance* spi = SPI::registered_spi[id];
-
+	turn_off_chip_select(spi);
 	 HAL_StatusTypeDef errorcode = HAL_SPI_Transmit_DMA(spi->hspi, data.data(), data.size());
+	 turn_on_chip_select(spi);
 	 switch(errorcode){
 	 	 case HAL_OK:
 		 	 return true;
@@ -88,8 +89,9 @@ bool SPI::receive(uint8_t id, span<uint8_t> data) {
 	 }
 
 	SPI::Instance* spi = SPI::registered_spi[id];
-
+	turn_off_chip_select(spi);
 	 HAL_StatusTypeDef errorcode = HAL_SPI_Receive_DMA(spi->hspi, data.data(), data.size());
+	 turn_on_chip_select(spi);
 	 switch(errorcode){
 	 	 case HAL_OK:
 		 	 return true;
@@ -111,8 +113,9 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
 	 }
 
 	SPI::Instance* spi = SPI::registered_spi[id];
-
+	turn_off_chip_select(spi);
 	 HAL_StatusTypeDef errorcode = HAL_SPI_TransmitReceive_DMA(spi->hspi, command_data.data(), receive_data.data(), command_data.size());
+	 turn_on_chip_select(spi);
 	 switch(errorcode){
 	 	 case HAL_OK:
 		 	 return true;
