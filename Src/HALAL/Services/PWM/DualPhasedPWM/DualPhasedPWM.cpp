@@ -32,18 +32,34 @@ DualPhasedPWM::DualPhasedPWM(Pin& pin, Pin& pin_negated) {
 
 void DualPhasedPWM::set_duty_cycle(float duty_cycle){
 	this->duty_cycle = duty_cycle;
-	uint32_t arr = peripheral->handle->Instance->ARR;
-	float raw_duty = arr - (arr / 100.0 * duty_cycle);
-	float raw_phase = raw_duty * phase / 100.0;
+		float raw_phase = phase;
+		if(raw_phase > 100.0){
+			duty_cycle = 100.0 - duty_cycle;
+			raw_phase = raw_phase - 100.0;
+			__STLIB_TIM_SET_MODE(peripheral->handle, channel, STLIB_TIMER_CCMR_PWM_MODE_1)
+		}else{
+			__STLIB_TIM_SET_MODE(peripheral->handle, channel, STLIB_TIMER_CCMR_PWM_MODE_2)
+		}
+		uint32_t arr = peripheral->handle->Instance->ARR;
+		float start_high = arr*(50.0 - duty_cycle)/50.0;
+		float end_high = arr*(100.0 - duty_cycle)/50.0 + 1;
+		if(start_high < 0){start_high = 0;}
+		if(end_high > arr){end_high = arr;}
+		float max_range = duty_cycle > 50.0 ? 100 - duty_cycle : duty_cycle;
+		start_high = start_high + arr * max_range * raw_phase / 5000.0;
+		end_high = end_high - arr * max_range * raw_phase / 5000.0;
 
-	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty + raw_phase);
 
-	if (channel % 8 == 0) {
-		__HAL_TIM_SET_COMPARE(peripheral->handle, channel + 4, raw_duty - raw_phase);
-	} else {
-		__HAL_TIM_SET_COMPARE(peripheral->handle, channel - 4, raw_duty - raw_phase);
-	}
+		__HAL_TIM_SET_COMPARE(peripheral->handle, channel, start_high);
+
+		if (channel % 8 == 0) {
+			__HAL_TIM_SET_COMPARE(peripheral->handle, channel + 4, end_high);
+		} else {
+			__HAL_TIM_SET_COMPARE(peripheral->handle, channel - 4, end_high);
+		}
 }
+
+
 void DualPhasedPWM::set_frequency(uint32_t freq_in_hz){
   	this->frequency = freq_in_hz;
 	TIM_TypeDef& timer = *peripheral->handle->Instance;
