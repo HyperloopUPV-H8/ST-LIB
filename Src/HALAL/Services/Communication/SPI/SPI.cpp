@@ -38,8 +38,6 @@ uint8_t SPI::inscribe(SPI::Peripheral& spi){
 
     uint8_t id = SPI::id_counter++;
 
-    DMA::inscribe_stream(spi_instance->hdma_rx);
-    DMA::inscribe_stream(spi_instance->hdma_tx);
     SPI::registered_spi[id] = spi_instance;
     SPI::registered_spi_by_handler[spi_instance->hspi] = spi_instance;
 
@@ -65,8 +63,9 @@ bool SPI::transmit(uint8_t id, span<uint8_t> data) {
 	 }
 
 	SPI::Instance* spi = SPI::registered_spi[id];
-
-	 HAL_StatusTypeDef errorcode = HAL_SPI_Transmit_DMA(spi->hspi, data.data(), data.size());
+	turn_off_chip_select(spi);
+	 HAL_StatusTypeDef errorcode = HAL_SPI_Transmit(spi->hspi, data.data(), data.size(),10);
+	 turn_on_chip_select(spi);
 	 switch(errorcode){
 	 	 case HAL_OK:
 		 	 return true;
@@ -88,8 +87,9 @@ bool SPI::receive(uint8_t id, span<uint8_t> data) {
 	 }
 
 	SPI::Instance* spi = SPI::registered_spi[id];
-
-	 HAL_StatusTypeDef errorcode = HAL_SPI_Receive_DMA(spi->hspi, data.data(), data.size());
+	turn_off_chip_select(spi);
+	 HAL_StatusTypeDef errorcode = HAL_SPI_Receive(spi->hspi, data.data(), data.size(),10);
+	 turn_on_chip_select(spi);
 	 switch(errorcode){
 	 	 case HAL_OK:
 		 	 return true;
@@ -111,20 +111,19 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
 	 }
 
 	SPI::Instance* spi = SPI::registered_spi[id];
-
-	 HAL_StatusTypeDef errorcode = HAL_SPI_TransmitReceive_DMA(spi->hspi, command_data.data(), receive_data.data(), command_data.size());
-	 switch(errorcode){
-	 	 case HAL_OK:
-		 	 return true;
-		 break;
-	 	 case HAL_BUSY:
-	 		 return false;
-	 	 break;
-	 	 default:
-	 		 ErrorHandler("Error while transmiting and receiving with spi DMA. Errorcode %u",(uint8_t)errorcode);
-	 		 return false;
-	 	 break;
+	turn_off_chip_select(spi);
+	 HAL_StatusTypeDef errorcode = HAL_SPI_Transmit(spi->hspi, command_data.data(), command_data.size(),10);
+	 if(errorcode != HAL_OK){
+		 ErrorHandler("Error during transmission in %s", spi->name.c_str());
+		 return false;
 	 }
+	 if(HAL_SPI_Receive(spi->hspi, receive_data.data(), receive_data.size(), 10) != HAL_OK){
+		 turn_on_chip_select(spi);
+		 ErrorHandler("Error during receive in %s", spi->name.c_str());
+		 return false;
+	 }
+	 turn_on_chip_select(spi);
+	 return true;
 
 }
 
