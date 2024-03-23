@@ -29,6 +29,10 @@ void HalfBridge::turn_off() {
 }
 
 void HalfBridge::set_duty_cycle(float duty_cycle) {
+	if(duty_cycle != 50){
+		ErrorHandler("Cannot modify duty cycle in HalfBridge");
+		return;
+	}
 	positive_pwm.set_duty_cycle(duty_cycle);
 	negative_pwm.set_duty_cycle(duty_cycle);
 }
@@ -39,8 +43,14 @@ void HalfBridge::set_frequency(int32_t frequency) {
 }
 
 void HalfBridge::set_phase(float phase) {
-	positive_pwm.set_phase(-phase);
+	positive_pwm.set_phase(0);
 	negative_pwm.set_phase(phase);
+}
+void HalfBridge::set_negative_pwm_phase(float phase){
+	negative_pwm.set_phase(positive_pwm.get_phase() + phase);
+}
+void HalfBridge::set_positive_pwm_phase(float phase){
+	positive_pwm.set_phase(negative_pwm.get_phase() + phase);
 }
 
 float HalfBridge::get_phase() {
