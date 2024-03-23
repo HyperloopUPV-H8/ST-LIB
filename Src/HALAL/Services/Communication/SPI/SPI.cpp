@@ -37,7 +37,10 @@ uint8_t SPI::inscribe(SPI::Peripheral& spi){
     }
 
     uint8_t id = SPI::id_counter++;
-
+	if(spi_instance->use_DMA){
+		DMA::inscribe_stream(spi_instance->hdma_rx);
+		DMA::inscribe_stream(spi_instance->hdma_tx);
+	}
     SPI::registered_spi[id] = spi_instance;
     SPI::registered_spi_by_handler[spi_instance->hspi] = spi_instance;
 
@@ -80,6 +83,29 @@ bool SPI::transmit(uint8_t id, span<uint8_t> data) {
 	 }
 }
 
+bool SPI::transmit_DMA(uint8_t id, span<uint8_t> data) {
+	 if (!SPI::registered_spi.contains(id)){
+		ErrorHandler("No SPI registered with id %u", id);
+		return false;
+	 }
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+
+	 HAL_StatusTypeDef errorcode = HAL_SPI_Transmit_DMA(spi->hspi, data.data(), data.size());
+	 switch(errorcode){
+	 	 case HAL_OK:
+		 	 return true;
+		 break;
+	 	 case HAL_BUSY:
+	 		 return false;
+	 	 break;
+	 	 default:
+	 		 ErrorHandler("Error while transmiting and receiving with spi DMA. Errorcode %u",(uint8_t)errorcode);
+	 		 return false;
+	 	 break;
+	 }
+}
+
 bool SPI::receive(uint8_t id, span<uint8_t> data) {
 	 if (!SPI::registered_spi.contains(id)){
 		ErrorHandler("No SPI registered with id %u", id);
@@ -102,7 +128,29 @@ bool SPI::receive(uint8_t id, span<uint8_t> data) {
 	 		 return false;
 	 	 break;
 	 }
-    };
+    }
+bool SPI::receive_DMA(uint8_t id, span<uint8_t> data) {
+	 if (!SPI::registered_spi.contains(id)){
+		ErrorHandler("No SPI registered with id %u", id);
+		return false;
+	 }
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+
+	 HAL_StatusTypeDef errorcode = HAL_SPI_Receive_DMA(spi->hspi, data.data(), data.size());
+	 switch(errorcode){
+	 	 case HAL_OK:
+		 	 return true;
+		 break;
+	 	 case HAL_BUSY:
+	 		 return false;
+	 	 break;
+	 	 default:
+	 		 ErrorHandler("Error while transmiting and receiving with spi DMA. Errorcode %u",(uint8_t)errorcode);
+	 		 return false;
+	 	 break;
+	 }
+}
 
 bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data){
 	 if (!SPI::registered_spi.contains(id)){
@@ -124,6 +172,29 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
 	 }
 	 turn_on_chip_select(spi);
 	 return true;
+
+}
+bool SPI::transmit_and_receive_DMA(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data){
+	 if (!SPI::registered_spi.contains(id)){
+		ErrorHandler("No SPI registered with id %u", id);
+		return false;
+	 }
+
+	SPI::Instance* spi = SPI::registered_spi[id];
+
+	 HAL_StatusTypeDef errorcode = HAL_SPI_TransmitReceive_DMA(spi->hspi, command_data.data(), receive_data.data(), command_data.size());
+	 switch(errorcode){
+	 	 case HAL_OK:
+		 	 return true;
+		 break;
+	 	 case HAL_BUSY:
+	 		 return false;
+	 	 break;
+	 	 default:
+	 		 ErrorHandler("Error while transmiting and receiving with spi DMA. Errorcode %u",(uint8_t)errorcode);
+	 		 return false;
+	 	 break;
+	 }
 
 }
 

@@ -49,6 +49,8 @@ public:
 
         SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
         SPI_TypeDef* instance; /**< HAL spi instance. */
+        DMA::Stream hdma_tx; /**< HAL DMA handler for writting */
+        DMA::Stream hdma_rx; /**< HAL DMA handler for reading */
 
         uint32_t baud_rate_prescaler; /**< SPI baud prescaler.*/
         uint32_t mode = SPI_MODE_MASTER; /**< SPI mode. */
@@ -59,6 +61,7 @@ public:
         uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
        
         bool initialized = false; /**< Peripheral has already been initialized */
+        bool use_DMA = false;
         string name;
         SPIstate state = IDLE; /**< State of the spi on the packet communication*/
         uint16_t available_end = 0; /**< variable that checks for what packet id is the other end ready*/
@@ -147,6 +150,15 @@ public:
 	 */
     static bool transmit(uint8_t id, span<uint8_t> data);
 
+    /**@brief	Transmits size bytes by SPI via DMA
+	 *
+	 * @param id Id of the SPI
+	 * @param data Data to be send
+	 * @param size Size in bytes to be send
+	 * @return bool Returns true if the data has been send successfully.
+	 * 			    Returns false if a problem has occurred.
+	 */
+    static bool transmit_DMA(uint8_t id, span<uint8_t> data);
     /**						
      * @brief This method requests an array of data. The data
      * 		  will be stored in data parameter. You must make sure you have
@@ -159,6 +171,18 @@ public:
      * 			    Returns false if a problem has occurred.
      */
     static bool receive(uint8_t id, span<uint8_t> data);
+    /**						
+     * @brief This method requests an array of data. The data
+     * 		  will be stored in data parameter. You must make sure you have
+     * 		  enough space, this function uses DMA
+     * 
+     * @param id Id of the SPI
+     * @param data Pointer where data will be stored
+     * @param size Size in bytes to receive.
+     * @return bool Returns true if the data have been read successfully.
+     * 			    Returns false if a problem has occurred.
+     */
+    static bool receive_DMA(uint8_t id, span<uint8_t> data);
 
     /**
 	 * @brief This method transmits one order of command_size bytes and
@@ -174,6 +198,19 @@ public:
 	 */
     static bool transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
 
+    /**
+	 * @brief This method transmits one order of command_size bytes and
+	 * 		  then stores the data received after that order using DMA
+	 *
+	 * @param id Id of the SPI
+	 * @param command_data Command
+	 * @param command_size Command size in bytes to receive
+	 * @param receive_data Pointer where data will be stored
+	 * @param receive_size Number of bytes to read
+	 * @return bool Returns true if the data have been read successfully.
+	 * 			    Returns false if a problem has occurred.
+	 */
+    static bool transmit_and_receive_DMA(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
     /**
      * @brief update that has to be called in order for master to check if the slave is ready to send the packet. If it is not called periodically, the master_transmit_packet will not work. Not needed for dummy communication (not using packets)
      */
