@@ -32,7 +32,7 @@ PhasedPWM::PhasedPWM(Pin& pin) {
 	timer.init_data.pwm_channels.push_back(pwm_data);
 
 	duty_cycle = 0;
-	phase = 0;
+	raw_phase = 0;
 	is_initialized = true;
 }
 
@@ -45,7 +45,6 @@ PhasedPWM::PhasedPWM(Pin& pin) {
  */
 void PhasedPWM::set_duty_cycle(float duty_cycle) {
 	this->duty_cycle = duty_cycle;
-	float raw_phase = phase;
 	if(raw_phase > 100.0){
 		duty_cycle = 100.0 - duty_cycle;
 		raw_phase = raw_phase - 100.0;
@@ -90,11 +89,21 @@ void PhasedPWM::set_frequency(uint32_t frequency) {
  * @param phase The "phase" parameter is a floating-point value that represents the phase shift of a
  * PWM signal. In other words, it determines the timing offset of the PWM waveform relative to its center.
  */
-void PhasedPWM::set_phase(float phase) {
-	this->phase = phase;
+void PhasedPWM::set_phase(float phase_in_deg) {
+	if(duty_cycle == 50.0){
+	this->raw_phase = phase_in_deg*(200/360);
+	}else{
+		//TODO
+	}
 	set_duty_cycle(duty_cycle);
 }
 
+void PhasedPWM::set_raw_phase(float raw_phase){
+	this->raw_phase = raw_phase;
+	set_duty_cycle(duty_cycle);
+
+}
+
 float PhasedPWM::get_phase()const{
-	return phase;
+	return raw_phase*360/200;
 }

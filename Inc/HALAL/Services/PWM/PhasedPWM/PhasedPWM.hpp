@@ -35,13 +35,14 @@
 
 class PhasedPWM :  public PWM {
 protected:
-	float phase;
+	float raw_phase{};
 	PhasedPWM() = default;
 
 public:
 	void set_duty_cycle(float duty_cycle);
 	void set_frequency(uint32_t frequency);
-	void set_phase(float phase);
+	void set_raw_phase(float phase);
+	void set_phase(float phase_in_deg);
 	float get_phase()const;
 	PhasedPWM(Pin& pin);
 
