@@ -38,6 +38,7 @@ uint8_t SPI::inscribe(SPI::Peripheral& spi){
 	spi_instance->SPIOrderID = (uint16_t*)MPUManager::allocate_non_cached_memory(32);
 	spi_instance->available_end = (uint16_t*)MPUManager::allocate_non_cached_memory(32);
 	spi_instance->rx_buffer = (uint8_t*)MPUManager::allocate_non_cached_memory(SPI_MAXIMUM_PACKET_SIZE_BYTES);
+	spi_instance->tx_buffer = (uint8_t*)MPUManager::allocate_non_cached_memory(SPI_MAXIMUM_PACKET_SIZE_BYTES);
 
     Pin::inscribe(*spi_instance->SCK, ALTERNATIVE);
     Pin::inscribe(*spi_instance->MOSI, ALTERNATIVE);
@@ -204,8 +205,6 @@ bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder *Order){
 	spi->state = SPI::STARTING_ORDER;
 	*(spi->SPIOrderID) = Order->id;
 	master_check_available_end(spi);
-	//SPI::chip_select_off(id);
-	//HAL_SPI_TransmitReceive_DMA(spi->hspi, (uint8_t *)spi->SPIOrderID, (uint8_t *)spi->available_end, 2);
 	return true;
 }
 
@@ -264,11 +263,11 @@ void SPI::Order_update(){
 
 void SPI::master_check_available_end(SPI::Instance* spi){
 	SPI::turn_off_chip_select(spi);
-	spi_communicate_cache_data(spi, (uint8_t *)spi->SPIOrderID, 2, (uint8_t *)spi->available_end, 32);
+	spi_communicate_order_data(spi, (uint8_t *)spi->SPIOrderID, (uint8_t *)spi->available_end, 2);
 }
 
 void SPI::slave_check_packet_ID(SPI::Instance* spi){
-	spi_communicate_cache_data(spi, (uint8_t *)spi->available_end, 2, (uint8_t *)spi->SPIOrderID, 32);
+	spi_communicate_order_data(spi, (uint8_t *)spi->available_end, (uint8_t *)spi->SPIOrderID, 2);
 }
 
 void SPI::chip_select_on(uint8_t id){
@@ -349,15 +348,14 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 		break;
 	case SPI::STARTING_ORDER:
 	{
-		SPI::spi_end_cache_data_communication((uint8_t*)spi->available_end, 2);
 		SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[*(spi->SPIOrderID)];
 		if(spi->mode == SPI_MODE_MASTER){ //checks if the Order is ready on slave
 			if(*(spi->available_end) == *(spi->SPIOrderID)){
 				spi->state = SPI::PROCESSING_ORDER;
-				Order->master_prepare_buffer();
+				Order->master_prepare_buffer(spi->tx_buffer);
 				SPI::turn_off_chip_select(spi);
 
-				SPI::spi_communicate_cache_data(spi, Order->master_data, Order->payload_size-PAYLOAD_OVERHEAD, spi->rx_buffer, Order->aligned_payload_size);
+				SPI::spi_communicate_order_data(spi, spi->tx_buffer, spi->rx_buffer, Order->payload_size-PAYLOAD_OVERHEAD);
 			}else{
 				spi->try_count++;
 				switch(*(spi->available_end)){
@@ -384,15 +382,14 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	}
 	case SPI::WAITING_ORDER:
 	{
-		SPI::spi_end_cache_data_communication((uint8_t*)spi->SPIOrderID, 2);
 		SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[*(spi->SPIOrderID)];
 		if(Order == 0x0){
 			SPI::spi_recover(spi, hspi);
 			return;
 		}
 		else if(spi->mode == SPI_MODE_SLAVE){ //prepares the Order on the slave
-			Order->slave_prepare_buffer();
-			SPI::spi_communicate_cache_data(spi, Order->MISO_payload, Order->payload_size, spi->rx_buffer, Order->aligned_payload_size);
+			Order->slave_prepare_buffer(spi->tx_buffer);
+			SPI::spi_communicate_order_data(spi, spi->tx_buffer, spi->rx_buffer, Order->payload_size);
 			SPI::mark_slave_ready(spi);
 			spi->state = SPI::PROCESSING_ORDER;
 		}else{
@@ -403,7 +400,6 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	case SPI::PROCESSING_ORDER:
 		{
 			SPIBaseOrder *Order = SPIBaseOrder::SPIOrdersByID[*(spi->SPIOrderID)];
-			SPI::spi_end_cache_data_communication(spi->rx_buffer, Order->payload_size);
 
 			if(spi->mode == SPI_MODE_MASTER){ //ends communication
 				if(*(uint16_t*)&spi->rx_buffer[Order->CRC_index - PAYLOAD_OVERHEAD] != *spi->SPIOrderID){
@@ -467,20 +463,8 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 }
 
 
-void SPI::spi_communicate_cache_data(SPI::Instance* spi, uint8_t* value_to_send, uint16_t size_to_send, uint8_t* value_to_receive, uint16_t aligned_size_to_receive){
-#ifdef STLIB_ETH
-	//SCB_CleanDCache_by_Addr((uint32_t*)value_to_send, size_to_send);
-	//SCB_InvalidateDCache_by_Addr(value_to_receive, aligned_size_to_receive);
-#endif
+void SPI::spi_communicate_order_data(SPI::Instance* spi, uint8_t* value_to_send, uint8_t* value_to_receive, uint16_t size_to_send){
 	HAL_SPI_TransmitReceive_DMA(spi->hspi, value_to_send, value_to_receive, size_to_send);
-}
-
-
-void SPI::spi_end_cache_data_communication(uint8_t* value_to_receive, uint16_t size_to_receive){
-#ifdef STLIB_ETH
-	//SCB_InvalidateDCache_by_Addr(value_to_receive, size_to_receive);
-
-#endif
 }
 
 

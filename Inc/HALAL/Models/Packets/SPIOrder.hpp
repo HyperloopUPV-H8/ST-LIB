@@ -31,12 +31,10 @@ public:
 
 
 	uint16_t id; /**< Number of the Order ID, saved on the first two bytes of both payloads, even if the values sent are unused*/
-	uint8_t* MISO_payload __ALIGNED(32); /**< Byte Buffer for the slave DMA output*/
-	uint8_t* MOSI_payload __ALIGNED(32); /**< Byte Buffer for the master DMA output*/
-	uint8_t* rx_dma_buffer_holder __ALIGNED(32); /**< will make as a rx_buffer to avoid data being corrupted while DMA is working on it. DO NOT access to it while DMA is running*/
+	uint8_t* MISO_payload; /**< Byte Buffer for the slave DMA output*/
+	uint8_t* MOSI_payload; /**< Byte Buffer for the master DMA output*/
 
 	uint16_t payload_size; /**< Size in bytes of both DMA buffers (both have to be the same)*/
-	uint16_t aligned_payload_size;
 	uint32_t CRC_index;
 
 	uint8_t* master_data; /**< Pointer to the master Byte buffer after the header (the space where the data is saved)*/
@@ -53,16 +51,20 @@ public:
         this->callback = callback;
     }
 
-    virtual void master_prepare_buffer(){/**< function used in SPI callback*/}
-    virtual void slave_prepare_buffer(){/**< function used in SPI callback*/}
+    virtual void master_prepare_buffer(uint8_t* tx_buffer){/**< function used in SPI callback*/
+		load_dma_buffer(tx_buffer, master_data, master_data_size + PAYLOAD_TAIL, 0);
+    }
+    virtual void slave_prepare_buffer(uint8_t* tx_buffer){/**< function used in SPI callback*/
+		load_dma_buffer(tx_buffer, MISO_payload, payload_size, 0);
+    }
 
-    virtual void master_process_callback(uint8_t* spi_buffer){/**< function used in SPI callback*/
-    	load_rx_dma_buffer(slave_data, spi_buffer, slave_data_size, 0);
+    virtual void master_process_callback(uint8_t* rx_buffer){/**< function used in SPI callback*/
+    	load_dma_buffer(slave_data, rx_buffer, slave_data_size, 0);
     	if (callback != nullptr) callback();
     }
 
-    virtual void slave_process_callback(uint8_t* spi_buffer){/**< function used in SPI callback*/
-    	load_rx_dma_buffer(master_data, spi_buffer, master_data_size, PAYLOAD_OVERHEAD);
+    virtual void slave_process_callback(uint8_t* rx_buffer){/**< function used in SPI callback*/
+    	load_dma_buffer(master_data, rx_buffer, master_data_size, PAYLOAD_OVERHEAD);
     	if (callback != nullptr) callback();
     }
 
@@ -82,34 +84,32 @@ protected:
 		if(payload_size > SPI_MAXIMUM_PAYLOAD_SIZE_BYTES){
 			ErrorHandler("Cannot declare SPIOrder %d as its size surpasses the maximum data size",id);
 		}
-		aligned_payload_size = ALIGN_NUMBER_TO_32(payload_size);
-		MISO_payload = new uint8_t[aligned_payload_size]{0};
-		MOSI_payload = new uint8_t[aligned_payload_size]{0};
-		rx_dma_buffer_holder = new uint8_t[aligned_payload_size]{0};
+		MISO_payload = new uint8_t[payload_size]{0};
+		MOSI_payload = new uint8_t[payload_size]{0};
 		master_data = &MOSI_payload[PAYLOAD_OVERHEAD];
 		slave_data = &MISO_payload[PAYLOAD_OVERHEAD];
 		MISO_payload[0] = (uint8_t) id;
 		MISO_payload[1] = (uint8_t) (id>>8);
 		MOSI_payload[0] = (uint8_t) id;
 		MOSI_payload[1] = (uint8_t) (id>>8);
-		rx_dma_buffer_holder[0] = (uint8_t) id;
-		rx_dma_buffer_holder[1] = (uint8_t) (id>>8);
 
 		CRC_index = payload_size - 2;
 		MISO_payload[CRC_index] = (uint8_t) id;
 		MISO_payload[CRC_index+1] = (uint8_t) (id>>8);
 		MOSI_payload[CRC_index] = (uint8_t) id;
 		MOSI_payload[CRC_index+1] = (uint8_t) (id>>8);
-		rx_dma_buffer_holder[CRC_index] = (uint8_t) id;
-		rx_dma_buffer_holder[CRC_index+1] = (uint8_t) (id>>8);
 		SPIBaseOrder::SPIOrdersByID[id] = this;
 	}
 
 	SPIBaseOrder(SPIBaseOrder& baseOrder) = default;
 	virtual ~SPIBaseOrder();
 
-    void load_rx_dma_buffer(uint8_t* packet_buffer, uint8_t* spi_buffer, uint16_t buffer_size, uint8_t start_copy_byte){
-    	memcpy(packet_buffer, spi_buffer + start_copy_byte, buffer_size);
+    void read_dma_buffer(uint8_t* dma_buffer, uint8_t* spi_buffer, uint16_t buffer_size, uint8_t start_copy_byte){
+    	memcpy(spi_buffer, dma_buffer + start_copy_byte, buffer_size);
+    }
+
+    void load_dma_buffer(uint8_t* dma_buffer, uint8_t* spi_buffer, uint16_t buffer_size, uint8_t start_copy_byte){
+    	memcpy(dma_buffer, spi_buffer + start_copy_byte, buffer_size);
     }
 
 };
@@ -179,22 +179,24 @@ public:
 
 	}
 
-	void master_prepare_buffer() override{
+	void master_prepare_buffer(uint8_t* tx_buffer) override{
 		memcpy(SPIBaseOrder::master_data, master_packet.build(), master_packet.size);
+		load_dma_buffer(tx_buffer, master_data, master_data_size + PAYLOAD_TAIL, 0);
 	}
 
-	void slave_prepare_buffer() override{
+	void slave_prepare_buffer(uint8_t* tx_buffer) override{
 		memcpy(SPIBaseOrder::slave_data, slave_packet.build(), slave_packet.size);
+		load_dma_buffer(tx_buffer, MISO_payload, payload_size, 0);
 	}
 
-	void master_process_callback(uint8_t* spi_buffer) override{
-		load_rx_dma_buffer(slave_data, spi_buffer, slave_data_size, 0);
+	void master_process_callback(uint8_t* rx_buffer) override{
+		read_dma_buffer(rx_buffer, slave_data, slave_data_size, 0);
 		slave_packet.parse(SPIBaseOrder::slave_data);
 		if (callback != nullptr) callback();
 	}
 
-	void slave_process_callback(uint8_t* spi_buffer) override{
-		load_rx_dma_buffer(master_data, spi_buffer, master_data_size, PAYLOAD_OVERHEAD);
+	void slave_process_callback(uint8_t* rx_buffer) override{
+		read_dma_buffer(rx_buffer, master_data, master_data_size, PAYLOAD_OVERHEAD);
 		master_packet.parse(SPIBaseOrder::master_data);
 		if (callback != nullptr) callback();
 	}

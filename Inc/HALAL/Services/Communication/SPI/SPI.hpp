@@ -16,7 +16,7 @@
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
-#define MASTER_SPI_CHECK_DELAY 400000 //how often the master should check if the slave is ready, in nanoseconds
+#define MASTER_SPI_CHECK_DELAY 100000 //how often the master should check if the slave is ready, in nanoseconds
 
 #define MASTER_MAXIMUM_QUEUE_LEN 10
 
@@ -72,6 +72,7 @@ public:
         string name;
         SPIstate state = IDLE; /**< State of the spi on the Order communication*/
         uint8_t *rx_buffer;
+        uint8_t *tx_buffer;
         uint16_t *available_end; /**< variable that checks for what Order id is the other end ready*/
         uint16_t *SPIOrderID; /**< SPIOrder being processed, if any*/
         RingBuffer<uint16_t, MASTER_MAXIMUM_QUEUE_LEN> SPIOrderQueue;  /**< Queue of SPIOrders to process after this one*/
@@ -265,8 +266,7 @@ public:
 	 */
     static void chip_select_off(uint8_t id);
 
-    static inline void spi_communicate_cache_data(SPI::Instance* spi, uint8_t* value_to_send, uint16_t size_to_send, uint8_t* value_to_receive, uint16_t aligned_size_to_receive);
-    static inline void spi_end_cache_data_communication(uint8_t* value_to_receive, uint16_t size_to_receive);
+    static inline void spi_communicate_order_data(SPI::Instance* spi, uint8_t* value_to_send, uint8_t* value_to_receive, uint16_t size_to_send);
 
 
     static void turn_on_chip_select(SPI::Instance* spi);
