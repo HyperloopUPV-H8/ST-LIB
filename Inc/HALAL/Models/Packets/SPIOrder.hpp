@@ -181,7 +181,7 @@ public:
 
 	void master_prepare_buffer(uint8_t* tx_buffer) override{
 		memcpy(SPIBaseOrder::master_data, master_packet.build(), master_packet.size);
-		load_dma_buffer(tx_buffer, master_data, master_data_size + PAYLOAD_TAIL, 0);
+		load_dma_buffer(tx_buffer, MOSI_payload + PAYLOAD_OVERHEAD, payload_size - PAYLOAD_OVERHEAD, 0);
 	}
 
 	void slave_prepare_buffer(uint8_t* tx_buffer) override{
