@@ -21,7 +21,7 @@ public:
 	uint8_t get_id();
 	void set_offset(Type new_offset);
 	Type get_offset();
-	Type* get_value_pointer();
+	Type* get_value_pointer()const;
 
 protected:
 	uint8_t id;
@@ -71,6 +71,6 @@ void LinearSensor<Type>::set_offset(Type new_offset){
 
 template<class Type>
 requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
-Type* LinearSensor<Type>::get_value_pointer(){
+Type* LinearSensor<Type>::get_value_pointer()const{
 	return value;
 }
