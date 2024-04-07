@@ -18,6 +18,7 @@
 #include "Communication/SPI/SPI.hpp"
 #include "Communication/UART/UART.hpp"
 #include "Communication/I2C/I2C.hpp"
+#include "Models/Packets/ForwardOrder.hpp"
 #include "Communication/Ethernet/UDP/DatagramSocket.hpp"
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "Communication/Ethernet/TCP/Socket.hpp"
