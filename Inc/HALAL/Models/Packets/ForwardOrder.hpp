@@ -53,7 +53,7 @@ private:
     void set_pointer(size_t index, void* pointer) override{
 		StackPacket<BufferLength,Types...>::set_pointer(index, pointer);
 	}
-    // socket in charge of forwarding the order
+    // socket(s) in charge of forwarding the order
     vector<ServerSocket*>* forwarding_sockets{};
 };
 
