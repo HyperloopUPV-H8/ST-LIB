@@ -8,14 +8,17 @@
 #pragma once
 
 #include "PinModel/Pin.hpp"
-#include "Packets/SPIPacket.hpp"
+#include "Packets/SPIOrder.hpp"
 #include "DigitalOutputService/DigitalOutputService.hpp"
+#include "DigitalInputService/DigitalInputService.hpp"
 #include "DMA/DMA.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
 #define MASTER_SPI_CHECK_DELAY 100000 //how often the master should check if the slave is ready, in nanoseconds
+
+#define MASTER_MAXIMUM_QUEUE_LEN 10
 
 //TODO: Hay que hacer el Chip select funcione a traves de un GPIO en vez de a traves del periferico.
 
@@ -30,9 +33,10 @@ public:
 	 */
     enum SPIstate{
     	IDLE = 0,
-		STARTING_PACKET,
-    	WAITING_PACKET,
-		PROCESSING_PACKET,
+		STARTING_ORDER,
+    	WAITING_ORDER,
+		PROCESSING_ORDER,
+		ERROR_RECOVERY,
     };
 
     /**
@@ -46,6 +50,8 @@ public:
         Pin* MOSI; /**< MOSI pin. */
         Pin* MISO; /**< MISO pin. */
         Pin* SS; /**< Slave select pin. */
+        Pin* RS; /**< Ready Slave pin (optional)*/
+        uint8_t RShandler;
 
         SPI_HandleTypeDef* hspi;  /**< HAL spi struct pin. */  
         SPI_TypeDef* instance; /**< HAL spi instance. */
@@ -59,19 +65,22 @@ public:
         uint32_t clock_polarity = SPI_POLARITY_LOW; /**< SPI clock polarity. */
         uint32_t clock_phase = SPI_PHASE_1EDGE; /**< SPI clock phase. */
         uint32_t nss_polarity = SPI_NSS_POLARITY_LOW; /**< SPI chip select polarity. */
+
        
         bool initialized = false; /**< Peripheral has already been initialized */
+        bool using_ready_slave = false;
         string name;
-        SPIstate state = IDLE; /**< State of the spi on the packet communication*/
-        uint16_t available_end = 0; /**< variable that checks for what packet id is the other end ready*/
-        uint16_t SPIPacketID = 0; /**< SPIPacket being processed, if any*/
+        SPIstate state = IDLE; /**< State of the spi on the Order communication*/
+        uint8_t *rx_buffer;
+        uint8_t *tx_buffer;
+        uint16_t *available_end; /**< variable that checks for what Order id is the other end ready*/
+        uint16_t *SPIOrderID; /**< SPIOrder being processed, if any*/
+        RingBuffer<uint16_t, MASTER_MAXIMUM_QUEUE_LEN> SPIOrderQueue;  /**< Queue of SPIOrders to process after this one*/
         uint64_t last_end_check = 0; /**< last clock cycle where the available end was checked*/
-        uint64_t packet_count = 0; /**< packet completed counter for debugging*/
+        uint64_t Order_count = 0; /**< Order completed counter for debugging (success rate)*/
+        uint64_t try_count = 0; /**< Tries from the master to communicate a packet with the slave for debugging (affected by how much the slave delays on preparing a packet)*/
+        uint64_t error_count = 0; /**< Order error counter for debugging (affected by how much the bits sent are corrupted in any way)*/
     };
-
-
-    static void turn_on_chip_select(SPI::Instance* spi);
-    static void turn_off_chip_select(SPI::Instance* spi);
 
     /**
      * @brief Enum that abstracts the use of the Instance struct to facilitate the mocking of the HALAL.
@@ -115,6 +124,12 @@ public:
 	static SPI::Instance instance5;
 	static SPI::Instance instance6;
 
+
+
+    /*=========================================
+     * User functions for configuration of the SPI
+     ==========================================*/
+
     /**
      * @brief Registers a new SPI.
      * 
@@ -123,12 +138,24 @@ public:
      */
     static uint8_t inscribe(SPI::Peripheral& spi);
 
+
+    /**
+     * @brief assigns the RS pin to the SPI.
+     */
+    static void assign_RS(uint8_t id, Pin& RSPin);
+
     /**
      * @brief Method that initializes all enrolled SPI peripherals
      *        service. The peripherals that you want to use
      *  	  must be enrolled before initializing.
      */
     static void start();
+
+
+
+    /*=========================================
+     * User functions for dummy mode
+     ==========================================*/
 
     /**@brief	Transmits 1 byte by SPI.
      * 
@@ -176,34 +203,99 @@ public:
 	 */
     static bool transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data);
 
-    /**
-     * @brief update that has to be called in order for master to check if the slave is ready to send the packet. If it is not called periodically, the master_transmit_packet will not work. Not needed for dummy communication (not using packets)
-     */
-    static void packet_update();
+
+
+    /*=============================================
+     * User functions for Order mode
+     ==============================================*/
 
     /**
-     * @brief master send packet method, which tries to send a single packet
+     * @brief master send Order method, which tries to send a single Order
      */
-    static bool master_transmit_packet(uint8_t id, SPIPacket packet);
+    static bool master_transmit_Order(uint8_t id, SPIBaseOrder &Order);
+    static bool master_transmit_Order(uint8_t id, SPIBaseOrder *Order);
 
     /**
-     * @brief slave listen packets method. When called, the slave will start to listen packets until the state is set again to IDLE
+     * @brief slave listen Orders method. When called, the slave will start to listen Orders until the state is set again to IDLE
      */
-    static void slave_listen_packets(uint8_t id);
+    static void slave_listen_Orders(uint8_t id);
 
     /**
-     * @brief This method sets chip select to high level.
+     * @brief method that needs to be called periodically by the master code for proper communication. Can be called at any speed, but the faster it is called, the faster the Orders will resolve.
+     *
+     * this update has to be called by the code in order for master to check if the slave is ready to send the Order.
+     * If it is not called periodically, the master_transmit_Order will not work. Not needed for dummy communication (not using Orders)
+     */
+    static void Order_update();
+
+
+
+    /*=============================================
+     * SPI Module Functions for HAL (cannot be private)
+     ==============================================*/
+
+    /**
+     * @brief master Order that checks the state of the slave, used on the callback of the SPI module and handled automatically by Order_update method (as long as it is called).
+     */
+    static void master_check_available_end(SPI::Instance* spi);
+
+    /**
+     * @brief slave updates the information on its buffer to check what ID is master asking on next query
+     */
+    static void slave_check_packet_ID(SPI::Instance* spi);
+
+    /**
+     * @brief This method sets chip select to high level, and is used automatically by the SPI module
+     *
+     * The high level signal on SPI on chip select marks a slave to not process anything.
+     * For more information read the chip_select_off method.
      *
      * @param spi Id of the SPI
      */
     static void chip_select_on(uint8_t id);
 
     /**
-	 * @brief This method sets chip select to low level.
+	 * @brief This method sets chip select to low level, and is used automatically by the SPI module.
+	 *
+	 * The low level signal on SPI on chip select marks the slave connected to it to start processing data, and is marked by the master
+	 * The slave on the ST-LIB doesn t use this configuration yet and is instead active all the time, so for now it can only function as a single point to point configuration
+	 * to have multiple ST-LIB SPI slaves on a single SPI interface you may need to implement an EXTI on the slave that deactivates it while its on.
+	 * This method is still used to communicate to any slave that is not coded with the ST-LIB, as those follow the common rules of the SPI
 	 *
 	 * @param spi Id of the SPI
 	 */
     static void chip_select_off(uint8_t id);
+
+    static inline void spi_communicate_order_data(SPI::Instance* spi, uint8_t* value_to_send, uint8_t* value_to_receive, uint16_t size_to_send);
+
+
+    static void turn_on_chip_select(SPI::Instance* spi);
+    static void turn_off_chip_select(SPI::Instance* spi);
+
+    /*
+     * @brief returns true if its KNOWN that the slave has the packet ready, and false if it is NOT KNOWN
+     *
+     * This function uses the optional RS to know if the slave is ready, and always returns false if the RS is not used.
+     */
+    static bool known_slave_ready(SPI::Instance* spi);
+
+
+    /**
+     * @brief function used by slave to signal using RS that it has the message ready
+     */
+    static void mark_slave_ready(SPI::Instance* spi);
+
+
+    /**
+     * @brief function used by slave to signal using RS that it is waiting a new message
+     */
+    static void mark_slave_waiting(SPI::Instance* spi);
+
+    /**
+     * @brief Recovers SPI from any error so it starts working again, and counts the error
+     */
+    static void spi_recover(uint8_t id);
+    static void spi_recover(SPI::Instance* spi, SPI_HandleTypeDef* hspi);
 
 
 private:

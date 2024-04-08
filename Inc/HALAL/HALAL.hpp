@@ -27,6 +27,7 @@
 #include "Communication/SNTP/SNTP.hpp"
 #include "CORDIC/CORDIC.hpp"
 #include "FMAC/FMAC.hpp"
+#include "MPUManager/MPUManager.hpp"
 
 namespace HALAL {
 	void start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral);
