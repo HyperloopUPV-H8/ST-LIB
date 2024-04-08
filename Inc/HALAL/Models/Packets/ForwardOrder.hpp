@@ -7,10 +7,21 @@
 template<size_t BufferLength,class... Types> requires NotCallablePack<Types*...>
 class ForwardOrder : public StackPacket<BufferLength,Types...>, public Order{
 public:
-    ForwardOrder(uint16_t id,ServerSocket& forwarder, Types*... values) : StackPacket<BufferLength,Types...>(id,values...) ,forwarding_socket{forwarder}{orders[id] = this;}
+    ForwardOrder(uint16_t id,ServerSocket* forwarder, Types*... values) : StackPacket<BufferLength,Types...>(id,values...) ,{
+        orders[id] = this;
+        forwarding_sockets->push_back(forwarder);
+    }
+    ForwardOrder(uint16_t id,ServerSocket* forwarder,void(*callback)(void), Types*... values) : StackPacket<BufferLength,Types...>(id,values...),callback(callback){
+        orders[id] = this;
+        forwarding_sockets->push_back(forwarder);
+
+        }
+    ForwardOrder(uint16_t id,vector<ServerSocket*>& forwarders,Types*... values) : StackPacket<BufferLength,Types...>(id,values...) ,forwarding_sockets{&forwarder}{orders[id] = this;}
+    ForwardOrder(uint16_t id,vector<ServerSocket*>& forwarders,void(*callback)(void), Types*... values) : StackPacket<BufferLength,Types...>(id,values...),callback(callback),forwarding_sockets{&forwarder}{orders[id] = this;}
+    void(*callback)(void) = nullptr;
 
     void process() override {
-        return;
+        if(callback) callback();
     }
 
     void parse(void* data) override {
@@ -41,10 +52,16 @@ private:
 		StackPacket<BufferLength,Types...>::set_pointer(index, pointer);
 	}
     // socket in charge of forwarding the order
-    ServerSocket& forwarding_socket;
+    vector<ServerSocket*>* forwarding_sockets{};
 };
 
 #if __cpp_deduction_guides >= 201606
 template<class... Types> requires NotCallablePack<Types*...>
 ForwardOrder(uint16_t id,ServerSocket& fwd, Types*... values)->ForwardOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
+template<class... Types> requires NotCallablePack<Types*...>
+ForwardOrder(uint16_t id,ServerSocket& fwd,void(*callback)(void), Types*... values)->ForwardOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
+template<class... Types> requires NotCallablePack<Types*...>
+ForwardOrder(uint16_t id,vector<ServerSocket*> forwarders, Types*... values)->ForwardOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
+template<class... Types> requires NotCallablePack<Types*...>
+ForwardOrder(uint16_t id,vector<ServerSocket*> forwarders, void(*callback)(void),Types*... values)->ForwardOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
 #endif
