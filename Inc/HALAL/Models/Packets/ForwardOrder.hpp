@@ -7,17 +7,16 @@
 template<size_t BufferLength,class... Types> requires NotCallablePack<Types*...>
 class ForwardOrder : public StackPacket<BufferLength,Types...>, public Order{
 public:
-    ForwardOrder(uint16_t id,ServerSocket* forwarder, Types*... values) : StackPacket<BufferLength,Types...>(id,values...) ,{
+    ForwardOrder(uint16_t id,ServerSocket* forwarder, Types*... values) : StackPacket<BufferLength,Types...>(id,values...){
         orders[id] = this;
         forwarding_sockets->push_back(forwarder);
     }
     ForwardOrder(uint16_t id,ServerSocket* forwarder,void(*callback)(void), Types*... values) : StackPacket<BufferLength,Types...>(id,values...),callback(callback){
         orders[id] = this;
         forwarding_sockets->push_back(forwarder);
-
         }
-    ForwardOrder(uint16_t id,vector<ServerSocket*>& forwarders,Types*... values) : StackPacket<BufferLength,Types...>(id,values...) ,forwarding_sockets{&forwarder}{orders[id] = this;}
-    ForwardOrder(uint16_t id,vector<ServerSocket*>& forwarders,void(*callback)(void), Types*... values) : StackPacket<BufferLength,Types...>(id,values...),callback(callback),forwarding_sockets{&forwarder}{orders[id] = this;}
+    ForwardOrder(uint16_t id,vector<ServerSocket*>& forwarders,Types*... values) : StackPacket<BufferLength,Types...>(id,values...) ,forwarding_sockets{&forwarders}{orders[id] = this;}
+    ForwardOrder(uint16_t id,vector<ServerSocket*>& forwarders,void(*callback)(void), Types*... values) : StackPacket<BufferLength,Types...>(id,values...),callback(callback),forwarding_sockets{&forwarders}{orders[id] = this;}
     void(*callback)(void) = nullptr;
 
     void process() override {
@@ -30,8 +29,11 @@ public:
     void parse(OrderProtocol* socket, void* data) override{
     	struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, get_size(), PBUF_POOL);
         pbuf_take(packet, data, get_size());
-        forwarding_socket.tx_packet_buffer.push(packet);
-        forwarding_socket.send();
+        for(const auto& forwarding_socket : *forwarding_sockets)
+        {
+            forwarding_socket->tx_packet_buffer.push(packet);
+            forwarding_socket->send();
+        }
     }
     size_t get_size() override {
         return StackPacket<BufferLength,Types...>::get_size();
