@@ -326,6 +326,9 @@ void SPI::Order_update(){
 				}
 			}
 		}
+		else{
+			spi_check_bus_collision(spi);
+		}
 	}
 }
 
@@ -579,6 +582,11 @@ void SPI::spi_recover(SPI::Instance* spi, SPI_HandleTypeDef* hspi){
 	SPI::slave_check_packet_ID(spi);
 }
 
+void SPI::spi_check_bus_collision(SPI::Instance* spi){
+	if(spi->hspi->State == HAL_SPI_STATE_READY){
+		SPI::spi_recover(spi, spi->hspi);
+	}
+}
 
 
 #endif
