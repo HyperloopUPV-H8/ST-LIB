@@ -9,10 +9,11 @@
 
 void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral) {
 
-#if defined STLIB_ETH
+#if !defined STLIB_ETH
+#else
 	Ethernet::inscribe();
 #endif
-
+	MPUManager::start();
 	HAL_Init();
 	HALconfig::system_clock();
 	HALconfig::peripheral_clock();
@@ -61,7 +62,8 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 	FDCAN::start();
 #endif
 
-#if defined STLIB_ETH
+#if !defined STLIB_ETH
+#else
 	Ethernet::start(ip, subnet_mask, gateway);
 #endif
 
