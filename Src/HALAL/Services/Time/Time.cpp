@@ -14,7 +14,7 @@
 
 TIM_HandleTypeDef* Time::global_timer = &htim2;
 TIM_HandleTypeDef* Time::low_precision_timer = &htim7;
-TIM_HandleTypeDef* Time::mid_precision_timer = &htim23;
+TIM_HandleTypeDef* Time::mid_precision_timer = &htim24;
 
 uint8_t Time::high_precision_ids = 0;
 uint8_t Time::low_precision_ids = 0;
@@ -67,7 +67,7 @@ void Time::start(){
     __HAL_RCC_TIM5_CLK_ENABLE();
     __HAL_RCC_TIM7_CLK_ENABLE();
     __HAL_RCC_TIM24_CLK_ENABLE();
-
+	__HAL_RCC_TIM23_CLK_ENABLE();
 	Time::init_timer(TIM2, &htim2, 0, HIGH_PRECISION_MAX_ARR, TIM2_IRQn);
 	Time::init_timer(TIM5, &htim5, 0, HIGH_PRECISION_MAX_ARR, TIM5_IRQn);
 	Time::init_timer(TIM24, &htim24, 0, HIGH_PRECISION_MAX_ARR, TIM24_IRQn);
@@ -76,10 +76,7 @@ void Time::start(){
 	HAL_TIM_Base_Start_IT(global_timer);
 	HAL_TIM_Base_Start_IT(low_precision_timer);
 
-	Time::available_high_precision_timers.push(&htim24);
 	Time::available_high_precision_timers.push(&htim5);
-
-	Time::high_precision_timers.insert(&htim24);
 	Time::high_precision_timers.insert(&htim5);
 }
 
@@ -125,7 +122,6 @@ uint8_t Time::register_high_precision_alarm(uint32_t period_in_us, function<void
 	};
 
 	NVIC_DisableIRQ(TIM5_IRQn);
-	NVIC_DisableIRQ(TIM24_IRQn);
 	Time::high_precision_alarms_by_id[high_precision_ids]= alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
 
@@ -136,7 +132,6 @@ uint8_t Time::register_high_precision_alarm(uint32_t period_in_us, function<void
 	Time::high_precision_alarms_by_id[high_precision_ids] = alarm;
 	Time::high_precision_alarms_by_timer[tim] = alarm;
 	NVIC_EnableIRQ(TIM5_IRQn);
-	NVIC_EnableIRQ(TIM24_IRQn);
 
 	return high_precision_ids++;
 }
@@ -148,7 +143,6 @@ bool Time::unregister_high_precision_alarm(uint8_t id){
 	}
 
 	NVIC_DisableIRQ(TIM5_IRQn);
-	NVIC_DisableIRQ(TIM24_IRQn);
 	Time::Alarm& alarm = high_precision_alarms_by_id[id];
 	Time::stop_timer(alarm.tim);
 	Time::available_high_precision_timers.push(alarm.tim);
@@ -156,8 +150,6 @@ bool Time::unregister_high_precision_alarm(uint8_t id){
 	Time::high_precision_alarms_by_timer.erase(alarm.tim);
 	Time::high_precision_alarms_by_id.erase(id);
 	NVIC_EnableIRQ(TIM5_IRQn);
-	NVIC_EnableIRQ(TIM24_IRQn);
-
 	return true;
 }
 
@@ -167,8 +159,8 @@ uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void(
 		return 0;
 	}
 	if(std::find_if(TimerPeripheral::timers.begin(),TimerPeripheral::timers.end(), [&](TimerPeripheral& tim) -> bool {
-		return tim.handle == &htim23 && (tim.is_occupied());}) !=  TimerPeripheral::timers.end()){
-		ErrorHandler("htim 23 cannot be used as mid precision timer and PWM or Input Capture Simultaneously");
+		return tim.handle == &htim24 && (tim.is_occupied());}) !=  TimerPeripheral::timers.end()){
+		ErrorHandler("htim 24 cannot be used as mid precision timer and PWM or Input Capture Simultaneously");
 		return 0;
 	}
 
@@ -183,20 +175,20 @@ uint8_t Time::register_mid_precision_alarm(uint32_t period_in_us, function<void(
 	while(mid_precision_alarms_by_id.contains(mid_precision_ids))
 		mid_precision_ids++;
 
-	NVIC_DisableIRQ(TIM23_IRQn);
+	NVIC_DisableIRQ(TIM24_IRQn);
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
 
 	if(not Time::mid_precision_registered){
-	    __HAL_RCC_TIM23_CLK_ENABLE();
-		Time::init_timer(TIM23, Time::mid_precision_timer, 275, Time::mid_precision_step_in_us, TIM23_IRQn);
+	    __HAL_RCC_TIM24_CLK_ENABLE();
+		Time::init_timer(TIM24, Time::mid_precision_timer, 275, Time::mid_precision_step_in_us, TIM24_IRQn);
 		Time::ConfigTimer(Time::mid_precision_timer, Time::mid_precision_step_in_us);
-		NVIC_DisableIRQ(TIM23_IRQn);
+		NVIC_DisableIRQ(TIM24_IRQn);
 		Time::mid_precision_registered = true;
 	}
 
 	alarm.alarm = func;
 	Time::mid_precision_alarms_by_id[mid_precision_ids] = alarm;
-	NVIC_EnableIRQ(TIM23_IRQn);
+	NVIC_EnableIRQ(TIM24_IRQn);
 
 
 	return mid_precision_ids;
@@ -207,11 +199,11 @@ bool Time::unregister_mid_precision_alarm(uint8_t id){
 		return false;
 	}
 
-	NVIC_DisableIRQ(TIM23_IRQn);
+	NVIC_DisableIRQ(TIM24_IRQn);
 	Time::Alarm& alarm = Time::mid_precision_alarms_by_id[id];
 	alarm.is_on = false;
 	Time::mid_precision_erasable_ids.push(id);
-	NVIC_EnableIRQ(TIM23_IRQn);
+	NVIC_EnableIRQ(TIM24_IRQn);
 
 	return true;
 }

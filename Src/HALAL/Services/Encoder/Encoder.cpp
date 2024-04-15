@@ -76,14 +76,14 @@ void Encoder::reset(uint8_t id){
 
 	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];
 
-	timer->handle->Instance->CNT = UINT16_MAX / 2;
+	timer->handle->Instance->CNT = UINT32_MAX / 2;
 }
 
 uint32_t Encoder::get_counter(uint8_t id){
-	if (not Encoder::registered_encoder.contains(id)) {
-		ErrorHandler("No encoder registered with id %u", id);
-		return 0;
-	}
+	// if (not Encoder::registered_encoder.contains(id)) {
+	// 	ErrorHandler("No encoder registered with id %u", id);
+	// 	return 0;
+	// }
 
 	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
 
