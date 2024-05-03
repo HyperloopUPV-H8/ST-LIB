@@ -263,9 +263,9 @@ err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_bloc
 
 void ServerSocket::config_keepalive(tcp_pcb* control_block){
 	control_block->so_options |= SOF_KEEPALIVE;
-	control_block->keep_idle = 500;
-	control_block->keep_intvl = 100;
-	control_block->keep_cnt = 3;
+	control_block->keep_idle = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
+	control_block->keep_intvl = TCP_SPACE_BETWEEN_KEEPALIVE_TRIES_MS;
+	control_block->keep_cnt = TCP_KEEPALIVE_TRIES_UNTIL_DISCONNECTION;
 }
 
 

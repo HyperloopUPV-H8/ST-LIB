@@ -38,7 +38,6 @@ public:
 	Socket();
 	Socket(Socket&& other);
 	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
-	Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port);
 	Socket(EthernetNode local_node, EthernetNode remote_node);
 	~Socket();
 
@@ -99,6 +98,8 @@ public:
 
 	static err_t connection_poll_callback(void* arg, struct tcp_pcb* connection_control_block);
 	static void connection_error_callback(void *arg, err_t error);
+
+	static void config_keepalive(tcp_pcb* control_block);
 
 };
 #endif
