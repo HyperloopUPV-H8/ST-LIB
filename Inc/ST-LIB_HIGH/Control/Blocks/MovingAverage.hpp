@@ -2,6 +2,7 @@
 
 #include "stdio.h"
 #include "../ControlSystem.hpp"
+#include "Concepts/Concepts.hpp"
 
 template<size_t N>
 class MovingAverage : public ControlBlock<double,double> {
@@ -50,13 +51,13 @@ class MovingAverage : public ControlBlock<double,double> {
 };
 
 
-template<class InputType, class OutputType, size_t N>
-class MovingAverageBlock : public ControlBlock<InputType,OutputType> {
+template<std::integral InputType, std::integral OutputType, uint8_t DecimalBitCount , size_t N>
+class MovingAverageBlock : public ControlBlock<InputType, OutputType> {
     private:
-		InputType buffer[N] = {(InputType)0};
+		FollowingUint<InputType>::Value buffer[N] = {0};
         uint32_t first = 0, last = -1;
         uint32_t counter = 0;
-        InputType accumulator = 0.0;
+        FollowingUint<InputType>::Value accumulator = 0.0;
 
     public:
         MovingAverageBlock(): ControlBlock<InputType,OutputType>(){this->output_value = 0;}
@@ -64,21 +65,21 @@ class MovingAverageBlock : public ControlBlock<InputType,OutputType> {
         void execute() override {
         	if(counter < N) {
                 last++;
-        		buffer[last] = this->input_value;
-        		accumulator += this->input_value/N;
+        		buffer[last] = ((decltype(accumulator)) this->input_value) << DecimalBitCount;
+        		accumulator += buffer[last]/N;
         		counter++;
         		return;
         	}
         	accumulator -= buffer[first] / N;
             first = (first + 1) % N;
             last = (last + 1) % N;
-            buffer[last] = this->input_value;
-            accumulator += buffer[last] / N;
+            buffer[last] = ((decltype(accumulator)) this->input_value) << DecimalBitCount;
+            accumulator += buffer[last]/ N;
             this->output_value = (OutputType) accumulator;
             return;
         }
 
-        double compute(InputType input_v) {
+        OutputType compute(InputType input_v) {
         	this->input(input_v);
         	execute();
         	return this->output_value;

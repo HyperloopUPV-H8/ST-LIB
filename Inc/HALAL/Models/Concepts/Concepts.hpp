@@ -98,3 +98,24 @@ concept Array = std::is_array<Type>::value;
 
 template<class Type>
 concept NotArray = not Array<Type>;
+
+template<class Type>
+class FollowingUint;
+
+template<>
+class FollowingUint<uint8_t>{
+public:
+	using Value = uint16_t;
+};
+
+template<>
+class FollowingUint<uint16_t>{
+public:
+	using Value = uint32_t;
+};
+
+template<>
+class FollowingUint<uint32_t>{
+public:
+	using Value = uint64_t;
+};
