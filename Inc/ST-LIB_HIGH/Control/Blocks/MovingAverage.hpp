@@ -51,8 +51,16 @@ class MovingAverage : public ControlBlock<double,double> {
 };
 
 
+/**
+ * @brief version of moving average for integers. Shifts the values by DecimalBitCount before adding to transform them into fixed arithmetic logic
+ *
+ * This version of the moving average implements the same logic as the MovingAverage class, but for any kind of integral values.
+ * For any DecimalBitCount greater than one, it is recommended that the OutputType is of greater size than the InputType to avoid overflows.
+ * The result is given in the Fixed Point Arithmetic of DecimalBitCount number of decimal bits. That is to say, it is shifted to the left by that amount.
+ * To translate back, shift the value to the right by DecimalBitCount bits. Needless to say, that will remove the decimal data.
+ */
 template<std::integral InputType, std::integral OutputType, uint8_t DecimalBitCount , size_t N>
-class MovingAverageBlock : public ControlBlock<InputType, OutputType> {
+class IntegerMovingAverage : public ControlBlock<InputType, OutputType> {
     private:
 		FollowingUint<InputType>::Value buffer[N] = {0};
         uint32_t first = 0, last = -1;
@@ -60,7 +68,7 @@ class MovingAverageBlock : public ControlBlock<InputType, OutputType> {
         FollowingUint<InputType>::Value accumulator = 0.0;
 
     public:
-        MovingAverageBlock(): ControlBlock<InputType,OutputType>(){this->output_value = 0;}
+        IntegerMovingAverage(): ControlBlock<InputType,OutputType>(){this->output_value = 0;}
 
         void execute() override {
         	if(counter < N) {
