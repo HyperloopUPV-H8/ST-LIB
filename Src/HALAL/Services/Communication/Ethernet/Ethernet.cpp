@@ -16,7 +16,6 @@ extern struct netif gnetif;
 extern ip4_addr_t ipaddr, netmask, gw;
 extern uint8_t IP_ADDRESS[4], NETMASK_ADDRESS[4], GATEWAY_ADDRESS[4];
 
-bool ETH_is_cable_connected = false;
 bool Ethernet::is_ready = false;
 bool Ethernet::is_running = false;
 
