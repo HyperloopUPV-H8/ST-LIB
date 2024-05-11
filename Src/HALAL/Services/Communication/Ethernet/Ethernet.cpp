@@ -132,7 +132,7 @@ void Ethernet::update(){
 	//important to call it here, as ethernetif_input is where it 
 	//actually checks the link status, if we didnt check before we would HardFault
 		if(not ETH_is_cable_connected){
-			ErrorHandler("Cable has been disconnected");
+			ErrorHandler("Ethernet cable has been disconnected");
 		return;
 	}
 	sys_check_timeouts();
