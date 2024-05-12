@@ -40,6 +40,9 @@ public:
 		BYTES_64 = FDCAN_DLC_BYTES_64,
 		DEFAULT = UINT32_MAX,
 	};
+    enum ID{
+        FAULT_ID = 1
+    };
 
 	struct Packet{
 		vector<uint8_t> rx_data;
@@ -87,6 +90,8 @@ public:
     static unordered_map<uint8_t, FDCAN::Instance*> registered_fdcan;
     static unordered_map<FDCAN::Peripheral, FDCAN::Instance*> available_fdcans;
     static unordered_map<FDCAN_HandleTypeDef*, FDCAN::Instance*> handle_to_fdcan;
+    static unordered_map<FDCAN::Instance*,uint8_t> instance_to_id;
+    static unordered_map<FDCAN_HandleTypeDef*,uint8_t> handle_to_id;
     static unordered_map<FDCAN::DLC, uint8_t> dlc_to_len;
     /**
 	* @brief FDCAN  wrapper enum of the STM32H723.
@@ -119,7 +124,7 @@ public:
 	 * @return bool Return true if the data queue has any packet.
 	 */
 	static bool received_test(uint8_t id);
-
+    static Packet packet;
 private:
 
     static void init(FDCAN::Instance* fdcan);
