@@ -134,7 +134,7 @@ void FDCAN::init(FDCAN::Instance* fdcan){
 
 	handle->Instance = fdcan->instance;
 	handle->Init.FrameFormat = FDCAN_FRAME_FD_BRS;
-	handle->Init.Mode = FDCAN_MODE_NORMAL;
+	handle->Init.Mode = FDCAN_MODE_EXTERNAL_LOOPBACK;
 	handle->Init.AutoRetransmission = ENABLE;
 	handle->Init.TransmitPause = DISABLE;
 	handle->Init.ProtocolException = DISABLE;
