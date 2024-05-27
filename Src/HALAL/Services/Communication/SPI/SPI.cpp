@@ -199,7 +199,6 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
 	turn_off_chip_select(spi);
 	 HAL_StatusTypeDef errorcode = HAL_SPI_Transmit(spi->hspi, command_data.data(), command_data.size(),10);
 	 if(errorcode != HAL_OK){
-		 ErrorHandler("Error during transmission in %s", spi->name.c_str());
 		 return false;
 	 }
 	 if(HAL_SPI_Receive(spi->hspi, receive_data.data(), receive_data.size(), 10) != HAL_OK){
