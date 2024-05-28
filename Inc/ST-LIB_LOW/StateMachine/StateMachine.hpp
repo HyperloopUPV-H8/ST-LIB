@@ -124,6 +124,7 @@ public:
 
 	void add_state(state_id state);
 	void add_transition(state_id old_state, state_id new_state, function<bool()> transition);
+	uint8_t get_current_state();
 
 	template<class TimeUnit>
 	TimedAction* add_low_precision_cyclic_action(function<void()> action, chrono::duration<int64_t, TimeUnit> period, state_id state);
