@@ -333,6 +333,11 @@ public:
     static void spi_recover(uint8_t id);
     static void spi_recover(SPI::Instance* spi, SPI_HandleTypeDef* hspi);
 
+    /**
+     * @brief Check if an SPI bus collision occurred during recover
+     */
+    static void spi_check_bus_collision(SPI::Instance* spi);
+
 
 private:
     /**
