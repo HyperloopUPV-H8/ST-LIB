@@ -181,6 +181,8 @@ private:
 	static err_t poll_callback(void *arg, struct tcp_pcb *client_control_block);
 	static err_t send_callback(void *arg, struct tcp_pcb *client_control_block, u16_t len);
 
+	static void config_keepalive(tcp_pcb* control_block);
+
 };
 
 #endif

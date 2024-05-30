@@ -57,9 +57,6 @@ Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remo
 	OrderProtocol::sockets.push_back(this);
 }
 
-Socket::Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port):Socket(IPV4(local_ip),local_port,IPV4(remote_ip),remote_port){}
-
-
 Socket::Socket(EthernetNode local_node, EthernetNode remote_node):Socket(local_node.ip, local_node.port, remote_node.ip, remote_node.port){}
 
 void Socket::close(){
@@ -182,6 +179,7 @@ err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, 
 		tcp_poll(client_control_block, poll_callback,0);
 		tcp_sent(client_control_block, send_callback);
 		tcp_err(client_control_block, error_callback);
+		config_keepalive(client_control_block);
 
 		return ERR_OK;
 	}else return ERROR;
@@ -276,6 +274,13 @@ err_t Socket::connection_poll_callback(void *arg, struct tcp_pcb* connection_con
 		socket->pending_connection_reset = true;
 	}
 	return ERR_OK;
+}
+
+void Socket::config_keepalive(tcp_pcb* control_block){
+	control_block->so_options |= SOF_KEEPALIVE;
+	control_block->keep_idle = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
+	control_block->keep_intvl = TCP_SPACE_BETWEEN_KEEPALIVE_TRIES_MS;
+	control_block->keep_cnt = TCP_KEEPALIVE_TRIES_UNTIL_DISCONNECTION;
 }
 
 #endif
