@@ -174,6 +174,8 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 		tcp_sent(incomming_control_block, send_callback);
 		tcp_err(incomming_control_block, error_callback);
 		tcp_poll(incomming_control_block, poll_callback , 0);
+		config_keepalive(incomming_control_block);
+
 
 		tcp_close(server_socket->server_control_block);
 		priority++;
@@ -257,6 +259,13 @@ err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_bloc
 		server_socket->close();
 	}
 	return ERR_OK;
+}
+
+void ServerSocket::config_keepalive(tcp_pcb* control_block){
+	control_block->so_options |= SOF_KEEPALIVE;
+	control_block->keep_idle = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
+	control_block->keep_intvl = TCP_SPACE_BETWEEN_KEEPALIVE_TRIES_MS;
+	control_block->keep_cnt = TCP_KEEPALIVE_TRIES_UNTIL_DISCONNECTION;
 }
 
 
