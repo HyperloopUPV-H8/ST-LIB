@@ -64,6 +64,9 @@ void TimerPeripheral::init() {
 		}
 
 		if (!init_data.input_capture_channels.empty()) {
+			//TO READ LOW FREQUENCIES WE NEED TO PRESCALE
+			//ALSO NEED CHANGE TIM23 TIMER FROM BASE TO ADVANCE
+			handle->Init.Prescaler = 1000; 
 			if (HAL_TIM_IC_Init(handle) != HAL_OK)
 			{
 				ErrorHandler("Unable to init input capture on %d", name.c_str());
