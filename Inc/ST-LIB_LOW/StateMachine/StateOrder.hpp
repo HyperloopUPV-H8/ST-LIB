@@ -9,10 +9,10 @@ public:
 		REMOVE_STATE_ORDERS = 6
 	};
 	static OrderProtocol* informer_socket;
-	static uint8_t state_orders_ids_size;
+	static uint16_t state_orders_ids_size;
 	static vector<uint16_t>* state_orders_ids;
-	static StackOrder<0,uint8_t, vector<uint16_t>> add_state_orders_order;
-	static StackOrder<0,uint8_t, vector<uint16_t>> remove_state_orders_order;
+	static StackOrder<0,uint16_t, vector<uint16_t>> add_state_orders_order;
+	static StackOrder<0,uint16_t, vector<uint16_t>> remove_state_orders_order;
 
 	static void set_socket(OrderProtocol& socket){
 		informer_socket = &socket;
