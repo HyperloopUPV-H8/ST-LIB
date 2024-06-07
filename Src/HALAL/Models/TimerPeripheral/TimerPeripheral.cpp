@@ -73,7 +73,6 @@ void TimerPeripheral::init() {
 		}
 
 		if (!init_data.pwm_channels.empty()) {
-			handle->Init.Prescaler = 1000;
 			if (HAL_TIM_PWM_Init(handle) != HAL_OK) {
 				ErrorHandler("Unable to init PWM on %d", name.c_str());
 			}
