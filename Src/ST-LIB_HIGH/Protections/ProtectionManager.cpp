@@ -93,8 +93,12 @@ void ProtectionManager::notify(Protection& protection){
         protection.fault_protection->update_error_handler_message(protection.fault_protection->get_error_handler_string());
     }
     for(OrderProtocol* socket : OrderProtocol::sockets){
-        if(protection.fault_protection)
-            socket->send_order(*protection.fault_protection->fault_message);
+        if(protection.fault_protection){
+        	if(!(protection.fault_protection->boundary_type_id == ERROR_HANDLER) || ErrorHandlerModel::error_to_communicate){
+        		socket->send_order(*protection.fault_protection->fault_message);
+        		ErrorHandlerModel::error_to_communicate = false;
+        	}
+        }
         for(auto& warning : protection.warnings_triggered){
             socket->send_order(*warning->warn_message);
         }
