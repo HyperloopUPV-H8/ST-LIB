@@ -1,6 +1,7 @@
 #pragma once
-#define PROTECTIONTYPE_LENGTH 7
+#define PROTECTIONTYPE_LENGTH 8
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 #include "Control/Blocks/MeanCalculator.hpp"
 #include "HALAL/Models/Packets/Order.hpp"
 #include "HALAL/Services/Time/RTC.hpp"
@@ -24,7 +25,8 @@ enum ProtectionType : uint8_t {
     EQUALS,
     NOT_EQUALS,
 	ERROR_HANDLER,
-	TIME_ACCUMULATION
+	TIME_ACCUMULATION,
+	INFO_WARNING
 };
 
 struct BoundaryInterface{
@@ -43,8 +45,13 @@ public:
 	}
 	virtual void update_error_handler_message( [[maybe_unused]] const char* err_message){
 	}
+	virtual void update_warning_message( [[maybe_unused]] const char* warn_message){
+	}
 	static const char* get_error_handler_string(){
 		return ErrorHandlerModel::description.c_str();
+	}
+	static const char* get_warning_string(){
+		return InfoWarning::description.c_str();
 	}
 	uint8_t boundary_type_id{};
 		//used to send messages only on raising/failing edges
@@ -55,6 +62,9 @@ protected:
 	static const map<type_id_t,uint8_t> format_look_up;
 	static int get_error_handler_string_size(){
 		return ErrorHandlerModel::description.size();
+	}
+	static int get_warning_string_size(){
+		return InfoWarning::description.size();
 	}
 
 	//this will store the name of the variable
@@ -290,7 +300,37 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 		static constexpr uint16_t ERROR_HANDLER_MSG_MAX_LEN = 255;
 };
 
-
+template<>
+struct Boundary<void,INFO_WARNING> : public BoundaryInterface{
+	static constexpr ProtectionType Protector = INFO_WARNING;
+	Boundary(void*){}
+	uint8_t padding{};
+	Boundary(void*, Boundary<void,INFO_WARNING>)
+	{
+		boundary_type_id = Protector;
+		warning_string.reserve(WARNING_HANDLER_MSG_MAX_LEN);
+		warn_message = new HeapOrder(uint16_t{1556},&padding,&boundary_type_id,&name,&warning_string,
+			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+	}
+	Boundary() = default;
+	Protections::FaultType check_bounds() override{
+		return not InfoWarning::warning_triggered ? Protections::OK : Protections::WARNING;
+	}
+	void update_warning_message(const char* warn_message)override{
+		warning_string = warn_message;
+		if(strlen(warn_message) > WARNING_HANDLER_MSG_MAX_LEN){
+			ErrorHandler("Error Handler message is too long, max length is %d",WARNING_HANDLER_MSG_MAX_LEN);
+			return;
+		}
+		warning_string_len = warning_string.size();
+	}
+	private:
+		
+		string warning_string;
+		uint16_t warning_string_len;
+		static constexpr uint16_t WARNING_HANDLER_MSG_MAX_LEN = 255;
+};
 
 template<typename Type>
 requires(std::is_floating_point_v<Type>)

@@ -96,6 +96,10 @@ void ProtectionManager::notify(Protection& protection){
         if(protection.fault_protection)
             socket->send_order(*protection.fault_protection->fault_message);
         for(auto& warning : protection.warnings_triggered){
+            if(warning->boundary_type_id == INFO_WARNING){
+                warning->update_warning_message(warning->get_warning_string());
+                InfoWarning::warning_triggered = false;
+            }
             socket->send_order(*warning->warn_message);
         }
         for(auto& ok : protection.oks_triggered){
@@ -104,7 +108,7 @@ void ProtectionManager::notify(Protection& protection){
 
     }
     protection.oks_triggered.clear();
-        protection.warnings_triggered.clear();
+    protection.warnings_triggered.clear();
 }
 
 
