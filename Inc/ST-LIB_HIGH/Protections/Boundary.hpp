@@ -307,15 +307,16 @@ struct Boundary<void,INFO_WARNING> : public BoundaryInterface{
 	uint8_t padding{};
 	Boundary(void*, Boundary<void,INFO_WARNING>)
 	{
-		boundary_type_id = Protector;
+		//SW are crybabies
+		boundary_type_id = Protector-2;
 		warning_string.reserve(WARNING_HANDLER_MSG_MAX_LEN);
-		warn_message = new HeapOrder(uint16_t{1556},&padding,&boundary_type_id,&name,&warning_string,
+		warn_message = new HeapOrder(uint16_t{2555},&padding,&boundary_type_id,&name,&warning_string,
 			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 	}
 	Boundary() = default;
 	Protections::FaultType check_bounds() override{
-		return not InfoWarning::warning_triggered ? Protections::OK : Protections::WARNING;
+		return InfoWarning::warning_triggered ? Protections::WARNING : Protections::OK;
 	}
 	void update_warning_message(const char* warn_message)override{
 		warning_string = warn_message;

@@ -8,7 +8,7 @@ Notification ProtectionManager::warning_notification = {ProtectionManager::warni
 StackOrder<0> ProtectionManager::fault_order(Protections::FAULT,to_fault);
 uint64_t ProtectionManager::last_notify = 0;
 void *error_handler;
-
+void* info_warning;
 
 void ProtectionManager::initialize(){
     for (Protection& protection: low_frequency_protections) {
@@ -25,6 +25,7 @@ void ProtectionManager::initialize(){
 
 void ProtectionManager::add_standard_protections(){
 	add_protection(error_handler, Boundary<void,ERROR_HANDLER>(error_handler));
+	add_protection(info_warning, Boundary<void,INFO_WARNING>(info_warning));
 }
 
 void ProtectionManager::set_id(Boards::ID board_id){
@@ -96,7 +97,7 @@ void ProtectionManager::notify(Protection& protection){
         if(protection.fault_protection)
             socket->send_order(*protection.fault_protection->fault_message);
         for(auto& warning : protection.warnings_triggered){
-            if(warning->boundary_type_id == INFO_WARNING){
+            if(warning->boundary_type_id == INFO_WARNING-2){
                 warning->update_warning_message(warning->get_warning_string());
                 InfoWarning::warning_triggered = false;
             }
