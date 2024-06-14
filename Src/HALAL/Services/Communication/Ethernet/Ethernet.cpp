@@ -7,6 +7,7 @@
 
 #include "Communication/Ethernet/Ethernet.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "MPUManager/MPUManager.hpp"
 
 #ifdef HAL_ETH_MODULE_ENABLED
 
@@ -89,6 +90,7 @@ void Ethernet::start(IPV4 local_ip, IPV4 subnet_mask, IPV4 gateway){
 		GATEWAY_ADDRESS[3] = (gw.addr >> 24) & 0xFF;
 		MX_LWIP_Init();
 		is_running = true;
+		ETH_is_cable_connected = true;
 	}else{
 		ErrorHandler("Unable to start Ethernet!");
 	}
@@ -112,9 +114,6 @@ void Ethernet::inscribe(){
 		Pin::inscribe(PG11, ALTERNATIVE);
 		Pin::inscribe(PG0, ALTERNATIVE);
 		Pin::inscribe(PG13, ALTERNATIVE);
-		mpu_start();
-		SCB_EnableICache();
-		SCB_EnableDCache();
 		is_ready = true;
 	}else{
 		ErrorHandler("Unable to inscribe Ethernet because is already ready!");
@@ -130,6 +129,12 @@ void Ethernet::update(){
 	}
 
 	ethernetif_input(&gnetif);
+	//important to call it here, as ethernetif_input is where it 
+	//actually checks the link status, if we didnt check before we would HardFault
+		if(not ETH_is_cable_connected){
+			ErrorHandler("Ethernet cable has been disconnected");
+		return;
+	}
 	sys_check_timeouts();
 
 	if (HAL_GetTick() - EthernetLinkTimer >= 100) {
@@ -140,6 +145,7 @@ void Ethernet::update(){
 			netif_set_up(&gnetif);
 		}
 	}
+
 }
 
 #endif

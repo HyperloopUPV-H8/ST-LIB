@@ -35,10 +35,16 @@ public:
 	static unordered_map<EthernetNode,Socket*> connecting_sockets;
 	bool pending_connection_reset = false;
 
+	struct KeepaliveConfig{
+		uint32_t inactivity_time_until_keepalive_ms = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
+		uint32_t space_between_tries_ms = TCP_SPACE_BETWEEN_KEEPALIVE_TRIES_MS;
+		uint32_t tries_until_disconnection = TCP_KEEPALIVE_TRIES_UNTIL_DISCONNECTION;
+	}keepalive_config;
+
 	Socket();
 	Socket(Socket&& other);
 	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
-	Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port);
+	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port, uint32_t inactivity_time_until_keepalive_ms, uint32_t space_between_tries_ms, uint32_t tries_until_disconnection);
 	Socket(EthernetNode local_node, EthernetNode remote_node);
 	~Socket();
 
@@ -99,6 +105,8 @@ public:
 
 	static err_t connection_poll_callback(void* arg, struct tcp_pcb* connection_control_block);
 	static void connection_error_callback(void *arg, err_t error);
+
+	static void config_keepalive(tcp_pcb* control_block, Socket* socket);
 
 };
 #endif
