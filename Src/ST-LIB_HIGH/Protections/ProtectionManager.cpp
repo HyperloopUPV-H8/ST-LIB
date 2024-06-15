@@ -8,7 +8,7 @@ Notification ProtectionManager::warning_notification = {ProtectionManager::warni
 StackOrder<0> ProtectionManager::fault_order(Protections::FAULT,to_fault);
 uint64_t ProtectionManager::last_notify = 0;
 void *error_handler;
-
+void* info_warning;
 
 void ProtectionManager::initialize(){
     for (Protection& protection: low_frequency_protections) {
@@ -25,6 +25,7 @@ void ProtectionManager::initialize(){
 
 void ProtectionManager::add_standard_protections(){
 	add_protection(error_handler, Boundary<void,ERROR_HANDLER>(error_handler));
+	add_protection(info_warning, Boundary<void,INFO_WARNING>(info_warning));
 }
 
 void ProtectionManager::set_id(Boards::ID board_id){
@@ -93,9 +94,17 @@ void ProtectionManager::notify(Protection& protection){
         protection.fault_protection->update_error_handler_message(protection.fault_protection->get_error_handler_string());
     }
     for(OrderProtocol* socket : OrderProtocol::sockets){
-        if(protection.fault_protection)
-            socket->send_order(*protection.fault_protection->fault_message);
+        if(protection.fault_protection){
+        	if(!(protection.fault_protection->boundary_type_id == ERROR_HANDLER) || ErrorHandlerModel::error_to_communicate){
+        		socket->send_order(*protection.fault_protection->fault_message);
+        		ErrorHandlerModel::error_to_communicate = false;
+        	}
+        }
         for(auto& warning : protection.warnings_triggered){
+            if(warning->boundary_type_id == INFO_WARNING-2){
+                warning->update_warning_message(warning->get_warning_string());
+                InfoWarning::warning_triggered = false;
+            }
             socket->send_order(*warning->warn_message);
         }
         for(auto& ok : protection.oks_triggered){
@@ -104,7 +113,7 @@ void ProtectionManager::notify(Protection& protection){
 
     }
     protection.oks_triggered.clear();
-        protection.warnings_triggered.clear();
+    protection.warnings_triggered.clear();
 }
 
 

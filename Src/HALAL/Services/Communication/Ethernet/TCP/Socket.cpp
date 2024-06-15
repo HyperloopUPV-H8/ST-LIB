@@ -57,6 +57,12 @@ Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remo
 	OrderProtocol::sockets.push_back(this);
 }
 
+Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port, uint32_t inactivity_time_until_keepalive_ms, uint32_t space_between_tries_ms, uint32_t tries_until_disconnection): Socket(local_ip, local_port, remote_ip, remote_port){
+	keepalive_config.inactivity_time_until_keepalive_ms = inactivity_time_until_keepalive_ms;
+	keepalive_config.space_between_tries_ms = space_between_tries_ms;
+	keepalive_config.tries_until_disconnection = tries_until_disconnection;
+}
+
 Socket::Socket(EthernetNode local_node, EthernetNode remote_node):Socket(local_node.ip, local_node.port, remote_node.ip, remote_node.port){}
 
 void Socket::close(){
@@ -179,7 +185,7 @@ err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, 
 		tcp_poll(client_control_block, poll_callback,0);
 		tcp_sent(client_control_block, send_callback);
 		tcp_err(client_control_block, error_callback);
-		config_keepalive(client_control_block);
+		config_keepalive(client_control_block, socket);
 
 		return ERR_OK;
 	}else return ERROR;
@@ -243,12 +249,8 @@ err_t Socket::send_callback(void* arg, struct tcp_pcb* client_control_block, uin
 
 void Socket::error_callback(void *arg, err_t error){
 	Socket* socket = (Socket*) arg;
-	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
-		socket->reset();
-	}else{
 		ErrorHandler("Client socket error: %d. Socket closed",error);
-	}
 }
 
 void Socket::connection_error_callback(void *arg, err_t error){
@@ -276,11 +278,11 @@ err_t Socket::connection_poll_callback(void *arg, struct tcp_pcb* connection_con
 	return ERR_OK;
 }
 
-void Socket::config_keepalive(tcp_pcb* control_block){
+void Socket::config_keepalive(tcp_pcb* control_block, Socket* socket){
 	control_block->so_options |= SOF_KEEPALIVE;
-	control_block->keep_idle = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
-	control_block->keep_intvl = TCP_SPACE_BETWEEN_KEEPALIVE_TRIES_MS;
-	control_block->keep_cnt = TCP_KEEPALIVE_TRIES_UNTIL_DISCONNECTION;
+	control_block->keep_idle = socket->keepalive_config.inactivity_time_until_keepalive_ms;
+	control_block->keep_intvl = socket->keepalive_config.space_between_tries_ms;
+	control_block->keep_cnt = socket->keepalive_config.tries_until_disconnection;
 }
 
 #endif

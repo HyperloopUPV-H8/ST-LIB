@@ -63,7 +63,6 @@ public:
 		return buffer[mlast_index];
 	}
 
-
 private:
 	std::array<item_type, N> buffer;
 	uint32_t msize;

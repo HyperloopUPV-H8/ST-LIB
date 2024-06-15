@@ -2,12 +2,12 @@
 
 
 
-#include  "HALAL/Services/Communication/Ethernet/TCP/ServerSocket.hpp"
+#include  "HALAL/Services/Communication/Ethernet/TCP/Socket.hpp"
 
 template<size_t BufferLength,class... Types> requires NotCallablePack<Types*...>
 class ForwardOrder : public StackPacket<BufferLength,Types...>, public Order{
 public:
-    ForwardOrder(uint16_t id,ServerSocket& forwarder, Types*... values) : StackPacket<BufferLength,Types...>(id,values...) ,forwarding_socket{forwarder}{orders[id] = this;}
+    ForwardOrder(uint16_t id,Socket& forwarder, Types*... values) : StackPacket<BufferLength,Types...>(id,values...) ,forwarding_socket{forwarder}{orders[id] = this;}
 
     void process() override {
         return;
@@ -41,10 +41,10 @@ private:
 		StackPacket<BufferLength,Types...>::set_pointer(index, pointer);
 	}
     // socket in charge of forwarding the order
-    ServerSocket& forwarding_socket;
+    Socket& forwarding_socket;
 };
 
 #if __cpp_deduction_guides >= 201606
 template<class... Types> requires NotCallablePack<Types*...>
-ForwardOrder(uint16_t id,ServerSocket& fwd, Types*... values)->ForwardOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
+ForwardOrder(uint16_t id,Socket& fwd, Types*... values)->ForwardOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
 #endif
