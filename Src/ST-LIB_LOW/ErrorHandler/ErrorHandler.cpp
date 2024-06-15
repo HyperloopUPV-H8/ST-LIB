@@ -12,6 +12,7 @@ string ErrorHandlerModel::line = "Error-No-Line-Found";
 string ErrorHandlerModel::func = "Error-No-Func-Found";
 string ErrorHandlerModel::file = "Error-No-File-Found";
 double ErrorHandlerModel::error_triggered = 0;
+bool ErrorHandlerModel::error_to_communicate = false;
 
 void ErrorHandlerModel::SetMetaData(int line, const char * func, const char * file){
 		ErrorHandlerModel::line = to_string(line);
@@ -25,6 +26,7 @@ void ErrorHandlerModel::ErrorHandlerTrigger(string format, ... ){
 	}
 
 	ErrorHandlerModel::error_triggered = 1.0;
+	ErrorHandlerModel::error_to_communicate = true; //This flag is marked so the ProtectionManager can know if it already consumed the error in question.
 
 	if (format.length() != 0) {
 		description = "";

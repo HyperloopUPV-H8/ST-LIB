@@ -249,12 +249,8 @@ err_t Socket::send_callback(void* arg, struct tcp_pcb* client_control_block, uin
 
 void Socket::error_callback(void *arg, err_t error){
 	Socket* socket = (Socket*) arg;
-	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
-		socket->reset();
-	}else{
 		ErrorHandler("Client socket error: %d. Socket closed",error);
-	}
 }
 
 void Socket::connection_error_callback(void *arg, err_t error){
