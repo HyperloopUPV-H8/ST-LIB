@@ -10,12 +10,12 @@
 #include "Encoder/Encoder.hpp"
 #include "Time/Time.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-#define COUNTER_DISTANCE_IN_METERS 0.025
+#define COUNTER_DISTANCE_IN_METERS 0.0001
 #define NANO_SECOND 1000000000.0
-#define N_FRAMES 8
-#define FRAME_SIZE_IN_SECONDS 0.01
-#define START_COUNTER UINT16_MAX / 2
-#define CLOCK_MAX_VALUE 4294967295 //here goes the tim2 counter period
+#define N_FRAMES 100
+#define FRAME_SIZE_IN_SECONDS 0.005
+#define START_COUNTER UINT32_MAX / 2
+#define CLOCK_MAX_VALUE 4294967295 //here goes the tim23 counter period
 
 
 

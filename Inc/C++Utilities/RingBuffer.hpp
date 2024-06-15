@@ -60,7 +60,7 @@ public:
 	}
 
 	item_type latest()const{
-			return buffer[mlast_index];
+		return buffer[mlast_index];
 	}
 
 private:
