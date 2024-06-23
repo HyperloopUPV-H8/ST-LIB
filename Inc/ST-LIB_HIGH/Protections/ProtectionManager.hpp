@@ -64,6 +64,7 @@ public:
     static void warn(string message);
     static void fault_and_propagate();
     static void notify(Protection& protection);
+    static void propagate_fault();
 private:
 	static constexpr uint16_t warning_id = 2;
 	static constexpr uint16_t fault_id = 3;
