@@ -35,7 +35,9 @@ Socket::~Socket(){
 	else OrderProtocol::sockets.erase(it);
 }
 
-Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port): local_ip(local_ip), local_port(local_port),remote_ip(remote_ip), remote_port(remote_port){
+Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port,bool use_keep_alive):
+		local_ip(local_ip), local_port(local_port),remote_ip(remote_ip), remote_port(remote_port),use_keep_alives{use_keep_alive}
+		{
 	if(not Ethernet::is_running) {
 		ErrorHandler("Cannot declare TCP socket before Ethernet::start()");
 		return;
@@ -185,7 +187,8 @@ err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, 
 		tcp_poll(client_control_block, poll_callback,0);
 		tcp_sent(client_control_block, send_callback);
 		tcp_err(client_control_block, error_callback);
-		config_keepalive(client_control_block, socket);
+		if(socket->use_keep_alives)
+			config_keepalive(client_control_block, socket);
 
 		return ERR_OK;
 	}else return ERROR;
