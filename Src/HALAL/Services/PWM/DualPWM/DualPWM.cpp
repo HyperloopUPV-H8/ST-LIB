@@ -76,4 +76,47 @@ void DualPWM::turn_off_negated() {
   }
 }
 
+void DualPWM::set_duty_cycle(float duty_cycle){
+	uint16_t raw_duty = __HAL_TIM_GET_AUTORELOAD(peripheral->handle) / 100.0 * duty_cycle;
+	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty);
+	this->duty_cycle = duty_cycle;
+}
+void DualPWM::set_frequency(uint32_t freq_in_hz){
+  	this->frequency = freq_in_hz;
+	TIM_TypeDef& timer = *peripheral->handle->Instance;
+	timer.ARR = (HAL_RCC_GetPCLK1Freq()*2 / (timer.PSC+1)) / frequency;
+	set_duty_cycle(duty_cycle);
+}
+uint32_t DualPWM::get_frequency()const{
+  return frequency;
+}
+float DualPWM::get_duty_cycle()const{
+  return duty_cycle;
+}
+void DualPWM::set_dead_time(std::chrono::nanoseconds dead_time_ns)
+{
+	TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
+	
+	// per https://hasanyavuz.ozderya.net/?p=437
+	auto time = dead_time_ns.count();
+
+	if(time <= 127 * clock_period_ns){
+		sBreakDeadTimeConfig.DeadTime = time/clock_period_ns;
+	}else if (time >127 * clock_period_ns && time  <= 2 * clock_period_ns * 127)
+	{
+		sBreakDeadTimeConfig.DeadTime = time /(2 * clock_period_ns) - 64 + 128;
+	}else if(time > 2 * clock_period_ns * 127 && time <= 8 * clock_period_ns * 127){
+		sBreakDeadTimeConfig.DeadTime = time/(8 * clock_period_ns) -32 + 192;
+	}else if(time > 8 * clock_period_ns * 127 && time <=16 * clock_period_ns*127){
+		sBreakDeadTimeConfig.DeadTime = time/(16 * clock_period_ns) -32 + 224;
+	}else{
+		ErrorHandler("Invalid dead time configuration");
+	}
+	//sBreakDeadTimeConfig.LockLevel = 0;
+	//sBreakDeadTimeConfig.BreakState = 1;
+	HAL_TIMEx_ConfigBreakDeadTime(peripheral->handle,&sBreakDeadTimeConfig);
+	peripheral->handle->Instance->BDTR |= TIM_BDTR_MOE;
+	return;
+
+}
 

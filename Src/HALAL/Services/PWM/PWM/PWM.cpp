@@ -11,6 +11,7 @@
 
 PWM::PWM(Pin& pin) {
 	if (not TimerPeripheral::available_pwm.contains(pin)) {
+
 		ErrorHandler("Pin %s is not registered as an available PWM", pin.to_string());
 		return;
 	}
@@ -29,9 +30,13 @@ PWM::PWM(Pin& pin) {
 	timer.init_data.pwm_channels.push_back(pwm_data);
 
 	duty_cycle = 0;
+	is_initialized = true;
 }
 
 void PWM::turn_on() {
+  if(not is_initialized){
+	ErrorHandler("PWM was not initialized");
+  }
   if(is_on) return;
   if(HAL_TIM_PWM_Start(peripheral->handle, channel) != HAL_OK) {
     ErrorHandler("PWM did not turn on correctly", 0);
@@ -66,4 +71,40 @@ uint32_t PWM::get_frequency() {
 
 float PWM::get_duty_cycle(){
 	return duty_cycle;
+}
+void PWM::set_dead_time(std::chrono::nanoseconds dead_time_ns)
+{
+	TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
+	
+	// per https://hasanyavuz.ozderya.net/?p=437
+	auto time = dead_time_ns.count();
+
+	if(time <= 127 * clock_period_ns){
+		sBreakDeadTimeConfig.DeadTime = time/clock_period_ns;
+	}else if (time >127 * clock_period_ns && time  <= 2 * clock_period_ns * 127)
+	{
+		sBreakDeadTimeConfig.DeadTime = time /(2 * clock_period_ns) - 64 + 128;
+	}else if(time > 2 * clock_period_ns * 127 && time <= 8 * clock_period_ns * 127){
+		sBreakDeadTimeConfig.DeadTime = time/(8 * clock_period_ns) -32 + 192;
+	}else if(time > 8 * clock_period_ns * 127 && time <=16 * clock_period_ns*127){
+		sBreakDeadTimeConfig.DeadTime = time/(16 * clock_period_ns) -32 + 224;
+	}else{
+		ErrorHandler("Invalid dead time configuration");
+	}
+
+	sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+	sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+	sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+	sBreakDeadTimeConfig.BreakState = TIM_BREAK_ENABLE;
+	sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+	sBreakDeadTimeConfig.BreakFilter = 0;
+	sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
+	sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
+	sBreakDeadTimeConfig.Break2Filter = 0;
+	sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+	HAL_TIMEx_ConfigBreakDeadTime(peripheral->handle,&sBreakDeadTimeConfig);
+	peripheral->handle->Instance->BDTR |= TIM_BDTR_MOE;
+
+	return;
+
 }
