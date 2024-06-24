@@ -22,5 +22,6 @@ public:
     void reset(){
         mean = 0.0;
         index = 0;
+        output_value = 0.0;
     }
 };
