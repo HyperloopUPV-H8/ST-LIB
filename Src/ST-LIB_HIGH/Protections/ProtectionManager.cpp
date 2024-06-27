@@ -5,7 +5,7 @@
 StateMachine* ProtectionManager::general_state_machine = nullptr;
 Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, nullptr};
 Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
-StackOrder<0> ProtectionManager::fault_order(Protections::FAULT,to_fault);
+StackOrder<0> ProtectionManager::fault_order(Protections::FAULT,tcp_to_fault);
 uint64_t ProtectionManager::last_notify = 0;
 void *error_handler;
 void* info_warning;
@@ -37,10 +37,13 @@ void ProtectionManager::link_state_machine(StateMachine& general_state_machine, 
 	ProtectionManager::fault_state_id = fault_id;
 }
 
+void ProtectionManager::tcp_to_fault()
+{
+    test_fault = true;
+    to_fault();
+}
+
 void ProtectionManager::to_fault(){
-    if(!hereited_fault){
-        ErrorHandler("Fail on Board with ID:", NULL, ProtectionManager::board_id);
-    }
     if(general_state_machine->current_state != fault_state_id){
 	    fault_and_propagate();
 	}
@@ -49,9 +52,7 @@ void ProtectionManager::to_fault(){
 
 void ProtectionManager::fault_and_propagate(){
 	ProtectionManager::general_state_machine->force_change_state(fault_state_id);
-	for(OrderProtocol* socket : OrderProtocol::sockets){
-		socket->send_order(fault_order);
-	}
+	propagate_fault();
 }
 
 void ProtectionManager::check_protections() {
@@ -120,19 +121,20 @@ void ProtectionManager::notify(Protection& protection){
 }
 
 void ProtectionManager::propagate_fault(){
+    if(!test_fault)
+    {
+         ErrorHandler("Fail on Board with ID:", NULL, ProtectionManager::board_id);
+    }
 		for(OrderProtocol* socket : OrderProtocol::sockets){
 			socket->send_order(ProtectionManager::fault_order);
 		}
 }
 
-void ProtectionManager::set_hereited_fault(){
-    hereited_fault = true;
-}
 
 Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;
 size_t ProtectionManager::message_size = 0;
 char* ProtectionManager::message = nullptr;
-bool ProtectionManager::hereited_fault = false;
+bool ProtectionManager::test_fault = false;
 ProtectionManager::state_id ProtectionManager::fault_state_id = 255;
 vector<Protection> ProtectionManager::low_frequency_protections = {};
 vector<Protection> ProtectionManager::high_frequency_protections = {};
