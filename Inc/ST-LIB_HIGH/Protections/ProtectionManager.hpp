@@ -65,11 +65,13 @@ public:
     static void fault_and_propagate();
     static void notify(Protection& protection);
     static void propagate_fault();
+    static void set_hereited_fault();
 private:
 	static constexpr uint16_t warning_id = 2;
 	static constexpr uint16_t fault_id = 3;
 	static char* message;
 	static size_t message_size;
+    static bool hereited_fault;
 	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}";
 
     static Boards::ID board_id;

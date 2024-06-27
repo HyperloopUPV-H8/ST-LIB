@@ -38,6 +38,9 @@ void ProtectionManager::link_state_machine(StateMachine& general_state_machine, 
 }
 
 void ProtectionManager::to_fault(){
+    if(!hereited_fault){
+        ErrorHandler("Fail on Board with ID:", NULL, ProtectionManager::board_id);
+    }
     if(general_state_machine->current_state != fault_state_id){
 	    fault_and_propagate();
 	}
@@ -122,9 +125,14 @@ void ProtectionManager::propagate_fault(){
 		}
 }
 
+void ProtectionManager::set_hereited_fault(){
+    hereited_fault = true;
+}
+
 Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;
 size_t ProtectionManager::message_size = 0;
 char* ProtectionManager::message = nullptr;
+bool ProtectionManager::hereited_fault = false;
 ProtectionManager::state_id ProtectionManager::fault_state_id = 255;
 vector<Protection> ProtectionManager::low_frequency_protections = {};
 vector<Protection> ProtectionManager::high_frequency_protections = {};
