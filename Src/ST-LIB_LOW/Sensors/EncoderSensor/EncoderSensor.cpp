@@ -51,15 +51,6 @@ uint8_t EncoderSensor::get_id(){
 	return id;
 }
 
-
-void EncoderSensor::get_arrays(double ret[3][N_FRAMES]){
-	for(int i = 0; i < N_FRAMES; i++) {
-		ret[0][i] = positions[i];
-		ret[1][i] = times[i];
-		ret[2][i] = speeds[i];
-	}
-}
-
 void EncoderSensor::update_arrays(){
 	for(int i = 1; i < N_FRAMES; i++){
 		positions[i-1] = positions[i];
