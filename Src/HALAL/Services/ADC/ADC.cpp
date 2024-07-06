@@ -103,6 +103,11 @@ uint16_t ADC::get_int_value(uint8_t id) {
 	}
 }
 
+uint16_t* ADC::get_value_pointer(uint8_t id) {
+	Instance& instance = active_instances[id];
+	return &instance.peripheral->dma_data_buffer[instance.rank];
+}
+
 void ADC::init(Peripheral& peripheral) {
 	ADC_MultiModeTypeDef multimode = {0};
 	ADC_ChannelConfTypeDef sConfig = {0};
