@@ -130,7 +130,7 @@ public :
 	 * @param callback the function to be executed
 	 * @return uint8_t the id of the order, if it didnot succeed it will return 255
 	 */
-	[[nodiscard]]static uint8_t set_timeout(int milliseconds, function<void()> callback);
+	static uint8_t set_timeout(int milliseconds, function<void()> callback);
 
 	/**
 	 * @brief Cancels a timeout by derigstering the alarm bound to it
