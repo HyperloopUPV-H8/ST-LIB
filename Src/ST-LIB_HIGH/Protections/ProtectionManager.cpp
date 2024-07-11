@@ -116,6 +116,11 @@ void ProtectionManager::notify(Protection& protection){
     protection.warnings_triggered.clear();
 }
 
+void ProtectionManager::propagate_fault(){
+		for(OrderProtocol* socket : OrderProtocol::sockets){
+			socket->send_order(ProtectionManager::fault_order);
+		}
+}
 
 Boards::ID ProtectionManager::board_id = Boards::ID::NOBOARD;
 size_t ProtectionManager::message_size = 0;
