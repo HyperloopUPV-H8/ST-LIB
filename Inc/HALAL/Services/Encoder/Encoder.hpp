@@ -75,5 +75,7 @@ public:
 	static bool get_direction(uint8_t id);
 
 	static void init(TimerPeripheral* encoder);
+
+	static uint32_t get_initial_counter_value(uint8_t id);
 };
 #endif
