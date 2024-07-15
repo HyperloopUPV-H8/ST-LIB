@@ -29,6 +29,7 @@
 #include "FMAC/FMAC.hpp"
 #include "MPUManager/MPUManager.hpp"
 #include "Services/InfoWarning/InfoWarning.hpp"
+#include "Watchdog/Watchdog.hpp"
 
 namespace HALAL {
 	void start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral);
