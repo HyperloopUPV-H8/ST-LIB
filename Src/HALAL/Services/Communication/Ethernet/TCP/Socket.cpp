@@ -253,7 +253,7 @@ err_t Socket::send_callback(void* arg, struct tcp_pcb* client_control_block, uin
 void Socket::error_callback(void *arg, err_t error){
 	Socket* socket = (Socket*) arg;
 		socket->close();
-		ErrorHandler("Client socket error: %d. Socket closed",error);
+		ErrorHandler("Client socket error: %d. Socket closed, remote ip: %s",error,socket->remote_ip.string_address);
 }
 
 void Socket::connection_error_callback(void *arg, err_t error){
