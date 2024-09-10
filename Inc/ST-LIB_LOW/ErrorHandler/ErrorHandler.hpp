@@ -20,6 +20,7 @@ private:
 
 public:
 	static double error_triggered;
+	static bool error_to_communicate;
 
 	 /**
 	 * @brief Triggers ErrorHandler and format the error message. The format works
@@ -47,6 +48,8 @@ public:
 	 * @brief Transmit the error message.
 	 */
 	static void ErrorHandlerUpdate();
+
+	friend class BoundaryInterface;
 
 };
 

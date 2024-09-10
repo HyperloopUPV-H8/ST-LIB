@@ -7,6 +7,7 @@
 
 #pragma once
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 
 class Stopwatch{
 
@@ -15,6 +16,6 @@ private:
 
 public:
 	void start(const string);
-	optional<uint64_t> stop(const string);
+	uint64_t stop(const string);
 };
 

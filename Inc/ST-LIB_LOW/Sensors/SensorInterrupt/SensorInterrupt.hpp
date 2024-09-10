@@ -12,13 +12,13 @@
 
 class SensorInterrupt{
 public:
-	SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState *value);
-	SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState &value);
+	SensorInterrupt() = default;
+	SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState *value, ExternalInterrupt::TRIGGER trigger = ExternalInterrupt::RISING);
+	SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState &value, ExternalInterrupt::TRIGGER trigger = ExternalInterrupt::RISING);
 	void read();
 	uint8_t get_id();
 
 protected:
-	Pin &pin;
 	uint8_t id;
 	PinState *value;
 };

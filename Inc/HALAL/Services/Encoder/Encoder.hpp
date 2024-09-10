@@ -31,9 +31,9 @@ public:
 	 * @param pin1	First pin of the encoder
 	 * @param pin2 	Second pin of the encoder
 	 *
-	 * @retval optional<uint8_t> Id of the service or empty if the pin pair is not valid
+	 * @retval uint8_t Id of the service
 	 */
-	static optional<uint8_t> inscribe(Pin& pin1, Pin& pin2);
+	static uint8_t inscribe(Pin& pin1, Pin& pin2);
 
 	static void start();
 
@@ -62,18 +62,20 @@ public:
 	 * @brief Get the CNT value of the encoder
 	 *
 	 * @param id Id of the encoder
-	 * @return optional<uint32_t> CNT value if the id is valid, empty if not
+	 * @return uint32_t CNT value if the id is valid
 	 */
-	static optional<uint32_t> get_counter(uint8_t id);
+	static uint32_t get_counter(uint8_t id);
 
 	/**
 	 * @brief Get the encoder direction
 	 *
 	 * @param id Id
-	 * @return optional<bool> Encoder direction if id is valid, empty if not
+	 * @return bool Encoder direction if id is valid
 	 */
-	static optional<bool> get_direction(uint8_t id);
+	static bool get_direction(uint8_t id);
 
 	static void init(TimerPeripheral* encoder);
+
+	static uint32_t get_initial_counter_value(uint8_t id);
 };
 #endif

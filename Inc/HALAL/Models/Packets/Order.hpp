@@ -7,26 +7,32 @@
 #pragma once
 
 #include "Packet.hpp"
+#include "OrderProtocol.hpp"
 
 class Order : public Packet{
 public:
     virtual void set_callback(void(*callback)(void)) = 0;
     virtual void process() = 0;
+    virtual void parse(OrderProtocol* socket, void* data) = 0;
+    void parse(void* data) override {
+    	parse(nullptr, data);
+    }
     static void process_by_id(uint16_t id) {
         if (orders.find(id) != orders.end()) orders[id]->process();
     }
-    static void process_data(void* data) {
+    static void process_data(OrderProtocol* socket, void* data) {
         uint16_t id = Packet::get_id(data);
         if (orders.contains(id)) {
-            orders[id]->parse(data);
+            orders[id]->parse(socket, data);
             orders[id]->process();
         }
     }
+
 protected:
     static map<uint16_t,Order*> orders;
 };
 
-template<size_t BufferLength,class... Types>
+template<size_t BufferLength,class... Types> requires NotCallablePack<Types*...>
 class StackOrder : public StackPacket<BufferLength,Types...>, public Order{
 public:
     StackOrder(uint16_t id,void(*callback)(void), Types*... values) : StackPacket<BufferLength,Types...>(id,values...), callback(callback) {orders[id] = this;}
@@ -44,19 +50,26 @@ public:
     void parse(void* data) override {
         StackPacket<BufferLength,Types...>::parse(data);
     }
+    void parse(OrderProtocol* socket, void* data) override{
+    	parse(data);
+    }
     size_t get_size() override {
         return StackPacket<BufferLength,Types...>::get_size();
     }
     uint16_t get_id() override {
         return StackPacket<BufferLength,Types...>::get_id();
     }
+
+	void set_pointer(size_t index, void* pointer) override{
+		StackPacket<BufferLength,Types...>::set_pointer(index, pointer);
+	}
 };
 
 #if __cpp_deduction_guides >= 201606
-template<class... Types>
+template<class... Types> requires NotCallablePack<Types*...>
 StackOrder(uint16_t id,void(*callback)(void), Types*... values)->StackOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
 
-template<class... Types>
+template<class... Types> requires NotCallablePack<Types*...>
 StackOrder(uint16_t id, Types*... values)->StackOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
 #endif
 
@@ -81,10 +94,17 @@ public:
     void parse(void* data) override {
         HeapPacket::parse(data);
     }
+    void parse(OrderProtocol* socket, void* data){
+    	parse(data);
+    }
     size_t get_size() override {
         return HeapPacket::get_size();
     }
     uint16_t get_id() override {
         return HeapPacket::get_id();
     }
+    void set_pointer(size_t index, void* pointer) override{
+    	HeapPacket::set_pointer(index, pointer);
+	}
+
 };

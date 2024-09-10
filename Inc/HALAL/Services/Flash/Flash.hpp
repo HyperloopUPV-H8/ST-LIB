@@ -13,6 +13,7 @@
 #include "C++Utilities/CppUtils.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
+#define FLASH_32BITS_WORLD			((uint8_t) 4U)
 #define FLASHWORD 8
 #define FLASH_START_ADDRESS 0x08000000
 #define FLASH_SECTOR0_START_ADDRESS 0x08000000

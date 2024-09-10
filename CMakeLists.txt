@@ -1,20 +1,49 @@
 cmake_minimum_required (VERSION 3.4)
+
+include(arm-none-eabi.cmake)
+
 project (ST-LIB)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(LIBRARY st-lib)
 
+set(LIBRARY st-lib)
+  
 file(GLOB_RECURSE SOURCE_C ${CMAKE_SOURCE_DIR}/ *.c)
 file(GLOB_RECURSE SOURCE_CPP ${CMAKE_SOURCE_DIR}/ *.cpp)
 file(GLOB_RECURSE SOURCE_H ${CMAKE_SOURCE_DIR}/ *.h)
 file(GLOB_RECURSE SOURCE_HPP ${CMAKE_SOURCE_DIR}/ *.hpp)
 
+
+
+if(${NUCLEO})
+  add_definitions(-DNUCLEO)
+  add_definitions(-DHSE_VALUE=8000000)
+else()
+  add_definitions(-DBOARD)
+  add_definitions(-DHSE_VALUE=25000000)
+endif()
+
+if(${RELEASE})
+  set(OPTIMIZATION -O3)
+  set(DEBUG_CONFIGURATION -g0)
+else()
+  set(OPTIMIZATION -O0)
+  set(DEBUG_CONFIGURATION -g3)
+endif()
+
+
+if(${ETHERNET})
+  set(ETH STLIB_ETH)
+endif()
+message("\n\nCMAKE:\n")
+message(STATUS "ETHERNET is ENABLED ?? " ${ETHERNET})
+
 add_library(${LIBRARY} STATIC
-  ${SOURCE_C}
-  ${SOURCE_CPP}
   ${SOURCE_H}
+  ${SOURCE_C}
+  ${SOURCE_HPP}
   ${SOURCE_CPP}
 )
 
@@ -22,20 +51,11 @@ target_compile_definitions(${LIBRARY} PUBLIC
   -DUSE_HAL_DRIVER
   -DSTM32H723xx
   -DDEBUG
+  ${ETH}
+  -DUSING_CMAKE
 )
 
-option(BOARD "Board clock config" OFF)
-option(NUCLEO "Nucleo clock config" OFF)
 
-if(BOARD)
-  add_definitions(-DNUCLEO)
-  add_definitions(-DHSE_VALUE=25000000)
-endif()
-
-if(NUCLEO)
-  add_definitions(-DBOARD)
-  add_definitions(-DHSE_VALUE=8000000)
-endif()
 
 
 target_compile_options(${LIBRARY} PUBLIC
@@ -43,8 +63,8 @@ target_compile_options(${LIBRARY} PUBLIC
   -mfpu=fpv5-d16
   -mfloat-abi=hard
   -mthumb
-  
-  -O0
+  ${OPTIMIZATION}
+  ${DEBUG_CONFIGURATION}
   -ffunction-sections
   -fdata-sections
   -fno-exceptions
@@ -52,7 +72,7 @@ target_compile_options(${LIBRARY} PUBLIC
   $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
 
   -Wno-psabi
-  --specs=nosys.specs
+  -specs=nosys.specs
 )
 
 target_include_directories(${LIBRARY} PUBLIC
@@ -86,20 +106,8 @@ target_include_directories(${LIBRARY} PUBLIC
   Inc/ST-LIB_HIGH
 )
 
-IF(CMAKE_CROSSCOMPILING)
-  message(STATUS "Cross-compiling")
-ELSE()
-  message(STATUS "NOT Cross-compiling")
-ENDIF()
-
-add_custom_command(TARGET ${LIBRARY}
-  POST_BUILD
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND ls -lh libst-lib.a
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND echo ""
-  )
+message(STATUS "[DEBUG, RELEASE]: RELEASE: " ${RELEASE})
+message(STATUS "Optimization value: " ${OPTIMIZATION})
+message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
+message(STATUS "[BOARD, NUCLEO] Config: NUCLEO: " ${NUCLEO})
 

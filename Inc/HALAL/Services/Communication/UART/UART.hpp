@@ -7,6 +7,7 @@
 #pragma once
 
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 #include "PinModel/Pin.hpp"
 #include "Packets/RawPacket.hpp"
 
@@ -106,7 +107,7 @@ public:
      * @param uart UART peripheral to register.
      * @return uint8_t Id of the service.
      */
-    static optional<uint8_t> inscribe(UART::Peripheral& uart);
+    static uint8_t inscribe(UART::Peripheral& uart);
 
     /**
      * @brief This method initializes all registered UARTs. The peripherals

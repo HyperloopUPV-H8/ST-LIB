@@ -47,16 +47,17 @@ public:
 	struct InitData {
 	private:
 		InitData() = default;
-
 	public:
 		uint32_t prescaler;
 		uint32_t period;
 		uint32_t deadtime;
+		uint32_t polarity;
+		uint32_t negated_polarity;
 		TIM_TYPE type;
 		vector<PWMData> pwm_channels = {};
 		vector<pair<uint32_t, uint32_t>> input_capture_channels = {};
 		InitData(TIM_TYPE type, uint32_t prescaler = 5,
-				uint32_t period = 55000, uint32_t deadtime = 0);
+				uint32_t period = 55000, uint32_t deadtime = 0, uint32_t polarity = TIM_OCPOLARITY_HIGH, uint32_t negated_polarity = TIM_OCPOLARITY_HIGH);
 	};
 
 	TIM_HandleTypeDef* handle;
@@ -76,6 +77,7 @@ public:
 	bool is_registered();
 	uint32_t get_prescaler();
 	uint32_t get_period();
+	bool is_occupied();
 
 private:
 	static map<TIM_HandleTypeDef*, TIM_TypeDef*> handle_to_timer;

@@ -1,5 +1,6 @@
 #pragma once
 #include "Communication/Ethernet/EthernetNode.hpp"
+#include "Communication/Ethernet/Ethernet.hpp"
 #include "Packets/Packet.hpp"
 
 #ifdef HAL_ETH_MODULE_ENABLED
@@ -13,13 +14,17 @@ public:
 	uint32_t local_port;
 	IPV4 remote_ip;
 	uint32_t remote_port;
+	bool is_disconnected = true;
 
 	DatagramSocket();
+	DatagramSocket(DatagramSocket&& other);
 	DatagramSocket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
 	DatagramSocket(EthernetNode local_node, EthernetNode remote_node);
 	~DatagramSocket();
 
-	bool send(Packet& packet){
+	void operator=(DatagramSocket&&);
+
+	bool send_packet(Packet& packet){
 		uint8_t* packet_buffer = packet.build();
 
 		struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.size, PBUF_RAM);
@@ -29,6 +34,8 @@ public:
 
 		return true;
 	}
+
+	void reconnect();
 
 	void close();
 

@@ -12,9 +12,11 @@ unordered_map<uint8_t, UART::Instance* > UART::registered_uart = {};
 
 uint16_t UART::id_counter = 0;
 
-optional<uint8_t> UART::inscribe(UART::Peripheral& uart){
+uint8_t UART::inscribe(UART::Peripheral& uart){
 	if ( !UART::available_uarts.contains(uart)){
-		return nullopt; //TODO: Error handler or throw exception
+		ErrorHandler(" The UART peripheral %d is already used or does not exists.", (uint16_t)uart);
+
+		return 0;
 	}
 
 	UART::Instance*	uart_instance = UART::available_uarts[uart];
@@ -149,12 +151,7 @@ bool UART::set_up_printf(UART::Peripheral& uart){
 			return false;
 		}
 
-		optional<uint8_t> id = UART::inscribe(uart);
-
-		if(!id.has_value()){
-			return false; //TODO: Error handler, no se ha podido inscribir el uart
-		}
-		UART::printf_uart = id.value();
+		UART::printf_uart = UART::inscribe(uart);
 		setvbuf(stdout, NULL, _IONBF, 0);
 		setvbuf(stderr, NULL, _IONBF, 0);
 

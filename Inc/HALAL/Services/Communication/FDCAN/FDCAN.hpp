@@ -104,16 +104,13 @@ public:
     static FDCAN::Instance instance2;
     static FDCAN::Instance instance3;
 
-    static optional<uint8_t> inscribe(FDCAN::Peripheral& fdcan);
+    static uint8_t inscribe(FDCAN::Peripheral& fdcan);
 
     static void start();
 
     static bool transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN::DLC dlc = FDCAN::DLC::DEFAULT);
 
     static bool read(uint8_t id, FDCAN::Packet* data);
-
-    //The use of this method is highly discouraged.
-    static bool wait_and_read(uint8_t id, FDCAN::Packet* data);
 
     /**
 	 * @brief This method is used to check if the FDCAN have received any new packet.

@@ -7,6 +7,7 @@ void Sensor::start(){
 	for(uint8_t adc_id : adc_id_list){
 		ADC::turn_on(adc_id);
 	}
+
 	for(uint8_t exti_id : EXTI_id_list){
 		ExternalInterrupt::turn_on(exti_id);
 	}
