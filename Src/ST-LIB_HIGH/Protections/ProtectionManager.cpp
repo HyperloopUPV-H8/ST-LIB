@@ -5,8 +5,9 @@
 StateMachine* ProtectionManager::general_state_machine = nullptr;
 Notification ProtectionManager::fault_notification = {ProtectionManager::fault_id, nullptr};
 Notification ProtectionManager::warning_notification = {ProtectionManager::warning_id, nullptr};
-StackOrder<0> ProtectionManager::fault_order(Protections::FAULT,to_fault);
+StackOrder<0> ProtectionManager::fault_order(Protections::FAULT,external_to_fault);
 uint64_t ProtectionManager::last_notify = 0;
+bool ProtectionManager::external_trigger = false;
 void *error_handler;
 void* info_warning;
 
@@ -41,7 +42,13 @@ void ProtectionManager::to_fault(){
     if(general_state_machine->current_state != fault_state_id){
 	    fault_and_propagate();
 	}
+}
 
+void ProtectionManager::external_to_fault(){
+    if(general_state_machine->current_state != fault_state_id){
+    	external_trigger = true;
+	    fault_and_propagate();
+	}
 }
 
 void ProtectionManager::fault_and_propagate(){

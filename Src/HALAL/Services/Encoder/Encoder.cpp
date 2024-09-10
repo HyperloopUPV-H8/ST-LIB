@@ -53,6 +53,8 @@ void Encoder::turn_on(uint8_t id){
 		ErrorHandler("Unable to start encoder in timer %s", timer->name.c_str());
 		return;
 	}
+
+	reset(id);
 }
 
 void Encoder::turn_off(uint8_t id){
@@ -76,7 +78,7 @@ void Encoder::reset(uint8_t id){
 
 	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];
 
-	timer->handle->Instance->CNT = UINT16_MAX / 2;
+	timer->handle->Instance->CNT = get_initial_counter_value(id);
 }
 
 uint32_t Encoder::get_counter(uint8_t id){
@@ -99,6 +101,11 @@ bool Encoder::get_direction(uint8_t id){
 	TimerPeripheral* timer =  pin_timer_map[registered_encoder[id]];
 
 	return ((timer->handle->Instance->CR1 & 0b10000) >> 4);
+}
+
+uint32_t Encoder::get_initial_counter_value(uint8_t id){
+	TimerPeripheral* timer = pin_timer_map[registered_encoder[id]];
+	return (timer->handle->Instance->ARR / 2);
 }
 
 void Encoder::init(TimerPeripheral* encoder){
