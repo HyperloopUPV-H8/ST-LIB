@@ -17,8 +17,9 @@ This NTC class is not generic. It is only for 10k Ohm, 1976Beta value NTCs.
 class NTC{
 public:
 	NTC() = default;
-	NTC(Pin &pin);
-	float read();
+	NTC(Pin &pin, float* src);
+  NTC(Pin &pin, float& src);
+	void read();
 	uint8_t get_id();
 
 private:
@@ -497,7 +498,7 @@ private:
   -677, -688, -700, -714, -729, -748, -770, 
   -797, -835, -873
 };
-
+  float* value;
 	uint8_t id;
 };
 
