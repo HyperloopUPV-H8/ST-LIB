@@ -59,6 +59,9 @@ public:
 		return buffer[return_index];
 	}
 
+	item_type latest()const{
+			return buffer[mlast_index];
+	}
 
 private:
 	std::array<item_type, N> buffer;

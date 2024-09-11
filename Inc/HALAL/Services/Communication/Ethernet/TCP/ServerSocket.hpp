@@ -52,6 +52,11 @@ public:
 	static uint8_t priority;
 	struct tcp_pcb* client_control_block;
 
+	struct KeepaliveConfig{
+		uint32_t inactivity_time_until_keepalive_ms = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
+		uint32_t space_between_tries_ms = TCP_SPACE_BETWEEN_KEEPALIVE_TRIES_MS;
+		uint32_t tries_until_disconnection = TCP_KEEPALIVE_TRIES_UNTIL_DISCONNECTION;
+	}keepalive_config;
 
 	ServerSocket();
 
@@ -65,7 +70,7 @@ public:
 	 * @param local_port the port number that the server listens for connections.
 	 */
 	ServerSocket(IPV4 local_ip, uint32_t local_port);
-
+	ServerSocket(IPV4 local_ip, uint32_t local_port, uint32_t inactivity_time_until_keepalive_ms, uint32_t space_between_tries_ms, uint32_t tries_until_disconnection);
 	/**
 	 * @brief ServerSocket constructor that uses the EthernetNode class as a parameter
 	 *
@@ -180,6 +185,8 @@ private:
 	 */
 	static err_t poll_callback(void *arg, struct tcp_pcb *client_control_block);
 	static err_t send_callback(void *arg, struct tcp_pcb *client_control_block, u16_t len);
+
+	static void config_keepalive(tcp_pcb* control_block, ServerSocket* server_socket);
 
 };
 

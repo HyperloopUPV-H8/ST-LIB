@@ -32,7 +32,8 @@ PhasedPWM::PhasedPWM(Pin& pin) {
 	timer.init_data.pwm_channels.push_back(pwm_data);
 
 	duty_cycle = 0;
-	phase = 0;
+	raw_phase = 0;
+	is_initialized = true;
 }
 
 /**
@@ -44,16 +45,44 @@ PhasedPWM::PhasedPWM(Pin& pin) {
  */
 void PhasedPWM::set_duty_cycle(float duty_cycle) {
 	this->duty_cycle = duty_cycle;
+	if(raw_phase > 100.0){
+		duty_cycle = 100.0 - duty_cycle;
+		raw_phase = raw_phase - 100.0;
+		__STLIB_TIM_SET_MODE(peripheral->handle, channel, STLIB_TIMER_CCMR_PWM_MODE_1)
+	}else{
+		__STLIB_TIM_SET_MODE(peripheral->handle, channel, STLIB_TIMER_CCMR_PWM_MODE_2)
+	}
 	uint32_t arr = peripheral->handle->Instance->ARR;
-	float raw_duty = arr - (arr / 100.0 * duty_cycle);
-	float raw_phase = raw_duty * phase / 100.0;
+	float start_high = arr*(50.0 - duty_cycle)/50.0;
+	float end_high = arr*(100.0 - duty_cycle)/50.0 + 1;
+	if(start_high < 0){start_high = 0;}
+	if(end_high > arr){end_high = arr;}
+	float max_range = duty_cycle > 50.0 ? 100 - duty_cycle : duty_cycle;
+	start_high = start_high + arr * max_range * raw_phase / 5000.0;
+	end_high = end_high - arr * max_range * raw_phase / 5000.0;
 
-	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, raw_duty + raw_phase);
+
+	peripheral->handle->Instance->CR2 &= ~TIM_CR2_CCPC;
+	peripheral->handle->Instance->CR2 &= ~TIM_CR2_CCUS;
+
+	__HAL_TIM_SET_COMPARE(peripheral->handle, channel, start_high);
 
 	if (channel % 8 == 0) {
-		__HAL_TIM_SET_COMPARE(peripheral->handle, channel + 4, raw_duty - raw_phase);
+		__HAL_TIM_SET_COMPARE(peripheral->handle, channel + 4, end_high);
+		peripheral->handle->Instance->EGR |= TIM_EGR_UG;
+		peripheral->handle->Instance->CR2 |= TIM_CR2_CCPC;
+		peripheral->handle->Instance->CR2 |= TIM_CR2_CCUS;
+		TIM_CCxChannelCmd(peripheral->handle->Instance, channel, TIM_CCx_ENABLE);
+		TIM_CCxChannelCmd(peripheral->handle->Instance, channel + 4, TIM_CCx_ENABLE);
+		__HAL_TIM_MOE_ENABLE(peripheral->handle);
 	} else {
-		__HAL_TIM_SET_COMPARE(peripheral->handle, channel - 4, raw_duty - raw_phase);
+		__HAL_TIM_SET_COMPARE(peripheral->handle, channel - 4, end_high);
+		peripheral->handle->Instance->EGR |= TIM_EGR_UG;
+		peripheral->handle->Instance->CR2 |= TIM_CR2_CCPC;
+		peripheral->handle->Instance->CR2 |= TIM_CR2_CCUS;
+		TIM_CCxChannelCmd(peripheral->handle->Instance, channel, TIM_CCx_ENABLE);
+		TIM_CCxChannelCmd(peripheral->handle->Instance, channel - 4, TIM_CCx_ENABLE);
+		__HAL_TIM_MOE_ENABLE(peripheral->handle);
 	}
 }
 
@@ -74,8 +103,23 @@ void PhasedPWM::set_frequency(uint32_t frequency) {
  * 
  * @param phase The "phase" parameter is a floating-point value that represents the phase shift of a
  * PWM signal. In other words, it determines the timing offset of the PWM waveform relative to its center.
+ * Only works with duty cycle = 50 for now.
  */
-void PhasedPWM::set_phase(float phase) {
-	this->phase = phase;
+void PhasedPWM::set_phase(float phase_in_deg) {
+	if(duty_cycle == 50.0){
+	this->raw_phase = phase_in_deg*(200.0/360.0);
+	}else{
+		//TODO
+	}
 	set_duty_cycle(duty_cycle);
+}
+
+void PhasedPWM::set_raw_phase(float raw_phase){
+	this->raw_phase = raw_phase;
+	set_duty_cycle(duty_cycle);
+
+}
+
+float PhasedPWM::get_phase()const{
+	return raw_phase*360/200;
 }

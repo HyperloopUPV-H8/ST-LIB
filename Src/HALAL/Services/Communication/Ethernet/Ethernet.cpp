@@ -138,6 +138,7 @@ void Ethernet::update(){
 			netif_set_up(&gnetif);
 		}
 	}
+
 }
 
 #endif
