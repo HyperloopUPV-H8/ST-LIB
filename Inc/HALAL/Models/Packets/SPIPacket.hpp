@@ -8,48 +8,79 @@
 #pragma once
 
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "PacketValue.hpp"
+#include "DataStructures/StackTuple.hpp"
 
 
-class SPIPacket{
+/**
+ * @brief Base structure of SPIPacket used to store them without need of knowing its template definition
+ */
+class SPIBasePacket{
 public:
-	static map<uint16_t, SPIPacket*> SPIPacketsByID;
-	uint16_t id;
-	uint8_t* master_data;
-	uint16_t master_data_size;
-	uint8_t* slave_data;
-	uint16_t slave_data_size;
-	uint16_t greater_data_size;
+	uint8_t *buffer;/**< pointer for the variables casted into binary data*/
+	size_t size;/**<size of the buffer*/
 
 	/**
-	 * @brief constructor of SPIPacket. The SPIPacket uses the first byte of the data arrays to coordinate the packet id, and builds the arrays with 1 more byte of space.
-	 *
+	 * @brief function that receives binary data and uses it to update the variables
 	 */
-	SPIPacket(uint16_t id, uint16_t master_data_size, uint16_t slave_data_size) : id(id), master_data_size(master_data_size), slave_data_size(slave_data_size){
-		if(id == 0){
-			ErrorHandler("Cannot use 0 as the SPIPacketID, as it is reserved to the no packet ready signal");
-		}
-		if(master_data_size > slave_data_size){
-			greater_data_size = master_data_size+2;
-		}else{
-			greater_data_size = slave_data_size+2;
-		}
-		master_data = new uint8_t[greater_data_size];
-		slave_data = new uint8_t[greater_data_size];
-		master_data[0] = (uint8_t) id;
-		master_data[1] = (uint8_t) (id>>8);
-		slave_data[0] = (uint8_t) id;
-		slave_data[1] = (uint8_t) (id>>8);
-		SPIPacket::SPIPacketsByID[id] = this;
-	}
+	virtual void parse(void* data) = 0;
 
-	SPIPacket(uint16_t id, uint8_t* master_data, uint8_t* slave_data, uint16_t shared_data_size) :
-		id(id), master_data(master_data), master_data_size(shared_data_size), slave_data(slave_data), slave_data_size(shared_data_size){
-		if(id == 0){
-			ErrorHandler("Cannot use 0 as the SPIPacketID, as it is reserved to the no packet ready signal");
-		}
+	/**
+	 * @brief function that transforms the variables into binary data and saves it on the buffer
+	 */
+	virtual uint8_t* build() = 0;
+};
 
-	}
+/**
+ * @brief template class used as a structure to link variables of any type to one or more SPIPackets.
+ */
+template<size_t BufferLength, class... Types>
+class SPIPacket : public SPIBasePacket{
+public:
+    PacketValue<>* values[sizeof...(Types)];
+    uint8_t buffer[BufferLength];
+    stack_tuple<PacketValue<Types>...> packetvalue_warehouse;
+    size_t& size = SPIBasePacket::size;
+    SPIPacket(Types*... values) : packetvalue_warehouse{PacketValue<Types>(values)...}{
+        int i = 0;
+        packetvalue_warehouse.for_each([this, &i](auto& value) {
+            this->values[i++] = &value;
+        });
+        size = BufferLength;
+        SPIBasePacket::buffer = buffer;
+    }
 
+    void parse(void* data) override {
+        for (PacketValue<>* value : values) {
+            value->parse(data);
+            data += value->get_size();
+        }
+    }
+
+    uint8_t* build() override {
+        uint8_t* data = buffer;
+        for (PacketValue<>* value : values) {
+            value->copy_to(data);
+            data += value->get_size();
+        }
+        return buffer;
+    }
+};
+
+template<>
+class SPIPacket<0> : public SPIBasePacket{
+public:
+    size_t& size = SPIBasePacket::size;
+    SPIPacket() {
+    	size = 0;
+    }
+
+    void parse(void* data) override {
+    }
+
+    uint8_t* build() override {
+        return nullptr;
+    }
 };
 
 

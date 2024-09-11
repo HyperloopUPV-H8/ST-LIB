@@ -40,6 +40,14 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port) : local_ip(local_
 	OrderProtocol::sockets.push_back(this);
 }
 
+
+ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port, uint32_t inactivity_time_until_keepalive_ms, uint32_t space_between_tries_ms, uint32_t tries_until_disconnection): ServerSocket(local_ip, local_port){
+	keepalive_config.inactivity_time_until_keepalive_ms = inactivity_time_until_keepalive_ms;
+	keepalive_config.space_between_tries_ms = space_between_tries_ms;
+	keepalive_config.tries_until_disconnection = tries_until_disconnection;
+}
+
+
 ServerSocket::ServerSocket(ServerSocket&& other) : server_control_block(move(other.server_control_block)), local_ip(move(other.local_ip)), local_port(move(other.local_port))
 , state(other.state){
 	listening_sockets[local_port] = this;
@@ -174,6 +182,8 @@ err_t ServerSocket::accept_callback(void* arg, struct tcp_pcb* incomming_control
 		tcp_sent(incomming_control_block, send_callback);
 		tcp_err(incomming_control_block, error_callback);
 		tcp_poll(incomming_control_block, poll_callback , 0);
+		config_keepalive(incomming_control_block, server_socket);
+
 
 		tcp_close(server_socket->server_control_block);
 		priority++;
@@ -257,6 +267,13 @@ err_t ServerSocket::send_callback(void *arg, struct tcp_pcb *client_control_bloc
 		server_socket->close();
 	}
 	return ERR_OK;
+}
+
+void ServerSocket::config_keepalive(tcp_pcb* control_block, ServerSocket* server_socket){
+	control_block->so_options |= SOF_KEEPALIVE;
+	control_block->keep_idle = server_socket->keepalive_config.inactivity_time_until_keepalive_ms;
+	control_block->keep_intvl = server_socket->keepalive_config.space_between_tries_ms;
+	control_block->keep_cnt = server_socket->keepalive_config.tries_until_disconnection;
 }
 
 

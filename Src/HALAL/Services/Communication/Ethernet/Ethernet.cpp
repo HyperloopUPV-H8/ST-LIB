@@ -7,6 +7,7 @@
 
 #include "Communication/Ethernet/Ethernet.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "MPUManager/MPUManager.hpp"
 
 #ifdef HAL_ETH_MODULE_ENABLED
 
@@ -112,9 +113,6 @@ void Ethernet::inscribe(){
 		Pin::inscribe(PG11, ALTERNATIVE);
 		Pin::inscribe(PG0, ALTERNATIVE);
 		Pin::inscribe(PG13, ALTERNATIVE);
-		mpu_start();
-		SCB_EnableICache();
-		SCB_EnableDCache();
 		is_ready = true;
 	}else{
 		ErrorHandler("Unable to inscribe Ethernet because is already ready!");
@@ -140,6 +138,7 @@ void Ethernet::update(){
 			netif_set_up(&gnetif);
 		}
 	}
+
 }
 
 #endif

@@ -13,8 +13,8 @@
 class DualPhasedPWM : public DualPWM{
 private:
 	float raw_phase{};
-	DualPhasedPWM() = default;
 public:
+	DualPhasedPWM() = default;
 	DualPhasedPWM(Pin& pin, Pin& pin_negated);
 	void set_duty_cycle(float duty_cycle);
 	void set_frequency(uint32_t frequency);

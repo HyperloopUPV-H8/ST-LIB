@@ -20,8 +20,10 @@ void STLIB::start(string ip, string subnet_mask, string gateaway,  UART::Periphe
 	STLIB::start(IPV4(ip),IPV4(subnet_mask),IPV4(gateaway),printf_peripheral);
 }
 
+
 void STLIB::update() {
-#if defined STLIB_ETH
+#if !defined STLIB_ETH
+#else
 	Ethernet::update();
 #endif
 	ErrorHandlerModel::ErrorHandlerUpdate();

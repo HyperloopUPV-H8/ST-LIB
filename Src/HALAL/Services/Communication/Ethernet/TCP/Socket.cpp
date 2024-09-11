@@ -35,7 +35,9 @@ Socket::~Socket(){
 	else OrderProtocol::sockets.erase(it);
 }
 
-Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port): local_ip(local_ip), local_port(local_port),remote_ip(remote_ip), remote_port(remote_port){
+Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port,bool use_keep_alive):
+		local_ip(local_ip), local_port(local_port),remote_ip(remote_ip), remote_port(remote_port),use_keep_alives{use_keep_alive}
+		{
 	if(not Ethernet::is_running) {
 		ErrorHandler("Cannot declare TCP socket before Ethernet::start()");
 		return;
@@ -57,8 +59,11 @@ Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remo
 	OrderProtocol::sockets.push_back(this);
 }
 
-Socket::Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port):Socket(IPV4(local_ip),local_port,IPV4(remote_ip),remote_port){}
-
+Socket::Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port, uint32_t inactivity_time_until_keepalive_ms, uint32_t space_between_tries_ms, uint32_t tries_until_disconnection): Socket(local_ip, local_port, remote_ip, remote_port){
+	keepalive_config.inactivity_time_until_keepalive_ms = inactivity_time_until_keepalive_ms;
+	keepalive_config.space_between_tries_ms = space_between_tries_ms;
+	keepalive_config.tries_until_disconnection = tries_until_disconnection;
+}
 
 Socket::Socket(EthernetNode local_node, EthernetNode remote_node):Socket(local_node.ip, local_node.port, remote_node.ip, remote_node.port){}
 
@@ -182,6 +187,8 @@ err_t Socket::connect_callback(void* arg, struct tcp_pcb* client_control_block, 
 		tcp_poll(client_control_block, poll_callback,0);
 		tcp_sent(client_control_block, send_callback);
 		tcp_err(client_control_block, error_callback);
+		if(socket->use_keep_alives)
+			config_keepalive(client_control_block, socket);
 
 		return ERR_OK;
 	}else return ERROR;
@@ -245,12 +252,8 @@ err_t Socket::send_callback(void* arg, struct tcp_pcb* client_control_block, uin
 
 void Socket::error_callback(void *arg, err_t error){
 	Socket* socket = (Socket*) arg;
-	if(error == ERR_RST || error == ERR_ABRT){
 		socket->close();
-		socket->reset();
-	}else{
-		ErrorHandler("Client socket error: %d. Socket closed",error);
-	}
+		ErrorHandler("Client socket error: %d. Socket closed, remote ip: %s",error,socket->remote_ip.string_address);
 }
 
 void Socket::connection_error_callback(void *arg, err_t error){
@@ -276,6 +279,13 @@ err_t Socket::connection_poll_callback(void *arg, struct tcp_pcb* connection_con
 		socket->pending_connection_reset = true;
 	}
 	return ERR_OK;
+}
+
+void Socket::config_keepalive(tcp_pcb* control_block, Socket* socket){
+	control_block->so_options |= SOF_KEEPALIVE;
+	control_block->keep_idle = socket->keepalive_config.inactivity_time_until_keepalive_ms;
+	control_block->keep_intvl = socket->keepalive_config.space_between_tries_ms;
+	control_block->keep_cnt = socket->keepalive_config.tries_until_disconnection;
 }
 
 #endif
