@@ -14,6 +14,7 @@ public:
     PacketValue() = default;
     ~PacketValue() = default;
     virtual void* get_pointer() = 0;
+    virtual void set_pointer(void* pointer) = 0;
     virtual size_t get_size() = 0;
     virtual void parse(void* data) = 0;
     virtual void copy_to(void* data) = 0;
@@ -30,6 +31,11 @@ public:
     void* get_pointer() override {
         return src;
     }
+
+    void set_pointer(void* pointer){
+    	src = (Type*)pointer;
+    }
+
     size_t get_size() override {
         return sizeof(Type);
     }
@@ -53,6 +59,11 @@ public:
     void* get_pointer() override {
         return src;
     }
+
+    void set_pointer(void* pointer){
+    	src = (double*)pointer;
+    }
+
     size_t get_size() override {
         return sizeof(double);
     }
@@ -79,6 +90,11 @@ public:
     void* get_pointer() override {
         return src->data();
     }
+
+    void set_pointer(void* pointer){
+		src = (Type*)pointer;
+	}
+
     size_t get_size() override {
         return src->size()*sizeof(typename Type::value_type);
     }
@@ -106,6 +122,11 @@ public:
     void* get_pointer() override {
         return src->data();
     }
+
+    void set_pointer(void* pointer){
+		src = (string*)pointer;
+	}
+
     size_t get_size() override {
         return strlen(src->c_str()) + 1;
     }
@@ -117,7 +138,7 @@ public:
     }
 };
 
-template<class Type,size_t N> 
+template<class Type,size_t N>
 class PacketValue<Type(&)[N]>: public PacketValue<> {
 public:
     using value_type = Type;
@@ -128,6 +149,11 @@ public:
     void* get_pointer() override {
         return src;
     }
+
+    void set_pointer(void* pointer){
+		src = (Type(*)[N])pointer;
+	}
+
     size_t get_size() override {
         return N*sizeof(Type);
     }
@@ -140,12 +166,11 @@ public:
 };
 
 #if __cpp_deduction_guides >= 201606
-template<class Type,size_t N> 
+template<class Type,size_t N>
 PacketValue(Type(*)[N])->PacketValue<Type(&)[N]>;
 #endif
 
-
-template<class Type,size_t N> 
+template<class Type,size_t N>
 class PacketValue<Type*(&)[N]>: public PacketValue<> {
 public:
     using value_type = Type*;
@@ -156,6 +181,11 @@ public:
     void* get_pointer() override {
         return src;
     }
+
+    void set_pointer(void* pointer){
+		src = (Type*(*)[N])pointer;
+	}
+
     size_t get_size() override {
         return N*sizeof(Type);
     }

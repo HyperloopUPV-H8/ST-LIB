@@ -1,10 +1,12 @@
 #pragma once
 
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 #include "Packets/Order.hpp"
 #include "BoardID/BoardID.hpp"
 #include "Protection.hpp"
 #include "Time/Time.hpp"
+#include "Packets/OrderProtocol.hpp"
 
 class Notification : public Order{
 private:
@@ -59,7 +61,10 @@ public:
     }
 
     void notify(){
-    	if(tx_message.empty()) ErrorHandler("Cannot notify empty notification");
+    	if(tx_message.empty()){
+    		ErrorHandler("Cannot notify empty notification");
+    		return;
+    	}
     	for(OrderProtocol* socket : OrderProtocol::sockets){
     		socket->send_order(*this);
     	}
@@ -67,7 +72,6 @@ public:
 
     void parse(OrderProtocol* socket, void* data) {
     	received_socket = socket;
-    	if(buffer != nullptr) free(buffer);
     	char* temp = (char*)malloc(get_string_size(data));
     	memcpy(temp, data+sizeof(id)+sizeof(message_size_t), get_string_size(data));
     	rx_message = string(temp);
@@ -81,6 +85,10 @@ public:
 
     uint16_t get_id() {
     	return id;
+    }
+
+    void set_pointer(size_t index, void* pointer) override{
+    	ErrorHandler("Notification does not suport this method!");
     }
 
     ~Notification(){
