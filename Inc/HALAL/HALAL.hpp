@@ -18,6 +18,7 @@
 #include "Communication/SPI/SPI.hpp"
 #include "Communication/UART/UART.hpp"
 #include "Communication/I2C/I2C.hpp"
+#include "Models/Packets/ForwardOrder.hpp"
 #include "Communication/Ethernet/UDP/DatagramSocket.hpp"
 #include "Communication/Ethernet/TCP/ServerSocket.hpp"
 #include "Communication/Ethernet/TCP/Socket.hpp"
@@ -25,6 +26,10 @@
 #include "Communication/FDCAN/FDCAN.hpp"
 #include "Communication/SNTP/SNTP.hpp"
 #include "CORDIC/CORDIC.hpp"
+#include "FMAC/FMAC.hpp"
+#include "MPUManager/MPUManager.hpp"
+#include "Services/InfoWarning/InfoWarning.hpp"
+#include "Watchdog/Watchdog.hpp"
 
 namespace HALAL {
 	void start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral);

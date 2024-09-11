@@ -9,10 +9,11 @@
 
 void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral) {
 
-#ifdef HAL_ETH_MODULE_ENABLED
+#if !defined STLIB_ETH
+#else
 	Ethernet::inscribe();
 #endif
-
+	MPUManager::start();
 	HAL_Init();
 	HALconfig::system_clock();
 	HALconfig::peripheral_clock();
@@ -27,6 +28,10 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 
 #ifdef HAL_DMA_MODULE_ENABLED
 	DMA::start();
+#endif
+
+#ifdef HAL_FMAC_MODULE_ENABLED
+	MultiplierAccelerator::start();
 #endif
 
 #ifdef HAL_CORDIC_MODULE_ENABLED
@@ -57,13 +62,14 @@ void HALAL::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& pri
 	FDCAN::start();
 #endif
 
-#ifdef HAL_ETH_MODULE_ENABLED
+#if !defined STLIB_ETH
+#else
 	Ethernet::start(ip, subnet_mask, gateway);
 #endif
 
 #ifdef HAL_TIM_MODULE_ENABLED
 	Encoder::start();
-	Time::start_rtc();
+	Global_RTC::start_rtc();
 	SNTP::sntp_update();
 	TimerPeripheral::start();
 	Time::start();
