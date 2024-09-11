@@ -12,6 +12,7 @@ namespace Boards {
     PCU,
     BMSA,
     OBCCU,
+	BCU,
     NOBOARD
   };
 
