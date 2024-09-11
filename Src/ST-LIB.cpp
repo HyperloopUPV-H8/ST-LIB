@@ -10,14 +10,22 @@
 
 #include "ST-LIB.hpp"
 
-void STLIB::start(string ip, string subnet_mask, string gateway, UART::Peripheral& printf_peripheral) {
+void STLIB::start(IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral) {
 	HALAL::start(ip, subnet_mask, gateway, printf_peripheral);
 	STLIB_LOW::start();
+	STLIB_HIGH::start();
 }
 
+void STLIB::start(string ip, string subnet_mask, string gateaway,  UART::Peripheral& printf_peripheral){
+	STLIB::start(IPV4(ip),IPV4(subnet_mask),IPV4(gateaway),printf_peripheral);
+}
+
+
 void STLIB::update() {
-  #ifdef STLIB_ETH
-    Ethernet::update();
-  #endif
+#if !defined STLIB_ETH
+#else
+	Ethernet::update();
+#endif
 	ErrorHandlerModel::ErrorHandlerUpdate();
+	Server::update_servers();
 }

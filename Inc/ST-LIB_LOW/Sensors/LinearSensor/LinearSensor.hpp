@@ -11,6 +11,7 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 
 template<class Type>
+requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 class LinearSensor{
 public:
 	LinearSensor() = default;
@@ -20,7 +21,8 @@ public:
 	uint8_t get_id();
 	void set_offset(Type new_offset);
 	Type get_offset();
-	Type* get_value_pointer();
+	Type get_gain();
+	Type* get_value_pointer()const;
 
 protected:
 	uint8_t id;
@@ -30,6 +32,7 @@ protected:
 };
 
 template<class Type>
+requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 LinearSensor<Type>::LinearSensor(Pin &pin, Type slope, Type offset, Type *value)
 : slope(slope), offset(offset), value(value){
 	id = ADC::inscribe(pin);
@@ -38,9 +41,11 @@ LinearSensor<Type>::LinearSensor(Pin &pin, Type slope, Type offset, Type *value)
 }
 
 template<class Type>
+requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 LinearSensor<Type>::LinearSensor(Pin &pin, Type slope, Type offset, Type &value):LinearSensor::LinearSensor(pin,slope,offset,&value){}
 
-template<std::integral Type>
+template<class Type>
+requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 void LinearSensor<Type>::read(){
 	float val = ADC::get_value(id);
 
@@ -48,22 +53,31 @@ void LinearSensor<Type>::read(){
 }
 
 template<class Type>
+requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 uint8_t LinearSensor<Type>::get_id(){
 	return id;
 }
 
 template<class Type>
+requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 Type LinearSensor<Type>::get_offset(){
 	return offset;
 }
 
 template<class Type>
+requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
+Type LinearSensor<Type>::get_gain(){
+	return slope;
+}
+
+template<class Type>
+requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 void LinearSensor<Type>::set_offset(Type new_offset){
 	offset = new_offset;
 }
 
 template<class Type>
-Type* LinearSensor<Type>::get_value_pointer(){
+requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
+Type* LinearSensor<Type>::get_value_pointer()const{
 	return value;
 }
-

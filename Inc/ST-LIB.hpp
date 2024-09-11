@@ -6,6 +6,8 @@
 
 class STLIB {
 public:
+
+	static void start(IPV4 ip, IPV4 subnet_mask, IPV4 gateaway, UART::Peripheral& printf_peripheral);
 	static void start(
 			string ip = "192.168.1.4",
 			string subnet_mask = "255.255.0.0",

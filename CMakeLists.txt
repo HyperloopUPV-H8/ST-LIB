@@ -37,7 +37,8 @@ endif()
 if(${ETHERNET})
   set(ETH STLIB_ETH)
 endif()
-message(STATUS "ETHERNET [ON, OFF] Config: " ${ETH})
+message("\n\nCMAKE:\n")
+message(STATUS "ETHERNET is ENABLED ?? " ${ETHERNET})
 
 add_library(${LIBRARY} STATIC
   ${SOURCE_H}
@@ -51,6 +52,7 @@ target_compile_definitions(${LIBRARY} PUBLIC
   -DSTM32H723xx
   -DDEBUG
   ${ETH}
+  -DUSING_CMAKE
 )
 
 
@@ -61,8 +63,8 @@ target_compile_options(${LIBRARY} PUBLIC
   -mfpu=fpv5-d16
   -mfloat-abi=hard
   -mthumb
-  -Og
-  -g3
+  ${OPTIMIZATION}
+  ${DEBUG_CONFIGURATION}
   -ffunction-sections
   -fdata-sections
   -fno-exceptions
@@ -70,7 +72,7 @@ target_compile_options(${LIBRARY} PUBLIC
   $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
 
   -Wno-psabi
-  -specs=/usr/lib/arm-none-eabi/lib/nosys.specs
+  -specs=nosys.specs
 )
 
 target_include_directories(${LIBRARY} PUBLIC
@@ -103,21 +105,9 @@ target_include_directories(${LIBRARY} PUBLIC
   Inc/ST-LIB_LOW
   Inc/ST-LIB_HIGH
 )
-message("\n\nCMAKE:\n")
+
 message(STATUS "[DEBUG, RELEASE]: RELEASE: " ${RELEASE})
 message(STATUS "Optimization value: " ${OPTIMIZATION})
 message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
 message(STATUS "[BOARD, NUCLEO] Config: NUCLEO: " ${NUCLEO})
-
-
-add_custom_command(TARGET ${LIBRARY}
-  POST_BUILD
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND ls -lh libst-lib.a
-  COMMAND echo ""
-  COMMAND echo ""
-  COMMAND echo ""
-  )
 

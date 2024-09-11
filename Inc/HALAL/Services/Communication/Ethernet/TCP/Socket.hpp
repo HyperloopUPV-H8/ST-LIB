@@ -23,6 +23,8 @@ public:
 		CLOSING
 	};
 
+	IPV4 local_ip;
+	uint32_t local_port;
 	IPV4 remote_ip;
 	uint32_t remote_port;
 	tcp_pcb* connection_control_block;
@@ -31,11 +33,18 @@ public:
 	queue<struct pbuf*> tx_packet_buffer;
 	queue<struct pbuf*> rx_packet_buffer;
 	static unordered_map<EthernetNode,Socket*> connecting_sockets;
+	bool pending_connection_reset = false;
+	bool use_keep_alives{true};
+	struct KeepaliveConfig{
+		uint32_t inactivity_time_until_keepalive_ms = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
+		uint32_t space_between_tries_ms = TCP_SPACE_BETWEEN_KEEPALIVE_TRIES_MS;
+		uint32_t tries_until_disconnection = TCP_KEEPALIVE_TRIES_UNTIL_DISCONNECTION;
+	}keepalive_config;
 
 	Socket();
 	Socket(Socket&& other);
-	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
-	Socket(string local_ip, uint32_t local_port, string remote_ip, uint32_t remote_port);
+	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port,bool use_keep_alives = true);
+	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port, uint32_t inactivity_time_until_keepalive_ms, uint32_t space_between_tries_ms, uint32_t tries_until_disconnection);
 	Socket(EthernetNode local_node, EthernetNode remote_node);
 	~Socket();
 
@@ -43,7 +52,18 @@ public:
 	void close();
 
 	void reconnect();
+	void reset();
 
+	/*
+	 * @brief puts the order data into the tx_packet_buffer so it can be sent when a connection is accepted
+	 * @return true if the data could be allocated in the buffer, false otherwise
+	 */
+	bool add_order_to_queue(Order& order);
+
+	/*
+	 * @brief puts the order data into the tx_packet_buffer and sends it
+	 * @return true if the data was sent successfully, false otherwise
+	 */
 	bool send_order(Order& order) override{
 		if(state != CONNECTED){
 			reconnect();
@@ -82,6 +102,11 @@ public:
 	static err_t poll_callback(void* arg, struct tcp_pcb* client_control_block);
 	static err_t send_callback(void* arg, struct tcp_pcb* client_control_block, uint16_t length);
 	static void error_callback(void *arg, err_t error);
+
+	static err_t connection_poll_callback(void* arg, struct tcp_pcb* connection_control_block);
+	static void connection_error_callback(void *arg, err_t error);
+
+	static void config_keepalive(tcp_pcb* control_block, Socket* socket);
 
 };
 #endif

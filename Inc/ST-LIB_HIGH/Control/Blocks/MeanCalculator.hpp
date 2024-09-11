@@ -2,7 +2,7 @@
 
 #include "../ControlBlock.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-template<size_t N>
+template<int N>
 class MeanCalculator : public ControlBlock<double,double>{
 public:
     int index = 0;

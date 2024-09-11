@@ -11,20 +11,34 @@
 #define add_protection(src,...)  \
 		{\
             Protection& ref = ProtectionManager::_add_protection(src,__VA_ARGS__); \
-            ref.set_name((char*)malloc(sizeof(getname(src))-1)); \
-            sprintf(ref.get_name(),"%s",getname(src)+1); \
+            if (getname(src)[0] == '&'){ \
+            	ref.set_name((char*)malloc(sizeof(getname(src))-1));\
+            	sprintf(ref.get_name(),"%s",getname(src)+1); \
+            }else{\
+            	ref.set_name((char*)malloc(sizeof(getname(src))));\
+            	sprintf(ref.get_name(),"%s",getname(src)); \
+            }\
 		}\
 
 #define add_high_frequency_protection(src,...)  \
 		{\
             Protection& ref = ProtectionManager::_add_high_frequency_protection(src,__VA_ARGS__); \
-            ref.set_name((char*)malloc(sizeof(getname(src))-1)); \
-            sprintf(ref.get_name(),"%s",getname(src)+1); \
+            if (getname(src)[0] == '&'){ \
+            	ref.set_name((char*)malloc(sizeof(getname(src))-1)); \
+            	sprintf(ref.get_name(),"%s",getname(src)+1); \
+            }else{\
+            	ref.set_name((char*)malloc(sizeof(getname(src))));\
+            	sprintf(ref.get_name(),"%s",getname(src)); \
+            }\
 		}\
 
 class ProtectionManager {
 public:
 	typedef uint8_t state_id;
+	static bool external_trigger;
+
+	static const uint64_t notify_delay_in_nanoseconds = 100'000'000;
+	static uint64_t last_notify;
 
     static void set_id(Boards::ID id);
 
@@ -41,16 +55,23 @@ public:
     	high_frequency_protections.push_back(Protection(src,protectors...));
         return high_frequency_protections.back();
     }
-
+    /**
+     * @brief call on startup to initialize the names of the protections
+    */
+    static void initialize();
+    static void add_standard_protections();
     static void check_protections();
     static void check_high_frequency_protections();
-
+    static void warn(string message);
+    static void fault_and_propagate();
+    static void notify(Protection& protection);
+    static void propagate_fault();
 private:
-	static constexpr uint16_t warning_id = 1;
-	static constexpr uint16_t fault_id = 2;
+	static constexpr uint16_t warning_id = 2;
+	static constexpr uint16_t fault_id = 3;
 	static char* message;
 	static size_t message_size;
-	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}\0";
+	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}";
 
     static Boards::ID board_id;
     static vector<Protection> low_frequency_protections;
@@ -60,17 +81,10 @@ private:
 
     static Notification fault_notification;
     static Notification warning_notification;
-
-    static int get_string_size(Protection& prot ,const Time::RTCData& timestamp){
-    	return snprintf(nullptr,0,format,"","","") + prot.get_string_size() + Time::RTCData::get_string_size(timestamp);
-    }
-
-    static char* serialize(Protection& prot, const Time::RTCData& timestamp){
-    	sprintf(message,format,to_string(board_id).c_str(),timestamp.serialize().c_str(),string(prot.serialize(message)).c_str());
-    	return message;
-    }
+    static StackOrder<0> fault_order;
 
     static void to_fault();
+    static void external_to_fault();
 };
 
 
