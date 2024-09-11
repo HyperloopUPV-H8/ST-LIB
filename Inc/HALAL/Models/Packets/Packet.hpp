@@ -10,6 +10,7 @@ public:
     virtual void parse(void* data) = 0;
     virtual size_t get_size() = 0;
     virtual uint16_t get_id() = 0; 
+    virtual void set_pointer(size_t index, void* pointer) = 0;
     static uint16_t get_id(void* data) {
         return *((uint16_t*)data);
     }
@@ -60,6 +61,10 @@ public:
 
     uint16_t get_id() override {
         return id;
+    }
+
+    void set_pointer(size_t index, void* pointer) override{
+    	values[index]->set_pointer(pointer);
     }
 };
 
@@ -123,6 +128,10 @@ public:
         return id;
     }
 
+    void set_pointer(size_t index, void* pointer) override{
+		values[index]->set_pointer(pointer);
+	}
+
     ~StackPacket() {
         if (buffer != nullptr) delete[] buffer;
     }
@@ -145,6 +154,8 @@ public:
     size_t get_size() override {
         return sizeof(id); 
     }
+
+    void set_pointer(size_t index, void* pointer) override {};
 };
 
 
@@ -209,6 +220,10 @@ public:
     uint16_t get_id() override {
         return id;
     }
+
+    void set_pointer(size_t index, void* pointer) override{
+		values[index]->set_pointer(pointer);
+	}
 
     ~HeapPacket() {
         if(buffer != nullptr) delete[] buffer;

@@ -36,7 +36,7 @@ template<size_t BufferLength,class... Types> requires NotCallablePack<Types*...>
 class StackOrder : public StackPacket<BufferLength,Types...>, public Order{
 public:
     StackOrder(uint16_t id,void(*callback)(void), Types*... values) : StackPacket<BufferLength,Types...>(id,values...), callback(callback) {orders[id] = this;}
-//    StackOrder(uint16_t id, Types*... values) : StackPacket<BufferLength,Types...>(id,values...) {orders[id] = this;}
+    StackOrder(uint16_t id, Types*... values) : StackPacket<BufferLength,Types...>(id,values...) {orders[id] = this;}
     void(*callback)(void) = nullptr;
     void set_callback(void(*callback)(void)) override {
         this->callback = callback;
@@ -50,7 +50,7 @@ public:
     void parse(void* data) override {
         StackPacket<BufferLength,Types...>::parse(data);
     }
-    void parse(OrderProtocol* socket, void* data){
+    void parse(OrderProtocol* socket, void* data) override{
     	parse(data);
     }
     size_t get_size() override {
@@ -59,14 +59,18 @@ public:
     uint16_t get_id() override {
         return StackPacket<BufferLength,Types...>::get_id();
     }
+
+	void set_pointer(size_t index, void* pointer) override{
+		StackPacket<BufferLength,Types...>::set_pointer(index, pointer);
+	}
 };
 
 #if __cpp_deduction_guides >= 201606
 template<class... Types> requires NotCallablePack<Types*...>
 StackOrder(uint16_t id,void(*callback)(void), Types*... values)->StackOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
 
-//template<class... Types> requires NotCallablePack<Types*...>
-//StackOrder(uint16_t id, Types*... values)->StackOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
+template<class... Types> requires NotCallablePack<Types*...>
+StackOrder(uint16_t id, Types*... values)->StackOrder<(!has_container<Types...>::value)*total_sizeof<Types...>::value, Types...>;
 #endif
 
 class HeapOrder : public HeapPacket, public Order{
@@ -99,4 +103,8 @@ public:
     uint16_t get_id() override {
         return HeapPacket::get_id();
     }
+    void set_pointer(size_t index, void* pointer) override{
+    	HeapPacket::set_pointer(index, pointer);
+	}
+
 };

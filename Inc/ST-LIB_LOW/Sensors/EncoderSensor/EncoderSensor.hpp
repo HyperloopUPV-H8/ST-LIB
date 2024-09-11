@@ -27,7 +27,6 @@ public:
 	void read();
 	void reset();
 	uint8_t get_id();
-	void get_arrays(double ret[][N_FRAMES]);
 
 protected:
 	uint8_t id;
@@ -36,9 +35,9 @@ protected:
 	double* speed;
 	double* acceleration;
 	double time;
-	double positions[N_FRAMES];
-	double times[N_FRAMES];
-	double speeds[N_FRAMES];
+	RingBuffer<double,N_FRAMES> positions{};
+	RingBuffer<double,N_FRAMES> times{};
+	RingBuffer<double,N_FRAMES> speeds{};
 	uint64_t last_clock_time;
 
 private:
