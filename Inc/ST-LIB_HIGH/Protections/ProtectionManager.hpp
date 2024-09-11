@@ -35,6 +35,7 @@
 class ProtectionManager {
 public:
 	typedef uint8_t state_id;
+	static bool external_trigger;
 
 	static const uint64_t notify_delay_in_nanoseconds = 100'000'000;
 	static uint64_t last_notify;
@@ -85,6 +86,7 @@ private:
 
     static void tcp_to_fault();
     static void to_fault();
+    static void external_to_fault();
 };
 
 
