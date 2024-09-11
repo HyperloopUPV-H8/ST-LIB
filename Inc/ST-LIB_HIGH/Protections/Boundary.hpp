@@ -1,6 +1,7 @@
 #pragma once
-#define PROTECTIONTYPE_LENGTH 7
+#define PROTECTIONTYPE_LENGTH 8
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 #include "Control/Blocks/MeanCalculator.hpp"
 #include "HALAL/Models/Packets/Order.hpp"
 #include "HALAL/Services/Time/RTC.hpp"
@@ -24,7 +25,8 @@ enum ProtectionType : uint8_t {
     EQUALS,
     NOT_EQUALS,
 	ERROR_HANDLER,
-	TIME_ACCUMULATION
+	TIME_ACCUMULATION,
+	INFO_WARNING
 };
 
 struct BoundaryInterface{
@@ -32,6 +34,7 @@ public:
     virtual Protections::FaultType check_bounds() = 0;
 	HeapOrder* fault_message;
 	HeapOrder* warn_message;
+	HeapOrder* ok_message;
 	void update_name(char* n){
 		name = n;
 		if(strlen(n) > NAME_MAX_LEN){
@@ -42,14 +45,26 @@ public:
 	}
 	virtual void update_error_handler_message( [[maybe_unused]] const char* err_message){
 	}
+	virtual void update_warning_message( [[maybe_unused]] const char* warn_message){
+	}
 	static const char* get_error_handler_string(){
 		return ErrorHandlerModel::description.c_str();
 	}
+	static const char* get_warning_string(){
+		return InfoWarning::description.c_str();
+	}
 	uint8_t boundary_type_id{};
+		//used to send messages only on raising/failing edges
+	bool warning_already_triggered{false};
+	bool warning_is_up{false};
+	bool back_to_normal{false};
 protected:
 	static const map<type_id_t,uint8_t> format_look_up;
 	static int get_error_handler_string_size(){
 		return ErrorHandlerModel::description.size();
+	}
+	static int get_warning_string_size(){
+		return InfoWarning::description.size();
 	}
 
 	//this will store the name of the variable
@@ -69,6 +84,7 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 	Type* src = nullptr;
 	Type boundary;
 	Type warning_threshold;
+
 	constexpr Boundary(const Type warn, const Type bound)
 	: has_warning_level{true}, boundary(bound), warning_threshold(warn){
 		// i havent been able to find a way to do a static_assertion.
@@ -89,11 +105,14 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 			name.reserve(NAME_MAX_LEN);
 			if(this->has_warning_level){
 				warning_threshold = boundary.warning_threshold;
-				warn_message = new HeapOrder(uint16_t{1000},&format_id,&boundary_type_id,&name,&this->warning_threshold,this->src,
+				warn_message = new HeapOrder(uint16_t{2000},&format_id,&boundary_type_id,&name,&this->warning_threshold,this->src,
+				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+				ok_message = new HeapOrder(uint16_t{3000},&format_id,&boundary_type_id,&name,&this->warning_threshold,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 			}
-			fault_message = new HeapOrder(uint16_t{2000},&format_id,&boundary_type_id,&name,&this->boundary,this->src,
+			fault_message = new HeapOrder(uint16_t{1000},&format_id,&boundary_type_id,&name,&this->boundary,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 			
@@ -103,7 +122,9 @@ struct Boundary<Type, BELOW> : public BoundaryInterface{
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
 	Protections::FaultType check_bounds()override{
 		if(*src < boundary) return Protections::FAULT;
-		if(has_warning_level && *src < warning_threshold) return Protections::WARNING;
+		if(has_warning_level && *src < warning_threshold){
+			return Protections::WARNING;
+		}
 		return Protections::OK;
 	}
 };
@@ -136,6 +157,9 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 				warn_message = new HeapOrder(uint16_t{2111},&format_id,&boundary_type_id,&name,&this->warning_threshold,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+				ok_message = new HeapOrder(uint16_t{3111},&format_id,&boundary_type_id,&name,&this->warning_threshold,this->src,
+				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+				&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 			}
 			fault_message = new HeapOrder(uint16_t{1111},&format_id,&boundary_type_id,&name,&this->boundary,this->src,
 				&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
@@ -145,7 +169,9 @@ struct Boundary<Type, ABOVE> : public BoundaryInterface{
 	Boundary(Type* src, Type boundary): src(src),boundary(boundary){}
 	Protections::FaultType check_bounds()override{
 		if(*src > boundary) return Protections::FAULT;
-		if(has_warning_level && *src > warning_threshold) return Protections::WARNING;
+		if(has_warning_level && *src > warning_threshold){
+			 return Protections::WARNING;
+		}
 		return Protections::OK;
 	}
 };
@@ -202,9 +228,10 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = OUT_OF_RANGE;
 	Type* src = nullptr;
 	Type lower_boundary, upper_boundary;
+	Type lower_warning, upper_warning;
 	bool has_warning_level{false};
 	Boundary(Type lower_warning, Type upper_warning,Type lower_boundary, Type upper_boundary): lower_boundary(lower_boundary), upper_boundary(upper_boundary),
-	has_warning_level{true}{
+	has_warning_level{true}, lower_warning(lower_warning), upper_warning(upper_warning){
 		if(lower_warning < lower_boundary || upper_warning > upper_boundary){
 			ErrorHandler("Warning thresholds are outside of boundaries");
 		}
@@ -217,7 +244,12 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 		format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
 		name.reserve(NAME_MAX_LEN);
 		if(boundary.has_warning_level){
+			lower_warning = boundary.lower_warning;
+			upper_warning = boundary.upper_warning;
 			warn_message = new HeapOrder(uint16_t{2222},&format_id,&boundary_type_id,&name,&boundary.lower_boundary,&boundary.upper_boundary,this->src,
+			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+			ok_message = new HeapOrder(uint16_t{3222},&format_id,&boundary_type_id,&name,&boundary.lower_boundary,&boundary.upper_boundary,this->src,
 			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		}
@@ -229,6 +261,9 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 	Boundary(Type* src, Type lower_boundary, Type upper_boundary): src(src), lower_boundary(lower_boundary), upper_boundary(upper_boundary){}
 	Protections::FaultType check_bounds()override{
 		if(*src < lower_boundary || *src > upper_boundary) return Protections::FAULT;
+		if(has_warning_level && *src < lower_boundary || *src > upper_boundary){
+				return Protections::WARNING;
+		}
 		return Protections::OK;
 	}
 };
@@ -265,23 +300,54 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 		static constexpr uint16_t ERROR_HANDLER_MSG_MAX_LEN = 255;
 };
 
-
+template<>
+struct Boundary<void,INFO_WARNING> : public BoundaryInterface{
+	static constexpr ProtectionType Protector = INFO_WARNING;
+	Boundary(void*){}
+	uint8_t padding{};
+	Boundary(void*, Boundary<void,INFO_WARNING>)
+	{
+		//SW are crybabies
+		boundary_type_id = Protector-2;
+		warning_string.reserve(WARNING_HANDLER_MSG_MAX_LEN);
+		warn_message = new HeapOrder(uint16_t{2555},&padding,&boundary_type_id,&name,&warning_string,
+			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+	}
+	Boundary() = default;
+	Protections::FaultType check_bounds() override{
+		return InfoWarning::warning_triggered ? Protections::WARNING : Protections::OK;
+	}
+	void update_warning_message(const char* warn_message)override{
+		warning_string = warn_message;
+		if(strlen(warn_message) > WARNING_HANDLER_MSG_MAX_LEN){
+			ErrorHandler("Error Handler message is too long, max length is %d",WARNING_HANDLER_MSG_MAX_LEN);
+			return;
+		}
+		warning_string_len = warning_string.size();
+	}
+	private:
+		
+		string warning_string;
+		uint16_t warning_string_len;
+		static constexpr uint16_t WARNING_HANDLER_MSG_MAX_LEN = 255;
+};
 
 template<typename Type>
 requires(std::is_floating_point_v<Type>)
 struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 	static constexpr ProtectionType Protector = TIME_ACCUMULATION;	
-	Boundary(Type bound, float time_limit, float frequency, Boundary<Type, Protector>*& external_pointer): bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100),
+	Boundary(Type bound, float time_limit, float frequency, Boundary<Type, Protector>*& external_pointer): real_still_good(new Protections::FaultType{Protections::OK}), bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100),
 			external_pointer(&external_pointer){
 		external_pointer = this;
 	};
-	Boundary(Type warning_threshold, Type bound, float time_limit, float frequency, Boundary<Type, Protector>*& external_pointer): bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100),
+	Boundary(Type warning_threshold, Type bound, float time_limit, float frequency, Boundary<Type, Protector>*& external_pointer): real_still_good(new Protections::FaultType{Protections::OK}), bound(bound),time_limit(time_limit) ,frequency(frequency), moving_order(frequency*time_limit/100),
 		external_pointer(&external_pointer){
 	external_pointer = this;
 	has_warning_level = true;
 	this->warning_threshold = warning_threshold;
 	};
-	Boundary(Type* src, Boundary<Type, Protector> boundary): src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100), external_pointer(boundary.external_pointer){
+	Boundary(Type* src, Boundary<Type, Protector> boundary): real_still_good(boundary.real_still_good), src(src),bound(boundary.bound),time_limit(boundary.time_limit),frequency(boundary.frequency),moving_order(frequency*time_limit/100), external_pointer(boundary.external_pointer){
 		*external_pointer = this;
 		boundary_type_id = Protector;
 		format_id = BoundaryInterface::format_look_up.at(type_id<Type>);
@@ -291,13 +357,16 @@ struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 			warn_message = new HeapOrder(uint16_t{2666},&format_id,&boundary_type_id,&name,&this->warning_threshold,&this->bound,this->src,&this->time_limit,&this->frequency,
 			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+			ok_message = new HeapOrder(uint16_t{2666},&format_id,&boundary_type_id,&name,&this->warning_threshold,&this->bound,this->src,&this->time_limit,&this->frequency,
+			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		}
 		fault_message = new HeapOrder(uint16_t{1666},&format_id,&boundary_type_id,&name,&this->bound,this->src,&this->time_limit,&this->frequency,
 			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
 			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
 		
 	}
-	Boundary(Type* src, Type bound ,float time_limit, float frequency): src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
+	Boundary(Type* src, Type bound ,float time_limit, float frequency): real_still_good(new Protections::FaultType{Protections::OK}), src(src),bound(bound) ,time_limit(time_limit), frequency(frequency),moving_order(frequency*time_limit/100), external_pointer(nullptr){}
 	bool has_warning_level{false};
 	Type warning_threshold;
 	uint8_t format_id{};
@@ -305,6 +374,7 @@ struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 	Type bound;
 	float time_limit;
 	float frequency;
+	Protections::FaultType *real_still_good = nullptr;
 	Protections::FaultType still_good = Protections::OK;
 	Boundary<Type,Protector>** external_pointer;
 
@@ -338,15 +408,18 @@ struct Boundary<Type, TIME_ACCUMULATION> : public BoundaryInterface {
 		accumulator += mean_moving_average[moving_last] / moving_order;
 		// we check by decreasing order. 
 		if(accumulator > bound){
+			*real_still_good = Protections::FAULT;
 			still_good = Protections::FAULT;
 			return Protections::FAULT;
 		}else if(has_warning_level && accumulator > warning_threshold){
 			return Protections::WARNING;
 		}
 		return Protections::OK;
+		
 	}
 
 	Protections::FaultType check_bounds() override{
+		still_good = *real_still_good;
 		return still_good;
 	}
 };

@@ -20,6 +20,7 @@ private:
 
 public:
 	static double error_triggered;
+	static bool error_to_communicate;
 
 	 /**
 	 * @brief Triggers ErrorHandler and format the error message. The format works

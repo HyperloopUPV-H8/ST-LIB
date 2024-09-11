@@ -52,13 +52,13 @@ public:
 	class Peripheral {
 	public:
 		ADC_HandleTypeDef* handle;
-		uint16_t* dma_stream;
+		uint16_t* dma_data_buffer;
 		LowPowerTimer timer;
 		InitData init_data;
 		bool is_on = false;
 
 		Peripheral() = default;
-		Peripheral(ADC_HandleTypeDef* handle, uint16_t* dma_stream, LowPowerTimer& timer, InitData& init_data);
+		Peripheral(ADC_HandleTypeDef* handle, LowPowerTimer& timer, InitData& init_data);
 
 		bool is_registered();
 	};
@@ -133,6 +133,16 @@ public:
 	 * @return the value of the ADC, in uint16_t format. 0 is minimum possible value and max_uint16_t is the maximum.
 	 */
 	static uint16_t get_int_value(uint8_t id);
+
+	/**
+	 * @brief Function that returns the pointer where the DMA of the ADC writes its value, for maximum efficiency on the access
+	 *
+	 * This function has no protection of any kind, other that checking that an adc exists before giving the pointer back.
+	 * If the ADC is running or not should be handled by the user.
+	 * The adcs of the adc3 peripheral are not aligned in the buffer, and are instead aligned in the get functions.
+	 * If the values are accessed from the buffer, is the responsibility of the user to handle the shift problems.
+	 */
+	static uint16_t* get_value_pointer(uint8_t id);
 
 	static Peripheral peripherals[3];
 
