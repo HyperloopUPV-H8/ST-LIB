@@ -16,7 +16,19 @@
 #define PBUF_POOL_MEMORY_DESC_POSITION 8
 
 /**
-* @brief ServerSocket class
+* @brief class that handles a single point to point server client connection, emulating the server side.
+*
+* The flow of this class goes as follows:
+*
+* 1. When the constructor is called, the listener is activated and starts working immediately
+*
+* 2. After a client issues a connection to the ServerSocket and Ethernet#update is executed, the ServerSocket accepts the request
+*
+* 3. Accepting the request raises an interrupt that calls accept_callback, which closes the listener socket (on server_control_block) and opens the connection socket (on client_control_block)
+*
+* 4. The connection goes on until one of the ends closes it, which calls the ErrorHandler to send the board into fault as a default behaviour.
+*
+* @see Ethernet#update
 */
 class ServerSocket : public OrderProtocol{
 public:
@@ -40,10 +52,32 @@ public:
 	static uint8_t priority;
 	struct tcp_pcb* client_control_block;
 
+	struct KeepaliveConfig{
+		uint32_t inactivity_time_until_keepalive_ms = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
+		uint32_t space_between_tries_ms = TCP_SPACE_BETWEEN_KEEPALIVE_TRIES_MS;
+		uint32_t tries_until_disconnection = TCP_KEEPALIVE_TRIES_UNTIL_DISCONNECTION;
+	}keepalive_config;
 
 	ServerSocket();
+
+
 	ServerSocket(ServerSocket&& other);
+
+	/**
+	 * @brief ServerSocket constructor that receives the server ip on the net as a binary value.
+	 *
+	 * @param local_ip the server ip on.
+	 * @param local_port the port number that the server listens for connections.
+	 */
 	ServerSocket(IPV4 local_ip, uint32_t local_port);
+	ServerSocket(IPV4 local_ip, uint32_t local_port, uint32_t inactivity_time_until_keepalive_ms, uint32_t space_between_tries_ms, uint32_t tries_until_disconnection);
+	/**
+	 * @brief ServerSocket constructor that uses the EthernetNode class as a parameter
+	 *
+	 * @param local_node the EthernetNode to listen to
+	 *
+	 * @see EthernetNode
+	 */
 	ServerSocket(EthernetNode local_node);
 	~ServerSocket();
 
@@ -105,21 +139,54 @@ public:
 
 	/**
 	* @brief sends all the binary data saved in the tx_packet_buffer to the connected client. 
+	*
+	* This function is the one that actually handles outgoing communication, sending one by one the packets in the tx_packet_buffer
+	* The messages in the buffer are all immediately sent after calling this function, unless an error of any kind happened, in which case ErrorHandler is raised
 	*/
 	void send();
 
 	/**
+	* @brief function that returns wether or not a client is connected to the ServerSocket
+	*
+	* This functions returns a comparison to the state of the ServerSocket, checking wether or not it is on the ACCEPTED state
+	* This function is equivalent to doing instance->state == ServerSocket#ACCEPT
+	*
 	* @return true if a connection with the client was established, false otherwise
 	*/
 	bool is_connected();
 
 private:
 
+	/**
+	 * @brief the callback for the listener socket receiving a request for connection into the ServerSocket.
+	 *
+	 * This function is called on an interrupt when a packet containing a connection request to the same port of the listener socket is received.
+	 * accept_callback builds the pcb that acts as the connection socket and saves it in the client_control_block pointer
+	 * It then closes the listener socket and makes the server_control_block point to nullptr.
+	 *
+	 * server_control_block shouldn't be accessed in any way while the ServerSocket is in the ServerSocket#ACCEPT state, as it will lead into a nullptr exception.
+	 * This in an intended behavior as there shouldn't be more than one listener socket on the same port, and a ServerSocket shouldn't be able to handle more than one connection by design.
+	 */
 	static err_t accept_callback(void* arg, struct tcp_pcb* incomming_control_block, err_t error);
+
+	/**
+	 * @brief callback that handles receiving a packet.
+	 *
+	 * On a received packet on an ACCEPTED state receive_callback calls the ServerSocket process_data,
+	 * which calls the Packet process_data() if it is inscribed as an Order.
+	 */
 	static err_t receive_callback(void* arg, struct tcp_pcb* client_control_block, struct pbuf* packet_buffer, err_t error);
 	static void error_callback(void *arg, err_t error);
+
+	/**
+	 * @brief callback called each 500ms to do housekeeping tasks
+	 *
+	 * The housekeeping tasks made now are basically checks to ensure no data remains unsent and that the ServerSocket is not left in a middle state (such as CLOSING)
+	 */
 	static err_t poll_callback(void *arg, struct tcp_pcb *client_control_block);
 	static err_t send_callback(void *arg, struct tcp_pcb *client_control_block, u16_t len);
+
+	static void config_keepalive(tcp_pcb* control_block, ServerSocket* server_socket);
 
 };
 
