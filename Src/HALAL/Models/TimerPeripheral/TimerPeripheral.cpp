@@ -24,10 +24,10 @@ map<TIM_HandleTypeDef*, TIM_TypeDef*> TimerPeripheral::handle_to_timer= {
 
 TimerPeripheral::InitData::InitData(
 		TIM_TYPE type, uint32_t prescaler, uint32_t period, uint32_t deadtime, uint32_t polarity, uint32_t negated_polarity) :
+		type(type),
 		prescaler(prescaler),
 		period(period),
 		deadtime(deadtime),
-		type(type),
 		polarity(polarity),
 		negated_polarity(negated_polarity)
 		{}
