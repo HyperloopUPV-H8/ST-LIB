@@ -21,7 +21,7 @@ Socket::Socket(Socket&& other):remote_port(move(remote_port)), connection_contro
 
 void Socket::operator=(Socket&& other){
 	connection_control_block = move(other.connection_control_block);
-	remote_port = move(remote_port);
+	remote_port = move(other.remote_port);
 	state = other.state;
 	EthernetNode remote_node(other.remote_ip, other.remote_port);
 	connecting_sockets[remote_node] = this;
