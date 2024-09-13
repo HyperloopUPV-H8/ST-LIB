@@ -17,9 +17,9 @@ is_windows = "Windows" in platform.system()
 move_cmd = "move" if is_windows else "mv"
 python_interpreter = "python" if is_windows else "python3"
 
-## !!!!!! CHANGE THIS PATH TO YOUR ST-LIB PATH !!!!!!
-stlib_path = "C:/ST-LIB/tools/build.py" if is_windows else "/opt/ST-LIB/tools/build.py"
-## !!!!!! CHANGE THIS PATH TO YOUR ST-LIB PATH !!!!!!
+stlib_path = os.environ.get('STLIB_PATH')
+if not stlib_path:
+    raise Exception("STLIB_PATH ENV VARIABLE IS NOT SET, \n\t check the readme")
 
 
 parser.add_argument('-bb','--build_behaviour',choices=['Release','Debug'],required=True)
