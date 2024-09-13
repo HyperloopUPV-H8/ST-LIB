@@ -33,13 +33,34 @@ else()
   set(DEBUG_CONFIGURATION -g3)
 endif()
 
-
+message("\n\nPROJECT CONFIGURATION:\n")
 if(${ETHERNET})
   set(ETH STLIB_ETH)
+  message(STATUS "ETHERNET is ENABLED ")
+else()
+message(STATUS "ETHERNET is DISABLED ")
 endif()
-message("\n\nCMAKE:\n")
-message(STATUS "ETHERNET is ENABLED ?? " ${ETHERNET})
+message(STATUS "[DEBUG, RELEASE]:")
 
+
+if(${RELEASE})
+  message( "\tRELEASE")
+else()
+  message( "\tDEBUG")
+endif()
+
+
+message(STATUS "Optimization value: " ${OPTIMIZATION})
+message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
+
+message(STATUS "[BOARD, NUCLEO]:")
+
+if(${NUCLEO})
+  message("\tNUCLEO")
+else()
+  message("\tBOARD")
+endif()
+message("\n\nEND OF PROJECT CONFIGURATION\n\n")
 add_library(${LIBRARY} STATIC
   ${SOURCE_H}
   ${SOURCE_C}
@@ -110,8 +131,5 @@ target_include_directories(${LIBRARY} PUBLIC
   Inc/ST-LIB_HIGH
 )
 
-message(STATUS "[DEBUG, RELEASE]: RELEASE: " ${RELEASE})
-message(STATUS "Optimization value: " ${OPTIMIZATION})
-message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
-message(STATUS "[BOARD, NUCLEO] Config: NUCLEO: " ${NUCLEO})
+
 
