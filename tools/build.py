@@ -30,7 +30,7 @@ args = parser.parse_args()
 
 class ConfigBuild:
     def find_repo_root(self):
-        current_directory = str(stlib_path).strip("build.py")
+        current_directory = os.path.join(stlib_path, "tools")
         repo = git.Repo(current_directory, search_parent_directories=True)
         git_root = repo.git.rev_parse("--show-toplevel")
         self.repo_root = git_root
