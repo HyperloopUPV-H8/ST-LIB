@@ -15,8 +15,6 @@ file(GLOB_RECURSE SOURCE_CPP ${CMAKE_SOURCE_DIR}/ *.cpp)
 file(GLOB_RECURSE SOURCE_H ${CMAKE_SOURCE_DIR}/ *.h)
 file(GLOB_RECURSE SOURCE_HPP ${CMAKE_SOURCE_DIR}/ *.hpp)
 
-
-
 if(${NUCLEO})
   add_definitions(-DNUCLEO)
   add_definitions(-DHSE_VALUE=8000000)
@@ -42,13 +40,11 @@ message(STATUS "ETHERNET is DISABLED ")
 endif()
 message(STATUS "[DEBUG, RELEASE]:")
 
-
 if(${RELEASE})
   message( "\tRELEASE")
 else()
   message( "\tDEBUG")
 endif()
-
 
 message(STATUS "Optimization value: " ${OPTIMIZATION})
 message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
@@ -61,6 +57,7 @@ else()
   message("\tBOARD")
 endif()
 message("\n\nEND OF PROJECT CONFIGURATION\n\n")
+
 add_library(${LIBRARY} STATIC
   ${SOURCE_H}
   ${SOURCE_C}
@@ -75,9 +72,6 @@ target_compile_definitions(${LIBRARY} PUBLIC
   ${ETH}
   -DUSING_CMAKE
 )
-
-
-
 
 target_compile_options(${LIBRARY} PUBLIC
   -mcpu=cortex-m7
@@ -130,6 +124,3 @@ target_include_directories(${LIBRARY} PUBLIC
   Inc/ST-LIB_LOW
   Inc/ST-LIB_HIGH
 )
-
-
-
