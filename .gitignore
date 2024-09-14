@@ -20,3 +20,6 @@ PRUEBAS/
 .settings
 build
 !build/build.sh
+
+# Python
+__pycache__/
