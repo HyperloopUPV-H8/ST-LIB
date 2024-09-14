@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '-bb',
     '--build_behaviour',
-    choices=['Release','Debug'],
+    choices=['Release', 'ReleaseDebug', 'Debug'],
     required=True
 )
 parser.add_argument(
@@ -56,7 +56,7 @@ def main(args: argparse.Namespace):
         "cmake",
         stlib_path,
         "-B", output_dir,
-        f"-DRELEASE={'TRUE' if args.build_behaviour == "Release" else 'FALSE'}",
+        f"-DRELEASE={args.build_behaviour}",
         f"-DNUCLEO={'TRUE' if args.target == "NUCLEO" else 'FALSE'}",
         f"-DETHERNET={'TRUE' if args.ethernet_config == "ON" else 'FALSE'}",
         "-G", "Unix Makefiles"
