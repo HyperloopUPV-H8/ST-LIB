@@ -13,10 +13,12 @@ PRUEBAS/
 .cache/
 
 #vscode 
-.vscode
 .cproject
 .cache
 
 .settings
 build
 !build/build.sh
+
+# Python
+__pycache__/

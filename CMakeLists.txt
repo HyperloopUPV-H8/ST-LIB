@@ -15,8 +15,6 @@ file(GLOB_RECURSE SOURCE_CPP ${CMAKE_SOURCE_DIR}/ *.cpp)
 file(GLOB_RECURSE SOURCE_H ${CMAKE_SOURCE_DIR}/ *.h)
 file(GLOB_RECURSE SOURCE_HPP ${CMAKE_SOURCE_DIR}/ *.hpp)
 
-
-
 if(${NUCLEO})
   add_definitions(-DNUCLEO)
   add_definitions(-DHSE_VALUE=8000000)
@@ -25,20 +23,45 @@ else()
   add_definitions(-DHSE_VALUE=25000000)
 endif()
 
-if(${RELEASE})
+if(${RELEASE} STREQUAL "Release")
   set(OPTIMIZATION -O3)
   set(DEBUG_CONFIGURATION -g0)
+elseif(${RELEASE} STREQUAL "ReleaseDebug")
+  set(OPTIMIZATION -O3)
+  set(DEBUG_CONFIGURATION -g3)
 else()
   set(OPTIMIZATION -O0)
   set(DEBUG_CONFIGURATION -g3)
 endif()
 
-
+message("\n\nPROJECT CONFIGURATION:\n")
 if(${ETHERNET})
   set(ETH STLIB_ETH)
+  message(STATUS "ETHERNET is ENABLED ")
+else()
+message(STATUS "ETHERNET is DISABLED ")
 endif()
-message("\n\nCMAKE:\n")
-message(STATUS "ETHERNET is ENABLED ?? " ${ETHERNET})
+message(STATUS "[DEBUG, RELEASE, RELEASE_DEBUG]:")
+
+if(${RELEASE} STREQUAL "Release")
+  message( "\tRELEASE")
+elseif(${RELEASE} STREQUAL "ReleaseDebug")
+  message( "\tRELEASE_DEBUG")
+else()
+  message( "\tDEBUG")
+endif()
+
+message(STATUS "Optimization value: " ${OPTIMIZATION})
+message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
+
+message(STATUS "[BOARD, NUCLEO]:")
+
+if(${NUCLEO})
+  message("\tNUCLEO")
+else()
+  message("\tBOARD")
+endif()
+message("\n\nEND OF PROJECT CONFIGURATION\n\n")
 
 add_library(${LIBRARY} STATIC
   ${SOURCE_H}
@@ -55,9 +78,6 @@ target_compile_definitions(${LIBRARY} PUBLIC
   -DUSING_CMAKE
 )
 
-
-
-
 target_compile_options(${LIBRARY} PUBLIC
   -mcpu=cortex-m7
   -mfpu=fpv5-d16
@@ -68,9 +88,13 @@ target_compile_options(${LIBRARY} PUBLIC
   -ffunction-sections
   -fdata-sections
   -fno-exceptions
+  ## disable Warnings for C files, this is Driver code from ST
+  $<$<COMPILE_LANGUAGE:C>:-w>
   $<$<COMPILE_LANGUAGE:CXX>:-fno-use-cxa-atexit>
   $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
-
+  $<$<COMPILE_LANGUAGE:CXX>:-Wall>
+  $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>
+  $<$<COMPILE_LANGUAGE:CXX>:-Werror>
   -Wno-psabi
   -specs=nosys.specs
 )
@@ -105,9 +129,3 @@ target_include_directories(${LIBRARY} PUBLIC
   Inc/ST-LIB_LOW
   Inc/ST-LIB_HIGH
 )
-
-message(STATUS "[DEBUG, RELEASE]: RELEASE: " ${RELEASE})
-message(STATUS "Optimization value: " ${OPTIMIZATION})
-message(STATUS "Debug configuration value: " ${DEBUG_CONFIGURATION})
-message(STATUS "[BOARD, NUCLEO] Config: NUCLEO: " ${NUCLEO})
-

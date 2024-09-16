@@ -174,8 +174,9 @@ public:
 	SPIBasePacket& slave_packet;
 
 	SPIStackOrder(uint16_t id, SPIBasePacket& master_packet, SPIBasePacket& slave_packet) :
-	master_packet(master_packet), slave_packet(slave_packet),
-	SPIBaseOrder(id, (uint16_t)master_packet.size, (uint16_t)slave_packet.size){
+	SPIBaseOrder(id, (uint16_t)master_packet.size, (uint16_t)slave_packet.size),
+	master_packet(master_packet), slave_packet(slave_packet)
+	{
 
 	}
 

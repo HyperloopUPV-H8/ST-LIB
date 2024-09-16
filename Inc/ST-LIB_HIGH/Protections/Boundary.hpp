@@ -271,7 +271,13 @@ struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInterface{
 template<>
 struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = ERROR_HANDLER;
-	Boundary(void*){}
+	Boundary(void*){
+		boundary_type_id = Protector;
+		error_handler_string.reserve(ERROR_HANDLER_MSG_MAX_LEN);
+		fault_message = new HeapOrder(uint16_t{1555},&padding,&boundary_type_id,&name,&error_handler_string,
+			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+	}
 	uint8_t padding{};
 	Boundary(void*, Boundary<void,ERROR_HANDLER>)
 	{
@@ -303,7 +309,13 @@ struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface{
 template<>
 struct Boundary<void,INFO_WARNING> : public BoundaryInterface{
 	static constexpr ProtectionType Protector = INFO_WARNING;
-	Boundary(void*){}
+	Boundary(void*){
+		boundary_type_id = Protector-2;
+		warning_string.reserve(WARNING_HANDLER_MSG_MAX_LEN);
+		warn_message = new HeapOrder(uint16_t{2555},&padding,&boundary_type_id,&name,&warning_string,
+			&Global_RTC::global_RTC.counter,&Global_RTC::global_RTC.second,&Global_RTC::global_RTC.minute,
+			&Global_RTC::global_RTC.hour,&Global_RTC::global_RTC.day,&Global_RTC::global_RTC.month,&Global_RTC::global_RTC.year);
+	}
 	uint8_t padding{};
 	Boundary(void*, Boundary<void,INFO_WARNING>)
 	{

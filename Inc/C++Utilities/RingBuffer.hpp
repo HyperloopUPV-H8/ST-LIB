@@ -15,7 +15,6 @@ public:
 	/**
 	 * @brief introduces a new item on the Ring Buffer unless it is full. Returns false when the Ring Buffer is full.
 	 */
-	[[nodiscard("Push may fail if the Buffer is full")]]
 	bool push(item_type item){
 		if(msize == mcapacity){
 			return false;
