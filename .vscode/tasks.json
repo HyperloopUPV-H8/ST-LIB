@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "buildBehaviour",
+      "description": "Build Behaviour",
+      "type": "pickString",
+      "options": ["Debug", "Release", "ReleaseDebug"],
+      "default": "Debug"
+    },
+    {
+      "id": "target",
+      "description": "Compilation Target",
+      "type": "pickString",
+      "options": ["NUCLEO", "BOARD"],
+      "default": "NUCLEO"
+    },
+    {
+      "id": "ethernetConfig",
+      "description": "Enable Ethernet",
+      "type": "pickString",
+      "options": ["ON", "OFF"],
+      "default": "ON"
+    }
+  ],
+  "tasks": [
+    {
+      "label": "Build Project",
+      "type": "shell",
+      "command": "${workspaceFolder}/tools/build.py",
+      "args": [
+        "-bb",
+        "${input:buildBehaviour}",
+        "-t",
+        "${input:target}",
+        "-eth",
+        "${input:ethernetConfig}"
+      ],
+      "windows": {
+        "command": "python",
+        "args": [
+          "${workspaceFolder}\\tools\\build.py",
+          "-bb",
+          "${input:buildBehaviour}",
+          "-t",
+          "${input:target}",
+          "-eth",
+          "${input:ethernetConfig}"
+        ]
+      },
+      "problemMatcher": ["$gcc"],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "clear": true
+      }
+    }
+  ]
+}
