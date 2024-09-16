@@ -57,8 +57,8 @@ def main(args: argparse.Namespace):
         stlib_path,
         "-B", output_dir,
         f"-DRELEASE={args.build_behaviour}",
-        f"-DNUCLEO={'TRUE' if args.target == "NUCLEO" else 'FALSE'}",
-        f"-DETHERNET={'TRUE' if args.ethernet_config == "ON" else 'FALSE'}",
+        f"-DNUCLEO={'TRUE' if args.target == 'NUCLEO' else 'FALSE'}",
+        f"-DETHERNET={'TRUE' if args.ethernet_config == 'ON' else 'FALSE'}",
         "-G", "Unix Makefiles"
     ])
 
