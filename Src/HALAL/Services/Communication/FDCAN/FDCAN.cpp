@@ -76,7 +76,7 @@ void FDCAN::start(){
 	}
 }
 
-bool FDCAN::transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN::DLC dlc){
+bool FDCAN::transmit(uint8_t id, uint32_t message_id, const char* data, FDCAN::DLC dlc){
 	if (not FDCAN::registered_fdcan.contains(id)) {
 		ErrorHandler("There is no registered FDCAN with id: %d.", id);
 		return false;
@@ -95,7 +95,7 @@ bool FDCAN::transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN:
 		instance->tx_header.DataLength = dlc;
 	}
 
-	HAL_StatusTypeDef error = HAL_FDCAN_AddMessageToTxFifoQ(instance->hfdcan, &instance->tx_header, data.data());
+	HAL_StatusTypeDef error = HAL_FDCAN_AddMessageToTxFifoQ(instance->hfdcan, &instance->tx_header, (uint8_t*)data);
 
 	if (error != HAL_OK) {
 		ErrorHandler("Error sending message with id: 0x%x by FDCAN %d", message_id, instance->fdcan_number);
@@ -125,6 +125,8 @@ bool FDCAN::read(uint8_t id, FDCAN::Packet* data){
 	HAL_FDCAN_GetRxMessage(FDCAN::registered_fdcan.at(id)->hfdcan, FDCAN::registered_fdcan.at(id)->rx_location, &header_buffer, data->rx_data.data());
 
 	data->identifier = header_buffer.Identifier;
+	data->data_length = static_cast<FDCAN::DLC>(header_buffer.DataLength);
+
 	return true;
 }
 
@@ -142,7 +144,7 @@ void FDCAN::init(FDCAN::Instance* fdcan){
 	handle_to_id[handle] = instance_to_id[fdcan];
 	handle->Instance = fdcan->instance;
 	handle->Init.FrameFormat = FDCAN_FRAME_FD_BRS;
-	handle->Init.Mode = FDCAN_MODE_NORMAL;
+	handle->Init.Mode = FDCAN_MODE_INTERNAL_LOOPBACK;
 	handle->Init.AutoRetransmission = ENABLE;
 	handle->Init.TransmitPause = DISABLE;
 	handle->Init.ProtocolException = DISABLE;

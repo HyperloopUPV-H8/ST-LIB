@@ -21,7 +21,7 @@ using std::queue;
 
 class FDCAN{
 public:
-	enum DLC{
+	enum DLC : uint32_t{
 		BYTES_0 = FDCAN_DLC_BYTES_0,
 		BYTES_1 = FDCAN_DLC_BYTES_1,
 		BYTES_2 = FDCAN_DLC_BYTES_2,
@@ -45,7 +45,7 @@ public:
     };
 
 	struct Packet{
-		vector<uint8_t> rx_data;
+		array<uint8_t,64> rx_data;
 		uint32_t identifier;
 		DLC data_length;
 
@@ -113,7 +113,7 @@ public:
 
     static void start();
 
-    static bool transmit(uint8_t id, uint32_t message_id, span<uint8_t> data, FDCAN::DLC dlc = FDCAN::DLC::DEFAULT);
+    static bool transmit(uint8_t id, uint32_t message_id, const char* data, FDCAN::DLC dlc = FDCAN::DLC::DEFAULT);
 
     static bool read(uint8_t id, FDCAN::Packet* data);
 
