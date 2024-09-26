@@ -42,4 +42,8 @@ void PWMSensor<Type>::read() {
 	*duty_cycle = InputCapture::read_duty_cycle(id);
 	*frequency = InputCapture::read_frequency(id);
 }
+template<class Type>
+uint8_t PWMSensor<Type>::get_id() {
+	return id;
+}
 

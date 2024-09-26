@@ -73,7 +73,7 @@ public:
   void send_protocol_to_module(ProtocolNumber protocol, ModuleID id) {
     uint32_t identifier = protocol * 256 + 1 * 16 + id;
     array<uint8_t, 8> data{0, 1, 2, 3, 4, 5, 6, 7};
-    FDCAN::transmit(fdcan_instance, identifier, data, FDCAN::DLC::BYTES_8);
+    FDCAN::transmit(fdcan_instance, identifier, (char *)data.data(), FDCAN::DLC::BYTES_8);
   }
 
 private:

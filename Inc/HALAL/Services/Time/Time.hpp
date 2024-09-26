@@ -18,9 +18,9 @@
 // HIGH RESOLUTION TIMERS
 extern TIM_HandleTypeDef htim2;		// Used for the global timer (3,36nS step)
 extern TIM_HandleTypeDef htim5;		// Used for the high precision alarms (1uS)
-extern TIM_HandleTypeDef htim24;	// Used for the high precision alarms (1uS)
 
-extern TIM_HandleTypeDef htim23;    // Used for the mid precision alarms (50uS)
+// MID RESOLUTION TIMERS
+extern TIM_HandleTypeDef htim24;	// Used for the high precision alarms (50uS)
 
 // LOW RESOLUTION TIMERS
 extern TIM_HandleTypeDef htim7;		// Used for the low precision alarms (1mS)
@@ -135,7 +135,7 @@ public :
 	 * @param callback the function to be executed
 	 * @return uint8_t the id of the order, if it didnot succeed it will return 255
 	 */
-	[[nodiscard]]static uint8_t set_timeout(int milliseconds, function<void()> callback);
+	static uint8_t set_timeout(int milliseconds, function<void()> callback);
 
 	/**
 	 * @brief Cancels a timeout by derigstering the alarm bound to it

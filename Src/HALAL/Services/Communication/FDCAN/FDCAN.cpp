@@ -20,7 +20,7 @@ unordered_map<FDCAN::DLC, uint8_t> FDCAN::dlc_to_len = {{DLC::BYTES_0, 0}, {DLC:
 													    };
 unordered_map<FDCAN_HandleTypeDef*,uint8_t> FDCAN::handle_to_id{};
 unordered_map<FDCAN::Instance*,uint8_t> FDCAN::instance_to_id{};
-FDCAN::Packet packet{.rx_data = vector<uint8_t>(64),.data_length = FDCAN::BYTES_64};
+FDCAN::Packet packet{.rx_data = array<uint8_t, 64>{},.data_length = FDCAN::BYTES_64};
 uint8_t FDCAN::inscribe(FDCAN::Peripheral& fdcan){
 	if (!FDCAN::available_fdcans.contains(fdcan)) {
 		ErrorHandler(" The FDCAN peripheral %d is already used or does not exists.", (uint16_t)fdcan);

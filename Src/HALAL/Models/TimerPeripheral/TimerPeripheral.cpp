@@ -46,7 +46,6 @@ void TimerPeripheral::init() {
 
 		handle->Instance = handle_to_timer[handle];
 		handle->Init.Prescaler = init_data.prescaler;
-
 		handle->Init.CounterMode = TIM_COUNTERMODE_UP;
 		for (PWMData pwm_data : init_data.pwm_channels) {
 			if (pwm_data.mode == PHASED) {
@@ -66,6 +65,9 @@ void TimerPeripheral::init() {
 		}
 
 		if (!init_data.input_capture_channels.empty()) {
+			//TO READ LOW FREQUENCIES WE NEED TO PRESCALE
+			//ALSO NEED CHANGE TIM23 TIMER FROM BASE TO ADVANCE
+			handle->Init.Prescaler = 2000; 
 			if (HAL_TIM_IC_Init(handle) != HAL_OK)
 			{
 				ErrorHandler("Unable to init input capture on %d", name.c_str());
