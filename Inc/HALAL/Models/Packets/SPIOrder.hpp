@@ -14,7 +14,7 @@
 #define PAYLOAD_OVERHEAD SPI_ID_SIZE
 #define PAYLOAD_TAIL SPI_ID_SIZE
 
-#define SPI_MAXIMUM_PAYLOAD_SIZE_BYTES 100
+#define SPI_MAXIMUM_PAYLOAD_SIZE_BYTES 120
 #define SPI_MAXIMUM_PACKET_SIZE_BYTES (SPI_MAXIMUM_PAYLOAD_SIZE_BYTES + PAYLOAD_OVERHEAD + PAYLOAD_TAIL)
 
 #define NO_ORDER_ID 0
@@ -174,8 +174,9 @@ public:
 	SPIBasePacket& slave_packet;
 
 	SPIStackOrder(uint16_t id, SPIBasePacket& master_packet, SPIBasePacket& slave_packet) :
-	master_packet(master_packet), slave_packet(slave_packet),
-	SPIBaseOrder(id, (uint16_t)master_packet.size, (uint16_t)slave_packet.size){
+	SPIBaseOrder(id, (uint16_t)master_packet.size, (uint16_t)slave_packet.size),
+	master_packet(master_packet), slave_packet(slave_packet)
+	{
 
 	}
 

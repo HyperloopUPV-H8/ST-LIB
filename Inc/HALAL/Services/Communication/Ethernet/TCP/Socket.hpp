@@ -34,7 +34,7 @@ public:
 	queue<struct pbuf*> rx_packet_buffer;
 	static unordered_map<EthernetNode,Socket*> connecting_sockets;
 	bool pending_connection_reset = false;
-
+	bool use_keep_alives{true};
 	struct KeepaliveConfig{
 		uint32_t inactivity_time_until_keepalive_ms = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
 		uint32_t space_between_tries_ms = TCP_SPACE_BETWEEN_KEEPALIVE_TRIES_MS;
@@ -43,7 +43,7 @@ public:
 
 	Socket();
 	Socket(Socket&& other);
-	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port);
+	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port,bool use_keep_alives = true);
 	Socket(IPV4 local_ip, uint32_t local_port, IPV4 remote_ip, uint32_t remote_port, uint32_t inactivity_time_until_keepalive_ms, uint32_t space_between_tries_ms, uint32_t tries_until_disconnection);
 	Socket(EthernetNode local_node, EthernetNode remote_node);
 	~Socket();

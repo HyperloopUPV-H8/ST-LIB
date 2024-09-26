@@ -13,6 +13,8 @@ jobs:
         build_type: [Debug, Release]
     runs-on: ubuntu-latest
 
+    env:
+      STLIB_PATH: "/opt/ST-LIB"
 
     steps:
       - uses: actions/checkout@v3

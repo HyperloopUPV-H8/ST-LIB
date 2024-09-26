@@ -248,7 +248,7 @@ void StateMachine::add_state_machine(StateMachine& state_machine, uint8_t state)
  * checks for transitions in a nested state machine if applicable.
  */
 void StateMachine::check_transitions() {
-	for (auto const state_transition : transitions[current_state]) {
+	for (auto const& state_transition : transitions[current_state]) {
 		if (state_transition.second()) {
 			force_change_state(state_transition.first);
 		}
