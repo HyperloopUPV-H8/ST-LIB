@@ -71,6 +71,7 @@ private:
 	static constexpr uint16_t fault_id = 3;
 	static char* message;
 	static size_t message_size;
+    static bool test_fault;
 	static constexpr const char* format = "{\"boardId\": %s, \"timestamp\":{%s}, %s}";
 
     static Boards::ID board_id;
@@ -83,6 +84,7 @@ private:
     static Notification warning_notification;
     static StackOrder<0> fault_order;
 
+    static void tcp_to_fault();
     static void to_fault();
     static void external_to_fault();
 };

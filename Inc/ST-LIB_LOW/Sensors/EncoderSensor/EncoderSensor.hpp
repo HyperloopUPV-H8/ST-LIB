@@ -25,6 +25,7 @@ public:
 	EncoderSensor(Pin pin1, Pin pin2, double* position, double* direction, double* speed, double* acceleration);
 	void start();
 	void read();
+	void reset();
 	uint8_t get_id();
 
 protected:
