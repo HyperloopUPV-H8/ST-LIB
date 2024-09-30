@@ -11,7 +11,6 @@
 #include "TimerPeripheral/TimerPeripheral.hpp"
 
 TIM_HandleTypeDef* Time::low_precision_timer = &htim7;
-TIM_HandleTypeDef* Time::mid_precision_timer = &htim24;
 
 uint8_t Time::high_precision_ids = 0;
 uint8_t Time::low_precision_ids = 0;
