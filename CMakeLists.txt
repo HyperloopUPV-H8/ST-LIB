@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.4)
 
 include(arm-none-eabi.cmake)
 
-project (ST-LIB)
+project (ST-LIB ASM C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
