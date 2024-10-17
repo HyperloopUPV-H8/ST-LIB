@@ -124,6 +124,8 @@ target_include_directories(${LIBRARY} PUBLIC
   LWIP/App
   LWIP/Target
   Inc
+  Inc/HALAL
+  Inc/HALALMock
   Inc/HALAL/Models
   Inc/HALAL/Services
   Inc/ST-LIB_LOW
