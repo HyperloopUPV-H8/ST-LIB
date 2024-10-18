@@ -78,6 +78,34 @@ enum PinState{
 	ON
 };
 
+enum Pin_Type {
+	DigitalOutput,
+	DigitalInput,
+	PWM,
+	ADC
+	// TODO: Add more types
+};
+
+struct Pin_Handler {
+	Pin_Type type; // Always check type before using the union
+
+	union Pin_Data {
+		struct DigitalOutput {
+			// TODO FW-52
+		};
+		struct DigitalInput {
+			// TODO FW-53
+		};
+		struct PWM {
+			// TODO FW-58
+		};
+		struct ADC {
+			// TODO FW-54
+		};
+		// TODO Add more types
+	};
+};
+
 class Pin {
 public:
 	GPIO_TypeDef * port;
