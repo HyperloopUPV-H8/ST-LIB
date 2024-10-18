@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include "HALALMock/Models/PinModel/Pin.hpp"
 
 class SharedMemory {
    public:
@@ -9,7 +10,7 @@ class SharedMemory {
     constexpr static uint8_t max_pin_size_bytes{16};
 
     // do not use before SharedMemory::start, uninitialized!!!
-    static void *gpio_memory;
+    static PinModel *gpio_memory;
 
     static void start();
 };
