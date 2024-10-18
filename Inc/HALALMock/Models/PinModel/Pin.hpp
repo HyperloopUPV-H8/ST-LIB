@@ -78,7 +78,7 @@ enum PinState{
 	ON
 };
 
-enum Pin_Type {
+enum PinType {
 	DigitalOutput,
 	DigitalInput,
 	PWM,
@@ -86,10 +86,10 @@ enum Pin_Type {
 	// TODO: Add more types
 };
 
-struct Pin_Handler {
-	Pin_Type type; // Always check type before using the union
+struct PinModel {
+	PinType type; // Always check type before using the union
 
-	union Pin_Data {
+	union PinData {
 		struct DigitalOutput {
 			// TODO FW-52
 		};
