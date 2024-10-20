@@ -6,9 +6,9 @@
 
 class PWM {
 protected:
-	float duty_cycle;
-	uint32_t frequency;
-	bool is_on = false;
+	float *duty_cycle;
+	uint32_t *frequency;
+	bool *is_on;
 public:
 	PWM() = default;
 	PWM(Pin& pin);

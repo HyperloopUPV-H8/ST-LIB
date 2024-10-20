@@ -90,23 +90,23 @@ enum PinType {
 struct PinModel {
 	PinType type; // Always check type before using the union
 
-	union PinData {
+	union  {
 		struct DigitalOutput {
 			// TODO FW-52
-		};
-		struct DigitalInput {
+		}DigitalOutput;
+		struct  {
 			// TODO FW-53
-		};
-		struct PWM {
+		}DigitalInput;
+		struct  {
 			float duty_cycle;
 			uint32_t frequency;
 			bool is_on;
-		};
-		struct ADC {
+		}PWM;
+		struct {
 			// TODO FW-54
-		};
+		}ADC;
 		// TODO Add more types
-	};
+	}PinData;
 };
 
 unordered_map<Pin, size_t> pin_offsets = {

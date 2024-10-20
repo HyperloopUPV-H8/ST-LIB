@@ -1,10 +1,3 @@
-/*
- * PWM.cpp
- *
- *  Created on: Feb 27, 2023
- *      Author: aleja
- */
-
 #include "HALALMock/Services/PWM/PWM/PWM.hpp"
 PWM::PWM(Pin& pin) {
 	/*By HalalMock we only will test the logical interface of PWM
@@ -21,10 +14,17 @@ PWM::PWM(Pin& pin) {
 	PinModel *pin_memory=(SharedMemory::gpio_memory)+offset;
 	if(pin_memory->type==PinType::NOT_USED){
 		pin_memory->type=PinType::PWM;
+		pin_memory->PinData.PWM.duty_cycle=0.0f;
+		pin_memory->PinData.PWM.is_on=false;
+		//let's point our class variables to the variables from PinModel
+		duty_cycle=&(pin_memory->PinData.PWM.duty_cycle);
+		frequency=&(pin_memory->PinData.PWM.frequency);
+		is_on=
 	}else{
 		ErrorHandler("Pin %s is being used already",pin.to_string());
 	}
-	duty_cycle = 0;
+	
+	
 }
 
 void PWM::turn_on() {
