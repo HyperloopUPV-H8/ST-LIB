@@ -79,6 +79,7 @@ enum PinState{
 };
 
 enum PinType {
+	NOT_USED,
 	DigitalOutput,
 	DigitalInput,
 	PWM,
@@ -97,7 +98,9 @@ struct PinModel {
 			// TODO FW-53
 		};
 		struct PWM {
-			// TODO FW-58
+			float duty_cycle;
+			uint32_t frequency;
+			bool is_on;
 		};
 		struct ADC {
 			// TODO FW-54
