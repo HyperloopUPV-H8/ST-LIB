@@ -5,10 +5,9 @@
  *      Author: aleja
  */
 
-#include <PWM/PWM/PWM.hpp>
-#include "ErrorHandler/ErrorHandler.hpp"
-#include "stm32h7xx_hal_def.h"
-
+#include "HALALMock/Services/PWM/PWM/PWM.hpp"
+#include "HALALMock/Models/PinModel/Pin.hpp"
+#include "HALALMock/Services/SharedMemory/SharedMemory.hpp"
 PWM::PWM(Pin& pin) {
 	if (not TimerPeripheral::available_pwm.contains(pin)) {
 
