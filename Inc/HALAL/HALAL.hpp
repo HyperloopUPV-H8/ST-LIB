@@ -31,6 +31,8 @@
 #include "HALAL/Models/MPUManager/MPUManager.hpp"
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 #include "HALAL/Services/Watchdog/Watchdog.hpp"
+#include "HALAL/Models/Packets/Order.hpp"
+#include "HALAL/Services/Time/RTC.hpp"
 #else
 #include "HALALMock/Models/HALconfig/HALconfig.hpp"
 #include "HALALMock/Models/DMA/DMA.hpp"
@@ -62,6 +64,8 @@
 #include "HALALMock/Models/MPUManager/MPUManager.hpp"
 #include "HALALMock/Services/InfoWarning/InfoWarning.hpp"
 #include "HALALMock/Services/Watchdog/Watchdog.hpp"
+#include "HALALMock/Models/Packets/Order.hpp"
+#include "HALALMock/Services/Time/RTC.hpp"
 #endif
 
 namespace HALAL {

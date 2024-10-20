@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "ADC/ADC.hpp"
+#include "HALAL/HALAL.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "Sensors/Sensor/Sensor.hpp"
 

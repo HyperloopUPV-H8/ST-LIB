@@ -5,7 +5,7 @@
  *      Author: ricardo
  */
 
-#include "HALAL/Models/Packets/SPIOrder.hpp"
+#include "Packets/SPIOrder.hpp"
 
 map<uint16_t, SPIBaseOrder*> SPIBaseOrder::SPIOrdersByID {};
 
