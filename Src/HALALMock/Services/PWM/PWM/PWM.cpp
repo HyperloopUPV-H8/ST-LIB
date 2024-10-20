@@ -4,22 +4,15 @@ PWM::PWM(Pin& pin) {
 	if the PWM works, however when you try in your micro doesn't work,
 	you should check the timers and channels, that could be the problem 
 	*/
-	uint8_t offset;
-	auto it=pin_offsets.find(pin);
-	if(it != pin_offsets.end()){
-		offset =it->second;
-	}else{
-		ErrorHandler("Pin %s doesn't exist",pin.to_string());
-	}
-	PinModel *pin_memory=(SharedMemory::gpio_memory)+offset;
-	if(pin_memory->type==PinType::NOT_USED){
-		pin_memory->type=PinType::PWM;
-		pin_memory->PinData.PWM.duty_cycle=0.0f;
-		pin_memory->PinData.PWM.is_on=false;
+	EmulatedPin &pin_memory=SharedMemory::get_pin(pin);
+	if(pin_memory.type==PinType::NOT_USED){
+		pin_memory.type=PinType::PWM;
+		pin_memory.PinData.PWM.duty_cycle=0.0f;
+		pin_memory.PinData.PWM.is_on=false;
 		//let's point our class variables to the variables from PinModel
-		this->duty_cycle=&(pin_memory->PinData.PWM.duty_cycle);
-		this->frequency=&(pin_memory->PinData.PWM.frequency);
-		this->is_on=&(pin_memory->PinData.PWM.is_on);
+		this->duty_cycle=&(pin_memory.PinData.PWM.duty_cycle);
+		this->frequency=&(pin_memory.PinData.PWM.frequency);
+		this->is_on=&(pin_memory.PinData.PWM.is_on);
 		//default values
 		*(this->duty_cycle)=0.0f;
 		*(this->is_on)=false;
