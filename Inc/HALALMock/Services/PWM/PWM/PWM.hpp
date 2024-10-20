@@ -1,4 +1,7 @@
 #pragma once
+#include "ErrorHandler/ErrorHandler.hpp"
+#include "HALALMock/Models/PinModel/Pin.hpp"
+#include "HALALMock/Services/SharedMemory/SharedMemory.hpp"
 #ifdef HAL_TIM_MODULE_ENABLED
 
 class PWM {

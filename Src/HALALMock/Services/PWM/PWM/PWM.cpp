@@ -6,30 +6,25 @@
  */
 
 #include "HALALMock/Services/PWM/PWM/PWM.hpp"
-#include "HALALMock/Models/PinModel/Pin.hpp"
-#include "HALALMock/Services/SharedMemory/SharedMemory.hpp"
 PWM::PWM(Pin& pin) {
-	if (not TimerPeripheral::available_pwm.contains(pin)) {
-
-		ErrorHandler("Pin %s is not registered as an available PWM", pin.to_string());
-		return;
+	/*By HalalMock we only will test the logical interface of PWM
+	if the PWM works, however when you try in your micro doesn't work,
+	you should check the timers and channels, that could be the problem 
+	*/
+	uint8_t offset;
+	auto it=pin_offsets.find(pin);
+	if(it != pin_offsets.end()){
+		offset =it->second;
+	}else{
+		ErrorHandler("Pin %s doesn't exist",pin.to_string());
 	}
-
-	TimerPeripheral& timer = TimerPeripheral::available_pwm.at(pin).first;
-	TimerPeripheral::PWMData& pwm_data = TimerPeripheral::available_pwm.at(pin).second;
-
-	if (pwm_data.mode != TimerPeripheral::PWM_MODE::NORMAL) {
-		ErrorHandler("Pin %s is not registered as a NORMAL PWM", pin.to_string());
+	PinModel *pin_memory=(SharedMemory::gpio_memory)+offset;
+	if(pin_memory->type==PinType::NOT_USED){
+		pin_memory->type=PinType::PWM;
+	}else{
+		ErrorHandler("Pin %s is being used already",pin.to_string());
 	}
-
-	peripheral = &timer;
-	channel = pwm_data.channel;
-
-	Pin::inscribe(pin, TIMER_ALTERNATE_FUNCTION);
-	timer.init_data.pwm_channels.push_back(pwm_data);
-
 	duty_cycle = 0;
-	is_initialized = true;
 }
 
 void PWM::turn_on() {
