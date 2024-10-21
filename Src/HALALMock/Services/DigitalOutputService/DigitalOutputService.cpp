@@ -27,7 +27,7 @@ void DigitalOutputService::turn_off(uint8_t id){
 	}
 
 	Pin pin = DigitalOutputService::service_ids[id];
-	(*gpio_memory + pin_offset[pin.gpio_pin]) = PinState::LOW;
+	(*gpio_memory + pin_offset[pin.gpio_pin]) = PinState::OFF;
 
 }
 
@@ -38,7 +38,7 @@ void DigitalOutputService::turn_on(uint8_t id){
 	}
 
 	Pin pin = DigitalOutputService::service_ids[id];
-	(*gpio_memory + pin_offset[pin.gpio_pin]) = PinState::HIGH;
+	(*gpio_memory + pin_offset[pin.gpio_pin]) = PinState::ON;
 }
 
 void DigitalOutputService::set_pin_state(uint8_t id, PinState state){
@@ -57,5 +57,5 @@ void DigitalOutputService::toggle(uint8_t id){
 	}
 
 	Pin pin = DigitalOutputService::service_ids[id];
-	(*gpio_memory + pin_offset[pin.gpio_pin]) = (*gpio_memory + pin_offset[pin.gpio_pin]) == PinState::HIGH ? PinState::LOW : PinState::HIGH;
+	(*gpio_memory + pin_offset[pin.gpio_pin]) = (*gpio_memory + pin_offset[pin.gpio_pin]) == PinState::ON ? PinState::OFF : PinState::ON;
 }
