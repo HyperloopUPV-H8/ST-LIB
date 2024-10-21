@@ -1,38 +1,36 @@
 #include "HALALMock/Services/PWM/PWM/PWM.hpp"
 PWM::PWM(Pin& pin) {
-	/*By HalalMock we only will test the logical interface of PWM
-	if the PWM works, however when you try in your micro doesn't work,
-	you should check the timers and channels, that could be the problem 
+	/*
+	HALALMock only tests the logical interface of the PWM works
+    
+    If the actual code doesn't work it might be related to
+	the timers and the channels
 	*/
-	EmulatedPin &pin_memory=SharedMemory::get_pin(pin);
-	if(pin_memory.type==PinType::NOT_USED){
-		pin_memory.type=PinType::PWM;
-		pin_memory.PinData.PWM.duty_cycle=0.0f;
-		pin_memory.PinData.PWM.is_on=false;
+	EmulatedPin &pin_data=SharedMemory::get_pin(pin);
+	if(pin_data.type==PinType::NOT_USED){
+		pin_data.type=PinType::PWM;
 		//let's point our class variables to the variables from PinModel
-		this->duty_cycle=&(pin_memory.PinData.PWM.duty_cycle);
-		this->frequency=&(pin_memory.PinData.PWM.frequency);
-		this->is_on=&(pin_memory.PinData.PWM.is_on);
+		duty_cycle=&(pin_data.PinData.PWM.duty_cycle);
+		frequency=&(pin_data.PinData.PWM.frequency);
+		is_on=&(pin_data.PinData.PWM.is_on);
+		dead_time_ns=&(pin_data.PinData.PWM.dead_time_ns);
+	
 		//default values
-		*(this->duty_cycle)=0.0f;
-		*(this->is_on)=false;
-		*(this->frequency)=0;
+		*duty_cycle=0.0f;
+		*is_on=false;
+		*frequency=0;
+		*dead_time_ns=0;
 	}else{
 		ErrorHandler("Pin %s is being used already",pin.to_string());
 	}
 }
 
 void PWM::turn_on() {
-	if(*(this->frequency)==0){
-		ErrorHandler("You need to set a frequency before turn_on the PWM :%d",*(this->frequency));
-	}else{
-		*(this->is_on) = true;
-	}
-  
+		*is_on= true;
 }
 
 void PWM::turn_off() {
-  *(this->is_on) = false;
+  *is_on = false;
 }
 
 void PWM::set_duty_cycle(float duty_cycle) {
@@ -44,15 +42,15 @@ void PWM::set_frequency(uint32_t frequency) {
 }
 
 uint32_t PWM::get_frequency() {
-	return *(this->frequency);
+	return *frequency;
 }
 
 float PWM::get_duty_cycle(){
-	return *(this->duty_cycle);
+	return *duty_cycle;
 }
 void PWM::set_dead_time(std::chrono::nanoseconds dead_time_ns)
 {
-	if(*(this->is_on)){
+	if(*is_on){
 		ErrorHandler("%s","This function can not be called if the PWM is on");
 	}
 	/*

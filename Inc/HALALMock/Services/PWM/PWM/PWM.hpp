@@ -9,6 +9,7 @@ protected:
 	float *duty_cycle;
 	uint32_t *frequency;
 	bool *is_on;
+	std::chrono::nanoseconds *dead_time_ns;
 public:
 	PWM() = default;
 	PWM(Pin& pin);
