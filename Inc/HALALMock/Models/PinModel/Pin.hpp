@@ -78,6 +78,38 @@ enum PinState{
 	ON
 };
 
+enum class PinType {
+	NOT_USED,
+	DigitalOutput,
+	DigitalInput,
+	PWM,
+	ADC
+	// TODO: Add more types
+};
+
+struct EmulatedPin {
+	PinType type = PinType::NOT_USED; //Always check type before using the union
+
+	union  {
+		struct {
+			// TODO FW-52
+		} DigitalOutput;
+		struct  {
+			// TODO FW-53
+		} DigitalInput;
+		struct  {
+			float duty_cycle;
+			uint32_t frequency;
+			bool is_on;
+			std::chrono::nanoseconds dead_time_ns;
+		} PWM;
+		struct {
+			// TODO FW-54
+		} ADC;
+		// TODO Add more types
+	} PinData;
+};
+
 class Pin {
 public:
 	GPIO_TypeDef * port;
