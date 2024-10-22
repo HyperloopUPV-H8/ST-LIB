@@ -8,14 +8,19 @@
 
 #include "DigitalOutputService/DigitalOutputService.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-#include "HALALMock/Services/SharedMemory/SharedMemory.hpp"
+
 
 
 uint8_t DigitalOutputService::id_counter = 0;
 map<uint8_t,Pin> DigitalOutputService::service_ids = {};
 
 uint8_t DigitalOutputService::inscribe(Pin& pin){
-        Pin::inscribe(pin, OUTPUT);
+        EmulatedPin &pin_data = SharedMemory::get_pin(pin);
+		if(pin_data.type == PinType::NOT_USED){
+			pin_data.type = PinType::DigitalOutput;
+			bool *output = &(pin_data.PinData.DigitalOutput.state);
+		}
+		*output = PinState::OFF;
 		DigitalOutputService::service_ids[id_counter] = pin;
 		return id_counter++;
 }
@@ -25,9 +30,11 @@ void DigitalOutputService::turn_off(uint8_t id){
 		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
 		return;
 	}
-
 	Pin pin = DigitalOutputService::service_ids[id];
-	(*gpio_memory + pin_offset[pin.gpio_pin]) = PinState::OFF;
+	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
+	pin_data.type = PinType::DigitalOutput;
+	bool *output = &(pin_data.PinData.DigitalOutput.state);
+	*output = PinState::OFF;
 
 }
 
@@ -36,9 +43,12 @@ void DigitalOutputService::turn_on(uint8_t id){
 		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
 		return;
 	}
-
 	Pin pin = DigitalOutputService::service_ids[id];
-	(*gpio_memory + pin_offset[pin.gpio_pin]) = PinState::ON;
+	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
+		
+	pin_data.type = PinType::DigitalOutput;
+	bool *output = &(pin_data.PinData.DigitalOutput.state);
+	*output = PinState::ON;
 }
 
 void DigitalOutputService::set_pin_state(uint8_t id, PinState state){
@@ -47,7 +57,10 @@ void DigitalOutputService::set_pin_state(uint8_t id, PinState state){
 		return;
 	}
 	Pin pin = DigitalOutputService::service_ids[id];
-	(*gpio_memory + pin_offset[pin.gpio_pin]) = state;
+	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
+	pin_data.type = PinType::DigitalOutput;
+	bool *output = &(pin_data.PinData.DigitalOutput.state);
+	*output = state;
 }
 
 void DigitalOutputService::toggle(uint8_t id){
@@ -55,7 +68,9 @@ void DigitalOutputService::toggle(uint8_t id){
 		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
 		return;
 	}
-
 	Pin pin = DigitalOutputService::service_ids[id];
-	(*gpio_memory + pin_offset[pin.gpio_pin]) = (*gpio_memory + pin_offset[pin.gpio_pin]) == PinState::ON ? PinState::OFF : PinState::ON;
+	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
+	pin_data.type = PinType::DigitalOutput;
+	bool *output = &(pin_data.PinData.DigitalOutput.state);
+	*output = *output == PinState::ON ? PinState::OFF : PinState::ON;
 }

@@ -6,6 +6,8 @@
  */
 #pragma once
 #include "PinModel/Pin.hpp"
+#include "SharedMemory/SharedMemory.hpp"
+
 
 class DigitalOutputService{
 public:
