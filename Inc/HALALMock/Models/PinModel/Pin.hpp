@@ -93,7 +93,7 @@ struct EmulatedPin {
 	union  {
 		struct {
 			// TODO FW-52
-		}DigitalOutput;
+		} DigitalOutput;
 		struct  {
 			// TODO FW-53
 		} DigitalInput;
