@@ -107,7 +107,7 @@ struct EmulatedPin {
 			// TODO FW-54
 		} ADC;
 		// TODO Add more types
-	}PinData;
+	} PinData;
 };
 
 class Pin {
