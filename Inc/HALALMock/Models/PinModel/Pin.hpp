@@ -88,7 +88,7 @@ enum class PinType {
 };
 
 struct EmulatedPin {
-	PinType type=PinType::NOT_USED; // Always check type before using the union
+	PinType type = PinType::NOT_USED; //Always check type before using the union
 
 	union  {
 		struct {
