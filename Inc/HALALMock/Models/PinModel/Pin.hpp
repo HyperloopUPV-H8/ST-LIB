@@ -96,7 +96,7 @@ struct EmulatedPin {
 		}DigitalOutput;
 		struct  {
 			// TODO FW-53
-		}DigitalInput;
+		} DigitalInput;
 		struct  {
 			float duty_cycle;
 			uint32_t frequency;
