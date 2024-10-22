@@ -102,7 +102,7 @@ struct EmulatedPin {
 			uint32_t frequency;
 			bool is_on;
 			std::chrono::nanoseconds dead_time_ns;
-		}PWM;
+		} PWM;
 		struct {
 			// TODO FW-54
 		} ADC;
