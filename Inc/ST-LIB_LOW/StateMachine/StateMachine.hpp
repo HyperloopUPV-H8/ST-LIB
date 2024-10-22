@@ -4,7 +4,7 @@
 
 #pragma once
 #include "C++Utilities/CppUtils.hpp"
-#include "Time/Time.hpp"
+#include "HALAL/HALAL.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "StateMachine/StateOrder.hpp"
 

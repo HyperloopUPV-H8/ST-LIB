@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "Communication/Ethernet/TCP/ServerSocket.hpp"
+#include "HALAL/HALAL.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
 #ifndef MAX_CONNECTIONS_TCP_SERVER

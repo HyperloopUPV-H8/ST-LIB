@@ -7,8 +7,7 @@
 
 #pragma once
 #include "C++Utilities/CppUtils.hpp"
-#include "ADC/ADC.hpp"
-#include "EXTI/EXTI.hpp"
+#include "HALAL/HALAL.hpp"
 
 class Sensor{
 public:
