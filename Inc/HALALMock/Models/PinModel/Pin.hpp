@@ -83,7 +83,8 @@ enum class PinType {
 	DigitalOutput,
 	DigitalInput,
 	PWM,
-	ADC
+	ADC,
+	ENCODER
 	// TODO: Add more types
 };
 
@@ -106,6 +107,11 @@ struct EmulatedPin {
 		struct {
 			// TODO FW-54
 		} ADC;
+
+		struct{
+			uin32_t count_value;
+			bool direction;
+		} ENCODER;
 		// TODO Add more types
 	} PinData;
 };
