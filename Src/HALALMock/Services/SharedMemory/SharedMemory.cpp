@@ -12,6 +12,6 @@ EmulatedPin &SharedMemory::get_pin(Pin pin){
 	}else{
 		ErrorHandler("Pin %s doesn't exist",pin.to_string());
 	}
-	EmulatedPin *pin_memory=(SharedMemory::gpio_memory)+offset;
+	EmulatedPin *pin_memory = SharedMemory::gpio_memory + offset;
     return *pin_memory;
 }
