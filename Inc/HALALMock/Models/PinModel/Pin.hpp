@@ -111,6 +111,7 @@ struct EmulatedPin {
 		struct{
 			uin32_t count_value;
 			bool direction;
+			bool is_on;
 		} ENCODER;
 		// TODO Add more types
 	} PinData;
