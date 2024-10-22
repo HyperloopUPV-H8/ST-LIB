@@ -105,7 +105,7 @@ struct EmulatedPin {
 		}PWM;
 		struct {
 			// TODO FW-54
-		}ADC;
+		} ADC;
 		// TODO Add more types
 	}PinData;
 };
