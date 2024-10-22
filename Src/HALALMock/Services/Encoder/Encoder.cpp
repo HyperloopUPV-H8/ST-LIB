@@ -38,6 +38,9 @@ uint8_t Encoder::inscribe(Pin& pin1, Pin& pin2) {
         *direction = false;
         *count_value = 0;
         is_on = false;
+    }else{
+        ErrorHandler("Pin1:%s or Pin2:%s are being used already",pin1.to_string(),pin2.to_string());
+    }
     return id;
 }
 
@@ -78,6 +81,5 @@ uint32_t Encoder::get_initial_counter_value(uint8_t id) {
 }
 
 void Encoder::init(TimerPeripheral* encoder) {}
-}
 
 #endif
