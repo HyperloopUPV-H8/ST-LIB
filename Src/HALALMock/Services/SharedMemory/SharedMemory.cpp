@@ -8,7 +8,7 @@ EmulatedPin &SharedMemory::get_pin(Pin pin){
     uint8_t offset;
 	auto it=pin_offsets.find(pin);
 	if(it != pin_offsets.end()){
-		offset =it->second;
+		offset = it -> second;
 	}else{
 		ErrorHandler("Pin %s doesn't exist",pin.to_string());
 	}
