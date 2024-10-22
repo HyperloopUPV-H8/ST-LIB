@@ -95,7 +95,7 @@ struct EmulatedPin {
 			// TODO FW-52
 		} DigitalOutput;
 		struct  {
-			// TODO FW-53
+			PinState curr_state;
 		} DigitalInput;
 		struct  {
 			float duty_cycle;
