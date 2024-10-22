@@ -7,7 +7,7 @@
  */
 
 #pragma once
-#include "EXTI/EXTI.hpp"
+#include "HALAL/HALAL.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
 class SensorInterrupt{

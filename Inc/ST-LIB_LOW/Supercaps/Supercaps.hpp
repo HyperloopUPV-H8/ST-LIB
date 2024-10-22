@@ -1,7 +1,7 @@
 #pragma once
 
 #include "C++Utilities/CppUtils.hpp"
-#include "HALAL/Services/Communication/FDCAN/FDCAN.hpp"
+#include "HALAL/HALAL.hpp"
 
 #define MODULE_CELLS 48
 

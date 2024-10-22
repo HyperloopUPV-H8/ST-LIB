@@ -7,8 +7,7 @@
  */
 
 #pragma once
-#include "Encoder/Encoder.hpp"
-#include "Time/Time.hpp"
+#include "HALAL/HALAL.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #define COUNTER_DISTANCE_IN_METERS 0.0001
 #define NANO_SECOND 1000000000.0
