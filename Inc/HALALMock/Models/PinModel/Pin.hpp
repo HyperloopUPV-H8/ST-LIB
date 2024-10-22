@@ -91,7 +91,7 @@ struct EmulatedPin {
 	PinType type=PinType::NOT_USED; // Always check type before using the union
 
 	union  {
-		struct DigitalOutput {
+		struct {
 			// TODO FW-52
 		}DigitalOutput;
 		struct  {
