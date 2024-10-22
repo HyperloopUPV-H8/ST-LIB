@@ -28,16 +28,12 @@ uint8_t Encoder::inscribe(Pin& pin1, Pin& pin2) {
     EmulatedPin &pin1_data = SharedMemory::get_pin(pin1);
     EmulatedPin &pin2_data = SharedMemory::get_pin(pin2);
 
-	if(pin_data1.type == PinType::NOT_USED && pin2_data.type == PinType::NOT_USED){
+	if(pin1_data.type == PinType::NOT_USED && pin2_data.type == PinType::NOT_USED){
 		pin1_data.type = PinType::ENCODER;
         pin2_data.type = PinType::ENCODER;
-        direction = &(pin1_data.PinData.ENCODER.direction);
-		count_value = &(pin1_data.PinData.ENCODER.count_value);
-        is_on = &(pin1_data.PinData.ENCODER.is_on);
-        //initialize by default values
-        *direction = false;
-        *count_value = 0;
-        is_on = false;
+        pin1_data.PinData.ENCODER.direction = false;
+		pin1_data.PinData.ENCODER.count_value = 0;
+        pin1_data.PinData.ENCODER.is_on = false;
     }else{
         ErrorHandler("Pin1:%s or Pin2:%s are being used already",pin1.to_string(),pin2.to_string());
     }
@@ -51,7 +47,10 @@ void Encoder::turn_on(uint8_t id) {
         ErrorHandler("No encoder registered with id %u", id);
         return;
     }
-    *is_on = true;
+    std::pair<Pin,Pin> pair_pin = Encoder::registered_encoder[id];
+    EmulatedPin &pin1_data = SharedMemory::get_pin(pair_pin.first);
+    pin1_data.PinData.ENCODER.is_on = true;
+    
 }
 
 void Encoder::turn_off(uint8_t id) {
@@ -59,13 +58,21 @@ void Encoder::turn_off(uint8_t id) {
         ErrorHandler("No encoder registered with id %u", id);
         return;
     }
-    *is_on = false;
+    std::pair<Pin,Pin> pair_pin = Encoder::registered_encoder[id];
+    EmulatedPin &pin1_data = SharedMemory::get_pin(pair_pin.first);
+    pin1_data.PinData.ENCODER.is_on = false;
 }
 
 void Encoder::reset(uint8_t id) {}
 
 uint32_t Encoder::get_counter(uint8_t id) {
-    return *count_value;
+    if (not Encoder::registered_encoder.contains(id)) {
+        ErrorHandler("No encoder registered with id %u", id);
+        return;
+    }
+    std::pair<Pin,Pin> pair_pin = Encoder::registered_encoder[id];
+    EmulatedPin &pin1_data = SharedMemory::get_pin(pair_pin.first);
+    return pin1_data.PinData.ENCODER.count_value;
 }
 
 bool Encoder::get_direction(uint8_t id) {
@@ -73,7 +80,9 @@ bool Encoder::get_direction(uint8_t id) {
         ErrorHandler("No encoder registered with id %u", id);
         return false;
     }
-    return *direction;
+    std::pair<Pin,Pin> pair_pin = Encoder::registered_encoder[id];
+    EmulatedPin &pin1_data = SharedMemory::get_pin(pair_pin.first);
+    return pin1_data.PinData.ENCODER.direction;
 }
 
 uint32_t Encoder::get_initial_counter_value(uint8_t id) {

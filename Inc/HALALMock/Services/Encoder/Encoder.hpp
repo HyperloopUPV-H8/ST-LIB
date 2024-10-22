@@ -18,10 +18,6 @@
  *
  */
 class Encoder {
-private:
-	bool *direction;
-	bool *is_on;
-	uint32_t *count_value;
 public:
 	static uint8_t id_counter;
 	static map<pair<Pin, Pin>, TimerPeripheral*> pin_timer_map;
