@@ -1,32 +1,18 @@
-/*
- * PWM.hpp
- *
- *  Created on: Feb 27, 2023
- *      Author: aleja
- */
-
 #pragma once
-
-#include "PinModel/Pin.hpp"
-#include "TimerPeripheral/TimerPeripheral.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-
+#include "HALALMock/Models/PinModel/Pin.hpp"
+#include "HALALMock/Services/SharedMemory/SharedMemory.hpp"
 #ifdef HAL_TIM_MODULE_ENABLED
 
 class PWM {
 protected:
-	TimerPeripheral* peripheral;
-	uint32_t channel;
-	float duty_cycle;
-	uint32_t frequency;
-	bool is_on = false;
-	static constexpr float CLOCK_FREQ_MHZ_WITHOUT_PRESCALER = 275;
-	static constexpr float clock_period_ns = (1/CLOCK_FREQ_MHZ_WITHOUT_PRESCALER)*1'000;
-	bool is_initialized = false;
+	float *duty_cycle;
+	uint32_t *frequency;
+	bool *is_on;
+	std::chrono::nanoseconds *dead_time_ns;
 public:
 	PWM() = default;
 	PWM(Pin& pin);
-
 	void turn_on();
 	void turn_off();
 	void set_duty_cycle(float duty_cycle);
