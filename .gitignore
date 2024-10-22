@@ -15,7 +15,7 @@ PRUEBAS/
 #vscode 
 .cproject
 .cache
-.CMakeFiles
+CMakeFiles/
 .vscode/settings.json
 
 .settings
