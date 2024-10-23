@@ -18,9 +18,11 @@ uint8_t DigitalOutputService::inscribe(Pin& pin){
         EmulatedPin &pin_data = SharedMemory::get_pin(pin);
 		if(pin_data.type == PinType::NOT_USED){
 			pin_data.type = PinType::DigitalOutput;
-			bool *output = &(pin_data.PinData.DigitalOutput.state);
+			(pin_data.PinData.DigitalOutput.state)= PinState::OFF;
+		}else{
+			ErrorHandler("Pin %d is already in use",pin);
+			return -1;
 		}
-		*output = PinState::OFF;
 		DigitalOutputService::service_ids[id_counter] = pin;
 		return id_counter++;
 }
@@ -32,9 +34,11 @@ void DigitalOutputService::turn_off(uint8_t id){
 	}
 	Pin pin = DigitalOutputService::service_ids[id];
 	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
-	pin_data.type = PinType::DigitalOutput;
-	bool *output = &(pin_data.PinData.DigitalOutput.state);
-	*output = PinState::OFF;
+	if(pin_data.type != PinType::DigitalOutput){
+		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
+		return;
+	}
+	(pin_data.PinData.DigitalOutput.state)= PinState::OFF;
 
 }
 
@@ -45,10 +49,12 @@ void DigitalOutputService::turn_on(uint8_t id){
 	}
 	Pin pin = DigitalOutputService::service_ids[id];
 	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
-		
-	pin_data.type = PinType::DigitalOutput;
-	bool *output = &(pin_data.PinData.DigitalOutput.state);
-	*output = PinState::ON;
+	if(pin_data.type != PinType::DigitalOutput){
+		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
+		return;
+	}
+	(pin_data.PinData.DigitalOutput.state)= PinState::ON;
+
 }
 
 void DigitalOutputService::set_pin_state(uint8_t id, PinState state){
@@ -58,9 +64,12 @@ void DigitalOutputService::set_pin_state(uint8_t id, PinState state){
 	}
 	Pin pin = DigitalOutputService::service_ids[id];
 	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
-	pin_data.type = PinType::DigitalOutput;
-	bool *output = &(pin_data.PinData.DigitalOutput.state);
-	*output = state;
+	if(pin_data.type != PinType::DigitalOutput){
+		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
+		return;
+	}
+	(pin_data.PinData.DigitalOutput.state)= state;
+
 }
 
 void DigitalOutputService::toggle(uint8_t id){
@@ -70,7 +79,9 @@ void DigitalOutputService::toggle(uint8_t id){
 	}
 	Pin pin = DigitalOutputService::service_ids[id];
 	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
-	pin_data.type = PinType::DigitalOutput;
-	bool *output = &(pin_data.PinData.DigitalOutput.state);
-	*output = *output == PinState::ON ? PinState::OFF : PinState::ON;
+	pif(pin_data.type != PinType::DigitalOutput){
+		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
+		return;
+	}
+	(pin_data.PinData.DigitalOutput.state)= (pin_data.PinData.DigitalOutput.state) == PinState::ON ? PinState::OFF : PinState::ON;
 }
