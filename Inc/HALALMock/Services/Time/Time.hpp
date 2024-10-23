@@ -39,7 +39,6 @@ private:
     static std::atomic<bool> running;
     static std::map<uint8_t, Alarm> alarms;
     static uint8_t next_alarm_id;
-    static std::set<uint8_t> canceled_alarms;
 
     static RealTimePoint simulation_start_time;
     static SimDuration simulation_time;
