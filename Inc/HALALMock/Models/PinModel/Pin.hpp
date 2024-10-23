@@ -87,12 +87,6 @@ enum class PinType {
 	// TODO: Add more types
 };
 
-// In STM32H723ZG, the ADC1 and ADC2 are 16 bits, while the ADC3 is 12 bits
-enum ADCSize {
-	ADC_12_BITS,	// ADC3
-	ADC_16_BITS		// ADC1 and ADC2
-};
-
 struct EmulatedPin {
 	PinType type = PinType::NOT_USED; //Always check type before using the union
 
@@ -110,7 +104,6 @@ struct EmulatedPin {
 			std::chrono::nanoseconds dead_time_ns;
 		} PWM;
 		struct {
-			ADCSize size;
 			uint16_t value;
 		} ADC;
 		// TODO Add more types
