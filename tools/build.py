@@ -57,7 +57,14 @@ def main(args: argparse.Namespace):
     print(Fore.BLUE + f"\tSimulator:       {args.simulator}")
     print(Fore.RESET)
 
-    output_dir = os.path.join(stlib_path, "build")
+    output_dir = os.path.join(
+        stlib_path,
+        "build",
+        "Simulator" if args.simulator == "ON" else "MCU",
+        args.build_behaviour,
+        args.target,
+        "Ethernet" if args.ethernet_config == "ON" else "NoEthernet"
+    )
     os.makedirs(output_dir, exist_ok=True)
 
     cmake_exit_code = subprocess.call([
@@ -87,16 +94,9 @@ def main(args: argparse.Namespace):
         print(Fore.RESET, end="")
         return make_exit_code
 
-    final_stlib_location = os.path.join(output_dir, args.build_behaviour)
-    os.makedirs(final_stlib_location, exist_ok=True)
-    shutil.copyfile(
-        os.path.join(output_dir, "libst-lib.a"),
-        os.path.join(final_stlib_location, "libst-lib.a")
-    )
-
     print()
     print(Fore.GREEN + "ST-LIB built successfuly!")
-    print(Fore.GREEN + f"\tOutput path:     {final_stlib_location}")
+    print(Fore.GREEN + f"\tOutput path:     {output_dir}")
     print(Fore.GREEN + f"\tTarget:          {args.target}")
     print(Fore.GREEN + f"\tBuild Behaviour: {args.build_behaviour}")
     print(Fore.GREEN + f"\tEthernet:        {args.ethernet_config}")

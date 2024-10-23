@@ -32,12 +32,88 @@
   ],
   "tasks": [
     {
-      "label": "Build Project",
+      "label": "Build ST-LIB",
       "type": "shell",
       "command": "${workspaceFolder}/tools/build.py",
       "args": [
         "-sim",
         "${input:simulator}",
+        "-bb",
+        "${input:buildBehaviour}",
+        "-t",
+        "${input:target}",
+        "-eth",
+        "${input:ethernetConfig}"
+      ],
+      "windows": {
+        "command": "python",
+        "args": [
+          "${workspaceFolder}\\tools\\build.py",
+          "-sim",
+          "${input:simulator}",
+          "-bb",
+          "${input:buildBehaviour}",
+          "-t",
+          "${input:target}",
+          "-eth",
+          "${input:ethernetConfig}"
+        ]
+      },
+      "problemMatcher": ["$gcc"],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Build ST-LIB (MCU)",
+      "type": "shell",
+      "command": "${workspaceFolder}/tools/build.py",
+      "args": [
+        "-sim",
+        "OFF",
+        "-bb",
+        "${input:buildBehaviour}",
+        "-t",
+        "${input:target}",
+        "-eth",
+        "${input:ethernetConfig}"
+      ],
+      "windows": {
+        "command": "python",
+        "args": [
+          "${workspaceFolder}\\tools\\build.py",
+          "-sim",
+          "${input:simulator}",
+          "-bb",
+          "${input:buildBehaviour}",
+          "-t",
+          "${input:target}",
+          "-eth",
+          "${input:ethernetConfig}"
+        ]
+      },
+      "problemMatcher": ["$gcc"],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Build ST-LIB (Simulator)",
+      "type": "shell",
+      "command": "${workspaceFolder}/tools/build.py",
+      "args": [
+        "-sim",
+        "ON",
         "-bb",
         "${input:buildBehaviour}",
         "-t",
