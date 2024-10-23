@@ -11,7 +11,7 @@ protected:
 	bool negative_is_on*{};
 	std::chrono::nanoseconds *dead_time_ns{};
 public:
-	DualPWM(Pin& pin_pos, Pin& pin_neg);
+	DualPWM(Pin& pin, Pin& pin_negated);
 
 	void turn_on();
 	void turn_on_positive();
