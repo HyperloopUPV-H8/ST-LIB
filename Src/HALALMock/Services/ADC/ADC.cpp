@@ -36,7 +36,7 @@ ADC::InitData::InitData(ADC_TypeDef* adc, uint32_t resolution, uint32_t external
 
 ADC::Peripheral::Peripheral(ADC_HandleTypeDef* handle, LowPowerTimer& timer, InitData& init_data) :
 	handle(handle), timer(timer), init_data(init_data) {
-	dma_data_buffer = (uint16_t*)MPUManager::allocate_non_cached_memory(2*ADC_BUF_LEN);
+	// dma_data_buffer = (uint16_t*)MPUManager::allocate_non_cached_memory(2*ADC_BUF_LEN); Comented because of the mock
 }
 
 bool ADC::Peripheral::is_registered() {
@@ -161,10 +161,12 @@ uint16_t ADC::get_int_value(uint8_t id) {
 
 uint16_t* ADC::get_value_pointer(uint8_t id) {
 	Instance& instance = active_instances[id];
-	return &instance.peripheral->dma_data_buffer[instance.rank];
+	//return &instance.peripheral->dma_data_buffer[instance.rank]; Commented out because of the mock
+	return &available_emulated_instances[instance].PinData.ADC.value;
 }
 
 void ADC::init(Peripheral& peripheral) {
+	/*
 	ADC_MultiModeTypeDef multimode = {0};
 	ADC_ChannelConfTypeDef sConfig = {0};
 	ADC_HandleTypeDef& adc_handle = *peripheral.handle;
@@ -218,5 +220,6 @@ void ADC::init(Peripheral& peripheral) {
 	}
 
 	  peripheral.timer.init();
+	*/ // Commented out because of the mock
 }
 #endif
