@@ -2,6 +2,13 @@
   "version": "2.0.0",
   "inputs": [
     {
+      "id": "simulator",
+      "description": "Simulate",
+      "type": "pickString",
+      "options": ["ON", "OFF"],
+      "default": "ON"
+    },
+    {
       "id": "buildBehaviour",
       "description": "Build Behaviour",
       "type": "pickString",
@@ -29,6 +36,8 @@
       "type": "shell",
       "command": "${workspaceFolder}/tools/build.py",
       "args": [
+        "-sim",
+        "${input:simulator}",
         "-bb",
         "${input:buildBehaviour}",
         "-t",
@@ -40,6 +49,8 @@
         "command": "python",
         "args": [
           "${workspaceFolder}\\tools\\build.py",
+          "-sim",
+          "${input:simulator}",
           "-bb",
           "${input:buildBehaviour}",
           "-t",

@@ -33,6 +33,13 @@ parser.add_argument(
     required=True
 )
 
+parser.add_argument(
+    '-sim',
+    '--simulator',
+    choices=['ON','OFF'],
+    required=True
+)
+
 stlib_path = os.environ.get('STLIB_PATH')
 
 
@@ -47,6 +54,7 @@ def main(args: argparse.Namespace):
     print(Fore.BLUE + f"\tTarget:          {args.target}")
     print(Fore.BLUE + f"\tBuild Behaviour: {args.build_behaviour}")
     print(Fore.BLUE + f"\tEthernet:        {args.ethernet_config}")
+    print(Fore.BLUE + f"\tSimulator:       {args.simulator}")
     print(Fore.RESET)
 
     output_dir = os.path.join(stlib_path, "build")
@@ -59,6 +67,7 @@ def main(args: argparse.Namespace):
         f"-DRELEASE={args.build_behaviour}",
         f"-DNUCLEO={'TRUE' if args.target == 'NUCLEO' else 'FALSE'}",
         f"-DETHERNET={'TRUE' if args.ethernet_config == 'ON' else 'FALSE'}",
+        f"-DSIMULATE={'TRUE' if args.simulator == 'ON' else 'FALSE'}",
         "-G", "Unix Makefiles"
     ])
 
@@ -91,6 +100,7 @@ def main(args: argparse.Namespace):
     print(Fore.GREEN + f"\tTarget:          {args.target}")
     print(Fore.GREEN + f"\tBuild Behaviour: {args.build_behaviour}")
     print(Fore.GREEN + f"\tEthernet:        {args.ethernet_config}")
+    print(Fore.GREEN + f"\tSimulator:       {args.simulator}")
     print(Fore.RESET, end="")
 
     return 0

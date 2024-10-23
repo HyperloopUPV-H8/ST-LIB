@@ -15,6 +15,13 @@ file(GLOB_RECURSE SOURCE_CPP ${CMAKE_SOURCE_DIR}/ *.cpp)
 file(GLOB_RECURSE SOURCE_H ${CMAKE_SOURCE_DIR}/ *.h)
 file(GLOB_RECURSE SOURCE_HPP ${CMAKE_SOURCE_DIR}/ *.hpp)
 
+if(${SIMULATE})
+  add_definitions(-DSIM_ON)
+  list(FILTER SOURCE_CPP EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/Src/HALAL/.*" )
+else()
+  list(FILTER SOURCE_CPP EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/Src/HALALMock/.*" )
+endif()
+
 if(${NUCLEO})
   add_definitions(-DNUCLEO)
   add_definitions(-DHSE_VALUE=8000000)
@@ -124,10 +131,6 @@ target_include_directories(${LIBRARY} PUBLIC
   LWIP/App
   LWIP/Target
   Inc
-  Inc/HALAL
-  Inc/HALALMock
-  Inc/HALAL/Models
-  Inc/HALAL/Services
   Inc/ST-LIB_LOW
   Inc/ST-LIB_HIGH
 )
