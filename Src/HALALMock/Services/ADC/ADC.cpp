@@ -54,8 +54,7 @@ uint8_t ADC::inscribe(Pin pin) {
 	// Emulated pin inscribe
 	EmulatedPin& emulated_pin = SharedMemory::get_pin(pin);
 	if (emulated_pin.type != PinType::NOT_USED) {
-		//ErrorHandler("Pin %s is not available for ADC usage", pin.to_string().c_str());
-		printf("Pin %s is not available for ADC usage, is already using as %s", pin.to_string().c_str(), emulated_pin.type);
+		ErrorHandler("Pin %s is not available for ADC usage, is already using as %s", pin.to_string().c_str(), emulated_pin.type);
 		return 0;
 	}
 
@@ -101,8 +100,7 @@ float ADC::get_value(uint8_t id) {
 
 	EmulatedPin& emulated_pin = available_emulated_instances[instance];
 	if (emulated_pin.type != PinType::ADC) {
-		printf("Pin %s is not configured to be used for ADC usage. WARNING: it means that this pin \
-				has been reconfigured to be another peripheral WHILE this pin was already configured to be an ADC", emulated_pin);
+		ErrorHandler("Pin %s is not configured to be used for ADC usage", emulated_pin);
 		return 0;
 	}
 	ADCResolution resolution = instance.peripheral->init_data.emulated_resolution;
@@ -124,8 +122,7 @@ uint16_t ADC::get_int_value(uint8_t id) {
 
 	EmulatedPin& emulated_pin = available_emulated_instances[instance];
 	if (emulated_pin.type != PinType::ADC) {
-		printf("Pin %s is not configured to be used for ADC usage. WARNING: it means that this pin \
-				has been reconfigured to be another peripheral WHILE this pin was already configured to be an ADC", emulated_pin);
+		ErrorHandler("Pin %s is not configured to be used for ADC usage", emulated_pin);
 		return 0;
 	}
 
