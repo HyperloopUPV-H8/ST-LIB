@@ -104,7 +104,7 @@ struct EmulatedPin {
 			std::chrono::nanoseconds dead_time_ns;
 		} PWM;
 		struct {
-			// TODO FW-54
+			uint16_t value;
 		} ADC;
 		// TODO Add more types
 	} PinData;
