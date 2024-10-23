@@ -83,8 +83,8 @@ enum class PinType {
 	DigitalOutput,
 	DigitalInput,
 	PWM,
-	ADC,
-	DualPWM
+	DualPWM,
+	ADC
 	// TODO: Add more types
 };
 
@@ -105,7 +105,7 @@ struct EmulatedPin {
 			std::chrono::nanoseconds dead_time_ns;
 		} PWM;
 		struct {
-			float duty cycle;
+			float duty_cycle;
 			uint32_t frequency;
 			bool is_on = false;
 			std::chrono::nanoseconds dead_time_ns;
