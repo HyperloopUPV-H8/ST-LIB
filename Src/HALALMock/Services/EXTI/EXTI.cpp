@@ -28,7 +28,7 @@ uint8_t ExternalInterrupt::inscribe(Pin& pin, function<void()>&& action, TRIGGER
 	}
 	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
 	if(pin_data.type != PinType::EXTIPin) {
-		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
+		ErrorHandler("ID %d is not registered as a EXTIPin",id);
 		return;
 	}
 
@@ -56,7 +56,7 @@ void ExternalInterrupt::turn_on(uint8_t id) {
 	Pin& pin = service_ids[id];
 	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
 	if(pin_data.type != PinType::EXTIPin) {
-		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
+		ErrorHandler("ID %d is not registered as a EXTIPin",id);
 		return;
 	}
 	(pin_data.PinData.EXTIPin.is_on) = true;
@@ -71,7 +71,7 @@ bool ExternalInterrupt::get_pin_value(uint8_t id) {
 	Pin& pin = service_ids[id];
 	EmulatedPin &pin_data = SharedMemory::get_pin(pin);
 	if(pin_data.type != PinType::EXTIPin) {
-		ErrorHandler("ID %d is not registered as a DigitalOutput",id);
+		ErrorHandler("ID %d is not registered as a EXTIPin",id);
 		return;
 	}
 	return (pin_data.PinData.EXTIPin.trigger_signal);
