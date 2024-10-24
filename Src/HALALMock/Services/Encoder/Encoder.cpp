@@ -86,7 +86,7 @@ bool Encoder::get_direction(uint8_t id) {
 }
 
 uint32_t Encoder::get_initial_counter_value(uint8_t id) {
-    return 0;
+    return UINT32_MAX/2;
 }
 
 void Encoder::init(TimerPeripheral* encoder) {}
