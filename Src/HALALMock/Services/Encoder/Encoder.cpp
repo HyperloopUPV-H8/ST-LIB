@@ -63,7 +63,15 @@ void Encoder::turn_off(uint8_t id) {
     pin1_data.PinData.ENCODER.is_on = false;
 }
 
-void Encoder::reset(uint8_t id) {}
+void Encoder::reset(uint8_t id) {
+     if (not Encoder::registered_encoder.contains(id)) {
+        ErrorHandler("No encoder registered with id %u", id);
+        return;
+    }
+    std::pair<Pin,Pin> pair_pin = Encoder::registered_encoder[id];
+    EmulatedPin &pin1_data = SharedMemory::get_pin(pair_pin.first);
+    pin1_data.PinData.ENCODER.count_value = INT32_MAX/2;
+}
 
 uint32_t Encoder::get_counter(uint8_t id) {
     if (not Encoder::registered_encoder.contains(id)) {
