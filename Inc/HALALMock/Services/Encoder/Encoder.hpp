@@ -7,12 +7,10 @@
 
 #pragma once
 
-
-#include "PinModel/Pin.hpp"
-#include "TimerPeripheral/TimerPeripheral.hpp"
+#include "HALALMock/Models/PinModel/Pin.hpp"
+#include "HALALMock/Services/SharedMemory/SharedMemory.hpp"
 #include "C++Utilities/CppUtils.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-
 
 #ifdef HAL_TIM_MODULE_ENABLED
 /**
