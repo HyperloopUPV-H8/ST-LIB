@@ -12,7 +12,7 @@
 #ifdef HAL_TIM_MODULE_ENABLED
 
 #include "HALAL/Models/TimerDomain/TimerDomain.hpp"
-#include "HALAL/Services/Encoder/NewEncoder.hpp"
+#include "HALAL/Services/Encoder/Encoder.hpp"
 #include "HALAL/Services/PWM/DualPWM.hpp"
 #include "HALAL/Services/PWM/PWM.hpp"
 #include "HALAL/Models/GPIO.hpp"
