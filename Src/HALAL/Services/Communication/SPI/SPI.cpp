@@ -6,6 +6,7 @@
  */
 
 #include "HALAL/Services/Communication/SPI/SPI.hpp"
+#include "HALAL/Services/Time/Scheduler.hpp"
 
 #include "HALAL/Models/MPUManager/MPUManager.hpp"
 
@@ -348,9 +349,9 @@ void SPI::Order_update() {
                     // slave again if it has the correct Order ID ready
                     if (known_slave_ready(spi)) {
                         master_check_available_end(spi);
-                    } else if (Time::get_global_tick() - spi->last_end_check > MASTER_SPI_CHECK_DELAY) {
+                    } else if (Scheduler::get_global_tick() - spi->last_end_check > MASTER_SPI_CHECK_DELAY) {
                         master_check_available_end(spi);
-                        spi->last_end_check = Time::get_global_tick();
+                        spi->last_end_check = Scheduler::get_global_tick();
                     }
                 }
             }
@@ -459,12 +460,12 @@ void SPI::init(SPI::Instance* spi) {
 //                     spi->try_count++;
 //                     switch (*(spi->available_end)) {
 //                         case NO_ORDER_ID: {
-//                             spi->last_end_check = Time::get_global_tick();
+//                             spi->last_end_check = Scheduler::get_global_tick();
 //                             SPI::turn_on_chip_select(spi);
 //                         } break;
 //                         default:
 //                         case ERROR_ORDER_ID: {
-//                             spi->last_end_check = Time::get_global_tick();
+//                             spi->last_end_check = Scheduler::get_global_tick();
 //                             spi->error_count++;
 //                             SPI::turn_on_chip_select(spi);
 //                         } break;

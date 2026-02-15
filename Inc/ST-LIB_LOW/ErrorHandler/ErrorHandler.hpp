@@ -10,7 +10,6 @@
 #include "C++Utilities/CppUtils.hpp"
 
 #ifndef SIM_ON
-#include "HALAL/Services/Time/Time.hpp"
 #include "HALAL/Services/Communication/UART/UART.hpp"
 #endif // !defined(SIM_ON)
 

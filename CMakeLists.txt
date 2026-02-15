@@ -272,7 +272,6 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/DMA/DMA2.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/PinModel/Pin.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerPeripheral/TimerPeripheral.cpp
   # ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/ADC/ADC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/CORDIC/CORDIC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/FDCAN/FDCAN.cpp
@@ -282,20 +281,13 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalInputService/DigitalInputService.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalOutputService/DigitalOutputService.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/EXTI/EXTI.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Encoder/Encoder.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/FMAC/FMAC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Flash/Flash.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Flash/FlashTests/Flash_Test.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/InfoWarning/InfoWarning.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/InputCapture/InputCapture.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/DualCenterPWM/DualCenterPWM.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/DualPWM/DualPWM.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/DualPhasedPWM/DualPhasedPWM.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/PWM/PWM.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/PhasedPWM/PhasedPWM.cpp
+  # ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/InputCapture/InputCapture.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/RTC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Scheduler.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Time.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Watchdog/Watchdog.cpp
 )
 
@@ -363,18 +355,14 @@ set(STLIB_LOW_CPP_ETH
 set(STLIB_LOW_C_NO_ETH)
 
 set(STLIB_LOW_CPP_NO_ETH
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Clocks/Counter.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Clocks/Stopwatch.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/DigitalOutput/DigitalOutput.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ErrorHandler/ErrorHandler.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/HalfBridge/HalfBridge.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Math/Math.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ST-LIB_LOW.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sd/Sd.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/LookupSensor/LookupSensor.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/NTC/NTC.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/Sensor/Sensor.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/SensorInterrupt/SensorInterrupt.cpp
 )
 
