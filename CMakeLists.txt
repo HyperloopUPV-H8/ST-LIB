@@ -18,6 +18,7 @@ option(USE_ETHERNET "Enable ethernet peripheral" OFF)
 option(TARGET_NUCLEO "Targets the STM32H723 Nucleo development board" OFF)
 option(USE_CCACHE "Use ccache if available" ON)
 option(STLIB_USE_PCH "Enable precompiled headers for ST-LIB" ON)
+option(STLIB_ENABLE_SANITIZERS "Enable AddressSanitizer + UBSan for simulator builds" OFF)
 if(NOT DEFINED ENABLE_LTO)
   if(CMAKE_CROSSCOMPILING)
     set(ENABLE_LTO OFF)
@@ -79,6 +80,26 @@ endif()
 message(STATUS "${PROJECT_NAME} Ethernet: ${USE_ETHERNET}")
 message(STATUS "${PROJECT_NAME} Nucleo:   ${TARGET_NUCLEO}")
 message(STATUS "${PROJECT_NAME} Crosscompiling: ${CMAKE_CROSSCOMPILING}")
+message(STATUS "${PROJECT_NAME} Sanitizers: ${STLIB_ENABLE_SANITIZERS}")
+
+if(NOT CMAKE_CROSSCOMPILING)
+  add_library(stlib_sim_dev_flags INTERFACE)
+
+  if(STLIB_ENABLE_SANITIZERS)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+      target_compile_options(stlib_sim_dev_flags INTERFACE
+        -fsanitize=address,undefined
+        -fno-omit-frame-pointer
+      )
+      target_link_options(stlib_sim_dev_flags INTERFACE
+        -fsanitize=address,undefined
+      )
+    else()
+      message(WARNING "STLIB_ENABLE_SANITIZERS is ON but compiler does not support configured sanitizers")
+    endif()
+  endif()
+
+endif()
 
 if(CMAKE_CROSSCOMPILING)
   if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/STM32CubeH7/Drivers)
@@ -247,9 +268,10 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MDMA/MDMA.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MPUManager/MPUManager.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/Packets/SPIOrder.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/SPI/SPI2.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/DMA/DMA2.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/PinModel/Pin.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerPeripheral/TimerPeripheral.cpp
   # ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/ADC/ADC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/CORDIC/CORDIC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/FDCAN/FDCAN.cpp
@@ -259,20 +281,13 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalInputService/DigitalInputService.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalOutputService/DigitalOutputService.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/EXTI/EXTI.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Encoder/Encoder.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/FMAC/FMAC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Flash/Flash.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Flash/FlashTests/Flash_Test.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/InfoWarning/InfoWarning.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/InputCapture/InputCapture.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/DualCenterPWM/DualCenterPWM.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/DualPWM/DualPWM.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/DualPhasedPWM/DualPhasedPWM.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/PWM/PWM.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/PWM/PhasedPWM/PhasedPWM.cpp
+  # ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/InputCapture/InputCapture.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/RTC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Scheduler.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Time.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Watchdog/Watchdog.cpp
 )
 
@@ -340,18 +355,14 @@ set(STLIB_LOW_CPP_ETH
 set(STLIB_LOW_C_NO_ETH)
 
 set(STLIB_LOW_CPP_NO_ETH
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Clocks/Counter.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Clocks/Stopwatch.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/DigitalOutput/DigitalOutput.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ErrorHandler/ErrorHandler.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/HalfBridge/HalfBridge.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Math/Math.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ST-LIB_LOW.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sd/Sd.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/LookupSensor/LookupSensor.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/NTC/NTC.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/Sensor/Sensor.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/SensorInterrupt/SensorInterrupt.cpp
 )
 
@@ -378,7 +389,7 @@ set(STLIB_HIGH_CPP_NO_ETH
 # Librería STLIB_LIBRARY
 # ============================
 
-add_library(${STLIB_LIBRARY} STATIC
+add_library(${STLIB_LIBRARY} OBJECT
   $<$<BOOL:${CMAKE_CROSSCOMPILING}>:${HAL_SOURCES_COMMON}>
   $<$<AND:$<BOOL:${CMAKE_CROSSCOMPILING}>,$<BOOL:${USE_ETHERNET}>>:${HAL_SOURCES_ETH}>
   $<$<AND:$<BOOL:${CMAKE_CROSSCOMPILING}>,$<BOOL:${USE_ETHERNET}>>:${LWIP_SOURCES}>
@@ -413,6 +424,8 @@ add_library(${STLIB_LIBRARY} STATIC
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Scheduler.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_hal_adc.cpp>
+  $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_hal_dma.cpp>
+  $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_hal_spi.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_ll_tim.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_system_stm32h7xx.c>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/stm32h723xx_wrapper.c>
@@ -425,6 +438,10 @@ set_target_properties(${STLIB_LIBRARY} PROPERTIES
   C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
+
+if(NOT CMAKE_CROSSCOMPILING)
+  target_link_libraries(${STLIB_LIBRARY} PUBLIC stlib_sim_dev_flags)
+endif()
 
 target_compile_definitions(${STLIB_LIBRARY} PUBLIC
   $<$<BOOL:${CMAKE_CROSSCOMPILING}>:USE_HAL_DRIVER>
@@ -480,7 +497,7 @@ target_include_directories(${STLIB_LIBRARY} PUBLIC
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Inc/MockedDrivers>
   ${CMAKE_CURRENT_LIST_DIR}/Inc/STM32CubeH7Wrapper
 
-  # LWIP includes 
+  # LWIP includes
   $<$<AND:$<BOOL:${CMAKE_CROSSCOMPILING}>,$<BOOL:${USE_ETHERNET}>>:${LWIP_DIR}/src/include>
   $<$<AND:$<BOOL:${CMAKE_CROSSCOMPILING}>,$<BOOL:${USE_ETHERNET}>>:${LWIP_DIR}/system>
   $<$<AND:$<BOOL:${CMAKE_CROSSCOMPILING}>,$<BOOL:${USE_ETHERNET}>>:${LWIP_DIR}/src/netif/ppp>

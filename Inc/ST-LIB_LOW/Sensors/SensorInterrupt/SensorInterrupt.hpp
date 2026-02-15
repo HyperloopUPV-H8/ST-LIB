@@ -12,15 +12,14 @@
 
 #include "HALAL/Services/EXTI/EXTI.hpp"
 
-class SensorInterrupt{
+class SensorInterrupt {
 public:
-	SensorInterrupt() = default;
-	SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState *value, TRIGGER trigger = TRIGGER::RISING_EDGE);
-	SensorInterrupt(Pin &pin, std::function<void()> &&action, PinState &value, TRIGGER trigger = TRIGGER::RISING_EDGE);
-	void read();
-	uint8_t get_id();
+    SensorInterrupt() = default;
+    SensorInterrupt(ST_LIB::EXTIDomain::Instance& exti, GPIO_PinState* value);
+    SensorInterrupt(ST_LIB::EXTIDomain::Instance& exti, GPIO_PinState& value);
+    void read();
 
 protected:
-	uint8_t id;
-	PinState *value;
+    ST_LIB::EXTIDomain::Instance* exti;
+    GPIO_PinState* value;
 };

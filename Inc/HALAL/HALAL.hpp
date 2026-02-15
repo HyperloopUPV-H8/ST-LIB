@@ -3,7 +3,7 @@
 #include "HALAL/Models/GPIO.hpp"
 #include "HALAL/Models/Pin.hpp"
 
-#include "HALAL/Models/DMA/DMA.hpp"
+#include "HALAL/Models/DMA/DMA2.hpp"
 #include "HALAL/Models/HALconfig/HALconfig.hpp"
 
 #include "HALAL/Services/DigitalInputService/DigitalInputService.hpp"
@@ -14,11 +14,9 @@
 
 #include "HALAL/Services/ADC/NewADC.hpp"
 
-#include "HALAL/Services/PWM/DualCenterPWM/DualCenterPWM.hpp"
-#include "HALAL/Services/PWM/DualPWM/DualPWM.hpp"
-#include "HALAL/Services/PWM/DualPhasedPWM/DualPhasedPWM.hpp"
-#include "HALAL/Services/PWM/PWM/PWM.hpp"
-#include "HALAL/Services/PWM/PhasedPWM/PhasedPWM.hpp"
+// To be implemented
+// #include "HALAL/Services/PWM/DualPhasedPWM/DualPhasedPWM.hpp"
+// #include "HALAL/Services/PWM/PhasedPWM/PhasedPWM.hpp"
 
 #include "HALAL/Services/PWM/DualPWM.hpp"
 #include "HALAL/Services/PWM/PWM.hpp"
@@ -29,12 +27,12 @@
 
 // #include "HALAL/Services/Encoder/Encoder.hpp"
 #include "HALAL/Services/EXTI/EXTI.hpp"
-#include "HALAL/Services/Encoder/Encoder.hpp"
 #include "HALAL/Services/Encoder/NewEncoder.hpp"
-#include "HALAL/Services/InputCapture/InputCapture.hpp"
+// #include "HALAL/Services/InputCapture/InputCapture.hpp" // To be implemented
 
 #include "HALAL/Services/Communication/FDCAN/FDCAN.hpp"
 #include "HALAL/Services/Communication/I2C/I2C.hpp"
+#include "HALAL/Models/SPI/SPI2.hpp"
 #include "HALAL/Services/Communication/SPI/SPI.hpp"
 #include "HALAL/Services/Communication/UART/UART.hpp"
 
@@ -72,10 +70,9 @@
 namespace HALAL {
 
 #ifdef STLIB_ETH
-void start(MAC mac, IPV4 ip, IPV4 subnet_mask, IPV4 gateway,
-           UART::Peripheral &printf_peripheral);
+void start(MAC mac, IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral);
 #else
-void start(UART::Peripheral &printf_peripheral);
+void start(UART::Peripheral& printf_peripheral);
 #endif
 
 } // namespace HALAL
