@@ -6,6 +6,7 @@
  */
 
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
+#include "HALAL/Services/Time/Scheduler.hpp"
 
 string InfoWarning::description = "Error-No-Description-Found";
 string InfoWarning::line = "Error-No-Line-Found";
@@ -46,7 +47,7 @@ void InfoWarning::InfoWarningTrigger(string format, ...) {
                    " Function: '" + InfoWarning::func + "' File: " + InfoWarning::file;
 
 #ifdef HAL_TIM_MODULE_ENABLED
-    description += " | TimeStamp: " + to_string(Time::get_global_tick());
+    description += " | TimeStamp: " + to_string(Scheduler::get_global_tick());
 #endif
 }
 
@@ -54,5 +55,5 @@ void InfoWarning::InfoWarningUpdate() {
     if (!InfoWarning::warning_triggered) {
         return;
     }
-    printf("Warning: %s%s", InfoWarning::description.c_str(), endl);
+    printf("Warning: %s\n", InfoWarning::description.c_str());
 }

@@ -9,7 +9,6 @@
 
 #include "sntp.h"
 #include "HALAL/Models/IPV4/IPV4.hpp"
-#include "HALAL/Services/Time/Time.hpp"
 #include "C++Utilities/CppUtils.hpp"
 
 class SNTP {

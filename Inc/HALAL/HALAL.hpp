@@ -14,11 +14,9 @@
 
 #include "HALAL/Services/ADC/NewADC.hpp"
 
-#include "HALAL/Services/PWM/DualCenterPWM/DualCenterPWM.hpp"
-#include "HALAL/Services/PWM/DualPWM/DualPWM.hpp"
-#include "HALAL/Services/PWM/DualPhasedPWM/DualPhasedPWM.hpp"
-#include "HALAL/Services/PWM/PWM/PWM.hpp"
-#include "HALAL/Services/PWM/PhasedPWM/PhasedPWM.hpp"
+// To be implemented
+// #include "HALAL/Services/PWM/DualPhasedPWM/DualPhasedPWM.hpp"
+// #include "HALAL/Services/PWM/PhasedPWM/PhasedPWM.hpp"
 
 #include "HALAL/Services/PWM/DualPWM.hpp"
 #include "HALAL/Services/PWM/PWM.hpp"
@@ -30,8 +28,7 @@
 // #include "HALAL/Services/Encoder/Encoder.hpp"
 #include "HALAL/Services/EXTI/EXTI.hpp"
 #include "HALAL/Services/Encoder/Encoder.hpp"
-#include "HALAL/Services/Encoder/NewEncoder.hpp"
-#include "HALAL/Services/InputCapture/InputCapture.hpp"
+// #include "HALAL/Services/InputCapture/InputCapture.hpp" // To be implemented
 
 #include "HALAL/Services/Communication/FDCAN/FDCAN.hpp"
 #include "HALAL/Services/Communication/I2C/I2C.hpp"
