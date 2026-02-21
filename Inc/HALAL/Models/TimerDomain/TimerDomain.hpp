@@ -146,9 +146,11 @@ TimerXList
 
         CHANNEL_NEGATED_FLAG = 8,
 
-        CHANNEL_1_NEGATED = 1 | CHANNEL_NEGATED_FLAG,
-        CHANNEL_2_NEGATED = 2 | CHANNEL_NEGATED_FLAG,
-        CHANNEL_3_NEGATED = 3 | CHANNEL_NEGATED_FLAG,
+        CHANNEL_1_NEGATED = CHANNEL_1 | CHANNEL_NEGATED_FLAG,
+        CHANNEL_2_NEGATED = CHANNEL_2 | CHANNEL_NEGATED_FLAG,
+        CHANNEL_3_NEGATED = CHANNEL_3 | CHANNEL_NEGATED_FLAG,
+        // STM32h723xx does not have a negated channel 4, but other stm microcontrollers do
+        CHANNEL_4_NEGATED = CHANNEL_4 | CHANNEL_NEGATED_FLAG,
     };
 
     struct TimerPin {
@@ -699,6 +701,53 @@ TimerXList
                 }
             }
         };
+
+        static consteval uint8_t get_channel_state_idx(const ST_LIB::TimerChannel ch) {
+            switch (ch) {
+            case TimerChannel::CHANNEL_1:
+            case TimerChannel::CHANNEL_1_NEGATED:
+            case TimerChannel::CHANNEL_2:
+            case TimerChannel::CHANNEL_2_NEGATED:
+            case TimerChannel::CHANNEL_3:
+            case TimerChannel::CHANNEL_3_NEGATED:
+            case TimerChannel::CHANNEL_4:
+            case TimerChannel::CHANNEL_4_NEGATED:
+            case TimerChannel::CHANNEL_5:
+            case TimerChannel::CHANNEL_6:
+                return (static_cast<uint8_t>(ch) &
+                        ~static_cast<uint8_t>(TimerChannel::CHANNEL_NEGATED_FLAG)) -
+                    1;
+
+            default:
+                ST_LIB::compile_error("unreachable");
+                return 0;
+            }
+        }
+
+        static consteval uint8_t get_channel_mul4(const ST_LIB::TimerChannel ch) {
+            switch (ch) {
+            case TimerChannel::CHANNEL_1:
+            case TimerChannel::CHANNEL_1_NEGATED:
+                return 0x00;
+            case TimerChannel::CHANNEL_2:
+            case TimerChannel::CHANNEL_2_NEGATED:
+                return 0x04;
+            case TimerChannel::CHANNEL_3:
+            case TimerChannel::CHANNEL_3_NEGATED:
+                return 0x08;
+            case TimerChannel::CHANNEL_4:
+            case TimerChannel::CHANNEL_4_NEGATED:
+                return 0x0C;
+            case TimerChannel::CHANNEL_5:
+                return 0x10;
+            case TimerChannel::CHANNEL_6:
+                return 0x14;
+
+            default:
+                ST_LIB::compile_error("unreachable");
+                return 0;
+            }
+        }
     };
 
     consteval GPIODomain::AlternateFunction TimerDomain::Timer::get_gpio_af(
