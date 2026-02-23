@@ -370,10 +370,10 @@ extern TIM_HandleTypeDef htim24;
                 case TimerAF::Encoder:
                     return GPIODomain::OperationMode::ALT_PP;
 
-                // TODO: check what this really needs to be for each
                 case TimerAF::InputCapture:
-                    return GPIODomain::OperationMode::OUTPUT_OPENDRAIN;
+                    return GPIODomain::OperationMode::ALT_PP;
 
+                // TODO: check what this really needs to be for each
                 case TimerAF::BreakInput:
                     return GPIODomain::OperationMode::OUTPUT_OPENDRAIN;
                 case TimerAF::BreakInputCompare:
@@ -391,10 +391,10 @@ extern TIM_HandleTypeDef htim24;
                 case TimerAF::Encoder:
                     return GPIODomain::Pull::Up;
 
-                // TODO: check what this really needs to be for each
                 case TimerAF::InputCapture:
-                    return GPIODomain::Pull::Up;
-
+                    return GPIODomain::Pull::None;
+                
+                // TODO: check what this really needs to be for each
                 case TimerAF::BreakInput:
                     return GPIODomain::Pull::None;
                 case TimerAF::BreakInputCompare:
@@ -412,10 +412,10 @@ extern TIM_HandleTypeDef htim24;
                 case TimerAF::Encoder:
                     return GPIODomain::Speed::Low;
 
-                // TODO: check what this really needs to be for each
                 case TimerAF::InputCapture:
                     return GPIODomain::Speed::Low;
-
+                
+                // TODO: check what this really needs to be for each
                 case TimerAF::BreakInput:
                     return GPIODomain::Speed::Low;
                 case TimerAF::BreakInputCompare:
