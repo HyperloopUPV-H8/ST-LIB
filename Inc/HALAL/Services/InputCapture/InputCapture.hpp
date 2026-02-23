@@ -78,7 +78,7 @@ public:
             SET_BIT(timer->instance->tim->CCER, enableCCx);
         }
 
-        // HAL_TIM_IC_Start(instance.peripheral->handle, instance.channel_falling)
+        // HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_falling)
         {
             volatile HAL_TIM_ChannelStateTypeDef* ch_state =
                 &timer->instance->hal_tim->ChannelState[TimerDomain::get_channel_state_idx(channel_falling)];
@@ -91,6 +91,7 @@ public:
             *ch_state = HAL_TIM_CHANNEL_STATE_BUSY;
             *n_ch_state = HAL_TIM_CHANNEL_STATE_BUSY;
 
+            timer->template enable_capture_compare_interrupt<channel_falling>();
             uint32_t enableCCx = TIM_CCER_CC1E
                             << (TimerDomain::get_channel_mul4(channel_falling) & 0x1FU
                             ); /* 0x1FU = 31 bits max shift */
@@ -130,8 +131,10 @@ public:
             *ch_n_state = HAL_TIM_CHANNEL_STATE_READY;
         }
         
-        // HAL_TIM_IC_Stop(instance.peripheral->handle, instance.channel_falling)
+        // HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_falling)
         {
+            timer->template disable_capture_compare_interrupt<channel_falling>();
+
             CLEAR_BIT(
                 timer->instance->tim->CCER,
                 (uint32_t)(TIM_CCER_CC1E << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU))
