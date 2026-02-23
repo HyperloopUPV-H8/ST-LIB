@@ -42,9 +42,22 @@
     X(16, APB2ENR)                                                                                 \
     X(17, APB2ENR)
 
-#define X(n, b) extern TIM_HandleTypeDef htim##n;
-TimerXList
-#undef X
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim5;
+extern TIM_HandleTypeDef htim6;
+extern TIM_HandleTypeDef htim7;
+extern TIM_HandleTypeDef htim8;
+extern TIM_HandleTypeDef htim12;
+extern TIM_HandleTypeDef htim13;
+extern TIM_HandleTypeDef htim14;
+extern TIM_HandleTypeDef htim15;
+extern TIM_HandleTypeDef htim16;
+extern TIM_HandleTypeDef htim17;
+extern TIM_HandleTypeDef htim23;
+extern TIM_HandleTypeDef htim24;
 
 #if !defined(glue)
 #define glue_(a, b) a##b
@@ -214,8 +227,21 @@ TimerXList
     static constexpr std::array<uint8_t, 25> timer_idxmap = create_timer_idxmap();
 
     struct TimerDomain {
-        // There are 16 timers
         static constexpr std::size_t max_instances = 16;
+        static constexpr std::size_t input_capture_channels = 4;
+
+        struct InputCaptureInfo {
+            uint8_t channel_rising;
+            uint8_t channel_falling;
+
+            float value_rising;
+            
+            float duty_cycle;
+            uint32_t frequency;
+        };
+        /* 2x as big as necessary but this makes indexing easier */
+        static InputCaptureInfo* input_capture_info[max_instances][input_capture_channels];
+        static InputCaptureInfo input_capture_info_backing[max_instances][input_capture_channels];
 
         struct Entry {
             std::array<char, 8> name; /* max length = 7 */
@@ -748,7 +774,46 @@ TimerXList
                 return 0;
             }
         }
+
+        static inline uint32_t get_timer_frequency(TIM_TypeDef* tim) {
+            uint32_t result;
+            switch(tim) {
+                case TIM2:
+                case TIM3:
+                case TIM4:
+                case TIM5:
+                case TIM6:
+                case TIM7:
+                case TIM12:
+                case TIM13:
+                case TIM14:
+                    result = HAL_RCC_GetPCLK1Freq();
+                    if ((RCC->D2CFGR & RCC_D2CFGR_D2PPRE1) != RCC_HCLK_DIV1) {
+                        result *= 2;
+                    }
+                    break;
+
+                case TIM1:
+                case TIM8:
+                case TIM15:
+                case TIM16:
+                case TIM17:
+                case TIM23:
+                case TIM24:
+                    result = HAL_RCC_GetPCLK2Freq();
+                    if ((RCC->D2CFGR & RCC_D2CFGR_D2PPRE2) != RCC_HCLK_DIV1) {
+                        result *= 2;
+                    }
+                    break;
+                default:
+                    ErrorHandler("Invalid timer ptr");
+                    break;
+            }
+            return result;
+        }
     };
+
+
 
     consteval GPIODomain::AlternateFunction TimerDomain::Timer::get_gpio_af(
         ST_LIB::TimerRequest req,
