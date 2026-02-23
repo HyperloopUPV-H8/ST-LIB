@@ -25,29 +25,33 @@ template <
 class InputCapture {
     TimerWrapper<dev>* timer = nullptr;
     TimerDomain::InputCaptureInfo *info = nullptr;
-    bool is_on;
+    bool is_on = false;
 
 public:
     InputCapture(TimerWrapper<dev>* tim) {
         timer = tim;
 
         // Setup TimerDomain
+        uint8_t ch_rising = static_cast<uint8_t>(pin_rising.channel) - 1;
+        uint8_t ch_falling = static_cast<uint8_t>(channel_falling) - 1;
         info =
-            &TimerDomain::input_capture_info_backing[tim->instance->timer_idx][pin_rising.channel];
-        TimerDomain::input_capture_info[tim->instance->timer_idx][pin_rising.channel] = info;
-        TimerDomain::input_capture_info[tim->instance->timer_idx][channel_falling] = info;
+            &TimerDomain::input_capture_info_backing[tim->instance->timer_idx][ch_rising];
+        TimerDomain::input_capture_info[tim->instance->timer_idx][ch_rising] = info;
+        TimerDomain::input_capture_info[tim->instance->timer_idx][ch_falling] = info;
 
-        info->channel_rising = static_cast<uint8_t>(pin_rising.channel) - 1;
-        info->channel_falling = static_cast<uint8_t>(channel_falling) - 1;
+        info->channel_rising = ch_rising;
+        info->channel_falling = ch_falling;
         info->value_rising = 0.0f;
         info->duty_cycle = 0.0f;
         info->frequency = 0;
-        
+
+        timer->enable_nvic();
+
         TIM_IC_InitTypeDef sConfigIC = {
             .ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING,
+            .ICSelection = TIM_ICSELECTION_DIRECTTI,
             .ICPrescaler = TIM_ICPSC_DIV1,
             .ICFilter = 0,
-            .ICSelection = TIM_ICSELECTION_DIRECTTI,
         };
         timer->template config_input_compare_channel<pin_rising.channel>(&sConfigIC);
 

@@ -239,7 +239,7 @@ extern TIM_HandleTypeDef htim24;
             float duty_cycle;
             uint32_t frequency;
         };
-        /* 2x as big as necessary but this makes indexing easier */
+        /* 2x as big as necessary but this makes indexing easier & faster */
         static InputCaptureInfo* input_capture_info[max_instances][input_capture_channels];
         static InputCaptureInfo input_capture_info_backing[max_instances][input_capture_channels];
 
@@ -689,7 +689,25 @@ extern TIM_HandleTypeDef htim24;
         template <std::size_t N> struct Init {
             static inline std::array<Instance, N> instances{};
 
+            static void TIM_Default_Callback(void* raw) { (void)raw; }
+
             static void init(std::span<const Config, N> cfgs) {
+                TimerDomain::callbacks[1] = TIM_Default_Callback;
+                TimerDomain::callbacks[2] = TIM_Default_Callback;
+                TimerDomain::callbacks[3] = TIM_Default_Callback;
+                TimerDomain::callbacks[4] = TIM_Default_Callback;
+                TimerDomain::callbacks[5] = TIM_Default_Callback;
+                TimerDomain::callbacks[6] = TIM_Default_Callback;
+                TimerDomain::callbacks[7] = TIM_Default_Callback;
+                TimerDomain::callbacks[8] = TIM_Default_Callback;
+                TimerDomain::callbacks[9] = TIM_Default_Callback;
+                TimerDomain::callbacks[10] = TIM_Default_Callback;
+                TimerDomain::callbacks[11] = TIM_Default_Callback;
+                TimerDomain::callbacks[12] = TIM_Default_Callback;
+                TimerDomain::callbacks[13] = TIM_Default_Callback;
+                TimerDomain::callbacks[14] = TIM_Default_Callback;
+                TimerDomain::callbacks[15] = TIM_Default_Callback;
+
                 for (std::size_t i = 0; i < N; i++) {
                     const Config& e = cfgs[i];
 

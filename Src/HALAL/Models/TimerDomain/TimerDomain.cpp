@@ -24,15 +24,16 @@ TIM_HandleTypeDef htim24;
 
 void (*TimerDomain::callbacks[TimerDomain::max_instances])(void*) = {nullptr};
 void* TimerDomain::callback_data[TimerDomain::max_instances] = {nullptr};
-TimerDomain::InputCaptureInfo input_capture_info_backing[TimerDomain::max_instances][TimerDomain::input_capture_channels/2] = {};
-TimerDomain::InputCaptureInfo* input_capture_info[TimerDomain::max_instances][TimerDomain::input_capture_channels] = {nullptr};
+TimerDomain::InputCaptureInfo* TimerDomain::input_capture_info[max_instances][input_capture_channels];
+TimerDomain::InputCaptureInfo TimerDomain::input_capture_info_backing[max_instances][input_capture_channels];
 
-static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel)
+static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t cc_channel)
 {
     TIM_HandleTypeDef* htim = TimerDomain::hal_handles[timer_idx];
     htim->Instance->CNT = 0;
 
-    TimerDomain::InputCaptureInfo* info = input_capture_info[timer_idx][channel];
+    uint32_t channel = __builtin_ffs(cc_channel) - 2;
+    TimerDomain::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
     if(info->channel_rising == channel) {
         // NOTE: CCR1 - CCR4 are contiguous
         info->value_rising = (float)(*(((uint32_t*)&htim->Instance->CCR1) + channel));
@@ -51,12 +52,12 @@ static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel)
 static void TIM_InterruptCallback(const uint32_t timer_idx)
 {
     TIM_TypeDef* tim = TimerDomain::cmsis_timers[timer_idx];
-    uint32_t cc_channel = (tim->SR & CaptureCompareInterruptMask) - 1;
     if(tim->SR & TIM_SR_UIF) {
         CLEAR_BIT(tim->SR, TIM_SR_UIF);
         TimerDomain::callbacks[timer_idx](TimerDomain::callback_data[timer_idx]);
     }
-
+    
+    uint32_t cc_channel = tim->SR & CaptureCompareInterruptMask;
     if(cc_channel != 0) {
         TIM_IC_CaptureCallback(timer_idx, cc_channel);
     }
@@ -101,7 +102,7 @@ extern "C" void TIM8_BRK_TIM12_IRQHandler(void) {
     TIM_TypeDef* tim8 = TimerDomain::cmsis_timers[tim8_idx];
     TIM_TypeDef* tim12 = TimerDomain::cmsis_timers[tim12_idx];
     
-    uint32_t tim12_cc_channel = (tim12->SR & CaptureCompareInterruptMask) - 1;
+    uint32_t tim12_cc_channel = tim12->SR & CaptureCompareInterruptMask;
     if ((tim12->SR & TIM_SR_UIF) != 0) {
         CLEAR_BIT(tim12->SR, TIM_SR_UIF);
         TimerDomain::callbacks[tim12_idx](TimerDomain::callback_data[tim12_idx]);
@@ -124,8 +125,8 @@ extern "C" void TIM8_UP_TIM13_IRQHandler(void) {
     TIM_TypeDef* tim8 = TimerDomain::cmsis_timers[tim8_idx];
     TIM_TypeDef* tim13 = TimerDomain::cmsis_timers[tim13_idx];
     
-    uint32_t tim8_cc_channel = (tim8->SR & CaptureCompareInterruptMask) - 1;
-    uint32_t tim13_cc_channel = (tim13->SR & CaptureCompareInterruptMask) - 1;
+    uint32_t tim8_cc_channel = tim8->SR & CaptureCompareInterruptMask;
+    uint32_t tim13_cc_channel = tim13->SR & CaptureCompareInterruptMask;
     if ((tim13->SR & TIM_SR_UIF) != 0) {
         CLEAR_BIT(tim13->SR, TIM_SR_UIF);
         TimerDomain::callbacks[tim13_idx](TimerDomain::callback_data[tim13_idx]);
@@ -150,7 +151,7 @@ extern "C" void TIM8_TRG_COM_TIM14_IRQHandler(void) {
     TIM_TypeDef* tim8 = TimerDomain::cmsis_timers[tim8_idx];
     TIM_TypeDef* tim14 = TimerDomain::cmsis_timers[tim14_idx];
 
-    uint32_t tim14_cc_channel = (tim14->SR & CaptureCompareInterruptMask) - 1;
+    uint32_t tim14_cc_channel = tim14->SR & CaptureCompareInterruptMask;
     if ((tim14->SR & TIM_SR_UIF) != 0) {
         CLEAR_BIT(tim14->SR, TIM_SR_UIF);
         TimerDomain::callbacks[tim14_idx](TimerDomain::callback_data[tim14_idx]);
