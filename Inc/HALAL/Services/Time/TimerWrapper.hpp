@@ -12,6 +12,7 @@
 #ifdef HAL_TIM_MODULE_ENABLED
 
 #include "HALAL/Models/TimerDomain/TimerDomain.hpp"
+#include "HALAL/Services/InputCapture/InputCapture.hpp"
 #include "HALAL/Services/Encoder/Encoder.hpp"
 #include "HALAL/Services/PWM/DualPWM.hpp"
 #include "HALAL/Services/PWM/PWM.hpp"
@@ -59,6 +60,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
          dev.e.request == TimerRequest::GeneralPurpose_15 ||
          dev.e.request == TimerRequest::GeneralPurpose_16 ||
          dev.e.request == TimerRequest::GeneralPurpose_17);
+    
     /* at least 2 capture/compare channels (see IS_TIM_CC2_INSTANCE for macro definition) */
     static constexpr bool is_CC2_instance =
         (dev.e.request == TimerRequest::Advanced_1 ||
@@ -71,6 +73,19 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
          dev.e.request == TimerRequest::GeneralPurpose_15 ||
          dev.e.request == TimerRequest::GeneralPurpose32bit_23 ||
          dev.e.request == TimerRequest::GeneralPurpose32bit_24);
+    /* at least 3 capture/compare channels (see IS_TIM_CC3_INSTANCE for macro definition) */
+    static constexpr bool is_CC3_instance =
+        (dev.e.request == TimerRequest::Advanced_1 ||
+         dev.e.request == TimerRequest::GeneralPurpose32bit_2 ||
+         dev.e.request == TimerRequest::GeneralPurpose_3 ||
+         dev.e.request == TimerRequest::GeneralPurpose_4 ||
+         dev.e.request == TimerRequest::GeneralPurpose32bit_5 ||
+         dev.e.request == TimerRequest::Advanced_8 ||
+         dev.e.request == TimerRequest::GeneralPurpose32bit_23 ||
+         dev.e.request == TimerRequest::GeneralPurpose32bit_24);
+    /* at least 4 capture/compare channels (see IS_TIM_CC4_INSTANCE for macro definition) */
+    static constexpr bool is_CC4_instance = is_CC3_instance;
+
     static constexpr bool is_slave_instance =
         (dev.e.request == TimerRequest::Advanced_1 ||
          dev.e.request == TimerRequest::GeneralPurpose32bit_2 ||
@@ -285,6 +300,24 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
     }
 
     inline Encoder<dev> get_encoder() { return Encoder<dev>(this); }
+
+    template <ST_LIB::TimerPin rising_pin, ST_LIB::TimerChannel channel_falling>
+    inline InputCapture<dev, rising_pin, channel_falling> get_input_capture(void)
+    {
+        static_assert(rising_pin.channel != channel_falling, "Rising and falling channels must be different");
+        static_assert(rising_pin.af == TimerAF::InputCapture, "Pin must be configured as input capture");
+        static_assert((static_cast<uint8_t>(channel_falling) - 1) <= 4, "Channel must be 1 to 4 for inputcapture");
+        static_assert(this->is_CC2_instance, "Timer must have 2 or more Capture compare channels");
+
+        if constexpr(channel_falling >= TimerChannel::CHANNEL_3 && !this->is_CC3_instance) {
+            ST_LIB::compile_error("Error: This timer does not have 3 or more Capture compare channels");
+        }
+        if constexpr(channel_falling == TimerChannel::CHANNEL_4 && !this->is_CC4_instance) {
+            ST_LIB::compile_error("Error: This timer does not have 4 or more Capture compare channels");
+        }
+
+        return InputCapture<dev, rising_pin, channel_falling>(this);
+    }
 
     inline void counter_enable() { SET_BIT(instance->tim->CR1, TIM_CR1_CEN); }
     inline void counter_disable() { CLEAR_BIT(instance->tim->CR1, TIM_CR1_CEN); }

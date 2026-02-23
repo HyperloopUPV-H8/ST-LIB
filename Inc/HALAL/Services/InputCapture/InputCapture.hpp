@@ -23,23 +23,25 @@ template <
     const ST_LIB::TimerPin pin_rising,
     const ST_LIB::TimerChannel channel_falling>
 class InputCapture {
-    TimerWrapper<dev>* timer;
+    TimerWrapper<dev>* timer = nullptr;
     TimerDomain::InputCaptureInfo *info = nullptr;
     bool is_on;
 
 public:
-    InputCapture(TimerWrapper<dev>* tim) : timer(tim) {
+    InputCapture(TimerWrapper<dev>* tim) {
+        timer = tim;
+
         // Setup TimerDomain
-        this->info =
+        info =
             &TimerDomain::input_capture_info_backing[tim->instance->timer_idx][pin_rising.channel];
         TimerDomain::input_capture_info[tim->instance->timer_idx][pin_rising.channel] = info;
         TimerDomain::input_capture_info[tim->instance->timer_idx][channel_falling] = info;
 
-        this->info->channel_rising = static_cast<uint8_t>(pin_rising.channel) - 1;
-        this->info->channel_falling = static_cast<uint8_t>(channel_falling) - 1;
-        this->info->value_rising = 0.0f;
-        this->info->duty_cycle = 0.0f;
-        this->info->frequency = 0;
+        info->channel_rising = static_cast<uint8_t>(pin_rising.channel) - 1;
+        info->channel_falling = static_cast<uint8_t>(channel_falling) - 1;
+        info->value_rising = 0.0f;
+        info->duty_cycle = 0.0f;
+        info->frequency = 0;
         
         TIM_IC_InitTypeDef sConfigIC = {
             .ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING,
@@ -54,8 +56,8 @@ public:
         timer->template config_input_compare_channel<channel_falling>(&sConfigIC);
     }
 
-    static void turn_on(void) {
-        if (this->is_on)
+    void turn_on(void) {
+        if (is_on)
             return;
         
         // HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising)
@@ -99,7 +101,7 @@ public:
         }
 
         if constexpr (timer->is_slave_instance) {
-            uint32_t tmpsmcr = timer->instance->tim->SMCR & SMCR_SMS;
+            uint32_t tmpsmcr = timer->instance->tim->SMCR & TIM_SMCR_SMS;
             if (!IS_TIM_SLAVEMODE_TRIGGER_ENABLED(tmpsmcr)) {
                 timer->counter_enable();
             }
@@ -107,11 +109,11 @@ public:
             timer->counter_enable();
         }
         
-        this->is_on = true;
+        is_on = true;
     }
 
-    static void turn_off(void) {
-        if(!this->is_on)
+    void turn_off(void) {
+        if(!is_on)
             return;
     
         // HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_rising)
@@ -128,7 +130,7 @@ public:
             volatile HAL_TIM_ChannelStateTypeDef* n_ch_state =
                 &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
             *ch_state = HAL_TIM_CHANNEL_STATE_READY;
-            *ch_n_state = HAL_TIM_CHANNEL_STATE_READY;
+            *n_ch_state = HAL_TIM_CHANNEL_STATE_READY;
         }
         
         // HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_falling)
@@ -145,31 +147,22 @@ public:
             volatile HAL_TIM_ChannelStateTypeDef* n_ch_state =
                 &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
             *ch_state = HAL_TIM_CHANNEL_STATE_READY;
-            *ch_n_state = HAL_TIM_CHANNEL_STATE_READY;
+            *n_ch_state = HAL_TIM_CHANNEL_STATE_READY;
         }
         
         if (timer->are_all_channels_free()) {
             timer->counter_disable();
         }
 
-#error TODO
-        if (HAL_TIM_IC_Stop(instance.peripheral->handle, instance.channel_falling) != HAL_OK) {
-            ErrorHandler(
-                "Unable to stop the %s Input Capture measurement",
-                instance.peripheral->name.c_str()
-            );
-        }
-
-
-        this->is_on = false;
+        is_on = false;
     }
 
-    static uint32_t get_frequency(void) {
-        return this->info->frequency;
+    uint32_t get_frequency(void) {
+        return info->frequency;
     }
 
-    static float get_duty_cycle(void) {
-        return this->info->duty_cycle;
+    float get_duty_cycle(void) {
+        return info->duty_cycle;
     }
 };
 
