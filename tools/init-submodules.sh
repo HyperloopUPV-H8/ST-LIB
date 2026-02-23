@@ -7,9 +7,9 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 STLIB_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
 cd "$STLIB_DIR"
-git submodule update --init
+git submodule update --init --depth=1
 cd "$STLIB_DIR/STM32CubeH7"
-git submodule update --init \
+git submodule update --init --depth=1 \
   Drivers/STM32H7xx_HAL_Driver \
   Drivers/CMSIS/Device/ST/STM32H7xx \
   Drivers/BSP/Components/lan8742
