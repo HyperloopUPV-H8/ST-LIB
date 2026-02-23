@@ -659,7 +659,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
 
             /* Set the filter */
             CLEAR_BIT(tmpccmrx, TIM_CCMR1_IC1F);
-            SET_BIT(tmpccmrx, ((sConfig->ICFilter << 4U) & TIMM_CCMR1_IC1F));
+            SET_BIT(tmpccmrx, ((sConfig->ICFilter << 4U) & TIM_CCMR1_IC1F));
 
             /* Select the Polarity and set the CC1E Bit */
             CLEAR_BIT(tmpccer, TIM_CCER_CC1P | TIM_CCER_CC1NP);
