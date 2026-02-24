@@ -7,6 +7,14 @@
 #define REPS 600000 // Three times faster because the board frequency
 #endif
 
+#ifndef HARDFAULT_BOOT_BLINK_CYCLES
+#define HARDFAULT_BOOT_BLINK_CYCLES 8U
+#endif
+
+#ifndef HARDFAULT_CHECK_BLOCKING
+#define HARDFAULT_CHECK_BLOCKING 1
+#endif
+
 extern GPIO_TypeDef* ports_hard_fault[];
 extern uint16_t pins_hard_fault[];
 extern uint8_t hard_fault_leds_count;
@@ -41,10 +49,19 @@ void Hard_fault_check(void) {
 #ifdef DEBUG
         __asm__ __volatile__("bkpt 1");
 #endif
+        if (hard_fault_leds_count == 0U) {
+            return;
+        }
         LED_init();
+#if HARDFAULT_CHECK_BLOCKING
         while (1) {
             LED_Blink();
         }
+#else
+        for (uint32_t i = 0; i < HARDFAULT_BOOT_BLINK_CYCLES; i++) {
+            LED_Blink();
+        }
+#endif
     }
 }
 static void EnableGPIOClock(GPIO_TypeDef* port) {
