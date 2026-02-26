@@ -52,7 +52,7 @@ void Server::update() {
 
 void Server::broadcast_order(Order& order) {
     for (uint16_t s = 0; s < running_connections_count; s++) {
-        if (running_connections[s]->send_order(order)) {
+        if (!running_connections[s]->send_order(order)) {
             ErrorHandler(
                 "Couldn t put Order %d into buffer of ip's %s ServerSocket, buffer may be full or "
                 "the ServerSocket may be ill formed",

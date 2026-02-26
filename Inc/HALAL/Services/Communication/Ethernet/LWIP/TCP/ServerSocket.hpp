@@ -41,6 +41,7 @@
 class ServerSocket : public OrderProtocol {
 public:
     enum ServerState { INACTIVE, LISTENING, ACCEPTED, CLOSING, CLOSED };
+    static constexpr size_t MAX_TX_QUEUE_DEPTH = 24;
 
     static unordered_map<uint32_t, ServerSocket*> listening_sockets;
     IPV4 local_ip;
@@ -110,20 +111,11 @@ public:
      * @return true if the data was sent successfully, false otherwise
      */
     bool send_order(Order& order) override {
-        if (state != ACCEPTED) {
+        if (state != ACCEPTED || client_control_block == nullptr) {
             return false;
         }
-        struct memp* next_memory_pointer_in_packet_buffer_pool =
-            (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
-        if (next_memory_pointer_in_packet_buffer_pool == nullptr) {
-            if (client_control_block->unsent != nullptr) {
-                tcp_output(client_control_block);
-            } else {
-                memp_free_pool(
-                    memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],
-                    next_memory_pointer_in_packet_buffer_pool
-                );
-            }
+        send();
+        if (tx_packet_buffer.size() >= MAX_TX_QUEUE_DEPTH) {
             return false;
         }
 
@@ -132,8 +124,14 @@ public:
             return false;
         }
 
-        struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_POOL);
-        pbuf_take(packet, order_buffer, order.get_size());
+        struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_RAM);
+        if (packet == nullptr) {
+            return false;
+        }
+        if (pbuf_take(packet, order_buffer, order.get_size()) != ERR_OK) {
+            pbuf_free(packet);
+            return false;
+        }
         tx_packet_buffer.push(packet);
         send();
         return true;

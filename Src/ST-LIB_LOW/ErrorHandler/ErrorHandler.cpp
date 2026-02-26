@@ -66,6 +66,6 @@ void ErrorHandlerModel::ErrorHandlerUpdate() {
         return;
     }
 
-    printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
+    // printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
 #endif
 }

@@ -97,6 +97,11 @@ static void low_level_init(struct netif *netif) {
  * TX
  ******************************************************************************/
 static err_t low_level_output(struct netif *netif, struct pbuf *p) {
+  (void)netif;
+  if (p == NULL) {
+    return ERR_ARG;
+  }
+
   ETH_BufferTypeDef Txbuffer[ETH_TX_DESC_CNT];
   struct pbuf *q;
   uint32_t i = 0;
@@ -104,6 +109,9 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p) {
   memset(Txbuffer, 0, sizeof(Txbuffer));
 
   for (q = p; q != NULL; q = q->next) {
+    if (i >= ETH_TX_DESC_CNT) {
+      return ERR_BUF;
+    }
     Txbuffer[i].buffer = q->payload;
     Txbuffer[i].len = q->len;
     if (i > 0)
@@ -115,7 +123,9 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p) {
   TxConfig.TxBuffer = Txbuffer;
   TxConfig.pData = p;
 
-  HAL_ETH_Transmit(&heth, &TxConfig, ETH_DMA_TRANSMIT_TIMEOUT);
+  if (HAL_ETH_Transmit(&heth, &TxConfig, ETH_DMA_TRANSMIT_TIMEOUT) != HAL_OK) {
+    return ERR_IF;
+  }
   return ERR_OK;
 }
 

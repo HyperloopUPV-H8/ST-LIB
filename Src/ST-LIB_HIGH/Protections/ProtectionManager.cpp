@@ -16,6 +16,7 @@ void* error_handler;
 void* info_warning;
 
 void ProtectionManager::initialize() {
+    Global_RTC::start_rtc();
     for (Protection& protection : low_frequency_protections) {
         for (auto& boundary : protection.boundaries) {
             boundary->update_name(protection.get_name());

@@ -82,30 +82,14 @@ ServerSocket::~ServerSocket() {
         return;
     else
         OrderProtocol::sockets.erase(it);
-    tcp_abort(client_control_block);
-    tcp_abort(server_control_block);
-    while (!tx_packet_buffer.empty()) {
-        free(tx_packet_buffer.front());
-        tx_packet_buffer.pop();
+    if (client_control_block != nullptr) {
+        tcp_abort(client_control_block);
+        client_control_block = nullptr;
     }
-    while (!rx_packet_buffer.empty()) {
-        free(rx_packet_buffer.front());
-        rx_packet_buffer.pop();
+    if (server_control_block != nullptr) {
+        tcp_abort(server_control_block);
+        server_control_block = nullptr;
     }
-}
-
-ServerSocket::ServerSocket(EthernetNode local_node)
-    : ServerSocket(local_node.ip, local_node.port){};
-
-void ServerSocket::close() {
-    // Clean all callbacks
-    tcp_arg(client_control_block, nullptr);
-    tcp_sent(client_control_block, nullptr);
-    tcp_recv(client_control_block, nullptr);
-    tcp_err(client_control_block, nullptr);
-    tcp_poll(client_control_block, nullptr, 0);
-
-    tcp_close(client_control_block);
     while (!tx_packet_buffer.empty()) {
         pbuf_free(tx_packet_buffer.front());
         tx_packet_buffer.pop();
@@ -114,9 +98,34 @@ void ServerSocket::close() {
         pbuf_free(rx_packet_buffer.front());
         rx_packet_buffer.pop();
     }
+}
 
-    tcp_pcb_remove(&tcp_active_pcbs, client_control_block);
-    tcp_free(client_control_block);
+ServerSocket::ServerSocket(EthernetNode local_node)
+    : ServerSocket(local_node.ip, local_node.port){};
+
+void ServerSocket::close() {
+    if (client_control_block != nullptr) {
+        // Clean all callbacks
+        tcp_arg(client_control_block, nullptr);
+        tcp_sent(client_control_block, nullptr);
+        tcp_recv(client_control_block, nullptr);
+        tcp_err(client_control_block, nullptr);
+        tcp_poll(client_control_block, nullptr, 0);
+
+        err_t close_error = tcp_close(client_control_block);
+        if (close_error != ERR_OK) {
+            tcp_abort(client_control_block);
+        }
+        client_control_block = nullptr;
+    }
+    while (!tx_packet_buffer.empty()) {
+        pbuf_free(tx_packet_buffer.front());
+        tx_packet_buffer.pop();
+    }
+    while (!rx_packet_buffer.empty()) {
+        pbuf_free(rx_packet_buffer.front());
+        rx_packet_buffer.pop();
+    }
 
     listening_sockets[local_port] = this;
     state = CLOSED;
@@ -140,48 +149,65 @@ void ServerSocket::process_data() {
 }
 
 bool ServerSocket::add_order_to_queue(Order& order) {
-    if (state == ACCEPTED) {
-        return false; // yet to decide if add_order_to_queue should send the order
-                      // when used after the connection is accepted or just return
-                      // false
+    if (state != ACCEPTED || client_control_block == nullptr) {
+        return false;
+    }
+    send();
+    if (tx_packet_buffer.size() >= MAX_TX_QUEUE_DEPTH) {
+        return false;
     }
     struct memp* next_memory_pointer_in_packet_buffer_pool =
         (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
     if (next_memory_pointer_in_packet_buffer_pool == nullptr) {
-        memp_free_pool(
-            memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],
-            next_memory_pointer_in_packet_buffer_pool
-        );
         return false;
     }
 
     uint8_t* order_buffer = order.build();
 
-    struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_POOL);
-    pbuf_take(packet, order_buffer, order.get_size());
+    struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_RAM);
+    if (packet == nullptr) {
+        return false;
+    }
+    if (pbuf_take(packet, order_buffer, order.get_size()) != ERR_OK) {
+        pbuf_free(packet);
+        return false;
+    }
     tx_packet_buffer.push(packet);
     return true;
 }
 
 void ServerSocket::send() {
-    pbuf* temporal_packet_buffer;
-    err_t error = ERR_OK;
-    while (error == ERR_OK && !tx_packet_buffer.empty() &&
-           tx_packet_buffer.front()->len <= tcp_sndbuf(client_control_block)) {
-        temporal_packet_buffer = tx_packet_buffer.front();
-        error = tcp_write(
-            client_control_block,
-            temporal_packet_buffer->payload,
-            temporal_packet_buffer->len,
-            TCP_WRITE_FLAG_COPY
-        );
-        if (error == ERR_OK) {
-            tx_packet_buffer.pop();
-            tcp_output(client_control_block);
-            memp_free_pool(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION], temporal_packet_buffer);
-        } else {
-            ErrorHandler("Cannot write to socket, error: %d", error);
-        }
+    if (client_control_block == nullptr || state != ACCEPTED) {
+        return;
+    }
+
+    if (tx_packet_buffer.empty()) {
+        return;
+    }
+
+    pbuf* temporal_packet_buffer = tx_packet_buffer.front();
+    if (temporal_packet_buffer->tot_len > tcp_sndbuf(client_control_block)) {
+        return;
+    }
+
+    err_t error = tcp_write(
+        client_control_block,
+        temporal_packet_buffer->payload,
+        temporal_packet_buffer->tot_len,
+        TCP_WRITE_FLAG_COPY
+    );
+    if (error == ERR_OK) {
+        tx_packet_buffer.pop();
+        tcp_output(client_control_block);
+        pbuf_free(temporal_packet_buffer);
+    } else if (error == ERR_MEM) {
+        // TX queue full on lwIP side: keep packet enqueued and retry later.
+        tcp_output(client_control_block);
+        return;
+    } else {
+        // Connection/state error: request graceful close instead of hard-stopping firmware.
+        state = CLOSING;
+        return;
     }
 }
 
@@ -208,7 +234,7 @@ err_t ServerSocket::accept_callback(
         tcp_recv(incomming_control_block, receive_callback);
         tcp_sent(incomming_control_block, send_callback);
         tcp_err(incomming_control_block, error_callback);
-        tcp_poll(incomming_control_block, poll_callback, 0);
+        tcp_poll(incomming_control_block, poll_callback, 1);
         config_keepalive(incomming_control_block, server_socket);
 
         tcp_close(server_socket->server_control_block);
@@ -271,11 +297,11 @@ err_t ServerSocket::poll_callback(void* arg, struct tcp_pcb* client_control_bloc
         return ERR_ABRT;
     }
 
-    while (not server_socket->tx_packet_buffer.empty()) { // TX FIFO is not empty
+    if (!server_socket->tx_packet_buffer.empty()) { // TX FIFO is not empty
         server_socket->send();
     }
 
-    while (not server_socket->rx_packet_buffer.empty()) { // RX FIFO is not empty
+    if (!server_socket->rx_packet_buffer.empty()) { // RX FIFO is not empty
         server_socket->process_data();
     }
 

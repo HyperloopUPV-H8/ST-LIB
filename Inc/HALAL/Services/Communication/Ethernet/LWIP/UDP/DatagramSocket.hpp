@@ -33,14 +33,26 @@ public:
         u16_t port
     );
     bool send_packet(Packet& packet) {
+        if (is_disconnected || udp_control_block == nullptr) {
+            return false;
+        }
         uint8_t* packet_buffer = packet.build();
+        if (packet_buffer == nullptr || packet.size == 0) {
+            return false;
+        }
 
         struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.size, PBUF_RAM);
-        pbuf_take(tx_buffer, packet_buffer, packet.size);
-        udp_send(udp_control_block, tx_buffer);
+        if (tx_buffer == nullptr) {
+            return false;
+        }
+        if (pbuf_take(tx_buffer, packet_buffer, packet.size) != ERR_OK) {
+            pbuf_free(tx_buffer);
+            return false;
+        }
+        err_t send_error = udp_send(udp_control_block, tx_buffer);
         pbuf_free(tx_buffer);
 
-        return true;
+        return send_error == ERR_OK;
     }
 
     void close();
