@@ -378,36 +378,6 @@ public:
         }
     }
 
-    // Constructor de copia necesario para devolver por valor en add_state_machine
-    template <class... OtherNestedMachines>
-    constexpr StateMachine(
-        StateEnum current_state_arg,
-        const StaticVector<State<StateEnum, NTransitions>, NStates>& states_arg,
-        const StaticVector<Transition<StateEnum>, NTransitions>& transitions_arg,
-        const std::array<std::pair<size_t, size_t>, NStates>& transitions_assoc_arg,
-        const std::tuple<NestedMachineBinding<StateEnum, NestedMachines>...>& nested_machines_arg
-    ) :
-        current_state(current_state_arg),
-        nested_machines(nested_machines_arg),
-        states(states_arg),
-        transitions(transitions_arg),
-        transitions_assoc(transitions_assoc_arg)
-    {}
-
-    template <size_t N, size_t O, class NewNestedMachine>
-    constexpr auto add_state_machine(NewNestedMachine& machine, const State<StateEnum, N, O>& state) const {
-        auto new_binding = NestedMachineBinding<StateEnum, NewNestedMachine>{state.get_state(), &machine};
-        auto new_nested_tuple = std::tuple_cat(nested_machines, std::make_tuple(new_binding));
-        
-        return StateMachine<StateEnum, NStates, NTransitions, NestedMachines..., NewNestedMachine>(
-            current_state,
-            states,
-            transitions,
-            transitions_assoc,
-            new_nested_tuple
-        );
-    }
-
     void check_transitions() override {
         auto& [i, n] = transitions_assoc[static_cast<size_t>(current_state)];
 
