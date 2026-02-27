@@ -19,8 +19,6 @@ using ms = std::chrono::milliseconds;
 using us = std::chrono::microseconds;
 using s = std::chrono::seconds;
 
-template <typename T, size_t Capacity> using FixedVector = StaticVector<T, Capacity>;
-
 template <class StateEnum>
 concept IsEnum = std::is_enum_v<StateEnum>;
 
@@ -58,14 +56,14 @@ concept are_transitions = (std::same_as<T, Transition<StateEnum>> && ...);
 
 template <IsEnum StateEnum, size_t NTransitions, size_t Number_of_state_orders = 0> class State {
 private:
-    FixedVector<TimedAction, NUMBER_OF_ACTIONS> cyclic_actions = {};
-    FixedVector<Callback, NUMBER_OF_ACTIONS> on_enter_actions = {};
-    FixedVector<Callback, NUMBER_OF_ACTIONS> on_exit_actions = {};
+    StaticVector<TimedAction, NUMBER_OF_ACTIONS> cyclic_actions = {};
+    StaticVector<Callback, NUMBER_OF_ACTIONS> on_enter_actions = {};
+    StaticVector<Callback, NUMBER_OF_ACTIONS> on_exit_actions = {};
     StateEnum state = {};
-    FixedVector<Transition<StateEnum>, NTransitions> transitions = {};
+    StaticVector<Transition<StateEnum>, NTransitions> transitions = {};
 
 public:
-    [[no_unique_address]] FixedVector<uint16_t, Number_of_state_orders> state_orders_ids = {};
+    [[no_unique_address]] StaticVector<uint16_t, Number_of_state_orders> state_orders_ids = {};
     static constexpr size_t transition_count = NTransitions;
 
     template <typename... T>
@@ -285,10 +283,10 @@ public:
     void set_on(bool is_on) override { this->is_on = is_on; }
 
 private:
-    FixedVector<State<StateEnum, NTransitions>, NStates> states;
-    FixedVector<Transition<StateEnum>, NTransitions> transitions = {};
+    StaticVector<State<StateEnum, NTransitions>, NStates> states;
+    StaticVector<Transition<StateEnum>, NTransitions> transitions = {};
     std::array<std::pair<size_t, size_t>, NStates> transitions_assoc = {};
-    FixedVector<NestedPair, NStates> nested_state_machine = {};
+    StaticVector<NestedPair, NStates> nested_state_machine = {};
 
     constexpr bool operator==(const StateMachine&) const = default;
 
