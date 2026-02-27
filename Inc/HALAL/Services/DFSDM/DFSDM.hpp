@@ -456,10 +456,6 @@ namespace ST_LIB {
                 channel_regs->CHCFGR2 &= ~(DFSDM_CHCFGR2_OFFSET_Msk);
                 channel_regs->CHCFGR2 |= (offset & 0x00FFFFFF) << DFSDM_CHCFGR2_OFFSET_Pos;
             }
-            void change_right_bit_shift(uint8_t right_bit_shift){
-                channel_regs->CHCFGR2 &= ~(DFSDM_CHCFGR2_DTRBS_Msk);
-                channel_regs->CHCFGR2 |= uint8_t(right_bit_shift & 0x0F) << DFSDM_CHCFGR2_DTRBS_Pos;
-            }
             
             /*Filter functions*/   
             void keep_data_in_buffer(int32_t* buffer,size_t length){
