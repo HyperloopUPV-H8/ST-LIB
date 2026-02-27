@@ -140,7 +140,6 @@ protected:
         // Reset everything before tests
         reset_test_state();
 
-
         test_machine.force_change_state((size_t)MasterState::A);
         test_nested_machine.force_change_state((size_t)SubState::S1);
 
@@ -152,7 +151,7 @@ protected:
         test_nested_machine.get_states()[0].unregister_all_timed_actions();
         test_nested_machine.get_states()[1].unregister_all_timed_actions();
 
-        reset_test_state(); 
+        reset_test_state();
     }
 };
 
@@ -166,7 +165,7 @@ TEST_F(StateMachineTest, StartTriggersEnterActions) {
 
 TEST_F(StateMachineTest, BasicTransition) {
     test_machine.start();
-    a_enter_count = 0; 
+    a_enter_count = 0;
 
     condition_a_to_b = true;
     test_machine.check_transitions();
@@ -199,8 +198,8 @@ TEST_F(StateMachineTest, MasterStateChangeExitsNested) {
     test_machine.check_transitions();
 
     EXPECT_EQ(test_nested_machine.get_current_state(), SubState::S1);
-    s1_enter_count = 0; 
-    b_exit_count = 0;  
+    s1_enter_count = 0;
+    b_exit_count = 0;
 
     condition_b_to_c = true;
     test_machine.check_transitions();
