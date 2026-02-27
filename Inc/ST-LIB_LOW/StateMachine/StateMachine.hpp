@@ -388,10 +388,19 @@ public:
             }
         }
 
+        // Check for duplicate states
+        for (size_t i = 0; i < sorted_states.size() - 1; i++) {
+            for(size_t j = i + 1; j < sorted_states.size(); j++) {
+                if (sorted_states[i].get_state() == sorted_states[j].get_state()) {
+                    ErrorHandler("Duplicate state found in StateMachine constructor");
+                }
+            }
+        }
+
         // Check that states are contiguous and start from 0
         for (size_t i = 0; i < sorted_states.size(); i++) {
             if (static_cast<size_t>(sorted_states[i].get_state()) != i) {
-                ErrorHandler("States Enum must be contiguous and start from 0, with no duplicates");
+                ErrorHandler("States Enum must be contiguous and start from 0");
             }
         }
 
