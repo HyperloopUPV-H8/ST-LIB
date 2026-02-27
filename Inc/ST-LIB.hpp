@@ -9,96 +9,108 @@
 class STLIB {
 public:
 #ifdef STLIB_ETH
-  static void start(MAC mac, IPV4 ip, IPV4 subnet_mask, IPV4 gateway,
-                    UART::Peripheral &printf_peripheral);
+    static void
+    start(MAC mac, IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral);
 
-  static void start(const std::string &mac = "00:80:e1:00:00:00",
-                    const std::string &ip = "192.168.1.4",
-                    const std::string &subnet_mask = "255.255.0.0",
-                    const std::string &gateway = "192.168.1.1",
-                    UART::Peripheral &printf_peripheral = UART::uart2);
+    static void start(
+        const std::string& mac = "00:80:e1:00:00:00",
+        const std::string& ip = "192.168.1.4",
+        const std::string& subnet_mask = "255.255.0.0",
+        const std::string& gateway = "192.168.1.1",
+        UART::Peripheral& printf_peripheral = UART::uart2
+    );
 #else
-  static void start(UART::Peripheral &printf_peripheral = UART::uart2);
+    static void start(UART::Peripheral& printf_peripheral = UART::uart2);
 #endif
 
-  static void update();
+    static void update();
 };
 
 namespace ST_LIB {
-extern void compile_error(const char *msg);
+extern void compile_error(const char* msg);
 template <typename... Domains> struct BuildCtx {
-  template <typename D> using Decl = typename D::Entry;
-  template <typename D>
-  static constexpr std::size_t max_count_v = D::max_instances;
+    template <typename D> using Decl = typename D::Entry;
+    template <typename D> static constexpr std::size_t max_count_v = D::max_instances;
 
-  std::tuple<std::array<Decl<Domains>, max_count_v<Domains>>...> storage{};
-  std::tuple<std::array<const void *, max_count_v<Domains>>...> owners{};
-  std::array<std::size_t, sizeof...(Domains)> sizes{};
+    std::tuple<std::array<Decl<Domains>, max_count_v<Domains>>...> storage{};
+    std::tuple<std::array<const void*, max_count_v<Domains>>...> owners{};
+    std::array<std::size_t, sizeof...(Domains)> sizes{};
 
-  template <typename D, std::size_t I = 0>
-  static consteval std::size_t domain_index() {
-    if constexpr (I >= sizeof...(Domains)) {
-      static_assert([] { return false; }(), "Domain not found");
-      return 0;
-    } else if constexpr (std::is_same_v<D, std::tuple_element_t<
-                                               I, std::tuple<Domains...>>>) {
-      return I;
-    } else {
-      return domain_index<D, I + 1>();
+    template <typename D, std::size_t I = 0> static consteval std::size_t domain_index() {
+        if constexpr (I >= sizeof...(Domains)) {
+            static_assert([] { return false; }(), "Domain not found");
+            return 0;
+        } else if constexpr (std::is_same_v<D, std::tuple_element_t<I, std::tuple<Domains...>>>) {
+            return I;
+        } else {
+            return domain_index<D, I + 1>();
+        }
     }
-  }
 
-  template <typename D, typename Owner>
-  consteval std::size_t add(typename D::Entry e, const Owner *owner) {
-    constexpr std::size_t I = domain_index<D>();
-    auto &arr = std::get<I>(storage);
-    auto &own = std::get<I>(owners);
-    auto &size = sizes[I];
+    template <typename D, typename Owner>
+    consteval std::size_t add(typename D::Entry e, const Owner* owner) {
+        constexpr std::size_t I = domain_index<D>();
+        auto& arr = std::get<I>(storage);
+        auto& own = std::get<I>(owners);
+        auto& size = sizes[I];
 
-    const auto idx = size;
-    arr[size] = e;
-    own[size] = owner;
-    ++size;
-    return idx;
-  }
+        const auto idx = size;
+        arr[size] = e;
+        own[size] = owner;
+        ++size;
+        return idx;
+    }
 
-  template <typename D> consteval auto span() const {
-    constexpr std::size_t I = domain_index<D>();
-    auto const &arr = std::get<I>(storage);
-    auto const size = sizes[I];
-    using E = typename D::Entry;
-    return std::span<const E>{arr.data(), size};
-  }
+    template <typename D> consteval auto span() const {
+        constexpr std::size_t I = domain_index<D>();
+        auto const& arr = std::get<I>(storage);
+        auto const size = sizes[I];
+        using E = typename D::Entry;
+        return std::span<const E>{arr.data(), size};
+    }
 
-  template <typename D> consteval auto owners_span() const {
-    constexpr std::size_t I = domain_index<D>();
-    auto const &arr = std::get<I>(owners);
-    auto const size = sizes[I];
-    return std::span<const void *const>{arr.data(), size};
-  }
+    template <typename D> consteval auto owners_span() const {
+        constexpr std::size_t I = domain_index<D>();
+        auto const& arr = std::get<I>(owners);
+        auto const size = sizes[I];
+        return std::span<const void* const>{arr.data(), size};
+    }
 
-  template <typename D> consteval std::size_t size() const {
-    constexpr std::size_t I = domain_index<D>();
-    return sizes[I];
-  }
+    template <typename D> consteval std::size_t size() const {
+        constexpr std::size_t I = domain_index<D>();
+        return sizes[I];
+    }
 };
 
-using DomainsCtx = BuildCtx<MPUDomain, GPIODomain, TimerDomain,
-                            DigitalOutputDomain,
-                            DigitalInputDomain,DFSDM_DOMAIN,DFSDM_CLK_DOMAIN /*, ADCDomain, PWMDomain, ...*/>;
+using DomainsCtx = BuildCtx<
+    MPUDomain,
+    GPIODomain,
+    TimerDomain,
+    DMA_Domain,
+    SPIDomain,
+    DigitalOutputDomain,
+    DigitalInputDomain,
+    MdmaPacketDomain,
+    SdDomain,
+    EthernetDomain,
+    ADCDomain,
+    EXTIDomain,
+    DFSDM_DOMAIN,
+    DFSDM_CLK_DOMAIN
+    /* PWMDomain, ...*/>;
 
-template <auto &...devs> struct Board {
-  static consteval auto build_ctx() {
-    DomainsCtx ctx{};
-    (devs.inscribe(ctx), ...);
-    return ctx;
-  }
+template <auto&... devs> struct Board {
+    static consteval auto build_ctx() {
+        DomainsCtx ctx{};
+        (devs.inscribe(ctx), ...);
+        return ctx;
+    }
 
-  static constexpr auto ctx = build_ctx();
+    static constexpr auto ctx = build_ctx();
 
-  template <typename D> static consteval std::size_t domain_size() {
-    return ctx.template span<D>().size();
-  }
+    template <typename D> static consteval std::size_t domain_size() {
+        return ctx.template span<D>().size();
+    }
 
   static consteval auto build() {
     constexpr std::size_t gpioN = domain_size<GPIODomain>();
@@ -106,20 +118,25 @@ template <auto &...devs> struct Board {
     constexpr std::size_t doutN = domain_size<DigitalOutputDomain>();
     constexpr std::size_t dinN = domain_size<DigitalInputDomain>();
     constexpr std::size_t mpuN = domain_size<MPUDomain>();
-    constexpr std::size_t dfsdmN = domain_size<DFSDM_DOMAIN>();
-    constexpr std::size_t dfsdm_clkN = domain_size<DFSDM_CLK_DOMAIN>();
     // ...
 
-    struct ConfigBundle {
-      std::array<GPIODomain::Config, gpioN> gpio_cfgs;
-      std::array<TimerDomain::Config, timN> tim_cfgs;
-      std::array<DigitalOutputDomain::Config, doutN> dout_cfgs;
-      std::array<DigitalInputDomain::Config, dinN> din_cfgs;
-      std::array<MPUDomain::Config, mpuN> mpu_cfgs;
-      std::array<DFSDM_DOMAIN::Config,dfsdmN> dfsdm_cfgs;
-      std::array<DFSDM_CLK_DOMAIN::Config,dfsdm_clkN> dfsdm_clk_cfgs;
+        struct ConfigBundle {
+            std::array<MPUDomain::Config, mpuN> mpu_cfgs;
+            std::array<GPIODomain::Config, gpioN> gpio_cfgs;
+            std::array<TimerDomain::Config, timN> tim_cfgs;
+            std::array<DMA_Domain::Config, dmaN> dma_cfgs;
+            std::array<SPIDomain::Config, spiN> spi_cfgs;
+            std::array<DigitalOutputDomain::Config, doutN> dout_cfgs;
+            std::array<DigitalInputDomain::Config, dinN> din_cfgs;
+            std::array<MdmaPacketDomain::Config, mdmaPacketN> mdma_packet_cfgs;
+            std::array<SdDomain::Config, sdN> sd_cfgs;
+            std::array<EthernetDomain::Config, ethN> eth_cfgs;
+            std::array<ADCDomain::Config, adcN> adc_cfgs;
+            std::array<EXTIDomain::Config, extiN> exti_cfgs;
+            std::array<DFSDM_DOMAIN::Config,dfsdmN> dfsdm_cfgs;
+            std::array<DFSDM_CLK_DOMAIN::Config,dfsdm_clkN> dfsdm_clk_cfgs;
       // ...
-    };
+        };
 
     return ConfigBundle{
         .gpio_cfgs =
@@ -132,64 +149,90 @@ template <auto &...devs> struct Board {
             ctx.template span<DigitalInputDomain>()),
         .mpu_cfgs = MPUDomain::template build<mpuN>(
             ctx.template span<MPUDomain>())
-        .dfsdm_cfgs = DFSDM_DOMAIN::template build<dfsdmN>(
-            ctx.template span<DFSDM_DOMAIN>())
-        .dfsdm_clk_cfgs = DFSDM_CLK_DOMAIN::template build<dfsdm_clkN>(
-            ctx.template span<DFSDM_CLK_DOMAIN>())
         // ...
     };
   }
 
-  static constexpr auto cfg = build();
+    static constexpr auto cfg = build();
 
-  static void init() {
-    constexpr std::size_t gpioN = domain_size<GPIODomain>();
-    constexpr std::size_t timN = domain_size<TimerDomain>();
-    constexpr std::size_t doutN = domain_size<DigitalOutputDomain>();
-    constexpr std::size_t dinN = domain_size<DigitalInputDomain>();
-    constexpr std::size_t mpuN = domain_size<MPUDomain>();
-    constexpr std::size_t dfsdmN = domain_size<DFSDM_DOMAIN>();
-    constexpr std::size_t dfsdm_clkN = domain_size<DFSDM_CLK_DOMAIN>();
+    static void init() {
+        constexpr std::size_t mpuN = domain_size<MPUDomain>();
+        constexpr std::size_t gpioN = domain_size<GPIODomain>();
+        constexpr std::size_t timN = domain_size<TimerDomain>();
+        constexpr std::size_t dmaN = domain_size<DMA_Domain>();
+        constexpr std::size_t spiN = domain_size<SPIDomain>();
+        constexpr std::size_t doutN = domain_size<DigitalOutputDomain>();
+        constexpr std::size_t dinN = domain_size<DigitalInputDomain>();
+        constexpr std::size_t mdmaPacketN = domain_size<MdmaPacketDomain>();
+        constexpr std::size_t sdN = domain_size<SdDomain>();
+        constexpr std::size_t ethN = domain_size<EthernetDomain>();
+        constexpr std::size_t adcN = domain_size<ADCDomain>();
+        constexpr std::size_t extiN = domain_size<EXTIDomain>();
+        constexpr std::size_t dfsdmN = domain_size<DFSDM_DOMAIN>();
+        constexpr std::size_t dfsdm_clkN = domain_size<DFSDM_CLK_DOMAIN>();
     // ...
 
-    GPIODomain::Init<gpioN>::init(cfg.gpio_cfgs);
-    TimerDomain::Init<timN>::init(cfg.tim_cfgs);
-    DigitalOutputDomain::Init<doutN>::init(cfg.dout_cfgs,
-                                           GPIODomain::Init<gpioN>::instances);
-    DigitalInputDomain::Init<dinN>::init(cfg.din_cfgs,
-                                         GPIODomain::Init<gpioN>::instances);
-    MPUDomain::Init<mpuN, cfg.mpu_cfgs>::init();
-    DFSDM_DOMAIN::Init<dfsdmN>::init(cfg.dfsdm_cfgs);
-    DFSDM_CLK_DOMAIN::Init<dfsdm_clkN>::init(cfg.dfsdm_cfgs);
-    // ...
-  }
+#ifdef HAL_IWDG_MODULE_ENABLED
+        Watchdog::check_reset_flag();
+#endif
+        HAL_Init();
+        HALconfig::system_clock();
+        HALconfig::peripheral_clock();
 
-  template <typename Domain, auto &Target, std::size_t I = 0>
-  static consteval std::size_t owner_index_of() {
-    constexpr auto owners = ctx.template owners_span<Domain>();
-
-    if constexpr (I >= owners.size()) {
-      compile_error("Device not registered in domain");
-      return 0;
-    } else {
-      return owners[I] == &Target ? I : owner_index_of<Domain, Target, I + 1>();
+        MPUDomain::Init<mpuN, cfg.mpu_cfgs>::init();
+        GPIODomain::Init<gpioN>::init(cfg.gpio_cfgs);
+        TimerDomain::Init<timN>::init(cfg.tim_cfgs);
+        DMA_Domain::Init<dmaN>::init(cfg.dma_cfgs);
+        SPIDomain::Init<spiN>::init(
+            cfg.spi_cfgs,
+            GPIODomain::Init<gpioN>::instances,
+            DMA_Domain::Init<dmaN>::instances
+        );
+        DigitalOutputDomain::Init<doutN>::init(cfg.dout_cfgs, GPIODomain::Init<gpioN>::instances);
+        DigitalInputDomain::Init<dinN>::init(cfg.din_cfgs, GPIODomain::Init<gpioN>::instances);
+        MdmaPacketDomain::Init<mdmaPacketN>::init(
+            cfg.mdma_packet_cfgs,
+            MPUDomain::Init<mpuN, cfg.mpu_cfgs>::instances
+        );
+        SdDomain::Init<sdN>::init(
+            cfg.sd_cfgs,
+            MPUDomain::Init<mpuN, cfg.mpu_cfgs>::instances,
+            DigitalInputDomain::Init<dinN>::instances
+        );
+        EthernetDomain::Init<ethN>::init(cfg.eth_cfgs, DigitalOutputDomain::Init<doutN>::instances);
+        ADCDomain::Init<adcN>::init(cfg.adc_cfgs, GPIODomain::Init<gpioN>::instances);
+        EXTIDomain::Init<extiN>::init(cfg.exti_cfgs, GPIODomain::Init<gpioN>::instances); 
+        DFSDM_DOMAIN::Init<dfsdmN>::init(cfg.dfsdm_cfgs);
+        DFSDM_CLK_DOMAIN::Init<dfsdm_clkN>::init(cfg.dfsdm_cfgs);
+                // ...
     }
-  }
 
-  template <auto &Target> static auto &instance_of() {
-    using DevT = std::remove_cvref_t<decltype(Target)>;
-    using Domain = typename DevT::domain;
+    template <typename Domain, auto& Target, std::size_t I = 0>
+    static consteval std::size_t owner_index_of() {
+        constexpr auto owners = ctx.template owners_span<Domain>();
 
-    constexpr std::size_t idx = owner_index_of<Domain, Target>();
-
-    constexpr std::size_t N = domain_size<Domain>();
-    
-    if constexpr (std::is_same_v<Domain, MPUDomain>) {
-      return Domain::template Init<N, cfg.mpu_cfgs>::instances[idx];
-    } else {
-      return Domain::template Init<N>::instances[idx];
+        if constexpr (I >= owners.size()) {
+            compile_error("Device not registered in domain");
+            return 0;
+        } else {
+            return owners[I] == &Target ? I : owner_index_of<Domain, Target, I + 1>();
+        }
     }
-  }
+
+    template <auto& Target> static auto& instance_of() {
+        using DevT = std::remove_cvref_t<decltype(Target)>;
+        using Domain = typename DevT::domain;
+
+        constexpr std::size_t idx = owner_index_of<Domain, Target>();
+
+        constexpr std::size_t N = domain_size<Domain>();
+
+        if constexpr (std::is_same_v<Domain, MPUDomain>) {
+            return Domain::template Init<N, cfg.mpu_cfgs>::instances[idx];
+        } else {
+            return Domain::template Init<N>::instances[idx];
+        }
+    }
 };
 
 } // namespace ST_LIB

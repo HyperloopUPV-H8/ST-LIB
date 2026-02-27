@@ -7,8 +7,8 @@
 
 #pragma once
 
-// #include "Protections/Protection.hpp"
-// #include "Protections/ProtectionManager.hpp"
+#include "Protections/Protection.hpp"
+#include "Protections/ProtectionManager.hpp"
 #include "Control/ControlBlock.hpp"
 #include "Control/FeedbackControlBlock.hpp"
 #include "Control/SplitterBlock.hpp"
@@ -24,8 +24,8 @@
 #include "Control/ControlSystem.hpp"
 #ifdef SIM_ON
 #else
-	#include "FlashStorer/FlashStorer.hpp"
+#include "FlashStorer/FlashStorer.hpp"
 #endif
 namespace STLIB_HIGH {
-	void start();
+void start();
 }
