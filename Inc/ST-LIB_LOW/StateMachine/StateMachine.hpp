@@ -316,9 +316,9 @@ class StateMachine : public IStateMachine {
         std::apply(
             [this](auto&... nested) {
                 (void)((nested.state == this->current_state && nested.machine != nullptr
-                      ? (nested.machine->exit(), true)
-                      : false) ||
-                 ...);
+                            ? (nested.machine->exit(), true)
+                            : false) ||
+                       ...);
             },
             nested_machines
         );
@@ -331,9 +331,9 @@ class StateMachine : public IStateMachine {
         std::apply(
             [this](auto&... nested) {
                 (void)((nested.state == this->current_state && nested.machine != nullptr
-                      ? (nested.machine->enter(), true)
-                      : false) ||
-                 ...);
+                            ? (nested.machine->enter(), true)
+                            : false) ||
+                       ...);
             },
             nested_machines
         );
@@ -438,9 +438,9 @@ public:
         std::apply(
             [this](auto&... nested) {
                 (void)((nested.state == this->current_state && nested.machine != nullptr
-                      ? (nested.machine->check_transitions(), true)
-                      : false) ||
-                 ...);
+                            ? (nested.machine->check_transitions(), true)
+                            : false) ||
+                       ...);
             },
             nested_machines
         );
@@ -451,9 +451,9 @@ public:
         std::apply(
             [this](auto&... nested) {
                 (void)((nested.state == this->current_state && nested.machine != nullptr
-                      ? (nested.machine->start(), true)
-                      : false) ||
-                 ...);
+                            ? (nested.machine->start(), true)
+                            : false) ||
+                       ...);
             },
             nested_machines
         );
