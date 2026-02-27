@@ -118,6 +118,16 @@ template <auto&... devs> struct Board {
     constexpr std::size_t doutN = domain_size<DigitalOutputDomain>();
     constexpr std::size_t dinN = domain_size<DigitalInputDomain>();
     constexpr std::size_t mpuN = domain_size<MPUDomain>();
+    constexpr std::size_t dmaN = domain_size<DMA_Domain>();
+    constexpr std::size_t spiN = domain_size<SPIDomain>();
+    constexpr std::size_t mdmaPacketN = domain_size<MdmaPacketDomain>();
+    constexpr std::size_t sdN = domain_size<SdDomain>();
+    constexpr std::size_t ethN = domain_size<EthernetDomain>();
+    constexpr std::size_t adcN = domain_size<ADCDomain>();
+    constexpr std::size_t extiN = domain_size<EXTIDomain>();
+    constexpr std::size_t dfsdmN = domain_size<DFSDM_DOMAIN>();
+    constexpr std::size_t dfsdm_clkN = domain_size<DFSDM_CLK_DOMAIN>();
+
     // ...
 
         struct ConfigBundle {
