@@ -252,6 +252,8 @@ template <class StateEnum, class NestedSMType>
 struct NestedMachineBinding {
     StateEnum state;
     NestedSMType* machine;
+    
+    constexpr bool operator==(const NestedMachineBinding&) const = default;
 };
 
 template <class StateEnum, class NestedSMType, size_t N, size_t O>
@@ -261,6 +263,7 @@ constexpr auto bind_nested_machine(NestedSMType& machine, const State<StateEnum,
 
 template <class StateEnum, size_t NStates, size_t NTransitions, class... NestedMachines>
 class StateMachine : public IStateMachine {
+    template <class E, size_t N, size_t T, class... Nested> friend class StateMachine;
 private:
     StateEnum current_state;
     std::tuple<NestedMachineBinding<StateEnum, NestedMachines>...> nested_machines;
