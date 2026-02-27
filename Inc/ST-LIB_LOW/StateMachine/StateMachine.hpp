@@ -315,11 +315,10 @@ class StateMachine : public IStateMachine {
         exit();
         std::apply(
             [this](auto&... nested) {
-                (..., [&] {
-                    if (nested.state == this->current_state && nested.machine != nullptr) {
-                        nested.machine->exit();
-                    }
-                }());
+                ((nested.state == this->current_state && nested.machine != nullptr
+                      ? (nested.machine->exit(), true)
+                      : false) ||
+                 ...);
             },
             nested_machines
         );
@@ -331,11 +330,10 @@ class StateMachine : public IStateMachine {
         enter();
         std::apply(
             [this](auto&... nested) {
-                (..., [&] {
-                    if (nested.state == this->current_state && nested.machine != nullptr) {
-                        nested.machine->enter();
-                    }
-                }());
+                ((nested.state == this->current_state && nested.machine != nullptr
+                      ? (nested.machine->enter(), true)
+                      : false) ||
+                 ...);
             },
             nested_machines
         );
@@ -439,11 +437,10 @@ public:
 
         std::apply(
             [this](auto&... nested) {
-                (..., [&] {
-                    if (nested.state == this->current_state && nested.machine != nullptr) {
-                        nested.machine->check_transitions();
-                    }
-                }());
+                ((nested.state == this->current_state && nested.machine != nullptr
+                      ? (nested.machine->check_transitions(), true)
+                      : false) ||
+                 ...);
             },
             nested_machines
         );
@@ -453,11 +450,10 @@ public:
         enter();
         std::apply(
             [this](auto&... nested) {
-                (..., [&] {
-                    if (nested.state == this->current_state && nested.machine != nullptr) {
-                        nested.machine->start();
-                    }
-                }());
+                ((nested.state == this->current_state && nested.machine != nullptr
+                      ? (nested.machine->start(), true)
+                      : false) ||
+                 ...);
             },
             nested_machines
         );
@@ -589,7 +585,7 @@ consteval auto make_state_machine(StateEnum initial_state, States... states) {
  *
  * @tparam States Variadic template parameter pack representing the states
  * @param initial_state The initial state enum value
- * @tparam nested_machines Tuple of NestedMachineBinding representing the nested state machines to
+ * @param nested_machines Tuple of NestedMachineBinding representing the nested state machines to
  * its corresponding state
  * @param states The states to be included in the state machine
  * @return A StateMachine instance initialized with the provided initial state and states, as well
