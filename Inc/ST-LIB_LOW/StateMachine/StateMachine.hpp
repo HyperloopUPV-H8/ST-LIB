@@ -282,13 +282,13 @@ concept IsNestedMachineBinding = is_nested_machine_binding<T>::value;
 namespace StateMachineHelper {
 
 template <class StateEnum, IsStateMachineClass NestedSMType, size_t N, size_t O>
-static constexpr auto add_nesting(const State<StateEnum, N, O>& state, NestedSMType& machine) {
+static consteval auto add_nesting(const State<StateEnum, N, O>& state, NestedSMType& machine) {
     return NestedMachineBinding<StateEnum, NestedSMType>{state.get_state(), &machine};
 }
 
 template <typename... Bindings>
     requires(IsNestedMachineBinding<Bindings> && ...)
-static constexpr auto add_nested_machines(Bindings... bindings) {
+static consteval auto add_nested_machines(Bindings... bindings) {
     return std::make_tuple(bindings...);
 }
 
