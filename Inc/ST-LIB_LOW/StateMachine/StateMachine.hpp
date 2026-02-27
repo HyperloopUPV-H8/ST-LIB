@@ -197,9 +197,13 @@ public:
         timed_action->is_on = false;
     }
 
+    constexpr void add_state_order(uint16_t id) {
 #ifdef STLIB_ETH
-    constexpr void add_state_order(uint16_t id) { state_orders_ids.push_back(id); }
+        state_orders_ids.push_back(id);
+#else
+        (void)id;
 #endif
+    }
 
     template <ValidTime TimeUnit>
     consteval TimedAction* add_cyclic_action(Callback action, TimeUnit period) {
@@ -289,6 +293,17 @@ static consteval auto add_nesting(const State<StateEnum, N, O>& state, NestedSMT
 template <typename... Bindings>
     requires(IsNestedMachineBinding<Bindings> && ...)
 static consteval auto add_nested_machines(Bindings... bindings) {
+    constexpr std::size_t count = sizeof...(Bindings);
+    if constexpr (count > 1) {
+        auto states = std::array{bindings.state...};
+        for (std::size_t i = 0; i < count; ++i) {
+            for (std::size_t j = i + 1; j < count; ++j) {
+                if (states[i] == states[j]) {
+                    ErrorHandler("Duplicate state found in add_nested_machines");
+                }
+            }
+        }
+    }
     return std::make_tuple(bindings...);
 }
 
@@ -431,7 +446,7 @@ public:
             const auto& t = transitions[index];
             if (t.predicate()) {
                 perform_state_change(t.target);
-                return;
+                break;
             }
         }
 

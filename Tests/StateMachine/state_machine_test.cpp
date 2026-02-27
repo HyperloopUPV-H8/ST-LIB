@@ -232,3 +232,49 @@ TEST_F(StateMachineTest, CyclicActionsRun) {
     EXPECT_GE(b_cyclic_count, 1);  // B cyclic should run
     EXPECT_GE(s1_cyclic_count, 1); // Nested S1 cyclic should run
 }
+
+template <auto V> struct constant_eval {};
+
+template <typename F>
+concept CanCompile = requires { typename constant_eval<F::invoke()>; };
+
+struct DuplicateNestedCheck {
+    static consteval bool invoke() {
+        auto sm_nested_1 = make_state_machine(SubState::S1, state_s1, state_s2);
+        auto sm_nested_2 = make_state_machine(SubState::S1, state_s1, state_s2);
+
+        auto nested1 = StateMachineHelper::add_nesting(state_a, sm_nested_1);
+        auto nested2 = StateMachineHelper::add_nesting(state_a, sm_nested_2);
+
+        auto sm = make_state_machine(
+            MasterState::A,
+            StateMachineHelper::add_nested_machines(nested1, nested2),
+            state_a,
+            state_b
+        );
+        return true;
+    }
+};
+
+struct ValidNestedCheck {
+    static consteval bool invoke() {
+        auto sm_nested_1 = make_state_machine(SubState::S1, state_s1, state_s2);
+        auto sm_nested_2 = make_state_machine(SubState::S1, state_s1, state_s2);
+
+        auto nested1 = StateMachineHelper::add_nesting(state_a, sm_nested_1);
+        auto nested2 = StateMachineHelper::add_nesting(state_b, sm_nested_2);
+
+        auto sm = make_state_machine(
+            MasterState::A,
+            StateMachineHelper::add_nested_machines(nested1, nested2),
+            state_a,
+            state_b
+        );
+        return true;
+    }
+};
+
+TEST(StateMachineCompileCheck, ValidatesSFINAEOntoS_M) {
+    static_assert(CanCompile<ValidNestedCheck>, "Valid nested mapping should compile.");
+    static_assert(!CanCompile<DuplicateNestedCheck>, "Duplicate state mappings must not compile.");
+}
