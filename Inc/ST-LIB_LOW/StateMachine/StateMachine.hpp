@@ -10,6 +10,7 @@
 #include <utility>
 #include <unordered_map>
 #include <algorithm>
+#include <tuple>
 
 #ifdef STLIB_ETH
 #include "StateMachine/StateOrder.hpp"
@@ -244,37 +245,63 @@ protected:
     virtual void enter() = 0;
     virtual void exit() = 0;
     virtual void start() = 0;
-    template <class E, size_t N, size_t T> friend class StateMachine;
+    template <class E, size_t N, size_t T, class... NestedSMType> friend class StateMachine;
 };
 
-template <class StateEnum, size_t NStates, size_t NTransitions>
+template <class StateEnum, class NestedSMType>
+struct NestedMachineBinding {
+    StateEnum state;
+    NestedSMType* machine;
+};
+
+template <class StateEnum, class NestedSMType, size_t N, size_t O>
+constexpr auto bind_nested_machine(NestedSMType& machine, const State<StateEnum, N, O>& state) {
+    return NestedMachineBinding<StateEnum, NestedSMType>{state.get_state(), &machine};
+}
+
+template <class StateEnum, size_t NStates, size_t NTransitions, class... NestedMachines>
 class StateMachine : public IStateMachine {
 private:
-    struct NestedPair {
-        StateEnum state;
-        IStateMachine* machine;
-        constexpr bool operator==(const NestedPair&) const = default;
-    };
-
     StateEnum current_state;
+    std::tuple<NestedMachineBinding<StateEnum, NestedMachines>...> nested_machines;
+
+    void perform_state_change(StateEnum new_state) {
+        if (current_state == new_state) {
+            return;
+        }
+
+        exit();
+        std::apply([this](auto&... nested) {
+            (..., [&] {
+                if (nested.state == this->current_state && nested.machine != nullptr) {
+                    nested.machine->exit();
+                }
+            }());
+        }, nested_machines);
+
+#ifdef STLIB_ETH
+        remove_state_orders();
+#endif
+        current_state = new_state;
+        enter();
+        std::apply([this](auto&... nested) {
+            (..., [&] {
+                if (nested.state == this->current_state && nested.machine != nullptr) {
+                    nested.machine->enter();
+                }
+            }());
+        }, nested_machines);
+
+#ifdef STLIB_ETH
+        refresh_state_orders();
+#endif
+    }
 
 public:
     constexpr ~StateMachine() override = default;
 
     void force_change_state(size_t state) override {
-        StateEnum new_state = static_cast<StateEnum>(state);
-        if (current_state == new_state) {
-            return;
-        }
-#ifdef STLIB_ETH
-        remove_state_orders();
-#endif
-        exit();
-        current_state = new_state;
-        enter();
-#ifdef STLIB_ETH
-        refresh_state_orders();
-#endif
+        perform_state_change(static_cast<StateEnum>(state));
     }
 
     size_t get_current_state_id() const override { return static_cast<size_t>(current_state); }
@@ -286,7 +313,6 @@ private:
     StaticVector<State<StateEnum, NTransitions>, NStates> states;
     StaticVector<Transition<StateEnum>, NTransitions> transitions = {};
     std::array<std::pair<size_t, size_t>, NStates> transitions_assoc = {};
-    StaticVector<NestedPair, NStates> nested_state_machine = {};
 
     constexpr bool operator==(const StateMachine&) const = default;
 
@@ -313,13 +339,16 @@ private:
     }
 
 public:
+    // Constructor principal que toma la tupla de nested machines
     template <IsState<StateEnum>... S>
-    consteval StateMachine(StateEnum initial_state, S... states) : current_state(initial_state) {
-        // Sort states by their enum value
+    consteval StateMachine(StateEnum initial_state, const std::tuple<NestedMachineBinding<StateEnum, NestedMachines>...>& nested_machines_tuple, S... states_input) : 
+        current_state(initial_state), 
+        nested_machines(nested_machines_tuple) {
+        
         using StateType = State<StateEnum, NTransitions>;
         std::array<StateType, sizeof...(S)> sorted_states;
         size_t index = 0;
-        ((sorted_states[index++] = StateType(states)), ...);
+        ((sorted_states[index++] = StateType(states_input)), ...);
 
         for (size_t i = 0; i < sorted_states.size(); i++) {
             for (size_t j = 0; j < sorted_states.size() - 1; j++) {
@@ -349,81 +378,69 @@ public:
         }
     }
 
+    // Constructor de copia necesario para devolver por valor en add_state_machine
+    template <class... OtherNestedMachines>
+    constexpr StateMachine(
+        StateEnum current_state_arg,
+        const StaticVector<State<StateEnum, NTransitions>, NStates>& states_arg,
+        const StaticVector<Transition<StateEnum>, NTransitions>& transitions_arg,
+        const std::array<std::pair<size_t, size_t>, NStates>& transitions_assoc_arg,
+        const std::tuple<NestedMachineBinding<StateEnum, NestedMachines>...>& nested_machines_arg
+    ) :
+        current_state(current_state_arg),
+        nested_machines(nested_machines_arg),
+        states(states_arg),
+        transitions(transitions_arg),
+        transitions_assoc(transitions_assoc_arg)
+    {}
+
+    template <size_t N, size_t O, class NewNestedMachine>
+    constexpr auto add_state_machine(NewNestedMachine& machine, const State<StateEnum, N, O>& state) const {
+        auto new_binding = NestedMachineBinding<StateEnum, NewNestedMachine>{state.get_state(), &machine};
+        auto new_nested_tuple = std::tuple_cat(nested_machines, std::make_tuple(new_binding));
+        
+        return StateMachine<StateEnum, NStates, NTransitions, NestedMachines..., NewNestedMachine>(
+            current_state,
+            states,
+            transitions,
+            transitions_assoc,
+            new_nested_tuple
+        );
+    }
+
     void check_transitions() override {
         auto& [i, n] = transitions_assoc[static_cast<size_t>(current_state)];
+
         for (auto index = i; index < i + n; ++index) {
             const auto& t = transitions[index];
             if (t.predicate()) {
-                exit();
-                for (auto& nested : nested_state_machine) {
-                    if (nested.state == current_state) {
-                        nested.machine->exit();
-                        break;
-                    }
-                }
-#ifdef STLIB_ETH
-                remove_state_orders();
-#endif
-                current_state = t.target;
-                enter();
-                for (auto& nested : nested_state_machine) {
-                    if (nested.state == current_state) {
-                        nested.machine->enter();
-                        break;
-                    }
-                }
-#ifdef STLIB_ETH
-                refresh_state_orders();
-#endif
-                break;
+                perform_state_change(t.target);
+                return;
             }
         }
 
-        for (auto& nested : nested_state_machine) {
-            if (nested.state == current_state) {
-                nested.machine->check_transitions();
-                break;
-            }
-        }
+        std::apply([this](auto&... nested) {
+            (..., [&] {
+                if (nested.state == this->current_state && nested.machine != nullptr) {
+                    nested.machine->check_transitions();
+                }
+            }());
+        }, nested_machines);
     }
 
     void start() override {
         enter();
-        for (auto& nested : nested_state_machine) {
-            if (nested.state == current_state) {
-                nested.machine->start();
-                break;
-            }
-        }
+        std::apply([this](auto&... nested) {
+            (..., [&] {
+                if (nested.state == this->current_state && nested.machine != nullptr) {
+                    nested.machine->start();
+                }
+            }());
+        }, nested_machines);
     }
 
     template <size_t N, size_t O> void force_change_state(const State<StateEnum, N, O>& state) {
-        StateEnum new_state = state.get_state();
-        if (current_state == new_state) {
-            return;
-        }
-
-        exit();
-        for (auto& nested : nested_state_machine) {
-            if (nested.state == current_state) {
-                nested.machine->exit();
-                break;
-            }
-        }
-#ifdef STLIB_ETH
-        remove_state_orders();
-#endif
-        current_state = new_state;
-        enter();
-        for (auto& nested : nested_state_machine) {
-            if (nested.state == current_state) {
-                nested.machine->enter();
-                break;
-            }
-        }
-#ifdef STLIB_ETH
-        refresh_state_orders();
-#endif
+        perform_state_change(state.get_state());
     }
 
     template <ValidTime TimeUnit, size_t N, size_t O>
@@ -469,22 +486,6 @@ public:
             }
         }
         ErrorHandler("Error: The state is not added to the state machine");
-    }
-
-    template <size_t N, size_t O>
-    constexpr void
-    add_state_machine(IStateMachine& state_machine, const State<StateEnum, N, O>& state) {
-        for (auto& nested : nested_state_machine) {
-            if (nested.state == state.get_state()) {
-                ErrorHandler(
-                    "Only one Nested State Machine can be added per state, tried to add to state: "
-                    "%d",
-                    static_cast<int>(state.get_state())
-                );
-                return;
-            }
-        }
-        nested_state_machine.push_back({state.get_state(), &state_machine});
     }
 
     StateEnum get_current_state() const { return current_state; }
@@ -550,6 +551,29 @@ consteval auto make_state_machine(StateEnum initial_state, States... states) {
 
     return StateMachine<StateEnum, number_of_states, number_of_transitions>(
         initial_state,
+        std::tuple<>{},
+        states...
+    );
+}
+
+template <typename StateEnum, typename... NestedMachines, typename... States>
+    requires are_states<StateEnum, States...>
+consteval auto make_state_machine(
+    StateEnum initial_state,
+    std::tuple<NestedMachines...> nested_machines,
+    States... states
+) {
+    constexpr size_t number_of_states = sizeof...(states);
+    constexpr size_t number_of_transitions =
+        (std::remove_reference_t<States>::transition_count + ... + 0);
+
+    return StateMachine<
+        StateEnum,
+        number_of_states,
+        number_of_transitions,
+        typename std::remove_pointer<decltype(std::declval<NestedMachines>().machine)>::type...>(
+        initial_state,
+        nested_machines,
         states...
     );
 }
