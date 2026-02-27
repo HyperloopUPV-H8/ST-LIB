@@ -85,7 +85,7 @@ template <typename... Domains> struct BuildCtx {
 
 using DomainsCtx = BuildCtx<MPUDomain, GPIODomain, TimerDomain,
                             DigitalOutputDomain,
-                            DigitalInputDomain /*, ADCDomain, PWMDomain, ...*/>;
+                            DigitalInputDomain,DFSDM_DOMAIN,DFSDM_CLK_DOMAIN /*, ADCDomain, PWMDomain, ...*/>;
 
 template <auto &...devs> struct Board {
   static consteval auto build_ctx() {
@@ -106,6 +106,8 @@ template <auto &...devs> struct Board {
     constexpr std::size_t doutN = domain_size<DigitalOutputDomain>();
     constexpr std::size_t dinN = domain_size<DigitalInputDomain>();
     constexpr std::size_t mpuN = domain_size<MPUDomain>();
+    constexpr std::size_t dfsdmN = domain_size<DFSDM_DOMAIN>();
+    constexpr std::size_t dfsdm_clkN = domain_size<DFSDM_CLK_DOMAIN>();
     // ...
 
     struct ConfigBundle {
@@ -114,6 +116,8 @@ template <auto &...devs> struct Board {
       std::array<DigitalOutputDomain::Config, doutN> dout_cfgs;
       std::array<DigitalInputDomain::Config, dinN> din_cfgs;
       std::array<MPUDomain::Config, mpuN> mpu_cfgs;
+      std::array<DFSDM_DOMAIN::Config,dfsdmN> dfsdm_cfgs;
+      std::array<DFSDM_CLK_DOMAIN::Config,dfsdm_clkN> dfsdm_clk_cfgs;
       // ...
     };
 
@@ -128,6 +132,10 @@ template <auto &...devs> struct Board {
             ctx.template span<DigitalInputDomain>()),
         .mpu_cfgs = MPUDomain::template build<mpuN>(
             ctx.template span<MPUDomain>())
+        .dfsdm_cfgs = DFSDM_DOMAIN::template build<dfsdmN>(
+            ctx.template span<DFSDM_DOMAIN>())
+        .dfsdm_clk_cfgs = DFSDM_CLK_DOMAIN::template build<dfsdm_clkN>(
+            ctx.template span<DFSDM_CLK_DOMAIN>())
         // ...
     };
   }
@@ -140,6 +148,8 @@ template <auto &...devs> struct Board {
     constexpr std::size_t doutN = domain_size<DigitalOutputDomain>();
     constexpr std::size_t dinN = domain_size<DigitalInputDomain>();
     constexpr std::size_t mpuN = domain_size<MPUDomain>();
+    constexpr std::size_t dfsdmN = domain_size<DFSDM_DOMAIN>();
+    constexpr std::size_t dfsdm_clkN = domain_size<DFSDM_CLK_DOMAIN>();
     // ...
 
     GPIODomain::Init<gpioN>::init(cfg.gpio_cfgs);
@@ -149,6 +159,8 @@ template <auto &...devs> struct Board {
     DigitalInputDomain::Init<dinN>::init(cfg.din_cfgs,
                                          GPIODomain::Init<gpioN>::instances);
     MPUDomain::Init<mpuN, cfg.mpu_cfgs>::init();
+    DFSDM_DOMAIN::Init<dfsdmN>::init(cfg.dfsdm_cfgs);
+    DFSDM_CLK_DOMAIN::Init<dfsdm_clkN>::init(cfg.dfsdm_cfgs);
     // ...
   }
 

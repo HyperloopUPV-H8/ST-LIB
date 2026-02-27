@@ -47,6 +47,8 @@
 
 #include "HALAL/HardFault/HardfaultTrace.h"
 #include "HALAL/Benchmarking_toolkit/DataWatchpointTrace/DataWatchpointTrace.hpp"
+
+#include "HALAL/Services/DFSDM/DFSDM.hpp"
 #ifdef STLIB_ETH
 #include "HALAL/Models/Packets/Packet.hpp"
 #include "HALAL/Models/Packets/Order.hpp"
