@@ -315,7 +315,7 @@ class StateMachine : public IStateMachine {
         exit();
         std::apply(
             [this](auto&... nested) {
-                ((nested.state == this->current_state && nested.machine != nullptr
+                (void)((nested.state == this->current_state && nested.machine != nullptr
                       ? (nested.machine->exit(), true)
                       : false) ||
                  ...);
@@ -330,7 +330,7 @@ class StateMachine : public IStateMachine {
         enter();
         std::apply(
             [this](auto&... nested) {
-                ((nested.state == this->current_state && nested.machine != nullptr
+                (void)((nested.state == this->current_state && nested.machine != nullptr
                       ? (nested.machine->enter(), true)
                       : false) ||
                  ...);
@@ -437,7 +437,7 @@ public:
 
         std::apply(
             [this](auto&... nested) {
-                ((nested.state == this->current_state && nested.machine != nullptr
+                (void)((nested.state == this->current_state && nested.machine != nullptr
                       ? (nested.machine->check_transitions(), true)
                       : false) ||
                  ...);
@@ -450,7 +450,7 @@ public:
         enter();
         std::apply(
             [this](auto&... nested) {
-                ((nested.state == this->current_state && nested.machine != nullptr
+                (void)((nested.state == this->current_state && nested.machine != nullptr
                       ? (nested.machine->start(), true)
                       : false) ||
                  ...);
