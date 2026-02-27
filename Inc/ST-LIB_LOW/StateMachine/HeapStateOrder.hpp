@@ -24,8 +24,7 @@ public:
     }
 
     void process() override {
-        if (callback != nullptr &&
-            state_machine.get_current_state_id() == state)
+        if (callback != nullptr && state_machine.get_current_state_id() == state)
             callback();
     }
 
