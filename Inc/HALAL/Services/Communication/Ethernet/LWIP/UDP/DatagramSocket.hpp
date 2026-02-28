@@ -8,7 +8,7 @@
 
 class DatagramSocket {
 public:
-    struct udp_pcb* udp_control_block;
+    struct udp_pcb* udp_control_block = nullptr;
 
     IPV4 local_ip;
     uint32_t local_port;
