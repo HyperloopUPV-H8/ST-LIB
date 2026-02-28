@@ -122,8 +122,6 @@ namespace ST_LIB {
         Fast_Conversion fast;
         Sync_Conversion rsync;
         Regular_Mode rcont;
-        
-        uint8_t clock_divider; //has to be the same between ckout and here
     };
     static constexpr std::array<std::pair<GPIODomain::Pin,uint8_t>,Possible_Pin_Channel> pin_to_channel =
     {{
@@ -172,8 +170,7 @@ namespace ST_LIB {
         int32_t offset = 0,uint8_t right_shift = 0,Trigger_Timer_Source trigger_conv = Trigger_Timer_Source::Unused,Filter_Type filter_type = Filter_Type::FastSinc,
         uint16_t oversampling = 1,uint8_t integrator = 1,uint8_t Short_Circuit_Count = 0xFF,
         Data_Write rdma = Data_Write::DMA, Fast_Conversion fast = Fast_Conversion::Enable,
-        Sync_Conversion rsync = Sync_Conversion::Sync_With_Flt0, Regular_Mode rcont = Regular_Mode::Continuous,
-        uint8_t clock_divider = 4)
+        Sync_Conversion rsync = Sync_Conversion::Sync_With_Flt0, Regular_Mode rcont = Regular_Mode::Continuous)
         : e{
             .channel       = get_channel(pin),
             .offset        = offset,
@@ -190,7 +187,6 @@ namespace ST_LIB {
             .fast          = fast,
             .rsync         = rsync,
             .rcont         = rcont,
-            .clock_divider = clock_divider,
         }
         {   
             if(offset > OFFSET_MAX || offset < OFFSET_MIN){
@@ -204,11 +200,7 @@ namespace ST_LIB {
             }
             if (!is_correct_oversampling(filter_type, oversampling)){
                 compile_error("DFSDM_FILTER: invalid oversampling for selected filter type");
-            }
-            if (clock_divider < 4){
-                compile_error("DFSDM_CLKOUTDIV has to be at least 4");
-            }
-            
+            } 
         }
         template<class Ctx>
         consteval std::size_t inscribe(Ctx &ctx) const {
@@ -334,21 +326,15 @@ namespace ST_LIB {
         return v;
     }
 
-    static consteval uint32_t global_config_via_channel_0(const Entry& e){
-        uint32_t v = 0;
-        //ckoutsrc = 0
-        v |= uint32_t(e.clock_divider - 1) << DFSDM_CHCFGR1_CKOUTDIV_Pos;
-        return v;
-    }
     template <size_t N>
     static consteval std::array<Config, N> build(std::span<const Entry> entries) {
         std::array<Config, N> cfgs{};
         if(N == 0) return cfgs;
         std::array<bool,8> channels_used{false};
         std::array<int8_t,4> filters_used{-1,-1,-1,-1};
-        cfgs[0].init_data_channel.CHCFGR1 |= global_config_via_channel_0(entries[0]);
+         bool filter_per_channel = (N <= 4) ? true : false;
+
         cfgs[0].init_data_filter.FLTCR2 |= make_fltcr2_global(entries[0]);
-        bool filter_per_channel = (N <= 4) ? true : false;
         for (size_t i = 0; i < N; ++i) {
             const Entry &e = entries[i];
 
@@ -756,7 +742,7 @@ struct DFSDM_CLK_DOMAIN{
     }
     struct Entry{
         size_t gpio_idx;
-        uint8_t clk_divider;
+        uint16_t clk_divider;
     };
     
     struct DFSDM_CLK{
@@ -764,7 +750,7 @@ struct DFSDM_CLK_DOMAIN{
         GPIODomain::GPIO gpio;
         GPIODomain::Pin pin;
         uint8_t clk_divider;
-        consteval DFSDM_CLK(const GPIODomain::Pin &pin,uint8_t clk_divider = 4):
+        consteval DFSDM_CLK(const GPIODomain::Pin &pin,uint8_t clk_divider = 100): // clk_divider = 100 -> 1Mhz
         gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,dfsdm_clk_af(pin)},
         pin(pin),
         clk_divider(clk_divider)
@@ -776,8 +762,8 @@ struct DFSDM_CLK_DOMAIN{
             if(!is_valid_dfsdm_clk_pin(pin.port,pin.pin)){
                 compile_error("Invalid clk dfsdm pin used");
             }
-            if(clk_divider < 4){
-                compile_error("The divider must be at least frequency/4");
+            if(clk_divider < 7 || clk_divider > 256){
+                compile_error("The clk_divider has to be between 7 and 256");
             }
             Entry e{.gpio_idx = gpio_idx,.clk_divider = clk_divider};
             return ctx.template add<DFSDM_CLK_DOMAIN>(e,this);
@@ -786,12 +772,12 @@ struct DFSDM_CLK_DOMAIN{
     static constexpr std::size_t max_instances{1};
     struct Config{
         size_t gpio_idx;
-        uint8_t clk_divider;
+        uint16_t clk_divider;
     };
     template <size_t N>
     static consteval std::array<Config, N> build(std::span<const Entry> entries) {
         std::array<Config, N> cfgs{};
-        static_assert(N == 1,"You can't have more than one clock_out");
+        static_assert(N <= 1,"You can't have more than one clock_out");
         for (std::size_t i = 0; i < N; ++i) {
             cfgs[i] = {
                 .gpio_idx = entries[i].gpio_idx,
@@ -802,17 +788,19 @@ struct DFSDM_CLK_DOMAIN{
     }
         struct Instance{
             GPIODomain::Instance *gpio_instance;
-            uint8_t clk_divider;
+            uint16_t clk_divider;
             /*Already called in init()*/
             void init(){
-                RCC->APB2ENR |= RCC_APB2ENR_DFSDM1EN; //Activate the DFSDM Clocki OUT in RCC by default it uses rcc_pclk2(80MH)
-                //CKOUT = kernell clock (rcc_pclk2)
-                //The channel 0 also allows to configure the CKOUT
+                RCC->APB2ENR |= RCC_APB2ENR_DFSDM1EN; //Activate the DFSDM Clock OUT in RCC by default it uses rcc_pclk2
+                //Disable DFSDMEN to change parameters
+                DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_DFSDMEN;
+
+                //CKOUTSRC = 0 -> kernel clock (rcc_pclk2)  It works 137,5 Mhz, 
                 DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CKOUTSRC;
-                
                 //CKOUT Divider. Divider = CKOUTDIV + 1
                 DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CKOUTDIV;
-               DFSDM1_Channel0->CHCFGR1 |= (clk_divider -1) << DFSDM_CHCFGR1_CKOUTDIV_Pos;
+
+                DFSDM1_Channel0->CHCFGR1 |= uint32_t(clk_divider -1) << DFSDM_CHCFGR1_CKOUTDIV_Pos;
                 
                 //enable the CKOUT
                 DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
@@ -845,7 +833,7 @@ struct DFSDM_CLK_DOMAIN{
                 auto &inst = instances[0];
                 inst.gpio_instance = &gpio_instances[c.gpio_idx];
                 inst.clk_divider = c.clk_divider;
-                inst.init();
+                 inst.init();
             }
         };
     };
