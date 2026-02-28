@@ -251,7 +251,7 @@ TEST_F(StateMachineTest, StressTestWithScheduler) {
     });
 
     for (int i = 0; i < 50; i++) {
-        //A -> B
+        // A -> B
         condition_a_to_b = true;
         condition_b_to_c = false;
         condition_c_to_a = false;
