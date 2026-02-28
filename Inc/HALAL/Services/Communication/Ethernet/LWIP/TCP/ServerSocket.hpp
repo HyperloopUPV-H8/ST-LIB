@@ -41,7 +41,7 @@
 class ServerSocket : public OrderProtocol {
 public:
     enum ServerState { INACTIVE, LISTENING, ACCEPTED, CLOSING, CLOSED };
-    static constexpr size_t MAX_TX_QUEUE_DEPTH = 24;
+    static constexpr size_t MAX_TX_QUEUE_DEPTH = 64;
 
     static unordered_map<uint32_t, ServerSocket*> listening_sockets;
     IPV4 local_ip;
@@ -114,25 +114,13 @@ public:
         if (state != ACCEPTED || client_control_block == nullptr) {
             return false;
         }
-        send();
-        if (tx_packet_buffer.size() >= MAX_TX_QUEUE_DEPTH) {
-            return false;
+        if (!add_order_to_queue(order)) {
+            // One opportunistic flush avoids false negatives when TX queue is momentarily full.
+            send();
+            if (!add_order_to_queue(order)) {
+                return false;
+            }
         }
-
-        uint8_t* order_buffer = order.build();
-        if (order.get_size() > tcp_sndbuf(client_control_block)) {
-            return false;
-        }
-
-        struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_RAM);
-        if (packet == nullptr) {
-            return false;
-        }
-        if (pbuf_take(packet, order_buffer, order.get_size()) != ERR_OK) {
-            pbuf_free(packet);
-            return false;
-        }
-        tx_packet_buffer.push(packet);
         send();
         return true;
     }
@@ -160,12 +148,15 @@ public:
      * otherwise
      */
     bool is_connected();
+    bool is_listening() const;
 
 private:
     struct tcp_pcb* server_control_block = nullptr;
     queue<struct pbuf*> tx_packet_buffer;
     queue<struct pbuf*> rx_packet_buffer;
-    struct tcp_pcb* client_control_block;
+    vector<uint8_t> rx_stream_buffer;
+    struct tcp_pcb* client_control_block = nullptr;
+    void clear_packet_queues();
 
     /**
      * @brief process the data received by the client orders. It is meant to be
