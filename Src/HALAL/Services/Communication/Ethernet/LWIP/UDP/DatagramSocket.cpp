@@ -14,8 +14,8 @@ DatagramSocket::DatagramSocket() = default;
 
 DatagramSocket::DatagramSocket(DatagramSocket&& other)
     : udp_control_block(other.udp_control_block), local_ip(move(other.local_ip)),
-      local_port(other.local_port), remote_ip(move(other.remote_ip)), remote_port(other.remote_port),
-      is_disconnected(other.is_disconnected) {
+      local_port(other.local_port), remote_ip(move(other.remote_ip)),
+      remote_port(other.remote_port), is_disconnected(other.is_disconnected) {
     other.udp_control_block = nullptr;
     other.is_disconnected = true;
 }

@@ -16,9 +16,10 @@ Socket::Socket() = default;
 Socket::Socket(Socket&& other)
     : connection_control_block(other.connection_control_block),
       socket_control_block(other.socket_control_block),
-      tx_packet_buffer(move(other.tx_packet_buffer)), rx_packet_buffer(move(other.rx_packet_buffer)),
-      rx_stream_buffer(move(other.rx_stream_buffer)),
-      local_ip(move(other.local_ip)), local_port(other.local_port), remote_ip(move(other.remote_ip)),
+      tx_packet_buffer(move(other.tx_packet_buffer)),
+      rx_packet_buffer(move(other.rx_packet_buffer)),
+      rx_stream_buffer(move(other.rx_stream_buffer)), local_ip(move(other.local_ip)),
+      local_port(other.local_port), remote_ip(move(other.remote_ip)),
       remote_port(other.remote_port), state(other.state),
       pending_connection_reset(other.pending_connection_reset),
       connect_poll_ticks(other.connect_poll_ticks), use_keep_alives(other.use_keep_alives),
@@ -351,8 +352,12 @@ void Socket::process_data() {
         const size_t previous_size = rx_stream_buffer.size();
         const size_t append_size = packet->tot_len;
         rx_stream_buffer.resize(previous_size + append_size);
-        if (pbuf_copy_partial(packet, rx_stream_buffer.data() + previous_size, packet->tot_len, 0) ==
-            static_cast<u16_t>(packet->tot_len)) {
+        if (pbuf_copy_partial(
+                packet,
+                rx_stream_buffer.data() + previous_size,
+                packet->tot_len,
+                0
+            ) == static_cast<u16_t>(packet->tot_len)) {
             TcpOrderStreamParser::process(this, remote_ip, rx_stream_buffer);
         } else {
             rx_stream_buffer.resize(previous_size);
