@@ -56,7 +56,6 @@ void Server::update() {
             open_connection = new ServerSocket(local_ip, local_port);
         } else {
             // Capacity reached: close the new connection and keep current sessions untouched.
-            open_connection->close();
             delete open_connection;
             open_connection = new ServerSocket(local_ip, local_port);
         }
@@ -69,7 +68,6 @@ void Server::update() {
             running_connections[write_index++] = current;
         } else {
             if (current != nullptr) {
-                current->close();
                 delete current;
             }
         }
@@ -100,13 +98,11 @@ void Server::close_all() {
         if (running_connections[s] == nullptr) {
             continue;
         }
-        running_connections[s]->close();
         delete running_connections[s];
         running_connections[s] = nullptr;
     }
     running_connections_count = 0;
     if (open_connection != nullptr) {
-        open_connection->close();
         delete open_connection;
         open_connection = nullptr;
     }

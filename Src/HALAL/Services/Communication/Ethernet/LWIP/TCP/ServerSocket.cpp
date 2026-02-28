@@ -6,59 +6,13 @@
  */
 #ifdef STLIB_ETH
 #include "HALAL/Services/Communication/Ethernet/LWIP/TCP/ServerSocket.hpp"
+#include "HALAL/Services/Communication/Ethernet/LWIP/TCP/TcpOrderStreamParser.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "lwip/priv/tcp_priv.h"
 #ifdef HAL_ETH_MODULE_ENABLED
 
 uint8_t ServerSocket::priority = 1;
 unordered_map<uint32_t, ServerSocket*> ServerSocket::listening_sockets = {};
-
-namespace {
-constexpr size_t MAX_RX_STREAM_BUFFER_BYTES = 8192;
-
-void process_order_stream(
-    OrderProtocol* protocol,
-    IPV4& remote_ip,
-    vector<uint8_t>& stream_buffer
-) {
-    if (stream_buffer.empty()) {
-        return;
-    }
-    size_t parsed_bytes = 0;
-
-    while (stream_buffer.size() - parsed_bytes >= sizeof(uint16_t)) {
-        uint8_t* packet_ptr = stream_buffer.data() + parsed_bytes;
-        uint16_t order_id = Packet::get_id(packet_ptr);
-        auto order_it = Order::orders.find(order_id);
-        if (order_it == Order::orders.end()) {
-            parsed_bytes += 1;
-            continue;
-        }
-
-        const size_t order_size = order_it->second->get_size();
-        if (order_size < sizeof(uint16_t)) {
-            parsed_bytes += 1;
-            continue;
-        }
-        if (stream_buffer.size() - parsed_bytes < order_size) {
-            break;
-        }
-
-        order_it->second->store_ip_order(remote_ip.string_address);
-        Order::process_data(protocol, packet_ptr);
-        parsed_bytes += order_size;
-    }
-
-    if (parsed_bytes > 0) {
-        stream_buffer.erase(stream_buffer.begin(), stream_buffer.begin() + parsed_bytes);
-    }
-
-    if (stream_buffer.size() > MAX_RX_STREAM_BUFFER_BYTES) {
-        const size_t trim_count = stream_buffer.size() - MAX_RX_STREAM_BUFFER_BYTES;
-        stream_buffer.erase(stream_buffer.begin(), stream_buffer.begin() + trim_count);
-    }
-}
-} // namespace
 
 ServerSocket::ServerSocket() = default;
 
@@ -71,7 +25,7 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port)
     tx_packet_buffer = {};
     rx_packet_buffer = {};
     rx_stream_buffer = {};
-    rx_stream_buffer.reserve(MAX_RX_STREAM_BUFFER_BYTES);
+    rx_stream_buffer.reserve(TcpOrderStreamParser::MAX_RX_STREAM_BUFFER_BYTES);
     state = INACTIVE;
     server_control_block = tcp_new();
     if (server_control_block == nullptr) {
@@ -273,7 +227,7 @@ void ServerSocket::process_data() {
         rx_stream_buffer.resize(previous_size + append_size);
         if (pbuf_copy_partial(packet, rx_stream_buffer.data() + previous_size, packet->tot_len, 0) ==
             static_cast<u16_t>(packet->tot_len)) {
-            process_order_stream(this, remote_ip, rx_stream_buffer);
+            TcpOrderStreamParser::process(this, remote_ip, rx_stream_buffer);
         } else {
             rx_stream_buffer.resize(previous_size);
         }
@@ -376,7 +330,7 @@ err_t ServerSocket::accept_callback(
     server_socket->remote_ip = IPV4(incomming_control_block->remote_ip);
     server_socket->rx_packet_buffer = {};
     server_socket->rx_stream_buffer.clear();
-    server_socket->rx_stream_buffer.reserve(MAX_RX_STREAM_BUFFER_BYTES);
+    server_socket->rx_stream_buffer.reserve(TcpOrderStreamParser::MAX_RX_STREAM_BUFFER_BYTES);
 
     tcp_setprio(incomming_control_block, priority);
     tcp_nagle_disable(incomming_control_block);

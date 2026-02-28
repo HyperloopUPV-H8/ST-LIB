@@ -39,7 +39,7 @@ DatagramSocket::DatagramSocket(
     err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
 
     if (error == ERR_OK) {
-        udp_recv(udp_control_block, receive_callback, this);
+        udp_recv(udp_control_block, receive_callback, nullptr);
         udp_connect(udp_control_block, &remote_ip.address, remote_port);
         is_disconnected = false;
         Ethernet::update();
@@ -98,7 +98,7 @@ void DatagramSocket::reconnect() {
     err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
 
     if (error == ERR_OK) {
-        udp_recv(udp_control_block, receive_callback, this);
+        udp_recv(udp_control_block, receive_callback, nullptr);
         udp_connect(udp_control_block, &remote_ip.address, remote_port);
         is_disconnected = false;
         Ethernet::update();
@@ -106,6 +106,7 @@ void DatagramSocket::reconnect() {
         udp_remove(udp_control_block);
         udp_control_block = nullptr;
         is_disconnected = true;
+        ErrorHandler("Error binding UDP socket");
     }
 }
 
