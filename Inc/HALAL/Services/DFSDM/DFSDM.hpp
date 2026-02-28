@@ -343,10 +343,11 @@ namespace ST_LIB {
     template <size_t N>
     static consteval std::array<Config, N> build(std::span<const Entry> entries) {
         std::array<Config, N> cfgs{};
+        if(N == 0) return cfgs;
         std::array<bool,8> channels_used{false};
-        std::array<uint8_t,4> filters_used{-1,-1,-1,-1};
-        cfgs[0].init_data_channel |= global_config_via_channel_0(entries[0]);
-        cfgs[0].init_data_filter |= make_fltcr2_global(entries[0]);
+        std::array<int8_t,4> filters_used{-1,-1,-1,-1};
+        cfgs[0].init_data_channel.CHCFGR1 |= global_config_via_channel_0(entries[0]);
+        cfgs[0].init_data_filter.FLTCR2 |= make_fltcr2_global(entries[0]);
         bool filter_per_channel = (N <= 4) ? true : false;
         for (size_t i = 0; i < N; ++i) {
             const Entry &e = entries[i];
@@ -370,8 +371,13 @@ namespace ST_LIB {
             cfg.init_data_channel.CHCFGR2 |= make_chcfgr2(e);
             cfg.init_data_channel.CHAWSCDR |= make_chawscdr(e);
             cfg.latency_cycles = compute_latency(e);
-            if(filters_used[cfg.filter] != -1 && cfgs[filters_used[cfg.filter]].init_data_filter != cfg.init_data_filter){
-                compile_error("You have two channels that goes to the same filter with different filter configuration");
+            if(filters_used[cfg.filter] != -1){
+                if(cfgs[filters_used[cfg.filter]].init_data_filter.FLTCR1 != cfg.init_data_filter.FLTCR1 ||
+                    cfgs[filters_used[cfg.filter]].init_data_filter.FLTCR2 != cfg.init_data_filter.FLTCR2 ||
+                    cfgs[filters_used[cfg.filter]].init_data_filter.FLTFCR != cfg.init_data_filter.FLTFCR){
+                        compile_error("You have two channels that goes to the same filter with different filter configuration");
+                    }
+                
             }
             filters_used[cfg.filter] = i;    
         }
@@ -725,13 +731,14 @@ namespace ST_LIB {
 
 struct DFSDM_CLK_DOMAIN{
     static constexpr GPIODomain::Pin valid_clk_pins[] = {
-            {GPIODomain::Port::C, 2}, 
-            {GPIODomain::Port::B, 0}, 
-            {GPIODomain::Port::E, 9}, 
-            {GPIODomain::Port::D, 3},
-            {GPIODomain::Port::D, 10}
+            {GPIODomain::Port::C,GPIO_PIN_2}, 
+            {GPIODomain::Port::B, GPIO_PIN_0}, 
+            {GPIODomain::Port::E, GPIO_PIN_9}, 
+            {GPIODomain::Port::D, GPIO_PIN_3},
+            {GPIODomain::Port::D, GPIO_PIN_10}
     };
-    static consteval void is_valid_dfsdm_clk_pin(const GPIODomain::Port port, uint32_t pin) {
+
+    static consteval bool is_valid_dfsdm_clk_pin(GPIODomain::Port port, uint32_t pin) {
         bool found = false;
         for (auto &p : valid_clk_pins) {
             if (p.port == port && p.pin == pin) {
@@ -739,15 +746,13 @@ struct DFSDM_CLK_DOMAIN{
                 break;
             }
         }
-        if (!found) {
-            compile_error("This pin cannot be used as DFSDM CLK OUT");
-        }
+        return found;
     }
 
     static consteval GPIODomain::AlternateFunction dfsdm_clk_af(const GPIODomain::Pin& pin) {
-        if (pin.port == GPIODomain::Port::C && pin.pin == 2)
-            return GPIODomain::AlternateFunction::AF4;
-        return GPIODomain::AlternateFunction::AF6; //In every other case
+        if ((pin.port == GPIODomain::Port::C && pin.pin == GPIO_PIN_2)|| (pin.port == GPIODomain::Port::B && pin.pin == GPIO_PIN_0))
+            return GPIODomain::AlternateFunction::AF6;  
+        return GPIODomain::AlternateFunction::AF3; //In every other case
     }
     struct Entry{
         size_t gpio_idx;
@@ -757,19 +762,23 @@ struct DFSDM_CLK_DOMAIN{
     struct DFSDM_CLK{
         using domain = DFSDM_CLK_DOMAIN;
         GPIODomain::GPIO gpio;
-        Entry e;
+        GPIODomain::Pin pin;
         uint8_t clk_divider;
         consteval DFSDM_CLK(const GPIODomain::Pin &pin,uint8_t clk_divider = 4):
         gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,dfsdm_clk_af(pin)},
+        pin(pin),
         clk_divider(clk_divider)
-        {
-            is_valid_dfsdm_clk_pin(pin.port,pin.pin);
+        {}
+
+
+        template<class Ctx> consteval std::size_t inscribe(Ctx &ctx) const{
+            const auto gpio_idx = gpio.inscribe(ctx);
+            if(!is_valid_dfsdm_clk_pin(pin.port,pin.pin)){
+                compile_error("Invalid clk dfsdm pin used");
+            }
             if(clk_divider < 4){
                 compile_error("The divider must be at least frequency/4");
             }
-        }
-        template<class Ctx> consteval std::size_t inscribe(Ctx &ctx) const{
-            const auto gpio_idx = gpio.inscribe(ctx);
             Entry e{.gpio_idx = gpio_idx,.clk_divider = clk_divider};
             return ctx.template add<DFSDM_CLK_DOMAIN>(e,this);
         }
@@ -801,7 +810,7 @@ struct DFSDM_CLK_DOMAIN{
                 //The channel 0 also allows to configure the CKOUT
                 DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CKOUTSRC;
                 
-                //CKOUT DivideR. Divider = CKOUTDIV + 1
+                //CKOUT Divider. Divider = CKOUTDIV + 1
                 DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CKOUTDIV;
                DFSDM1_Channel0->CHCFGR1 |= (clk_divider -1) << DFSDM_CHCFGR1_CKOUTDIV_Pos;
                 
@@ -834,7 +843,7 @@ struct DFSDM_CLK_DOMAIN{
                 //add ckaie scdie
                 const auto &c = cfgs[0];
                 auto &inst = instances[0];
-                inst.gpio = &gpio_instances[c.gpio_idx];
+                inst.gpio_instance = &gpio_instances[c.gpio_idx];
                 inst.clk_divider = c.clk_divider;
                 inst.init();
             }

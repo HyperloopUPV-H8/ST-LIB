@@ -148,18 +148,49 @@ template <auto&... devs> struct Board {
       // ...
         };
 
-    return ConfigBundle{
+  return ConfigBundle{
+        .mpu_cfgs =
+            MPUDomain::template build<mpuN>(
+                ctx.template span<MPUDomain>()),
         .gpio_cfgs =
-            GPIODomain::template build<gpioN>(ctx.template span<GPIODomain>()),
+            GPIODomain::template build<gpioN>(
+                ctx.template span<GPIODomain>()),
         .tim_cfgs =
-            TimerDomain::template build<timN>(ctx.template span<TimerDomain>()),
-        .dout_cfgs = DigitalOutputDomain::template build<doutN>(
-            ctx.template span<DigitalOutputDomain>()),
-        .din_cfgs = DigitalInputDomain::template build<dinN>(
-            ctx.template span<DigitalInputDomain>()),
-        .mpu_cfgs = MPUDomain::template build<mpuN>(
-            ctx.template span<MPUDomain>())
-        // ...
+            TimerDomain::template build<timN>(
+                ctx.template span<TimerDomain>()),
+        .dma_cfgs =
+            DMA_Domain::template build<dmaN>(
+                ctx.template span<DMA_Domain>()),
+        .spi_cfgs =
+            SPIDomain::template build<spiN>(
+                ctx.template span<SPIDomain>()),
+        .dout_cfgs =
+            DigitalOutputDomain::template build<doutN>(
+                ctx.template span<DigitalOutputDomain>()),
+        .din_cfgs =
+            DigitalInputDomain::template build<dinN>(
+                ctx.template span<DigitalInputDomain>()),
+        .mdma_packet_cfgs =
+            MdmaPacketDomain::template build<mdmaPacketN>(
+                ctx.template span<MdmaPacketDomain>()),
+        .sd_cfgs =
+            SdDomain::template build<sdN>(
+                ctx.template span<SdDomain>()),
+        .eth_cfgs =
+            EthernetDomain::template build<ethN>(
+                ctx.template span<EthernetDomain>()),
+        .adc_cfgs =
+            ADCDomain::template build<adcN>(
+                ctx.template span<ADCDomain>()),
+        .exti_cfgs =
+            EXTIDomain::template build<extiN>(
+                ctx.template span<EXTIDomain>()),
+        .dfsdm_cfgs =
+            DFSDM_DOMAIN::template build<dfsdmN>(
+                ctx.template span<DFSDM_DOMAIN>()),
+        .dfsdm_clk_cfgs =
+            DFSDM_CLK_DOMAIN::template build<dfsdm_clkN>(
+                ctx.template span<DFSDM_CLK_DOMAIN>())
     };
   }
 
@@ -213,7 +244,7 @@ template <auto&... devs> struct Board {
         ADCDomain::Init<adcN>::init(cfg.adc_cfgs, GPIODomain::Init<gpioN>::instances);
         EXTIDomain::Init<extiN>::init(cfg.exti_cfgs, GPIODomain::Init<gpioN>::instances); 
         DFSDM_DOMAIN::Init<dfsdmN>::init(cfg.dfsdm_cfgs);
-        DFSDM_CLK_DOMAIN::Init<dfsdm_clkN>::init(cfg.dfsdm_cfgs);
+        DFSDM_CLK_DOMAIN::Init<dfsdm_clkN>::init(cfg.dfsdm_clk_cfgs,GPIODomain::Init<gpioN>::instances);
                 // ...
     }
 
