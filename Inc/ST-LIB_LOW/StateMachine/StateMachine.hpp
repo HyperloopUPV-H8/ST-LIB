@@ -30,7 +30,7 @@ concept ValidTime =
 using Callback = void (*)();
 using Guard = bool (*)();
 
-static constexpr size_t NUMBER_OF_ACTIONS = 20;
+static constexpr size_t NUMBER_OF_ACTIONS = 16;
 
 enum AlarmType { Milliseconds = 0, Microseconds = 1 };
 

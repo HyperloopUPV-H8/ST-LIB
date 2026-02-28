@@ -137,7 +137,6 @@ static inline auto test_machine = []() consteval {
 class StateMachineTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Reset everything before tests
         reset_test_state();
 
         test_machine.force_change_state((size_t)MasterState::A);
@@ -233,6 +232,71 @@ TEST_F(StateMachineTest, CyclicActionsRun) {
     EXPECT_GE(s1_cyclic_count, 1); // Nested S1 cyclic should run
 }
 
+static int custom_task_count = 0;
+
+static int check_transition_task_count = 0;
+
+TEST_F(StateMachineTest, StressTestWithScheduler) {
+    test_machine.start();
+    Scheduler::start();
+
+    custom_task_count = 0;
+    check_transition_task_count = 0;
+
+    auto custom_task_id = Scheduler::register_task(999, []() { custom_task_count++; });
+
+    auto check_task_id = Scheduler::register_task(499, []() {
+        test_machine.check_transitions();
+        check_transition_task_count++;
+    });
+
+    for (int i = 0; i < 50; i++) {
+        //A -> B
+        condition_a_to_b = true;
+        condition_b_to_c = false;
+        condition_c_to_a = false;
+        tick_scheduler(1500);
+
+        // B -> C
+        condition_a_to_b = false;
+        condition_b_to_c = true;
+        condition_c_to_a = false;
+        tick_scheduler(1500);
+
+        // C -> A
+        condition_a_to_b = false;
+        condition_b_to_c = false;
+        condition_c_to_a = true;
+        tick_scheduler(1500);
+    }
+
+    condition_a_to_b = false;
+    condition_b_to_c = false;
+    condition_c_to_a = false;
+
+    EXPECT_GT(custom_task_count, 100);
+    EXPECT_GT(check_transition_task_count, 300);
+
+    // Because state changes were strictly faster than 10ms, no cyclic tasks should have fired
+    EXPECT_EQ(a_cyclic_count, 0);
+    EXPECT_EQ(b_cyclic_count, 0);
+
+    tick_scheduler(20000); // 20ms
+    EXPECT_GE(a_cyclic_count, 1);
+
+    condition_a_to_b = true;
+    tick_scheduler(40000); // 40ms in State B
+    EXPECT_GE(b_cyclic_count, 1);
+
+    EXPECT_LE(Scheduler::active_task_count_, 5);
+
+    Scheduler::unregister_task(custom_task_id);
+    Scheduler::unregister_task(check_task_id);
+}
+
+enum class StartAtOne { A = 1, B = 2 };
+enum class NonContiguous { A = 0, B = 2 };
+
 template <auto V> struct constant_eval {};
 
 template <typename F>
@@ -274,7 +338,63 @@ struct ValidNestedCheck {
     }
 };
 
+struct StartAtOneCheck {
+    static consteval bool invoke() {
+        auto stA = make_state(StartAtOne::A);
+        auto stB = make_state(StartAtOne::B);
+        auto sm = make_state_machine(StartAtOne::A, stA, stB);
+        return true;
+    }
+};
+
+struct NonContiguousCheck {
+    static consteval bool invoke() {
+        auto stA = make_state(NonContiguous::A);
+        auto stB = make_state(NonContiguous::B);
+        auto sm = make_state_machine(NonContiguous::A, stA, stB);
+        return true;
+    }
+};
+
+struct DuplicateStateInConstructorCheck {
+    static consteval bool invoke() {
+        auto stA = make_state(MasterState::A);
+        auto sm = make_state_machine(MasterState::A, stA, stA);
+        return true;
+    }
+};
+
+struct SelfTransitionCheck {
+    static consteval bool invoke() {
+        auto stA = make_state(MasterState::A, Transition<MasterState>{MasterState::A, [] {
+                                                                          return true;
+                                                                      }});
+        return true;
+    }
+};
+
+struct InvalidActionStateCheck {
+    static consteval bool invoke() {
+        auto stA = make_state(MasterState::A);
+        auto sm = make_state_machine(MasterState::A, stA);
+        auto stB = make_state(MasterState::B);
+        sm.add_enter_action([] {}, stB);
+        return true;
+    }
+};
+
 TEST(StateMachineCompileCheck, ValidatesSFINAEOntoS_M) {
     static_assert(CanCompile<ValidNestedCheck>, "Valid nested mapping should compile.");
     static_assert(!CanCompile<DuplicateNestedCheck>, "Duplicate state mappings must not compile.");
+    static_assert(!CanCompile<StartAtOneCheck>, "State Enums must start at 0.");
+    static_assert(!CanCompile<NonContiguousCheck>, "State Enums must be contiguous.");
+    static_assert(
+        !CanCompile<DuplicateStateInConstructorCheck>,
+        "Must not allow duplicate states in Constructor."
+    );
+    static_assert(!CanCompile<SelfTransitionCheck>, "Self transition must not compile.");
+    static_assert(
+        !CanCompile<InvalidActionStateCheck>,
+        "Adding action to invalid state must not compile."
+    );
 }
