@@ -478,9 +478,8 @@ public:
         );
         std::apply(
             [this](auto&... nested) {
-                (void)((nested.machine != nullptr
-                            ? (nested.machine->called_start=true, true)
-                            : false) ||
+                (void)((nested.machine != nullptr ? (nested.machine->called_start = true, true)
+                                                  : false) ||
                        ...);
             },
             nested_machines
