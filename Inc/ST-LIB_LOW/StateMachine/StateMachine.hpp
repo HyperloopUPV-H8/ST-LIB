@@ -437,10 +437,9 @@ public:
         }
     }
     constexpr ~StateMachine() override = default;
-    constexpr StateMachine() = default;
 
     void check_transitions() override {
-        if(!called_start) [[unlikely]] { 
+        if (!called_start) [[unlikely]] {
             ErrorHandler("Error: check_transitions called before StateMachine.start()");
             return;
         }
@@ -471,7 +470,16 @@ public:
         std::apply(
             [this](auto&... nested) {
                 (void)((nested.state == this->current_state && nested.machine != nullptr
-                            ? (nested.machine->start(), true)
+                            ? (nested.machine->enter(), true)
+                            : false) ||
+                       ...);
+            },
+            nested_machines
+        );
+        std::apply(
+            [this](auto&... nested) {
+                (void)((nested.machine != nullptr
+                            ? (nested.machine->called_start=true, true)
                             : false) ||
                        ...);
             },
