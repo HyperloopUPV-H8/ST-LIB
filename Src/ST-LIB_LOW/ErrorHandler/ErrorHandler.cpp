@@ -57,7 +57,7 @@ void ErrorHandlerModel::ErrorHandlerTrigger(string format, ...) {
 }
 
 void ErrorHandlerModel::ErrorHandlerUpdate() {
-    if (!ErrorHandlerModel::error_triggered) {
+    if (!ErrorHandlerModel::error_triggered || !ErrorHandlerModel::error_to_communicate) {
         return;
     }
 
@@ -66,6 +66,7 @@ void ErrorHandlerModel::ErrorHandlerUpdate() {
         return;
     }
 
-    // printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
+    printf("Error: %s%s", ErrorHandlerModel::description.c_str(), endl);
+    ErrorHandlerModel::error_to_communicate = false;
 #endif
 }

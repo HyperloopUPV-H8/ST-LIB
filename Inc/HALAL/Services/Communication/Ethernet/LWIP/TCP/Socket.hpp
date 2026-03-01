@@ -24,6 +24,7 @@ private:
     vector<uint8_t> rx_stream_buffer;
     void clear_packet_queues();
     void process_data();
+    bool try_send_immediately(Order& order);
     static err_t connect_callback(void* arg, struct tcp_pcb* client_control_block, err_t error);
     static err_t receive_callback(
         void* arg,
@@ -99,21 +100,7 @@ public:
      * @return true if the data was sent successfully, false otherwise
      */
 
-    bool send_order(Order& order) override {
-        if (state != CONNECTED || socket_control_block == nullptr) {
-            reconnect();
-            return false;
-        }
-        if (!add_order_to_queue(order)) {
-            // One opportunistic flush avoids false negatives when TX queue is momentarily full.
-            send();
-            if (!add_order_to_queue(order)) {
-                return false;
-            }
-        }
-        send();
-        return true;
-    }
+    bool send_order(Order& order) override;
     void send();
     bool is_connected();
 };

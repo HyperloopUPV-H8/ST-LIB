@@ -110,20 +110,7 @@ public:
      * message
      * @return true if the data was sent successfully, false otherwise
      */
-    bool send_order(Order& order) override {
-        if (state != ACCEPTED || client_control_block == nullptr) {
-            return false;
-        }
-        if (!add_order_to_queue(order)) {
-            // One opportunistic flush avoids false negatives when TX queue is momentarily full.
-            send();
-            if (!add_order_to_queue(order)) {
-                return false;
-            }
-        }
-        send();
-        return true;
-    }
+    bool send_order(Order& order) override;
 
     /**
      * @brief sends all the binary data saved in the tx_packet_buffer to the
@@ -157,6 +144,7 @@ private:
     vector<uint8_t> rx_stream_buffer;
     struct tcp_pcb* client_control_block = nullptr;
     void clear_packet_queues();
+    bool try_send_immediately(Order& order);
 
     /**
      * @brief process the data received by the client orders. It is meant to be

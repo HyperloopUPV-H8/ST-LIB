@@ -366,6 +366,57 @@ void Socket::process_data() {
     }
 }
 
+bool Socket::try_send_immediately(Order& order) {
+    if (state != CONNECTED || socket_control_block == nullptr || !tx_packet_buffer.empty()) {
+        return false;
+    }
+
+    const size_t order_size = order.get_size();
+    if (order_size == 0 || order_size > TCP_SND_BUF || order_size > tcp_sndbuf(socket_control_block)) {
+        return false;
+    }
+
+    uint8_t* order_buffer = order.build();
+    if (order_buffer == nullptr) {
+        return false;
+    }
+
+    err_t error = tcp_write(socket_control_block, order_buffer, order_size, TCP_WRITE_FLAG_COPY);
+    if (error == ERR_OK) {
+        if (socket_control_block != nullptr) {
+            tcp_output(socket_control_block);
+        }
+        return true;
+    }
+    if (error == ERR_MEM) {
+        return false;
+    }
+
+    state = CLOSING;
+    return false;
+}
+
+bool Socket::send_order(Order& order) {
+    if (state != CONNECTED || socket_control_block == nullptr) {
+        reconnect();
+        return false;
+    }
+
+    if (try_send_immediately(order)) {
+        return true;
+    }
+
+    if (!add_order_to_queue(order)) {
+        // One opportunistic flush avoids false negatives when TX queue is momentarily full.
+        send();
+        if (!add_order_to_queue(order)) {
+            return false;
+        }
+    }
+    send();
+    return true;
+}
+
 bool Socket::add_order_to_queue(Order& order) {
     if (state != Socket::SocketState::CONNECTED || socket_control_block == nullptr) {
         return false;
@@ -376,12 +427,12 @@ bool Socket::add_order_to_queue(Order& order) {
     }
 
     const size_t order_size = order.get_size();
-    if (order_size == 0 || order_size > tcp_sndbuf(socket_control_block)) {
+    if (order_size == 0 || order_size > TCP_SND_BUF) {
         return false;
     }
 
     uint8_t* order_buffer = order.build();
-    pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order_size, PBUF_RAM);
+    pbuf* packet = pbuf_alloc(PBUF_RAW, order_size, PBUF_RAM);
     if (packet == nullptr) {
         return false;
     }

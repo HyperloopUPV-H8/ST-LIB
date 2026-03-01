@@ -136,10 +136,14 @@ void DatagramSocket::receive_callback(
     }
 
     if (packet_buffer->tot_len >= sizeof(uint16_t)) {
-        vector<uint8_t> data(packet_buffer->tot_len);
-        if (pbuf_copy_partial(packet_buffer, data.data(), packet_buffer->tot_len, 0) ==
-            static_cast<u16_t>(packet_buffer->tot_len)) {
-            Packet::parse_data(data.data());
+        if (packet_buffer->len == packet_buffer->tot_len && packet_buffer->payload != nullptr) {
+            Packet::parse_data(static_cast<uint8_t*>(packet_buffer->payload));
+        } else {
+            vector<uint8_t> data(packet_buffer->tot_len);
+            if (pbuf_copy_partial(packet_buffer, data.data(), packet_buffer->tot_len, 0) ==
+                static_cast<u16_t>(packet_buffer->tot_len)) {
+                Packet::parse_data(data.data());
+            }
         }
     }
 
