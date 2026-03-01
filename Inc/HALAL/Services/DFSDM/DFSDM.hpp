@@ -207,16 +207,21 @@ namespace ST_LIB {
             return ctx.template add<DFSDM_CHANNEL_DOMAIN>(e, this);
         }
     };
-    // I hate stm32, DFSDM_FILTER_TYPEDEF has volatile in the struct.
+    // I hate stm32,has volatile in the DFSDM structs.
     struct FilterConfig{
         uint32_t FLTCR1;
         uint32_t FLTCR2;
         uint32_t FLTFCR;
         uint32_t CHCFGR1;
     };
+    struct ChannelConfig{
+        uint32_t CHCFGR1;
+        uint32_t CHCFGR2;
+        uint32_t CHAWSCDR;
+    };
     struct Config {
        FilterConfig init_data_filter;
-       DFSDM_Channel_TypeDef init_data_channel; 
+       ChannelConfig init_data_channel; 
        
        uint32_t latency_cycles;
        Type_Conversion type_conv;
@@ -607,7 +612,8 @@ namespace ST_LIB {
             //     DFSDM1_Filter0->FLTCR2 &= ~(DFSDM_FLTCR2_SCDIE_Msk);
             // }
     };
-    static Instance* channel_instances[DFSDM_CHANNEL_DOMAIN::max_instances]; 
+    static inline Instance* channel_instances[DFSDM_CHANNEL_DOMAIN::max_instances] = {nullptr}; 
+    
     static constexpr DFSDM_Filter_TypeDef* filter_hw[4] = {
             DFSDM1_Filter0,
             DFSDM1_Filter1,
