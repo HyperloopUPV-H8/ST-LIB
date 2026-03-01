@@ -321,6 +321,10 @@ class StateMachine : public IStateMachine {
 
     StateEnum current_state;
     std::tuple<NestedMachineBinding<StateEnum, NestedMachines>...> nested_machines;
+    StaticVector<State<StateEnum, NTransitions>, NStates> states;
+    StaticVector<Transition<StateEnum>, NTransitions> transitions = {};
+    std::array<std::pair<size_t, size_t>, NStates> transitions_assoc = {};
+    bool called_start = false;
 
     void perform_state_change(StateEnum new_state) {
         if (current_state == new_state) {
@@ -357,11 +361,6 @@ class StateMachine : public IStateMachine {
         refresh_state_orders();
 #endif
     }
-
-private:
-    StaticVector<State<StateEnum, NTransitions>, NStates> states;
-    StaticVector<Transition<StateEnum>, NTransitions> transitions = {};
-    std::array<std::pair<size_t, size_t>, NStates> transitions_assoc = {};
 
     constexpr bool operator==(const StateMachine&) const = default;
 
@@ -438,8 +437,13 @@ public:
         }
     }
     constexpr ~StateMachine() override = default;
+    constexpr StateMachine() = default;
 
     void check_transitions() override {
+        if(!called_start) [[unlikely]] { 
+            ErrorHandler("Error: check_transitions called before StateMachine.start()");
+            return;
+        }
         auto& [i, n] = transitions_assoc[static_cast<size_t>(current_state)];
 
         for (auto index = i; index < i + n; ++index) {
@@ -462,6 +466,7 @@ public:
     }
 
     void start() override {
+        called_start = true;
         enter();
         std::apply(
             [this](auto&... nested) {
