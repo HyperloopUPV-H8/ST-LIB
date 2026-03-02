@@ -84,7 +84,7 @@ void ProtectionManager::check_protections() {
         }
         Global_RTC::update_rtc_data();
         if (Scheduler::get_global_tick() >
-            protection.get_last_notify_tick() + notify_delay_in_nanoseconds) {
+            protection.get_last_notify_tick() + notify_delay_in_microseconds) {
             ProtectionManager::notify(protection);
             protection.update_last_notify_tick(Scheduler::get_global_tick());
         }
@@ -107,7 +107,7 @@ void ProtectionManager::check_high_frequency_protections() {
         }
         Global_RTC::update_rtc_data();
         if (Scheduler::get_global_tick() >
-            protection.get_last_notify_tick() + notify_delay_in_nanoseconds) {
+            protection.get_last_notify_tick() + notify_delay_in_microseconds) {
             ProtectionManager::notify(protection);
             protection.update_last_notify_tick(Scheduler::get_global_tick());
         }
