@@ -282,15 +282,14 @@ struct is_nested_machine_binding<NestedMachineBinding<StateEnum, NestedSMType>> 
 
 template <typename T>
 concept IsNestedMachineBinding = is_nested_machine_binding<T>::value;
-template <typename T, typename StateEnum>
-struct is_nested_machine_binding_for : std::false_type {};
+template <typename T, typename StateEnum> struct is_nested_machine_binding_for : std::false_type {};
 
 template <typename StateEnum, class NestedSMType>
-struct is_nested_machine_binding_for<NestedMachineBinding<StateEnum, NestedSMType>, StateEnum> : std::true_type {};
+struct is_nested_machine_binding_for<NestedMachineBinding<StateEnum, NestedSMType>, StateEnum>
+    : std::true_type {};
 
 template <typename T, typename StateEnum>
 concept IsNestedMachineBindingFor = is_nested_machine_binding_for<T, StateEnum>::value;
-
 
 namespace StateMachineHelper {
 
@@ -629,7 +628,8 @@ consteval auto make_state_machine(StateEnum initial_state, States... states) {
  */
 
 template <IsEnum StateEnum, typename... NestedMachines, typename... States>
-    requires are_states<StateEnum, States...> && (IsNestedMachineBindingFor<NestedMachines, StateEnum> && ...)
+    requires are_states<StateEnum, States...> &&
+             (IsNestedMachineBindingFor<NestedMachines, StateEnum> && ...)
 consteval auto make_state_machine(
     StateEnum initial_state,
     std::tuple<NestedMachines...> nested_machines,
