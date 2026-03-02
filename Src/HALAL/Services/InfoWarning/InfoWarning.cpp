@@ -6,21 +6,26 @@
  */
 
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
-#include "HALAL/Models/Packets/Order.hpp"
 #include "HALAL/Services/Communication/UART/UART.hpp"
 #include "HALAL/Services/Time/RTC.hpp"
 #include "HALAL/Services/Time/Scheduler.hpp"
+#ifdef STLIB_ETH
+#include "HALAL/Models/Packets/Order.hpp"
+#endif
 
 namespace {
 
+#ifdef STLIB_ETH
 constexpr uint16_t INFO_WARNING_TCP_ORDER_ID = 2555;
 constexpr uint8_t INFO_WARNING_BOUNDARY_TYPE_ID = 5;
+#endif
 
 bool warning_sent_via_tcp = false;
 bool warning_sent_via_uart = false;
 bool tcp_delivery_required = false;
 bool uart_delivery_required = false;
 
+#ifdef STLIB_ETH
 uint8_t warning_padding = 0;
 uint8_t warning_boundary_type = INFO_WARNING_BOUNDARY_TYPE_ID;
 string warning_name = "info_warning";
@@ -118,6 +123,7 @@ void refresh_warning_transport_state(const string& description) {
     warning_month = 0;
     warning_year = 0;
 }
+#endif
 
 bool try_send_warning_via_tcp(const string& description) {
 #ifdef STLIB_ETH
