@@ -470,7 +470,7 @@ public:
         std::apply(
             [this](auto&... nested) {
                 (void)((nested.state == this->current_state && nested.machine != nullptr
-                            ? (nested.machine->enter(), true)
+                            ? (nested.machine->start(), true)
                             : false) ||
                        ...);
             },
