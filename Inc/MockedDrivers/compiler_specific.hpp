@@ -60,8 +60,7 @@ inline uint32_t __CLZ(uint32_t val) {
 #endif
 }
 
-inline uint32_t __CTZ(uint32_t val)
-{
+inline uint32_t __CTZ(uint32_t val) {
 #if defined(__GNUC__) || defined(__GNUG__) || defined(__clang__)
     return __builtin_ctz(val);
 #elif defined(_MSC_VER)
