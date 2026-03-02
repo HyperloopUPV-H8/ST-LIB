@@ -128,6 +128,7 @@ void ProtectionManager::notify(Protection& protection) {
             if (warning->boundary_type_id == INFO_WARNING - 2) {
                 warning->update_warning_message(warning->get_warning_string());
                 InfoWarning::warning_triggered = false;
+                InfoWarning::warning_to_communicate = false;
             }
             socket->send_order(*warning->warn_message);
         }
