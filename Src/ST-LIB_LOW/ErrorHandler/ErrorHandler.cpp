@@ -164,6 +164,34 @@ bool try_send_error_via_uart(const string& description) {
 #endif
 }
 
+void append_readable_timestamp(string& message) {
+#ifdef HAL_RTC_MODULE_ENABLED
+    if (Global_RTC::ensure_started()) {
+        Global_RTC::update_rtc_data();
+        const RTCData& timestamp = Global_RTC::global_RTC;
+        char buffer[80]{};
+        snprintf(
+            buffer,
+            sizeof(buffer),
+            " | Timestamp: %04u-%02u-%02u %02u:%02u:%02u.%05u",
+            static_cast<unsigned>(timestamp.year),
+            static_cast<unsigned>(timestamp.month),
+            static_cast<unsigned>(timestamp.day),
+            static_cast<unsigned>(timestamp.hour),
+            static_cast<unsigned>(timestamp.minute),
+            static_cast<unsigned>(timestamp.second),
+            static_cast<unsigned>(timestamp.counter)
+        );
+        message += buffer;
+        return;
+    }
+#endif
+
+#ifdef HAL_TIM_MODULE_ENABLED
+    message += " | Timestamp(ns): " + to_string(Scheduler::get_global_tick());
+#endif
+}
+
 } // namespace
 
 string ErrorHandlerModel::description = "Error-No-Description-Found";
@@ -221,9 +249,7 @@ void ErrorHandlerModel::ErrorHandlerTrigger(string format, ...) {
                    " | Line: " + ErrorHandlerModel::line + " Function: '" +
                    ErrorHandlerModel::func + "' File: " + ErrorHandlerModel::file;
 
-#ifdef HAL_TIM_MODULE_ENABLED
-    description += " | TimeStamp: " + to_string(Scheduler::get_global_tick());
-#endif
+    append_readable_timestamp(description);
 
     ErrorHandlerModel::ErrorHandlerUpdate();
 }
