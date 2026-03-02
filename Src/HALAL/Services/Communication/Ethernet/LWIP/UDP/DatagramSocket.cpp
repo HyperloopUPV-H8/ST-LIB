@@ -13,9 +13,12 @@
 DatagramSocket::DatagramSocket() = default;
 
 DatagramSocket::DatagramSocket(DatagramSocket&& other)
-    : udp_control_block(move(other.udp_control_block)), local_ip(move(other.local_ip)),
-      local_port(move(other.local_port)), remote_ip(move(other.remote_ip)),
-      remote_port(move(remote_port)) {}
+    : udp_control_block(other.udp_control_block), local_ip(move(other.local_ip)),
+      local_port(other.local_port), remote_ip(move(other.remote_ip)),
+      remote_port(other.remote_port), is_disconnected(other.is_disconnected) {
+    other.udp_control_block = nullptr;
+    other.is_disconnected = true;
+}
 
 DatagramSocket::DatagramSocket(
     IPV4 local_ip,
@@ -29,6 +32,10 @@ DatagramSocket::DatagramSocket(
         return;
     }
     udp_control_block = udp_new();
+    if (udp_control_block == nullptr) {
+        ErrorHandler("Cannot allocate UDP control block");
+        return;
+    }
     err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
 
     if (error == ERR_OK) {
@@ -38,6 +45,7 @@ DatagramSocket::DatagramSocket(
         Ethernet::update();
     } else {
         udp_remove(udp_control_block);
+        udp_control_block = nullptr;
         is_disconnected = true;
         ErrorHandler("Error binding UDP socket");
     }
@@ -52,16 +60,40 @@ DatagramSocket::~DatagramSocket() {
 }
 
 void DatagramSocket::operator=(DatagramSocket&& other) {
-    udp_control_block = move(other.udp_control_block);
+    if (this == &other) {
+        return;
+    }
+    close();
+
+    udp_control_block = other.udp_control_block;
     local_ip = move(other.local_ip);
-    local_port = move(other.local_port);
-    remote_ip = other.remote_ip;
+    local_port = other.local_port;
+    remote_ip = move(other.remote_ip);
     remote_port = other.remote_port;
+    is_disconnected = other.is_disconnected;
+
+    other.udp_control_block = nullptr;
     other.is_disconnected = true;
 }
 
 void DatagramSocket::reconnect() {
-    udp_disconnect(udp_control_block);
+    if (not Ethernet::is_running) {
+        is_disconnected = true;
+        return;
+    }
+
+    if (udp_control_block != nullptr) {
+        udp_disconnect(udp_control_block);
+        udp_remove(udp_control_block);
+        udp_control_block = nullptr;
+    }
+
+    udp_control_block = udp_new();
+    if (udp_control_block == nullptr) {
+        is_disconnected = true;
+        return;
+    }
+
     is_disconnected = true;
     err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
 
@@ -72,14 +104,18 @@ void DatagramSocket::reconnect() {
         Ethernet::update();
     } else {
         udp_remove(udp_control_block);
+        udp_control_block = nullptr;
         is_disconnected = true;
         ErrorHandler("Error binding UDP socket");
     }
 }
 
 void DatagramSocket::close() {
-    udp_disconnect(udp_control_block);
-    udp_remove(udp_control_block);
+    if (udp_control_block != nullptr) {
+        udp_disconnect(udp_control_block);
+        udp_remove(udp_control_block);
+        udp_control_block = nullptr;
+    }
     is_disconnected = true;
 }
 
@@ -90,8 +126,26 @@ void DatagramSocket::receive_callback(
     const ip_addr_t* remote_address,
     u16_t port
 ) {
-    uint8_t* received_data = (uint8_t*)packet_buffer->payload;
-    Packet::parse_data(received_data);
+    (void)args;
+    (void)udp_control_block;
+    (void)remote_address;
+    (void)port;
+
+    if (packet_buffer == nullptr) {
+        return;
+    }
+
+    if (packet_buffer->tot_len >= sizeof(uint16_t)) {
+        if (packet_buffer->len == packet_buffer->tot_len && packet_buffer->payload != nullptr) {
+            Packet::parse_data(static_cast<uint8_t*>(packet_buffer->payload));
+        } else {
+            vector<uint8_t> data(packet_buffer->tot_len);
+            if (pbuf_copy_partial(packet_buffer, data.data(), packet_buffer->tot_len, 0) ==
+                static_cast<u16_t>(packet_buffer->tot_len)) {
+                Packet::parse_data(data.data());
+            }
+        }
+    }
 
     pbuf_free(packet_buffer);
 }

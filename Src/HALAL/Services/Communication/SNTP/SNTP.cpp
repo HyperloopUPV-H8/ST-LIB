@@ -10,7 +10,20 @@
 
 #define SUBSECONDS_PER_SECOND 32767
 #define TRANSFORMATION_FACTOR (SUBSECONDS_PER_SECOND / 999999.0)
-#define TARGET_IP "192.168.0.9"
+
+namespace {
+
+void configure_sntp_server(const ip_addr_t& address) {
+    if (sntp_enabled()) {
+        sntp_stop();
+    }
+
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setserver(0, &address);
+    sntp_init();
+}
+
+} // namespace
 
 void SNTP::sntp_update(
     uint8_t address_head,
@@ -18,28 +31,19 @@ void SNTP::sntp_update(
     uint8_t address_third,
     uint8_t address_last
 ) {
-    //	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    //	ip4_addr_t* address;
-    //	IP_ADDR4(address,address_head,address_second,address_third,address_last);
-    //	sntp_setserver(0,address);
-    //	sntp_init();
+    ip_addr_t address;
+    IP_ADDR4(&address, address_head, address_second, address_third, address_last);
+    configure_sntp_server(address);
 }
 
 void SNTP::sntp_update(string ip) {
-    //	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    //	IPV4 target(ip);
-    //	sntp_setserver(0,&target.address);
-    //	sntp_init();
+    IPV4 target(ip.c_str());
+    configure_sntp_server(target.address);
 }
 
-void SNTP::sntp_update() {
-    //	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    //	IPV4 target(TARGET_IP);
-    //	sntp_setserver(0,&target.address);
-    //	sntp_init();
-}
+void SNTP::sntp_update() { sntp_update(DEFAULT_SERVER_IP); }
 
-void set_rtc(
+extern "C" void stlib_sntp_set_rtc(
     uint16_t counter,
     uint8_t second,
     uint8_t minute,
@@ -51,8 +55,12 @@ void set_rtc(
     Global_RTC::set_rtc_data(counter, second, minute, hour, day, month, year);
 }
 
-u32_t get_rtc_s() {
-    RTCData rtc_time = Global_RTC::get_rtc_timestamp();
+extern "C" u32_t stlib_sntp_get_rtc_seconds() {
+    if (!Global_RTC::has_valid_time()) {
+        return 0;
+    }
+
+    const RTCData rtc_time = Global_RTC::get_rtc_timestamp();
     time_t nowtime = 0;
     struct tm* nowtm;
     nowtm = gmtime(&nowtime);
@@ -66,19 +74,23 @@ u32_t get_rtc_s() {
     return sec;
 }
 
-u32_t get_rtc_us() {
-    RTCData rtc_time = Global_RTC::get_rtc_timestamp();
+extern "C" u32_t stlib_sntp_get_rtc_microseconds() {
+    if (!Global_RTC::has_valid_time()) {
+        return 0;
+    }
+
+    const RTCData rtc_time = Global_RTC::get_rtc_timestamp();
     return rtc_time.counter / TRANSFORMATION_FACTOR;
 }
 
-void set_time(uint32_t sec, uint32_t us) {
+extern "C" void stlib_sntp_set_time(uint32_t sec, uint32_t us) {
     struct timeval tv;
     tv.tv_sec = sec;
     tv.tv_usec = us;
     time_t nowtime = sec;
     struct tm* nowtm = localtime(&nowtime);
     uint32_t subsecond = (uint32_t)(TRANSFORMATION_FACTOR * tv.tv_usec);
-    set_rtc(
+    stlib_sntp_set_rtc(
         subsecond,
         nowtm->tm_sec,
         nowtm->tm_min,

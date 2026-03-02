@@ -152,6 +152,10 @@ bool UART::set_up_printf(UART::Peripheral& uart) {
         return false;
     }
 
+    if (!UART::available_uarts.contains(uart)) {
+        return false;
+    }
+
     UART::printf_uart = UART::inscribe(uart);
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
@@ -162,12 +166,11 @@ bool UART::set_up_printf(UART::Peripheral& uart) {
 }
 
 void UART::print_by_uart(char* ptr, int len) {
-    if (!UART::printf_ready) {
+    if (!UART::printf_ready || ptr == nullptr || len <= 0) {
         return;
     }
 
-    vector<uint8_t> data(ptr, ptr + len);
-
+    span<uint8_t> data(reinterpret_cast<uint8_t*>(ptr), static_cast<size_t>(len));
     UART::transmit_polling(UART::printf_uart, data);
 }
 
@@ -219,6 +222,17 @@ UART_HandleTypeDef* UART::get_handle(uint8_t id) { return registered_uart[id]->h
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+int __io_putchar(int ch) {
+    if (!UART::printf_ready) {
+        return ch;
+    }
+
+    UART::transmit_polling(UART::printf_uart, static_cast<uint8_t>(ch));
+    return ch;
+}
+
+int __io_getchar(void) { return -1; }
 
 #ifdef __cplusplus
 }

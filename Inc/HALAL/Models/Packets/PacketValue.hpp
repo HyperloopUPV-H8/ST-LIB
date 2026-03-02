@@ -33,8 +33,8 @@ public:
     void set_pointer(void* pointer) { src = (Type*)pointer; }
 
     size_t get_size() override { return sizeof(Type); }
-    void parse(uint8_t* data) override { *src = *((Type*)data); }
-    void copy_to(uint8_t* data) override { *((Type*)data) = *src; }
+    void parse(uint8_t* data) override { memcpy(src, data, get_size()); }
+    void copy_to(uint8_t* data) override { memcpy(data, src, get_size()); }
 };
 
 template <> class PacketValue<double> : public PacketValue<> {
@@ -49,7 +49,7 @@ public:
     void set_pointer(void* pointer) { src = (double*)pointer; }
 
     size_t get_size() override { return sizeof(double); }
-    void parse(uint8_t* data) override { *src = *((double*)data); }
+    void parse(uint8_t* data) override { memcpy(src, data, get_size()); }
     void copy_to(uint8_t* data) override { memcpy(data, src, get_size()); }
 };
 
