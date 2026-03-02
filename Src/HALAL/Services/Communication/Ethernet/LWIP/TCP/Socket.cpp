@@ -372,7 +372,8 @@ bool Socket::try_send_immediately(Order& order) {
     }
 
     const size_t order_size = order.get_size();
-    if (order_size == 0 || order_size > TCP_SND_BUF || order_size > tcp_sndbuf(socket_control_block)) {
+    if (order_size == 0 || order_size > TCP_SND_BUF ||
+        order_size > tcp_sndbuf(socket_control_block)) {
         return false;
     }
 
