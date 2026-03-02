@@ -10,6 +10,7 @@
 #include "HALAL/Services/Communication/Ethernet/LWIP/Ethernet.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/EthernetHelper.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/EthernetNode.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 extern "C" {
 #include "ethernetif.h"
 #include "lwip.h"
@@ -224,6 +225,7 @@ struct EthernetDomain {
         void update() {
             ethernetif_input(&gnetif);
             sys_check_timeouts();
+            ErrorHandlerModel::ErrorHandlerUpdate();
 
             if (HAL_GetTick() - EthernetLinkTimer >= 100) {
                 EthernetLinkTimer = HAL_GetTick();
