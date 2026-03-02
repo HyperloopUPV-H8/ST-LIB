@@ -113,11 +113,23 @@
 #define LWIP_DHCP 0
 #define LWIP_AUTOIP 0
 #define LWIP_DNS 0
+#define LWIP_SNTP 1
 #define LWIP_IGMP 0
 #define LWIP_IPV6_MLD 0
 #define LWIP_IPV6_DHCP6 0
 #define LWIP_IPV6_REASS 0
 #define LWIP_IPV6_FRAG 0
+
+void stlib_sntp_set_time(uint32_t sec, uint32_t us);
+uint32_t stlib_sntp_get_rtc_seconds(void);
+uint32_t stlib_sntp_get_rtc_microseconds(void);
+
+#define SNTP_SET_SYSTEM_TIME_US(sec, us) stlib_sntp_set_time((sec), (us))
+#define SNTP_GET_SYSTEM_TIME(sec, us)                                                            \
+  do {                                                                                           \
+    (sec) = stlib_sntp_get_rtc_seconds();                                                        \
+    (us) = stlib_sntp_get_rtc_microseconds();                                                    \
+  } while (0)
 
 /* USER CODE END 1 */
 

@@ -140,7 +140,7 @@ void ProtectionManager::notify(Protection& protection) {
             }
         }
         for (auto& warning : protection.warnings_triggered) {
-            if (warning->boundary_type_id == INFO_WARNING - 2) {
+            if (warning->boundary_type_id == BoundaryInterface::INFO_WARNING_BOUNDARY_TYPE_ID) {
                 if (!InfoWarning::warning_to_communicate) {
                     continue;
                 }

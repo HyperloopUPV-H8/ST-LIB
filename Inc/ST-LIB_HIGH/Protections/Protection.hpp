@@ -69,7 +69,8 @@ public:
                     bound->back_to_normal = true;
                 }
                 bound->warning_already_triggered = false;
-                if (bound->back_to_normal && bound->boundary_type_id != INFO_WARNING - 2) {
+                if (bound->back_to_normal &&
+                    bound->boundary_type_id != BoundaryInterface::INFO_WARNING_BOUNDARY_TYPE_ID) {
                     triggered_oks_idx[oks_count] = idx - 1;
                     oks_count++;
                     bound->back_to_normal = false;

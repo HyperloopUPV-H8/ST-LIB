@@ -10,6 +10,7 @@
 #include "HALAL/Services/Communication/Ethernet/LWIP/Ethernet.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/EthernetHelper.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/EthernetNode.hpp"
+#include "HALAL/Services/Communication/SNTP/SNTP.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 extern "C" {
@@ -81,6 +82,7 @@ struct EthernetDomain {
         const char* local_ip;
         const char* subnet_mask;
         const char* gateway;
+        const char* sntp_server;
 
         size_t phy_reset_id;
     };
@@ -99,9 +101,10 @@ struct EthernetDomain {
             const char* local_mac,
             const char* local_ip,
             const char* subnet_mask = "255.255.0.0",
-            const char* gateway = "192.168.1.1"
+            const char* gateway = "192.168.1.1",
+            const char* sntp_server = SNTP::DEFAULT_SERVER_IP
         )
-            : pins{pins}, e{local_mac, local_ip, subnet_mask, gateway},
+            : pins{pins}, e{local_mac, local_ip, subnet_mask, gateway, sntp_server},
               rmii_gpios{
                   GPIODomain::GPIO(
                       pins.MDC,
@@ -187,6 +190,7 @@ struct EthernetDomain {
                 .local_ip = this->e.local_ip,
                 .subnet_mask = this->e.subnet_mask,
                 .gateway = this->e.gateway,
+                .sntp_server = this->e.sntp_server,
                 .phy_reset_id = phy_reset_id,
             };
 
@@ -201,6 +205,7 @@ struct EthernetDomain {
         const char* local_ip;
         const char* subnet_mask;
         const char* gateway;
+        const char* sntp_server;
 
         size_t phy_reset_id;
     };
@@ -216,12 +221,16 @@ struct EthernetDomain {
         cfgs[0].local_ip = e.local_ip;
         cfgs[0].subnet_mask = e.subnet_mask;
         cfgs[0].gateway = e.gateway;
+        cfgs[0].sntp_server = e.sntp_server;
         cfgs[0].phy_reset_id = e.phy_reset_id;
 
         return cfgs;
     }
     // Runtime object
     struct Instance {
+        const char* sntp_server{nullptr};
+        bool sntp_started{false};
+
         constexpr Instance() {}
         void update() {
             ethernetif_input(&gnetif);
@@ -236,6 +245,12 @@ struct EthernetDomain {
                 if (netif_is_link_up(&gnetif) && !netif_is_up(&gnetif)) {
                     netif_set_up(&gnetif);
                 }
+            }
+
+            if (!sntp_started && sntp_server != nullptr && sntp_server[0] != '\0' &&
+                netif_is_link_up(&gnetif)) {
+                SNTP::sntp_update(sntp_server);
+                sntp_started = true;
             }
         };
     };
@@ -320,6 +335,7 @@ struct EthernetDomain {
             ::Ethernet::is_running = true;
 
             instances[0] = Instance{};
+            instances[0].sntp_server = e.sntp_server;
         }
     };
 };
