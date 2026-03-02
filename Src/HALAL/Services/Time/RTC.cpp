@@ -3,7 +3,18 @@
 RTC_HandleTypeDef hrtc;
 RTCData Global_RTC::global_RTC;
 
+namespace {
+bool rtc_started = false;
+bool rtc_start_in_progress = false;
+bool rtc_time_valid = false;
+} // namespace
+
 void Global_RTC::start_rtc() {
+    if (rtc_started || rtc_start_in_progress) {
+        return;
+    }
+
+    rtc_start_in_progress = true;
     RTC_TimeTypeDef sTime = {0};
     RTC_DateTypeDef sDate = {0};
 
@@ -17,7 +28,9 @@ void Global_RTC::start_rtc() {
     hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
 
     if (HAL_RTC_Init(&hrtc) != HAL_OK) {
+        rtc_start_in_progress = false;
         ErrorHandler("Error on RTC Init");
+        return;
     }
     sTime.Hours = 0x0;
     sTime.Minutes = 0x0;
@@ -26,7 +39,9 @@ void Global_RTC::start_rtc() {
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
 
     if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+        rtc_start_in_progress = false;
         ErrorHandler("Error while setting time at RTC start");
+        return;
     }
 
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
@@ -35,9 +50,24 @@ void Global_RTC::start_rtc() {
     sDate.Year = 23;
 
     if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+        rtc_start_in_progress = false;
         ErrorHandler("Error while setting date at RTC start");
+        return;
     }
+
+    rtc_time_valid = false;
+    rtc_started = true;
+    rtc_start_in_progress = false;
 }
+
+bool Global_RTC::ensure_started() {
+    if (!rtc_started && !rtc_start_in_progress) {
+        start_rtc();
+    }
+    return rtc_started;
+}
+
+bool Global_RTC::has_valid_time() { return rtc_time_valid; }
 
 RTCData Global_RTC::get_rtc_timestamp() {
     RTCData ret;
@@ -64,6 +94,10 @@ void Global_RTC::set_rtc_data(
     uint8_t month,
     uint16_t year
 ) {
+    if (!ensure_started()) {
+        return;
+    }
+
     RTC_TimeTypeDef gTime;
     RTC_DateTypeDef gDate;
     gTime.SubSeconds = counter;
@@ -76,11 +110,27 @@ void Global_RTC::set_rtc_data(
     gDate.Date = day;
     gDate.Month = month;
     gDate.Year = year - 2000;
+    bool write_ok = true;
     if (HAL_RTC_SetTime(&hrtc, &gTime, RTC_FORMAT_BIN) != HAL_OK) {
+        write_ok = false;
         ErrorHandler("Error on writing Time on the RTC");
     }
     if (HAL_RTC_SetDate(&hrtc, &gDate, RTC_FORMAT_BIN) != HAL_OK) {
+        write_ok = false;
         ErrorHandler("Error on writing Date on the RTC");
     }
+    rtc_time_valid = write_ok;
+    if (write_ok) {
+        global_RTC = get_rtc_timestamp();
+    }
 }
-void Global_RTC::update_rtc_data() { global_RTC = get_rtc_timestamp(); }
+void Global_RTC::update_rtc_data() {
+    if (!ensure_started()) {
+        return;
+    }
+    if (!rtc_time_valid) {
+        global_RTC = {};
+        return;
+    }
+    global_RTC = get_rtc_timestamp();
+}

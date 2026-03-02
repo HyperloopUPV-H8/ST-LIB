@@ -36,7 +36,7 @@ public:
     Server(IPV4 local_ip, uint32_t local_port);
     ~Server();
     void update();
-    void broadcast_order(Order& order);
+    bool broadcast_order(Order& order);
     void close_all();
     uint32_t connections_count();
 

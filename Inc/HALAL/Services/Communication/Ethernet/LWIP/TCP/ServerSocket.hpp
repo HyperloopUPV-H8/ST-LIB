@@ -41,7 +41,7 @@
 class ServerSocket : public OrderProtocol {
 public:
     enum ServerState { INACTIVE, LISTENING, ACCEPTED, CLOSING, CLOSED };
-    static constexpr size_t MAX_TX_QUEUE_DEPTH = 24;
+    static constexpr size_t MAX_TX_QUEUE_DEPTH = 64;
 
     static unordered_map<uint32_t, ServerSocket*> listening_sockets;
     IPV4 local_ip;
@@ -110,32 +110,7 @@ public:
      * message
      * @return true if the data was sent successfully, false otherwise
      */
-    bool send_order(Order& order) override {
-        if (state != ACCEPTED || client_control_block == nullptr) {
-            return false;
-        }
-        send();
-        if (tx_packet_buffer.size() >= MAX_TX_QUEUE_DEPTH) {
-            return false;
-        }
-
-        uint8_t* order_buffer = order.build();
-        if (order.get_size() > tcp_sndbuf(client_control_block)) {
-            return false;
-        }
-
-        struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_RAM);
-        if (packet == nullptr) {
-            return false;
-        }
-        if (pbuf_take(packet, order_buffer, order.get_size()) != ERR_OK) {
-            pbuf_free(packet);
-            return false;
-        }
-        tx_packet_buffer.push(packet);
-        send();
-        return true;
-    }
+    bool send_order(Order& order) override;
 
     /**
      * @brief sends all the binary data saved in the tx_packet_buffer to the
@@ -160,12 +135,16 @@ public:
      * otherwise
      */
     bool is_connected();
+    bool is_listening() const;
 
 private:
     struct tcp_pcb* server_control_block = nullptr;
     queue<struct pbuf*> tx_packet_buffer;
     queue<struct pbuf*> rx_packet_buffer;
-    struct tcp_pcb* client_control_block;
+    vector<uint8_t> rx_stream_buffer;
+    struct tcp_pcb* client_control_block = nullptr;
+    void clear_packet_queues();
+    bool try_send_immediately(Order& order);
 
     /**
      * @brief process the data received by the client orders. It is meant to be

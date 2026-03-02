@@ -218,6 +218,10 @@ template <auto&... devs> struct Board {
         HALconfig::system_clock();
         HALconfig::peripheral_clock();
 
+#ifdef HAL_RTC_MODULE_ENABLED
+        (void)Global_RTC::ensure_started();
+#endif
+
         MPUDomain::Init<mpuN, cfg.mpu_cfgs>::init();
         GPIODomain::Init<gpioN>::init(cfg.gpio_cfgs);
         TimerDomain::Init<timN>::init(cfg.tim_cfgs);

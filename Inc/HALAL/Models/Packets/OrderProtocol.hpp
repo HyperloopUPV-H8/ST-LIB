@@ -5,6 +5,7 @@ class Order;
 
 class OrderProtocol {
 public:
+    virtual ~OrderProtocol() = default;
     virtual bool send_order(Order& order) = 0;
     static vector<OrderProtocol*> sockets;
 

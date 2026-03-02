@@ -27,15 +27,23 @@ enum ProtectionType : uint8_t {
 
 struct BoundaryInterface {
 public:
+    static constexpr uint8_t ERROR_HANDLER_BOUNDARY_TYPE_ID = ERROR_HANDLER;
+    static constexpr uint8_t INFO_WARNING_BOUNDARY_TYPE_ID = INFO_WARNING - 2;
+
     virtual Protections::FaultType check_bounds() = 0;
     HeapOrder* fault_message{nullptr};
     HeapOrder* warn_message{nullptr};
     HeapOrder* ok_message{nullptr};
     void update_name(char* n) {
-        name = n;
-        if (strlen(n) > NAME_MAX_LEN) {
-            ErrorHandler("Variable name is too long, max length is %d", NAME_MAX_LEN);
+        if (n == nullptr) {
+            name.clear();
+            string_len = 0;
             return;
+        }
+
+        name = n;
+        if (name.size() > NAME_MAX_LEN) {
+            name.resize(NAME_MAX_LEN);
         }
         string_len = name.size();
     }
@@ -490,7 +498,7 @@ template <class Type> struct Boundary<Type, OUT_OF_RANGE> : public BoundaryInter
 template <> struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface {
     static constexpr ProtectionType Protector = ERROR_HANDLER;
     Boundary(void*) {
-        boundary_type_id = Protector;
+        boundary_type_id = ERROR_HANDLER_BOUNDARY_TYPE_ID;
         error_handler_string.reserve(ERROR_HANDLER_MSG_MAX_LEN);
         fault_message = new HeapOrder(
             uint16_t{1555},
@@ -509,7 +517,7 @@ template <> struct Boundary<void, ERROR_HANDLER> : public BoundaryInterface {
     }
     uint8_t padding{};
     Boundary(void*, Boundary<void, ERROR_HANDLER>) {
-        boundary_type_id = Protector;
+        boundary_type_id = ERROR_HANDLER_BOUNDARY_TYPE_ID;
         error_handler_string.reserve(ERROR_HANDLER_MSG_MAX_LEN);
         fault_message = new HeapOrder(
             uint16_t{1555},
@@ -551,7 +559,7 @@ private:
 template <> struct Boundary<void, INFO_WARNING> : public BoundaryInterface {
     static constexpr ProtectionType Protector = INFO_WARNING;
     Boundary(void*) {
-        boundary_type_id = Protector - 2;
+        boundary_type_id = INFO_WARNING_BOUNDARY_TYPE_ID;
         warning_string.reserve(WARNING_HANDLER_MSG_MAX_LEN);
         warn_message = new HeapOrder(
             uint16_t{2555},
@@ -571,7 +579,7 @@ template <> struct Boundary<void, INFO_WARNING> : public BoundaryInterface {
     uint8_t padding{};
     Boundary(void*, Boundary<void, INFO_WARNING>) {
         // SW are crybabies
-        boundary_type_id = Protector - 2;
+        boundary_type_id = INFO_WARNING_BOUNDARY_TYPE_ID;
         warning_string.reserve(WARNING_HANDLER_MSG_MAX_LEN);
         warn_message = new HeapOrder(
             uint16_t{2555},

@@ -16,7 +16,7 @@ void* error_handler;
 void* info_warning;
 
 void ProtectionManager::initialize() {
-    Global_RTC::start_rtc();
+    Global_RTC::ensure_started();
     for (Protection& protection : low_frequency_protections) {
         for (auto& boundary : protection.boundaries) {
             boundary->update_name(protection.get_name());
@@ -84,7 +84,7 @@ void ProtectionManager::check_protections() {
         }
         Global_RTC::update_rtc_data();
         if (Scheduler::get_global_tick() >
-            protection.get_last_notify_tick() + notify_delay_in_nanoseconds) {
+            protection.get_last_notify_tick() + notify_delay_in_microseconds) {
             ProtectionManager::notify(protection);
             protection.update_last_notify_tick(Scheduler::get_global_tick());
         }
@@ -93,18 +93,21 @@ void ProtectionManager::check_protections() {
 
 void ProtectionManager::check_high_frequency_protections() {
     for (Protection& protection : high_frequency_protections) {
+        auto protection_status = protection.check_state();
+
         if (general_state_machine == nullptr) {
             ErrorHandler("Protection Manager does not have General State Machine "
                          "Linked");
             return;
         }
 
-        if (protection.fault_type == Protections::FAULT) {
+        if (protection.fault_type == Protections::FAULT &&
+            protection_status == Protections::FAULT) {
             ProtectionManager::to_fault();
         }
         Global_RTC::update_rtc_data();
         if (Scheduler::get_global_tick() >
-            protection.get_last_notify_tick() + notify_delay_in_nanoseconds) {
+            protection.get_last_notify_tick() + notify_delay_in_microseconds) {
             ProtectionManager::notify(protection);
             protection.update_last_notify_tick(Scheduler::get_global_tick());
         }
@@ -114,20 +117,37 @@ void ProtectionManager::check_high_frequency_protections() {
 void ProtectionManager::warn(string message) { warning_notification.notify(message); }
 
 void ProtectionManager::notify(Protection& protection) {
+    const bool is_error_handler_fault =
+        protection.fault_protection != nullptr &&
+        protection.fault_protection->boundary_type_id == ERROR_HANDLER;
+    const bool should_send_fault =
+        protection.fault_protection != nullptr &&
+        (!is_error_handler_fault || ErrorHandlerModel::error_to_communicate);
+    bool error_handler_delivered = false;
+    bool info_warning_delivered = false;
+
     for (OrderProtocol* socket : OrderProtocol::sockets) {
-        if (protection.fault_protection) {
-            if (protection.fault_protection->boundary_type_id == ERROR_HANDLER) {
+        if (should_send_fault) {
+            if (is_error_handler_fault) {
                 protection.fault_protection->update_error_handler_message(
                     protection.fault_protection->get_error_handler_string()
                 );
+                error_handler_delivered =
+                    socket->send_order(*protection.fault_protection->fault_message) ||
+                    error_handler_delivered;
+            } else {
+                socket->send_order(*protection.fault_protection->fault_message);
             }
-            socket->send_order(*protection.fault_protection->fault_message);
-            ErrorHandlerModel::error_to_communicate = false;
         }
         for (auto& warning : protection.warnings_triggered) {
-            if (warning->boundary_type_id == INFO_WARNING - 2) {
+            if (warning->boundary_type_id == BoundaryInterface::INFO_WARNING_BOUNDARY_TYPE_ID) {
+                if (!InfoWarning::warning_to_communicate) {
+                    continue;
+                }
                 warning->update_warning_message(warning->get_warning_string());
-                InfoWarning::warning_triggered = false;
+                info_warning_delivered =
+                    socket->send_order(*warning->warn_message) || info_warning_delivered;
+                continue;
             }
             socket->send_order(*warning->warn_message);
         }
@@ -135,6 +155,16 @@ void ProtectionManager::notify(Protection& protection) {
             socket->send_order(*ok->ok_message);
         }
     }
+
+    if (error_handler_delivered) {
+        ErrorHandlerModel::error_to_communicate = false;
+    }
+
+    if (info_warning_delivered) {
+        InfoWarning::warning_triggered = false;
+        InfoWarning::warning_to_communicate = false;
+    }
+
     protection.oks_triggered.clear();
     protection.warnings_triggered.clear();
 }
