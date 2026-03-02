@@ -4,7 +4,7 @@
 #if defined(_MSC_VER)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h> /* _BitScanForward, _BitScanReverse */
-#include <stdlib.h> /* _byteswap_ulong */
+#include <stdlib.h>  /* _byteswap_ulong */
 #endif
 
 /*
@@ -53,7 +53,8 @@ inline uint32_t __CLZ(uint32_t val) {
     return 31 - idx;
 #else
     for(uint32_t i = 0; i < 32; i++) {
-        if((val & (1 << (31 - i))) != 0) return i;
+        if((val & (1 << (31 - i))) != 0)
+            return i;
     }
     return 32;
 #endif
@@ -69,7 +70,8 @@ inline uint32_t __CTZ(uint32_t val)
     return idx;
 #else
     for(uint32_t i = 0; i < 32; i++) {
-        if((val & (1 << i)) != 0) return i;
+        if((val & (1 << i)) != 0)
+            return i;
     }
     return 32;
 #endif
