@@ -22,6 +22,7 @@ public:
     static RTCData global_RTC;
     static void start_rtc();
     static bool ensure_started();
+    static bool has_valid_time();
     static void update_rtc_data();
     static RTCData get_rtc_timestamp();
     static void set_rtc_data(

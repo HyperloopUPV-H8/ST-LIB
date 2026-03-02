@@ -166,7 +166,7 @@ bool try_send_error_via_uart(const string& description) {
 
 void append_readable_timestamp(string& message) {
 #ifdef HAL_RTC_MODULE_ENABLED
-    if (Global_RTC::ensure_started()) {
+    if (Global_RTC::ensure_started() && Global_RTC::has_valid_time()) {
         Global_RTC::update_rtc_data();
         const RTCData& timestamp = Global_RTC::global_RTC;
         char buffer[80]{};
@@ -188,7 +188,38 @@ void append_readable_timestamp(string& message) {
 #endif
 
 #ifdef HAL_TIM_MODULE_ENABLED
-    message += " | Timestamp(ns): " + to_string(Scheduler::get_global_tick());
+    const uint64_t uptime_us = Scheduler::get_global_tick();
+    const uint64_t total_seconds = uptime_us / 1'000'000ULL;
+    const uint64_t days = total_seconds / 86'400ULL;
+    const unsigned hours = static_cast<unsigned>((total_seconds / 3'600ULL) % 24ULL);
+    const unsigned minutes = static_cast<unsigned>((total_seconds / 60ULL) % 60ULL);
+    const unsigned seconds = static_cast<unsigned>(total_seconds % 60ULL);
+    const unsigned micros = static_cast<unsigned>(uptime_us % 1'000'000ULL);
+
+    char buffer[80]{};
+    if (days > 0) {
+        snprintf(
+            buffer,
+            sizeof(buffer),
+            " | Uptime: %llud %02u:%02u:%02u.%06u",
+            static_cast<unsigned long long>(days),
+            hours,
+            minutes,
+            seconds,
+            micros
+        );
+    } else {
+        snprintf(
+            buffer,
+            sizeof(buffer),
+            " | Uptime: %02u:%02u:%02u.%06u",
+            hours,
+            minutes,
+            seconds,
+            micros
+        );
+    }
+    message += buffer;
 #endif
 }
 
@@ -219,7 +250,7 @@ void ErrorHandlerModel::ErrorHandlerTrigger(string format, ...) {
     error_sent_via_tcp = false;
     error_sent_via_uart = false;
 #ifdef STLIB_ETH
-    tcp_delivery_required = !OrderProtocol::sockets.empty();
+    tcp_delivery_required = true;
 #else
     tcp_delivery_required = false;
 #endif
