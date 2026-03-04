@@ -98,8 +98,8 @@ class DualPWM {
         timer->template config_output_compare_channel<pin.channel>(&sConfigOC);
         timer->template set_output_compare_preload_enable<pin.channel>();
     }
-public:
 
+public:
     inline void turn_on() {
         turn_on_positive();
         turn_on_negative();

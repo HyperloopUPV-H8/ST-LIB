@@ -90,8 +90,8 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         timer->template config_output_compare_channel<pin.channel>(&sConfigOC);
         timer->template set_output_compare_preload_enable<pin.channel>();
     }
-public:
 
+public:
     void turn_on() {
         if (this->is_on)
             return;

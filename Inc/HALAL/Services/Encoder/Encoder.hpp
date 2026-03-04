@@ -28,11 +28,9 @@ template <const TimerDomain::Timer& dev> class Encoder {
     inline static TimerWrapper<dev>* timer;
     inline static bool is_on = false;
 
-    Encoder(TimerWrapper<dev>* tim) {
-        init(tim);
-    }
-public:
+    Encoder(TimerWrapper<dev>* tim) { init(tim); }
 
+public:
     static void init(TimerWrapper<dev>* tim) {
         TIM_Encoder_InitTypeDef sConfig = {0};
         TIM_MasterConfigTypeDef sMasterConfig = {0};
@@ -70,57 +68,53 @@ public:
             return;
 
         if (HAL_TIM_Encoder_GetState(timer->instance->hal_tim) == HAL_TIM_STATE_RESET) {
-        if (HAL_TIM_Encoder_GetState(timer->instance->hal_tim) == HAL_TIM_STATE_RESET) {
-            ErrorHandler("Unable to get state from encoder");
-            return;
-        }
-        if (HAL_TIM_Encoder_Start(timer->instance->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
-        if (HAL_TIM_Encoder_Start(timer->instance->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
-            ErrorHandler("Unable to start encoder");
-            return;
-        }
-        is_on = true;
-        reset();
-    }
+            if (HAL_TIM_Encoder_GetState(timer->instance->hal_tim) == HAL_TIM_STATE_RESET) {
+                ErrorHandler("Unable to get state from encoder");
+                return;
+            }
+            if (HAL_TIM_Encoder_Start(timer->instance->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
+                if (HAL_TIM_Encoder_Start(timer->instance->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
+                    ErrorHandler("Unable to start encoder");
+                    return;
+                }
+                is_on = true;
+                reset();
+            }
 
-    static void turn_off() {
-        if (!is_on)
-            return;
+            static void turn_off() {
+                if (!is_on)
+                    return;
 
-        if (HAL_TIM_Encoder_Stop(timer->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
-            ErrorHandler("Unable to stop encoder");
-            return;
-        }
-        is_on = false;
-    }
+                if (HAL_TIM_Encoder_Stop(timer->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
+                    ErrorHandler("Unable to stop encoder");
+                    return;
+                }
+                is_on = false;
+            }
 
-    static inline void reset() {
-        timer->instance->tim->CNT = get_initial_counter_value();
-    }
+            static inline void reset() { timer->instance->tim->CNT = get_initial_counter_value(); }
 
-    static inline uint32_t get_counter() {
-        return timer->instance->tim->CNT;
-    }
+            static inline uint32_t get_counter() { return timer->instance->tim->CNT; }
 
-    static inline bool get_direction() {
-        return ((timer->instance->tim->CR1 & 0b10000) >> 4);
-    }
+            static inline bool get_direction() {
+                return ((timer->instance->tim->CR1 & 0b10000) >> 4);
+            }
 
-    static inline uint32_t get_initial_counter_value() {
-        return timer->instance->tim->ARR / 2;
-    }
+            static inline uint32_t get_initial_counter_value() {
+                return timer->instance->tim->ARR / 2;
+            }
 
-    static int64_t get_delta_clock(uint64_t clock_time, uint64_t last_clock_time) {
-        int64_t delta_clock = clock_time - last_clock_time;
-        if (clock_time < last_clock_time) { // overflow handle
-            delta_clock = clock_time +
-                          CLOCK_MAX_VALUE * NANO_SECOND / timer->get_clock_frequency() -
-                          CLOCK_MAX_VALUE * NANO_SECOND / timer->get_clock_frequency() -
-                          last_clock_time;
-        }
-        return delta_clock;
-    }
-};
+            static int64_t get_delta_clock(uint64_t clock_time, uint64_t last_clock_time) {
+                int64_t delta_clock = clock_time - last_clock_time;
+                if (clock_time < last_clock_time) { // overflow handle
+                    delta_clock = clock_time +
+                                  CLOCK_MAX_VALUE * NANO_SECOND / timer->get_clock_frequency() -
+                                  CLOCK_MAX_VALUE * NANO_SECOND / timer->get_clock_frequency() -
+                                  last_clock_time;
+                }
+                return delta_clock;
+            }
+        };
 
-} // namespace ST_LIB
+    } // namespace ST_LIB
 #endif
