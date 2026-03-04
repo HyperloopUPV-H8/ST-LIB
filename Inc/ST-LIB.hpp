@@ -241,7 +241,7 @@ template <auto&... devs> struct Board {
         EthernetDomain::Init<ethN>::init(cfg.eth_cfgs, DigitalOutputDomain::Init<doutN>::instances);
         ADCDomain::Init<adcN>::init(cfg.adc_cfgs, GPIODomain::Init<gpioN>::instances);
         EXTIDomain::Init<extiN>::init(cfg.exti_cfgs, GPIODomain::Init<gpioN>::instances); 
-        DFSDM_CHANNEL_DOMAIN::Init<dfsdmN>::init(cfg.dfsdm_cfgs);
+        DFSDM_CHANNEL_DOMAIN::Init<dfsdmN>::init(cfg.dfsdm_cfgs,GPIODomain::Init<gpioN>::instances);
         DFSDM_CLK_DOMAIN::Init<dfsdm_clkN>::init(cfg.dfsdm_clk_cfgs,GPIODomain::Init<gpioN>::instances);
                 // ...
     }
