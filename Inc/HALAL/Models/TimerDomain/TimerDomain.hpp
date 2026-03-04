@@ -23,7 +23,7 @@
 /* default is tim2 */
 #define SCHEDULER_TIMER_DOMAIN 2
 #elif (SCHEDULER_TIMER_DOMAIN != 2) && (SCHEDULER_TIMER_DOMAIN != 3) &&                            \
-      (SCHEDULER_TIMER_DOMAIN != 23) && (SCHEDULER_TIMER_DOMAIN != 24)
+    (SCHEDULER_TIMER_DOMAIN != 23) && (SCHEDULER_TIMER_DOMAIN != 24)
 #error Scheduler timer must be a 32 bit timer
 #endif
 

@@ -65,7 +65,7 @@ void scheduler_global_timer_callback(void* raw) {
 
 void Scheduler::start() {
     static_assert((Scheduler::FREQUENCY % 1'000'000) == 0u, "frequenct must be a multiple of 1MHz");
-    Scheduler_global_timer = 
+    Scheduler_global_timer =
         ST_LIB::TimerDomain::cmsis_timers[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
 
     uint32_t prescaler = (SystemCoreClock / Scheduler::FREQUENCY);
