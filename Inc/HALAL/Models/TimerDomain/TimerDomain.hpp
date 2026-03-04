@@ -639,7 +639,8 @@ TimerXList
 
             for (int i = 0; i < (int)ARRAY_LENGTH(bits32_timers); i++) {
                 if (!used_timers[bits32_timers[i]])
-                    remaining_timers[count_remaining_timers++] = bits32_timers[i];
+                    remaining_timers[count_remaining_timers++] = bits32_timers[i]
+                    ;
             }
 
             if (count_remaining_requests > count_remaining_timers) {
