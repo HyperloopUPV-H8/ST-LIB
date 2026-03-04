@@ -19,6 +19,16 @@
 
 #include "ErrorHandler/ErrorHandler.hpp"
 
+#ifndef SCHEDULER_TIMER_DOMAIN
+/* default is tim2 */
+#define SCHEDULER_TIMER_DOMAIN 2
+#elif (SCHEDULER_TIMER_DOMAIN != 2) && (SCHEDULER_TIMER_DOMAIN != 3) &&                            \
+    (SCHEDULER_TIMER_DOMAIN != 23) && (SCHEDULER_TIMER_DOMAIN != 24)
+#error Scheduler timer must be a 32 bit timer
+#endif
+
+#define SCHEDULER_GLOBAL_TIMER_IRQn glue(TIM, glue(SCHEDULER_TIMER_DOMAIN, _IRQn))
+
 // NOTE: only works for static arrays
 #define ARRAY_LENGTH(a) (sizeof(a) / sizeof(*a))
 
@@ -531,6 +541,10 @@ TimerXList
                 remaining_requests[i] = i;
 
             for (int i = 0; i < (int)requests.size(); i++) {
+                if (static_cast<uint8_t>(requests[i].request) == SCHEDULER_TIMER_DOMAIN) {
+                    ST_LIB::compile_error("This timer is used by the scheduler");
+                }
+
                 if (requests[i].request != TimerRequest::AnyGeneralPurpose &&
                     (requests[i].request < 1 || requests[i].request > 24 ||
                      (requests[i].request > 17 && requests[i].request < 23))) {
@@ -576,7 +590,7 @@ TimerXList
             uint8_t count_32bit_requests = 0;
 
             for (int i = 0; i < (int)ARRAY_LENGTH(bits32_timers); i++) {
-                if (!used_timers[bits32_timers[i]])
+                if (!used_timers[bits32_timers[i]] && (bits32_timers[i] != SCHEDULER_TIMER_DOMAIN))
                     remaining_32bit_timers[count_remaining_32bit_timers++] = bits32_timers[i];
             }
 
@@ -662,6 +676,8 @@ TimerXList
             static inline std::array<Instance, N> instances{};
 
             static void init(std::span<const Config, N> cfgs) {
+                rcc_enable_timer(cmsis_timers[static_cast<uint8_t>(SCHEDULER_TIMER_DOMAIN)]);
+
                 for (std::size_t i = 0; i < N; i++) {
                     const Config& e = cfgs[i];
 
