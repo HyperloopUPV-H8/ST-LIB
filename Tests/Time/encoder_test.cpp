@@ -83,10 +83,7 @@ TEST_F(EncoderTest, ResetUsesConfiguredInitialCounterValue) {
     ST_LIB::Encoder<encoder_timer_decl>::reset();
 
     EXPECT_EQ(TIM2_BASE->ARR, 55000U);
-    EXPECT_EQ(
-        TIM2_BASE->CNT,
-        ST_LIB::Encoder<encoder_timer_decl>::get_initial_counter_value()
-    );
+    EXPECT_EQ(TIM2_BASE->CNT, ST_LIB::Encoder<encoder_timer_decl>::get_initial_counter_value());
 }
 
 TEST_F(EncoderTest, TurnOffKeepsTryingIfHALStopFails) {
@@ -108,15 +105,7 @@ TEST(EncoderSensorTest, ReadTreatsEncoderInitialCounterAsZeroPosition) {
     double acceleration = -1.0;
     MockSensor::Direction direction = MockSensor::BACKWARDS;
 
-    MockSensor sensor(
-        encoder,
-        0.5,
-        0.1,
-        &direction,
-        &position,
-        &speed,
-        &acceleration
-    );
+    MockSensor sensor(encoder, 0.5, 0.1, &direction, &position, &speed, &acceleration);
 
     sensor.read();
 
@@ -135,15 +124,7 @@ TEST(EncoderSensorTest, ResetForwardsToEncoderAndClearsHistory) {
     double acceleration = 0.0;
     MockSensor::Direction direction = MockSensor::BACKWARDS;
 
-    MockSensor sensor(
-        encoder,
-        1.0,
-        1.0,
-        &direction,
-        &position,
-        &speed,
-        &acceleration
-    );
+    MockSensor sensor(encoder, 1.0, 1.0, &direction, &position, &speed, &acceleration);
 
     sensor.read();
     ASSERT_NE(position, 0.0);

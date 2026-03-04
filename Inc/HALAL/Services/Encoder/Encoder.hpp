@@ -70,9 +70,11 @@ public:
             return;
 
         if (HAL_TIM_Encoder_GetState(timer->instance->hal_tim) == HAL_TIM_STATE_RESET) {
+        if (HAL_TIM_Encoder_GetState(timer->instance->hal_tim) == HAL_TIM_STATE_RESET) {
             ErrorHandler("Unable to get state from encoder");
             return;
         }
+        if (HAL_TIM_Encoder_Start(timer->instance->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
         if (HAL_TIM_Encoder_Start(timer->instance->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
             ErrorHandler("Unable to start encoder");
             return;
@@ -112,6 +114,7 @@ public:
         int64_t delta_clock = clock_time - last_clock_time;
         if (clock_time < last_clock_time) { // overflow handle
             delta_clock = clock_time +
+                          CLOCK_MAX_VALUE * NANO_SECOND / timer->get_clock_frequency() -
                           CLOCK_MAX_VALUE * NANO_SECOND / timer->get_clock_frequency() -
                           last_clock_time;
         }
