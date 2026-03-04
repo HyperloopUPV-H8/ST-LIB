@@ -6,8 +6,7 @@
  */
 #pragma once
 
-#include "HALAL/HALAL.hpp"
-// #include "HALAL/Services/Encoder/NewEncoder.hpp"
+#include "C++Utilities/CppUtils.hpp"
 
 namespace ST_LIB {
 
@@ -15,7 +14,8 @@ template <typename EncoderType, size_t SAMPLES> struct EncoderSensor {
     enum Direction : uint8_t { FORWARD = 0, BACKWARDS = 1 };
 
 private:
-    constexpr static int64_t START_COUNTER{UINT32_MAX / 2};
+    constexpr static size_t WINDOW_SIZE{(SAMPLES / 2) * 2};
+    static_assert(WINDOW_SIZE >= 2, "EncoderSensor requires at least two samples");
 
     const double counter_distance_m;
     const double sample_time_s;
@@ -41,7 +41,7 @@ public:
     )
         : counter_distance_m(counter_distance_m), sample_time_s(sample_time_s), encoder(enc),
           direction(direction), position(position), speed(speed), acceleration(acceleration) {
-        for (size_t i{0}; i < SAMPLES; i++)
+        for (size_t i{0}; i < WINDOW_SIZE; i++)
             past_delta_counters.push(0);
     }
 
@@ -50,7 +50,7 @@ public:
 
     void reset() {
         encoder.reset();
-        for (size_t i{0}; i < SAMPLES; ++i)
+        for (size_t i{0}; i < WINDOW_SIZE; ++i)
             past_delta_counters.push_pop(0);
     }
 
@@ -58,7 +58,7 @@ public:
     void read() {
         uint32_t counter{encoder.get_counter()};
 
-        int64_t delta_counter{(int64_t)counter - START_COUNTER};
+        int64_t delta_counter{(int64_t)counter - (int64_t)encoder.get_initial_counter_value()};
         const int64_t& previous_delta_counter{
             past_delta_counters[past_delta_counters.size() / 2 - 1]
         };
@@ -71,13 +71,12 @@ public:
         // https://en.wikipedia.org/wiki/Finite_difference_coefficient#Backward_finite_difference
         *speed = ((3.0 * delta_counter / 2.0) - (2.0 * previous_delta_counter) +
                   (previous_previous_delta_counter / 2.0)) *
-                 counter_distance_m / (sample_time_s * past_delta_counters.size() / 2);
+                 counter_distance_m / (sample_time_s * WINDOW_SIZE / 2);
 
         *acceleration =
             (delta_counter - (2.0 * previous_delta_counter) + previous_previous_delta_counter) *
             counter_distance_m /
-            ((sample_time_s * past_delta_counters.size() / 2) *
-             (sample_time_s * past_delta_counters.size() / 2));
+            ((sample_time_s * WINDOW_SIZE / 2) * (sample_time_s * WINDOW_SIZE / 2));
 
         *direction = encoder.get_direction() ? FORWARD : BACKWARDS;
 
