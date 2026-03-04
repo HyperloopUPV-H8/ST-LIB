@@ -15,6 +15,8 @@ namespace ST_LIB {
 template <const TimerDomain::Timer& dev> struct TimerWrapper;
 
 template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
+    friend TimerWrapper<dev>;
+
     static consteval uint8_t get_channel_state_idx(const ST_LIB::TimerChannel ch) {
         switch (ch) {
         case TimerChannel::CHANNEL_1:
@@ -65,7 +67,6 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
     float* duty_cycle = nullptr;
     bool is_on = false;
 
-public:
     PWM(TimerWrapper<dev>* tim,
         uint32_t polarity,
         uint32_t negated_polarity,
@@ -89,6 +90,7 @@ public:
         timer->template config_output_compare_channel<pin.channel>(&sConfigOC);
         timer->template set_output_compare_preload_enable<pin.channel>();
     }
+public:
 
     void turn_on() {
         if (this->is_on)

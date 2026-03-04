@@ -19,6 +19,8 @@ template <
     const ST_LIB::TimerPin pin,
     const ST_LIB::TimerPin negated_pin>
 class DualPWM {
+    friend TimerWrapper<dev>;
+
     static consteval uint8_t get_channel_state_idx(const ST_LIB::TimerChannel ch) {
         switch (ch) {
         case TimerChannel::CHANNEL_1:
@@ -70,7 +72,6 @@ class DualPWM {
     bool is_on_positive = false;
     bool is_on_negative = false;
 
-public:
     DualPWM(
         TimerWrapper<dev>* tim,
         uint32_t polarity,
@@ -97,6 +98,7 @@ public:
         timer->template config_output_compare_channel<pin.channel>(&sConfigOC);
         timer->template set_output_compare_preload_enable<pin.channel>();
     }
+public:
 
     inline void turn_on() {
         turn_on_positive();
