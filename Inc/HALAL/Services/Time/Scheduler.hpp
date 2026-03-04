@@ -27,7 +27,9 @@ struct Scheduler {
 
     static void start();
     static void update();
-    static inline uint64_t get_global_tick() { return global_tick_us_ + Scheduler_global_timer->CNT; }
+    static inline uint64_t get_global_tick() {
+        return global_tick_us_ + Scheduler_global_timer->CNT;
+    }
 
     static uint16_t register_task(uint32_t period_us, callback_t func);
     static bool unregister_task(uint16_t id);
