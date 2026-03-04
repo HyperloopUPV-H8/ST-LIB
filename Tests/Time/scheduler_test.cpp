@@ -4,8 +4,6 @@
 
 #include "HALAL/Services/Time/Scheduler.hpp"
 
-Scheduler_global_timer = TIM2_BASE;
-
 int count = 0;
 void fake_workload() { count++; }
 
@@ -18,6 +16,7 @@ protected:
         Scheduler::sorted_task_ids_ = 0;
         Scheduler::global_tick_us_ = 0;
         Scheduler::current_interval_us_ = 0;
+        Scheduler_global_timer = TIM2_BASE;
 
         // Reset global callback task count
         count = 0;
