@@ -589,7 +589,7 @@ TimerXList
             uint8_t count_32bit_requests = 0;
 
             for (int i = 0; i < (int)ARRAY_LENGTH(bits32_timers); i++) {
-                if (!used_timers[bits32_timers[i]])
+                if (!used_timers[bits32_timers[i]] && (bits32_timers[i] != SCHEDULER_TIMER_DOMAIN))
                     remaining_32bit_timers[count_remaining_32bit_timers++] = bits32_timers[i];
             }
 
