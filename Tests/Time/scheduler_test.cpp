@@ -4,6 +4,8 @@
 
 #include "HALAL/Services/Time/Scheduler.hpp"
 
+Scheduler_global_timer = TIM2_BASE;
+
 int count = 0;
 void fake_workload() { count++; }
 

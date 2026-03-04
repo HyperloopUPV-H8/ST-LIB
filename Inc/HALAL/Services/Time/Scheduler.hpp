@@ -19,13 +19,15 @@
 #include "stm32h7xx_hal_tim.h"
 #endif
 
+extern TIM_TypeDef* Scheduler_global_timer;
+
 struct Scheduler {
     using callback_t = void (*)();
     static constexpr uint32_t INVALID_ID = 0xFFu;
 
     static void start();
     static void update();
-    static inline uint64_t get_global_tick() { return global_tick_us_; }
+    static inline uint64_t get_global_tick() { return global_tick_us_ + Scheduler_global_timer->CNT; }
 
     static uint16_t register_task(uint32_t period_us, callback_t func);
     static bool unregister_task(uint16_t id);
