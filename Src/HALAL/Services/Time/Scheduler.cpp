@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-TIM_TypeDef *Scheduler_global_timer = nullptr;
+TIM_TypeDef* Scheduler_global_timer = nullptr;
 
 namespace {
 constexpr uint64_t kMaxIntervalUs = static_cast<uint64_t>(UINT32_MAX) / 2 + 1ULL;
@@ -65,7 +65,8 @@ void scheduler_global_timer_callback(void* raw) {
 
 void Scheduler::start() {
     static_assert((Scheduler::FREQUENCY % 1'000'000) == 0u, "frequenct must be a multiple of 1MHz");
-    Scheduler_global_timer = ST_LIB::TimerDomain::cmsis_timers[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
+    Scheduler_global_timer = 
+        ST_LIB::TimerDomain::cmsis_timers[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
 
     uint32_t prescaler = (SystemCoreClock / Scheduler::FREQUENCY);
     // setup prescaler
@@ -140,9 +141,8 @@ void Scheduler::start() {
     Scheduler_global_timer->CR1 =
         LL_TIM_CLOCKDIVISION_DIV1 | (Scheduler_global_timer->CR1 & ~TIM_CR1_CKD);
 
-    // Temporary solution for TimerDomain
-    ST_LIB::TimerDomain::callbacks[ST_LIB::timer_idxmap[static_cast<uint8_t>(SCHEDULER_TIMER_DOMAIN)]] =
-        scheduler_global_timer_callback;
+    ST_LIB::TimerDomain::callbacks[ST_LIB::timer_idxmap[static_cast<uint8_t>(SCHEDULER_TIMER_DOMAIN
+    )]] = scheduler_global_timer_callback;
 
     Scheduler_global_timer->CNT = 0; /* Clear counter value */
 

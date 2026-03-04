@@ -22,7 +22,8 @@
 #ifndef SCHEDULER_TIMER_DOMAIN
 /* default is tim2 */
 #define SCHEDULER_TIMER_DOMAIN 2
-#elif (SCHEDULER_TIMER_DOMAIN != 2) && (SCHEDULER_TIMER_DOMAIN != 3) && (SCHEDULER_TIMER_DOMAIN != 23) && (SCHEDULER_TIMER_DOMAIN != 24)
+#elif (SCHEDULER_TIMER_DOMAIN != 2) && (SCHEDULER_TIMER_DOMAIN != 3) &&                            \
+      (SCHEDULER_TIMER_DOMAIN != 23) && (SCHEDULER_TIMER_DOMAIN != 24)
 #error Scheduler timer must be a 32 bit timer
 #endif
 
@@ -540,7 +541,7 @@ TimerXList
                 remaining_requests[i] = i;
 
             for (int i = 0; i < (int)requests.size(); i++) {
-                if(static_cast<uint8_t>(requests[i].request) == SCHEDULER_TIMER_DOMAIN) {
+                if (static_cast<uint8_t>(requests[i].request) == SCHEDULER_TIMER_DOMAIN) {
                     ST_LIB::compile_error("This timer is used by the scheduler");
                 }
 
@@ -639,8 +640,7 @@ TimerXList
 
             for (int i = 0; i < (int)ARRAY_LENGTH(bits32_timers); i++) {
                 if (!used_timers[bits32_timers[i]])
-                    remaining_timers[count_remaining_timers++] = bits32_timers[i]
-                    ;
+                    remaining_timers[count_remaining_timers++] = bits32_timers[i];
             }
 
             if (count_remaining_requests > count_remaining_timers) {
