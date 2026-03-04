@@ -38,12 +38,6 @@ public:
         TIM_Encoder_InitTypeDef sConfig = {0};
         TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-        tim->instance->hal_tim->Init.Prescaler = 5;
-        tim->instance->hal_tim->Init.CounterMode = TIM_COUNTERMODE_UP;
-        tim->instance->hal_tim->Init.Period = 55000;
-        tim->instance->hal_tim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-        tim->instance->hal_tim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-
         sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
         sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
         sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
@@ -64,6 +58,9 @@ public:
             HAL_OK) {
             ErrorHandler("Unable to config master synchronization in encoder");
         }
+
+        tim->instance->tim->PSC = 5;
+        tim->instance->tim->ARR = 55000;        
     }
 
     static void turn_on() {
