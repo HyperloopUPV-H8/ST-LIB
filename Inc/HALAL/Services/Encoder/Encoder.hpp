@@ -60,7 +60,7 @@ public:
         }
 
         tim->instance->tim->PSC = 5;
-        tim->instance->tim->ARR = 55000;        
+        tim->instance->tim->ARR = 55000;
     }
 
     static void turn_on() {
@@ -109,3 +109,4 @@ public:
 
 } // namespace ST_LIB
 #endif
+
