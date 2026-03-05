@@ -676,8 +676,7 @@ TimerXList
             static inline std::array<Instance, N> instances{};
 
             static void init(std::span<const Config, N> cfgs) {
-                TIM_TypeDef* sched_timer = 
-                    cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
+                TIM_TypeDef* sched_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
                 rcc_enable_timer(sched_timer);
 
                 for (std::size_t i = 0; i < N; i++) {
