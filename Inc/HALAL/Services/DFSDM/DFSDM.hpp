@@ -47,9 +47,9 @@ namespace ST_LIB {
         Enable  = 1
     };
 
-    enum  class Data_Write : uint8_t {
-        CPU = 0,
-        DMA = 1
+    enum  class Rdma: uint8_t {
+        Enable = 0,
+        Disable = 1
     };
 
     enum  class Sync_Conversion : uint8_t {
@@ -121,7 +121,7 @@ namespace ST_LIB {
     uint16_t oversampling{1};
     uint16_t integrator{1};
 
-    Data_Write rdma{Data_Write::CPU};
+    Rdma rdma{Rdma::Disable};
     Fast_Conversion fast{Fast_Conversion::Disable};
     Sync_Conversion rsync{Sync_Conversion::Independent};
     Regular_Mode rcont{Regular_Mode::Single};
@@ -208,7 +208,7 @@ namespace ST_LIB {
         return GPIODomain::AlternateFunction::AF3; //In any other case
     }
     struct Entry{
-        const Config_Channel* config;
+        Config_Channel config;
         uint8_t channel;
         size_t gpio_idx;
         int32_t* buffer;
@@ -226,14 +226,20 @@ namespace ST_LIB {
         uint8_t channel;
         int32_t* buffer;
         size_t buffer_size;
-        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel& config, int32_t (&buffer)[N]) 
+        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config, int32_t (&buffer)[N]) 
         : pin(pin), 
         gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None,GPIODomain::Speed::High,dfsdm_channel_af(pin)},
         config(config),
         buffer_size(N)
         {    
+            static_assert(N != 0, "N must be bigger than 0");
             this->buffer = buffer;
             channel = get_channel(pin);
+            //remove in a future
+            if(config.rdma == Rdma::Enable){
+                compile_error("Not implemented DMA yet");
+            }
+
             if(config.offset > OFFSET_MAX || config.offset < OFFSET_MIN){
                 compile_error("Your offset is bigger than the maximum size");
             }
@@ -257,7 +263,7 @@ namespace ST_LIB {
         consteval std::size_t inscribe(Ctx &ctx) const {
             const auto gpio_idx = gpio.inscribe(ctx); 
             Entry e{
-                .config = &config,
+                .config = config,
                 .channel = channel,
                 .gpio_idx = gpio_idx,
                 .buffer = buffer,
@@ -268,17 +274,17 @@ namespace ST_LIB {
     };
     // I hate stm32,has volatile in the DFSDM structs.
     struct FilterConfig{
-        uint32_t FLTCR1;
-        uint32_t FLTCR2;
-        uint32_t FLTFCR;
-        uint32_t FLTAWHTR;
-        uint32_t FLTAWLTR;
-        uint32_t FLTJCHGR;
+        uint32_t FLTCR1{};
+        uint32_t FLTCR2{};
+        uint32_t FLTFCR{};
+        uint32_t FLTAWHTR{};
+        uint32_t FLTAWLTR{};
+        uint32_t FLTJCHGR{};
     };
     struct ChannelConfig{
-        uint32_t CHCFGR1;
-        uint32_t CHCFGR2;
-        uint32_t CHAWSCDR;
+        uint32_t CHCFGR1{};
+        uint32_t CHCFGR2{};
+        uint32_t CHAWSCDR{};
     };
     struct Config {
         size_t gpio_idx;
@@ -287,6 +293,7 @@ namespace ST_LIB {
         
         uint32_t latency_cycles;
         Type_Conversion type_conv;
+        Rdma rdma;
 
         uint8_t filter;
         uint8_t channel;
@@ -351,7 +358,7 @@ namespace ST_LIB {
     }
     static consteval uint32_t make_fltcr2(const Entry& e){
         uint32_t v = 0;
-        if(e.config.rdma == Data_Write::CPU || e.config.conversion_complete_callback != nullptr){
+        if(e.config.rdma == Rdma::Disable || e.config.conversion_complete_callback != nullptr){
             v |= DFSDM_FLTCR2_REOCIE;
             v |= DFSDM_FLTCR2_JEOCIE;
         }
@@ -464,6 +471,8 @@ namespace ST_LIB {
             cfg.buffer_size = e.buffer_size;
             cfg.buffer = e.buffer;
             cfg.type_conv = e.config.type_conv;
+            cfg.rdma = e.config.rdma;
+
             //add the callbacks
             cfg.overrun_callback = e.config.overrun_callback;
             cfg.clock_absence_callback = e.config.clock_absence_callback;
@@ -524,6 +533,7 @@ namespace ST_LIB {
         uint8_t channel;
         uint8_t filter;
         Type_Conversion type_conv;
+        Rdma rdma;
         
         int32_t* buffer{};
         size_t length_buffer{};
@@ -792,6 +802,7 @@ namespace ST_LIB {
                 inst.type_conv = cfg.type_conv;
                 inst.filter = cfg.filter;
                 inst.channel = cfg.channel;
+                inst.rdma = cfg.rdma;
 
                 inst.buffer = cfg.buffer;
                 inst.length_buffer = cfg.buffer_size;
@@ -854,19 +865,27 @@ namespace ST_LIB {
 
         if(isr & DFSDM_FLTISR_REOCF_Msk){
             Instance* inst = channel_instances[filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATACH_Msk];
-            inst->buffer[inst->idx] = (filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
-            inst->idx = (inst->idx + 1) % inst->length_buffer;
-            if(inst->end_conversion_cb != nullptr){
-                inst->end_conversion_cb();
+            if(inst != nullptr && inst->buffer != nullptr){
+                if(inst->rdma == Rdma::Disable){
+                    inst->buffer[inst->idx] = (filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
+                    inst->idx = (inst->idx + 1) % inst->length_buffer;
+                }
+                if(inst->end_conversion_cb != nullptr){
+                    inst->end_conversion_cb();
+                }
             }
         }
         if(isr & DFSDM_FLTISR_JEOCF_Msk){
             //GUARDARLO EN LA DIRECCIÓN DE MEMORIA QUE ME PORPORCIONE EL USUARIO
             Instance* inst = channel_instances[filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATACH_Msk];
-            inst->buffer[inst->idx] = (filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
-            inst->idx = (inst->idx + 1) % inst->length_buffer;
-            if(inst->end_conversion_cb != nullptr){
-                inst->end_conversion_cb();
+            if(inst != nullptr && inst->buffer != nullptr){
+                if(inst->rdma == Rdma::Disable){
+                    inst->buffer[inst->idx] = (filter->FLTRDATAR & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
+                    inst->idx = (inst->idx + 1) % inst->length_buffer;
+                }
+                if(inst->end_conversion_cb != nullptr){
+                    inst->end_conversion_cb();
+                }
             }
         }
         if(isr & (channels_enabled << DFSDM_FLTICR_CLRSCDF_Pos)){
