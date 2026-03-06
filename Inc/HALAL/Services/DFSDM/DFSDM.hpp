@@ -3,6 +3,7 @@
 #include "HALAL/Models/GPIO.hpp"
 #include "HALAL/Models/Pin.hpp"
 
+
 #define Oversampling_MAX 1024
 #define Oversampling_MAX_Filter_4 215
 #define Oversampling_MAX_Filter_5 73
@@ -61,7 +62,7 @@ namespace ST_LIB {
         Continuous = 1
     };
 
-    enum  class Analog_Watchdog_Fast_Mode : uint8_t {
+    enum  class Analog_Watchdog_Mode : uint8_t {
         After_Filter = 0,   // AWFSEL = 0
         Channel_Data = 1    // AWFSEL = 1
     };
@@ -81,6 +82,10 @@ namespace ST_LIB {
         Enable = 1
     };
     enum class Extreme_Detector : uint8_t{
+        Disable = 0,
+        Enable = 1
+    };
+    enum class Analog_Watchdog : uint8_t{
         Disable = 0,
         Enable = 1
     };
@@ -132,9 +137,11 @@ namespace ST_LIB {
 
     /* -------- Analog watchdog -------- */
 
-    bool watchdog_enable{false};
-    Analog_Watchdog_Fast_Mode watchdog_mode{Analog_Watchdog_Fast_Mode::After_Filter};
-
+    Analog_Watchdog watchdog{Analog_Watchdog::Disable};
+    Analog_Watchdog_Mode watchdog_mode{Analog_Watchdog_Mode::After_Filter};
+    //If Mode Watchdog == After filter
+    Filter_Type filter_wathdog{Filter_Type::Sinc2};
+    uint8_t watchdog_oversampling{5};
     int32_t watchdog_low_threshold{0x10000000};
     int32_t watchdog_high_threshold{0x7FFFFFFF};
 
@@ -239,6 +246,12 @@ namespace ST_LIB {
             if (!is_correct_oversampling(config.filter_type, config.oversampling)){
                 compile_error("DFSDM_FILTER: invalid oversampling for selected filter type");
             } 
+            if(config.watchdog_oversampling > 31){
+                compile_error("DFSDM_Watchdog oversampling is bigger than the maximum allowed");
+            }
+            if(static_cast<uint32_t>(config.filter_wathdog) > 3){
+                compile_error("Why would a sane person need a filter of the watchdog higher than sinc3");
+            }
         }
         template<class Ctx>
         consteval std::size_t inscribe(Ctx &ctx) const {
@@ -258,6 +271,9 @@ namespace ST_LIB {
         uint32_t FLTCR1;
         uint32_t FLTCR2;
         uint32_t FLTFCR;
+        uint32_t FLTAWHTR;
+        uint32_t FLTAWLTR;
+        uint32_t FLTJCHGR;
     };
     struct ChannelConfig{
         uint32_t CHCFGR1;
@@ -321,6 +337,7 @@ namespace ST_LIB {
         }
         return 0;
     }
+    //Filter registers
     static consteval uint32_t make_fltfcr(const Entry& e)
     {
         return
@@ -329,19 +346,26 @@ namespace ST_LIB {
             (uint32_t(e.config.integrator - 1) << DFSDM_FLTFCR_IOSR_Pos);
     }
     static consteval uint32_t make_fltcr2_global(){
-        //Activate the interrupt, to activate the continous detection, activate in execution the channel
-        return 
-            (uint32_t)(DFSDM_FLTCR2_CKABIE | 
-            DFSDM_FLTCR2_SCDIE);
+        //Activate the interrupt, to activate the continous detection, then the channel can 
+        return (uint32_t)(DFSDM_FLTCR2_CKABIE | DFSDM_FLTCR2_SCDIE);
     }
     static consteval uint32_t make_fltcr2(const Entry& e){
         uint32_t v = 0;
-        if(e.config.rdma == Data_Write::CPU){
+        if(e.config.rdma == Data_Write::CPU || e.config.conversion_complete_callback != nullptr){
             v |= DFSDM_FLTCR2_REOCIE;
             v |= DFSDM_FLTCR2_JEOCIE;
         }
-        //Activate the interrupt AWDIE,in case of using CPU also activating REOCIE
-        v |= DFSDM_FLTCR2_AWDIE;
+        if(e.config.watchdog == Analog_Watchdog::Enable){
+            v |= DFSDM_FLTCR2_AWDIE;
+            v |= 1 << (DFSDM_FLTCR2_AWDCH_Pos + e.channel);
+        } 
+        if (e.config.extreme_detector == Extreme_Detector::Enable){
+            v |= 1 << (DFSDM_FLTCR2_EXCH_Pos + e.channel);
+        }
+        if(e.config.overrun == Overrun::Enable){
+             v |= DFSDM_FLTCR2_JOVRIE;
+             v |= DFSDM_FLTCR2_ROVRIE;
+        }
         return v;
     }
     static consteval uint32_t make_fltcr1(const Entry& e,uint32_t filter)
@@ -369,8 +393,34 @@ namespace ST_LIB {
                 }
             } 
         }
+        v |= uint32_t(e.config.watchdog_mode) << DFSDM_FLTCR1_AWFSEL_Pos;
         return v;
-        
+    }
+    static consteval uint32_t make_fltawhtr(const Entry& e){
+        uint32_t v = 0;        
+        if (e.config.watchdog_mode == Analog_Watchdog_Mode::Channel_Data)
+            v |= (e.config.watchdog_high_threshold & 0xFFFF) << (DFSDM_FLTAWHTR_AWHT_Pos + DFSDM_FLTAWHTR_AWHT_Pos);
+        else
+            v |= (e.config.watchdog_high_threshold & 0xFFFFFF) << DFSDM_FLTAWHTR_AWHT_Pos;
+        return v;
+    }
+    static consteval uint32_t make_fltawltr(const Entry& e){
+        uint32_t v = 0;        
+        if (e.config.watchdog_mode == Analog_Watchdog_Mode::Channel_Data)
+            v |= (e.config.watchdog_low_threshold & 0xFFFF) << (DFSDM_FLTAWHTR_AWHT_Pos + DFSDM_FLTAWHTR_AWHT_Pos);
+        else
+            v |= (e.config.watchdog_low_threshold & 0xFFFFFF) << DFSDM_FLTAWHTR_AWHT_Pos;
+        return v;
+    }
+    //Channel
+    static consteval uint32_t make_chawscdr(const Entry& e){
+        uint32_t v = 0;
+        v |= uint32_t(e.config.short_circuit_count) << DFSDM_CHAWSCDR_SCDT_Pos;
+        if(e.config.watchdog == Analog_Watchdog::Enable){
+            v |= static_cast<uint32_t>(e.config.filter_wathdog) << DFSDM_CHAWSCDR_AWFORD_Pos;
+            v |= static_cast<uint32_t>(e.config.watchdog_oversampling & 0xF) << DFSDM_CHAWSCDR_AWFOSR_Pos;
+        }
+        return v;
     }
     static consteval uint32_t make_chcfgr1(const Entry& e){
         uint32_t v = 0;
@@ -379,6 +429,9 @@ namespace ST_LIB {
         //Chinsel = 0 -> channel input are taken from pin of the same channel y
         v |= uint32_t(e.config.spi_clock_sel) << DFSDM_CHCFGR1_SPICKSEL_Pos;
         v |= uint32_t (e.config.spi_type) << DFSDM_CHCFGR1_SITP_Pos;
+        v |= uint32_t(e.config.clock_absence) << DFSDM_CHCFGR1_CKABEN_Pos;
+        v |= uint32_t(e.config.short_circuit) << DFSDM_CHCFGR1_SCDEN_Pos;
+
         return v;
 
     }
@@ -386,11 +439,6 @@ namespace ST_LIB {
         uint32_t v = 0;
         v |= (e.config.offset & 0x00FFFFFF) << DFSDM_CHCFGR2_OFFSET_Pos;
         v |= uint8_t(e.config.right_shift & 0x0F) << DFSDM_CHCFGR2_DTRBS_Pos;
-        return v;
-    }
-    static consteval uint32_t make_chawscdr(const Entry& e){
-        uint32_t v = 0;
-        v |= uint32_t(e.config.short_circuit_count) << DFSDM_CHAWSCDR_SCDT_Pos;
         return v;
     }
 
@@ -431,14 +479,28 @@ namespace ST_LIB {
             cfg.init_data_channel.CHCFGR1 |= make_chcfgr1(e);
             cfg.init_data_channel.CHCFGR2 |= make_chcfgr2(e);
             cfg.init_data_channel.CHAWSCDR |= make_chawscdr(e);
+            cfg.init_data_filter.FLTAWHTR |= make_fltawhtr(e);
+            cfg.init_data_filter.FLTAWLTR |= make_fltawltr(e);
+            if(e.config.type_conv == Type_Conversion::Injected) cfg.init_data_filter.FLTJCHGR |= 1 << e.channel;
+            if(cfg.filter == 0) cfg.init_data_filter.FLTCR2 |= make_fltcr2_global();
+
             cfg.latency_cycles = compute_latency(e);
             if(filters_used[cfg.filter] != -1){
                 if(cfgs[filters_used[cfg.filter]].init_data_filter.FLTCR1 != cfg.init_data_filter.FLTCR1 ||
-                    cfgs[filters_used[cfg.filter]].init_data_filter.FLTCR2 != cfg.init_data_filter.FLTCR2 ||
-                    cfgs[filters_used[cfg.filter]].init_data_filter.FLTFCR != cfg.init_data_filter.FLTFCR){
+                    (cfgs[filters_used[cfg.filter]].init_data_filter.FLTCR2 & 0xFF) != (cfg.init_data_filter.FLTCR2 & 0xFF) ||
+                    cfgs[filters_used[cfg.filter]].init_data_filter.FLTFCR != cfg.init_data_filter.FLTFCR ||
+                    cfgs[filters_used[cfg.filter]].init_data_filter.FLTAWLTR != cfg.init_data_filter.FLTAWLTR ||
+                    cfgs[filters_used[cfg.filter]].init_data_filter.FLTAWHTR != cfg.init_data_filter.FLTAWHTR){
                         compile_error("You have two channels that goes to the same filter with different filter configuration");
-                    }
-                
+                }
+                //have the same thing in every register of the filter
+                //Channel group conversion in injected mode
+                cfgs[filters_used[cfg.filter]].init_data_filter.FLTJCHGR |= cfg.init_data_filter.FLTJCHGR;
+                cfg.init_data_filter.FLTJCHGR = cfgs[filters_used[cfg.filter]].init_data_filter.FLTJCHGR;
+                //Watchdog and Extreme detector channel enabled
+                cfgs[filters_used[cfg.filter]].init_data_filter.FLTCR2 |= cfg.init_data_filter.FLTCR2;
+                cfg.init_data_filter.FLTCR2 = cfgs[filters_used[cfg.filter]].init_data_filter.FLTCR2;
+                //Watchdog and Extreme detector channel enabled
             }
             filters_used[cfg.filter] = i;    
         }
@@ -454,6 +516,8 @@ namespace ST_LIB {
         Callback watchdog_cb{};
         Callback short_circuit_cb{};
         Callback clock_absence_cb{};
+        Callback overrun_cb{};
+        Callback end_conversion_cb{};
         
         uint32_t latency_cycles; 
         uint8_t channel;
@@ -612,40 +676,6 @@ namespace ST_LIB {
             uint32_t check_max_extreme_detector() {
                 return filter_regs->FLTEXMAX >> DFSDM_FLTEXMAX_EXMAX_Pos;
             }
-            //watchdog
-            bool activate_watchdog(Callback callback_wdg,uint32_t low_watchdog,uint32_t high_watchdog,
-                    Filter_Type watchdog_filter = Filter_Type::FastSinc,uint32_t oversampling = 1,Analog_Watchdog_Fast_Mode awfsel = Analog_Watchdog_Fast_Mode::After_Filter)
-            {
-                if (oversampling == 0 || oversampling > 32) return false;
-                if (low_watchdog >= high_watchdog) return false;
-                watchdog_cb = callback_wdg;
-                bool was_enabled_channel = is_enabled_channel();
-                if (was_enabled_channel) disable_channel();
-
-                /* ---------------- CHANNEL CONFIG ---------------- */
-                channel_regs->CHAWSCDR &= ~(DFSDM_CHAWSCDR_AWFORD_Msk | DFSDM_CHAWSCDR_AWFOSR_Msk);
-                channel_regs->CHAWSCDR |= (uint32_t(watchdog_filter) << DFSDM_CHAWSCDR_AWFORD_Pos);
-                channel_regs->CHAWSCDR |=   ((oversampling - 1) << DFSDM_CHAWSCDR_AWFOSR_Pos);
-
-                /* ---------------- FILTER CONFIG ---------------- */
-                bool was_enabled_filter = is_enabled_filter();
-                if(was_enabled_filter) disable_filter();                
-                if (awfsel == Analog_Watchdog_Fast_Mode::Channel_Data)
-                    filter_regs->FLTCR1 |= DFSDM_FLTCR1_AWFSEL;
-                else
-                    filter_regs->FLTCR1 &= ~DFSDM_FLTCR1_AWFSEL;
-
-                // Set thresholds
-                filter_regs->FLTAWLTR = low_watchdog;
-                filter_regs->FLTAWHTR = high_watchdog;
-                // add this channel to the Analog watchdog channel selection
-                filter_regs->FLTCR2 |= (this->channel << DFSDM_FLTCR2_AWDCH_Pos);
-                // Enable analog watchdog interrupt
-                filter_regs->FLTCR2 |= DFSDM_FLTCR2_AWDIE;
-                if (was_enabled_channel || was_enabled_filter) enable();
-                return true;
-            }
-
             void modify_watchdog_lth(uint32_t value) {
 
                 filter_regs->FLTAWLTR &= ~DFSDM_FLTAWLTR_AWLT_Msk;
@@ -666,15 +696,46 @@ namespace ST_LIB {
                 else
                     filter_regs->FLTAWHTR = (value & 0xFFFFFF) << DFSDM_FLTAWHTR_AWHT_Pos;
             }
-            // void activate_ckabie(Callback ckabie_cb){ 
-            //     DFSDM1_Filter0->FLTCR2 &= ~(DFSDM_FLTCR2_CKABIE_Msk);
-            // }
-            // void activate_scdie(Callback scdie_cb){
-            //     DFSDM1_Filter0->FLTCR2 &= ~(DFSDM_FLTCR2_SCDIE_Msk);
-            // }
+            //get the last conversion from a filter
+            static uint8_t get_last_conversion_from_filter(uint8_t filter, Type_Conversion conv){
+                uint8_t channel = 0xFF;
+                switch(filter){
+                    case 0:
+                        if(conv == Type_Conversion::Injected){
+                            channel = (DFSDM1_Filter0->FLTJDATAR & 0x7);
+                        }else{
+                            channel = (DFSDM1_Filter0->FLTRDATAR & 0x7);
+                        }
+                        break;
+                    case 1: 
+                        if(conv == Type_Conversion::Injected){
+                            channel = (DFSDM1_Filter1->FLTJDATAR & 0x7);
+                        }else{
+                            channel = (DFSDM1_Filter1->FLTRDATAR & 0x7);
+                        }
+                        break;
+
+                    case 2:
+                        if(conv == Type_Conversion::Injected){
+                            channel = (DFSDM1_Filter2->FLTJDATAR & 0x7);
+                        }else{
+                            channel = (DFSDM1_Filter2->FLTRDATAR & 0x7);
+                        }
+                        break;
+                    case 3: 
+                        if(conv == Type_Conversion::Injected){
+                            channel = (DFSDM1_Filter3->FLTJDATAR & 0x7);
+                        }else{
+                            channel = (DFSDM1_Filter3->FLTRDATAR & 0x7);
+                        }
+                        break;
+                    default: break;
+                }
+                return channel;
+            }
     };
     static inline Instance* channel_instances[DFSDM_CHANNEL_DOMAIN::max_instances] = {nullptr}; 
-    
+    static inline uint8_t channels_enabled{};
     static constexpr DFSDM_Filter_TypeDef* filter_hw[4] = {
             DFSDM1_Filter0,
             DFSDM1_Filter1,
@@ -694,7 +755,6 @@ namespace ST_LIB {
     template <std::size_t N> struct Init {
        
         static inline std::array<Instance, N> instances{};
-       
         static void init(std::span<const Config, N> cfgs,std::span<GPIODomain::Instance> gpio_instances) {
             std::array<bool,4> filters_configured = {false,false,false,false};
             RCC->APB2ENR |= RCC_APB2ENR_DFSDM1EN; //Activate the DFSDM clock
@@ -719,6 +779,12 @@ namespace ST_LIB {
 
                 inst.buffer = cfg.buffer;
                 inst.length_buffer = cfg.buffer_size;
+
+                //callbacks
+                inst.overrun_cb = cfg.overrun_callback;
+                inst.short_circuit_cb = cfg.short_circuit_callback;
+                inst.watchdog_cb = cfg.watchdog_callback;
+                inst.end_conversion_cb = cfg.conversion_complete_callback;
                 if(!filters_configured[cfg.filter]){
                     //add everything to the register of the filter
                     inst.filter_regs->FLTCR1 |= cfg.init_data_filter.FLTCR1;
@@ -728,14 +794,17 @@ namespace ST_LIB {
                     }
                     inst.filter_regs->FLTCR2 |= cfg.init_data_filter.FLTCR2;
                     inst.filter_regs->FLTFCR |= cfg.init_data_filter.FLTFCR;   
+                    inst.filter_regs->FLTAWHTR |= cfg.init_data_filter.FLTAWHTR;
+                    inst.filter_regs->FLTAWLTR |= cfg.init_data_filter.FLTAWLTR;
+                    inst.filter_regs->FLTJCHGR |= cfg.init_data_filter.FLTJCHGR;
+                    
+                    filters_configured[cfg.filter] = true;
                 }   
-                if(inst.type_conv == Type_Conversion::Injected){
-                    inst.filter_regs->FLTJCHGR |= 1 << inst.channel;
-                }
                 //add everything to the channel register
                 inst.channel_regs->CHCFGR1 |= cfg.init_data_channel.CHCFGR1;
                 inst.channel_regs->CHCFGR2 |= cfg.init_data_channel.CHCFGR2;
-                filters_configured[cfg.filter] = true;
+                inst.channel_regs->CHAWSCDR |= cfg.init_data_channel.CHAWSCDR;
+                
 
                 //enable the filter
                 inst.filter_regs->FLTCR1 |= DFSDM_FLTCR1_DFEN;
@@ -753,13 +822,13 @@ namespace ST_LIB {
                 }
                 //update channel_instances
                 channel_instances[inst.channel] = &inst;
+                channels_enabled |= 1 << inst.channel;
             }
-            DFSDM1_Filter0->FLTCR2 |= make_fltcr2_global();
-            
             //Activate the DFSDM GLOBAL Interface 
             DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
         }
     };
+    
     static void handle_irq(uint8_t filter_index)
     {
 
@@ -771,35 +840,38 @@ namespace ST_LIB {
             Instance* inst = channel_instances[filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATACH_Msk];
             inst->buffer[inst->idx] = (filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
             inst->idx = (inst->idx + 1) % inst->length_buffer;
-            return;
+            if(inst->end_conversion_cb != nullptr){
+                inst->end_conversion_cb();
+            }
         }
         if(isr & DFSDM_FLTISR_JEOCF_Msk){
             //GUARDARLO EN LA DIRECCIÓN DE MEMORIA QUE ME PORPORCIONE EL USUARIO
             Instance* inst = channel_instances[filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATACH_Msk];
             inst->buffer[inst->idx] = (filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
             inst->idx = (inst->idx + 1) % inst->length_buffer;
-            return;
+            if(inst->end_conversion_cb != nullptr){
+                inst->end_conversion_cb();
+            }
         }
-        if(isr & DFSDM_FLTISR_SCDF_Msk){
-            uint32_t ch = __builtin_ctz((isr & DFSDM_FLTISR_SCDF_Msk) >> DFSDM_FLTISR_SCDF_Pos) + 1;
-            if(channel_instances[ch]->short_circuit_cb != nullptr) channel_instances[ch]->short_circuit_cb();
+        if(isr & (channels_enabled << DFSDM_FLTICR_CLRSCDF_Pos)){
+            uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_SCDF_Msk) >> DFSDM_FLTISR_SCDF_Pos;
+            if(channel_instances[ch] != nullptr && channel_instances[ch]->short_circuit_cb != nullptr) channel_instances[ch]->short_circuit_cb();
             //clear
-            filter->FLTICR |= DFSDM_FLTICR_CLRSCDF;
+            filter->FLTICR = DFSDM_FLTICR_CLRSCDF;
         }
-        if(isr & DFSDM_FLTISR_CKABF_Msk){
-            uint32_t ch = __builtin_ctz((isr & DFSDM_FLTISR_CKABF_Msk)>> DFSDM_FLTISR_CKABF_Pos) + 1;
-            if(channel_instances[ch]->clock_absence_cb != nullptr) channel_instances[ch]->clock_absence_cb();
-            //cleaR
-            filter->FLTICR |= DFSDM_FLTICR_CLRSCDF;
+        if(isr & (channels_enabled << DFSDM_FLTISR_CKABF_Pos)){
+            uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_CKABF_Msk)>> DFSDM_FLTISR_CKABF_Pos;
+            if(channel_instances[ch] != nullptr && channel_instances[ch]->clock_absence_cb != nullptr) channel_instances[ch]->clock_absence_cb();
+            //clear
+            filter->FLTICR = DFSDM_FLTICR_CLRCKABF;
         }
         //Analog watchdog
-        if (isr & DFSDM_FLTISR_AWDF)
+        if (isr & (DFSDM_FLTISR_AWDF << DFSDM_FLTISR_AWDF_Pos))
         {
             filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWLTF;
             filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWHTF;
             //mirar como saber el canal que ha lanzado el watchdog
-            //  if(filter->watchdog_cb != nullptr)inst->watchdog_cb();
-            return;
+            // if(filter->watchdog_cb != nullptr) watchdog_cb();
         }
     }
 };
