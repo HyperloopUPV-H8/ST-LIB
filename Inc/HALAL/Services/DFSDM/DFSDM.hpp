@@ -208,7 +208,7 @@ namespace ST_LIB {
         return GPIODomain::AlternateFunction::AF3; //In any other case
     }
     struct Entry{
-        Config_Channel config;
+        const Config_Channel* config;
         uint8_t channel;
         size_t gpio_idx;
         int32_t* buffer;
@@ -216,17 +216,17 @@ namespace ST_LIB {
 
     };
 
-    static constexpr size_t max_instances{8};
+    static constexpr size_t mastances{8};
     template <size_t N>
     struct DFSDM_CHANNEL{
         using domain = DFSDM_CHANNEL_DOMAIN;
         const GPIODomain::Pin& pin;
         GPIODomain::GPIO gpio;
-        Config_Channel config;
+        const Config_Channel config;
         uint8_t channel;
         int32_t* buffer;
         size_t buffer_size;
-        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin, Config_Channel config, int32_t (&buffer)[N]) 
+        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel& config, int32_t (&buffer)[N]) 
         : pin(pin), 
         gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None,GPIODomain::Speed::High,dfsdm_channel_af(pin)},
         config(config),
@@ -246,7 +246,7 @@ namespace ST_LIB {
             if (!is_correct_oversampling(config.filter_type, config.oversampling)){
                 compile_error("DFSDM_FILTER: invalid oversampling for selected filter type");
             } 
-            if(config.watchdog_oversampling > 31){
+            if(config.watchdog_oversampling > 32){
                 compile_error("DFSDM_Watchdog oversampling is bigger than the maximum allowed");
             }
             if(static_cast<uint32_t>(config.filter_wathdog) > 3){
@@ -257,7 +257,7 @@ namespace ST_LIB {
         consteval std::size_t inscribe(Ctx &ctx) const {
             const auto gpio_idx = gpio.inscribe(ctx); 
             Entry e{
-                .config = config,
+                .config = &config,
                 .channel = channel,
                 .gpio_idx = gpio_idx,
                 .buffer = buffer,
@@ -418,7 +418,7 @@ namespace ST_LIB {
         v |= uint32_t(e.config.short_circuit_count) << DFSDM_CHAWSCDR_SCDT_Pos;
         if(e.config.watchdog == Analog_Watchdog::Enable){
             v |= static_cast<uint32_t>(e.config.filter_wathdog) << DFSDM_CHAWSCDR_AWFORD_Pos;
-            v |= static_cast<uint32_t>(e.config.watchdog_oversampling & 0xF) << DFSDM_CHAWSCDR_AWFOSR_Pos;
+            v |= static_cast<uint32_t>((e.config.watchdog_oversampling-1) & 0xF) << DFSDM_CHAWSCDR_AWFOSR_Pos;
         }
         return v;
     }
@@ -463,6 +463,7 @@ namespace ST_LIB {
             cfg.channel = e.channel;
             cfg.buffer_size = e.buffer_size;
             cfg.buffer = e.buffer;
+            cfg.type_conv = e.config.type_conv;
             //add the callbacks
             cfg.overrun_callback = e.config.overrun_callback;
             cfg.clock_absence_callback = e.config.clock_absence_callback;
@@ -570,8 +571,8 @@ namespace ST_LIB {
             void enable() {
                 //just in case enable everything to work
                 enable_DFSDM_Peripheral();
-                enable_filter();
                 enable_channel();
+                enable_filter();
             }
 
             void disable() {
@@ -611,11 +612,25 @@ namespace ST_LIB {
 
                 if (was_enabled_filter) enable_filter();
             }
-            void modify_mode(Regular_Mode mode) {
+            void modify_regular_mode(Regular_Mode mode) {
+                bool was_enabled_filter = is_enabled_filter();
+                if(was_enabled_filter) disable_filter();
+
                 filter_regs->FLTCR1 &= ~DFSDM_FLTCR1_RCONT_Msk;
                 filter_regs->FLTCR1 |= (uint32_t(mode) << DFSDM_FLTCR1_RCONT_Pos);
+                
+                if(was_enabled_filter) enable_filter();
             }
+            void read_this_channel_in_regular_mode(){
+                bool was_enabled_filter = is_enabled_filter();
+                if(was_enabled_filter) disable_filter();
 
+                filter_regs->FLTCR1 &= ~DFSDM_FLTCR1_RCH_Msk;
+                filter_regs->FLTCR1 |= (uint32_t(this->channel) << DFSDM_FLTCR1_RCONT_Pos);
+            
+                if(was_enabled_filter) enable_filter();
+                start();
+            }
             bool modify_oversampling(uint16_t oversampling) {
                 if (oversampling == 0) return false;
 
@@ -688,7 +703,7 @@ namespace ST_LIB {
             }
 
             void modify_watchdog_hth(uint32_t value) {
-                filter_regs->FLTAWLTR &=  ~DFSDM_FLTAWLTR_AWLT_Msk;
+                filter_regs->FLTAWHTR &=  ~DFSDM_FLTAWHTR_AWHT_Msk;
                 bool fast = (filter_regs->FLTCR1 & DFSDM_FLTCR1_AWFSEL);
                 
                 if (fast)
@@ -857,13 +872,13 @@ namespace ST_LIB {
             uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_SCDF_Msk) >> DFSDM_FLTISR_SCDF_Pos;
             if(channel_instances[ch] != nullptr && channel_instances[ch]->short_circuit_cb != nullptr) channel_instances[ch]->short_circuit_cb();
             //clear
-            filter->FLTICR = DFSDM_FLTICR_CLRSCDF;
+            filter->FLTICR |= DFSDM_FLTICR_CLRSCDF;
         }
         if(isr & (channels_enabled << DFSDM_FLTISR_CKABF_Pos)){
             uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_CKABF_Msk)>> DFSDM_FLTISR_CKABF_Pos;
             if(channel_instances[ch] != nullptr && channel_instances[ch]->clock_absence_cb != nullptr) channel_instances[ch]->clock_absence_cb();
             //clear
-            filter->FLTICR = DFSDM_FLTICR_CLRCKABF;
+            filter->FLTICR |= DFSDM_FLTICR_CLRCKABF;
         }
         //Analog watchdog
         if (isr & (DFSDM_FLTISR_AWDF << DFSDM_FLTISR_AWDF_Pos))
