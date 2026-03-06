@@ -749,6 +749,7 @@ namespace ST_LIB {
                 return channel;
             }
     };
+    static constexpr std::size_t max_instances{8};
     static inline Instance* channel_instances[DFSDM_CHANNEL_DOMAIN::max_instances] = {nullptr}; 
     static inline uint8_t channels_enabled{};
     static constexpr DFSDM_Filter_TypeDef* filter_hw[4] = {
