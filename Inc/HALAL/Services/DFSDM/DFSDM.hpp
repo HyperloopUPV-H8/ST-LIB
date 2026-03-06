@@ -478,6 +478,7 @@ namespace ST_LIB {
             cfg.clock_absence_callback = e.config.clock_absence_callback;
             cfg.short_circuit_callback = e.config.short_circuit_callback;
             cfg.watchdog_callback = e.config.watchdog_callback;
+            cfg.conversion_complete_callback = e.config.conversion_complete_callback;
             if(filter_per_channel){
                 cfg.filter = i;
             }else{
