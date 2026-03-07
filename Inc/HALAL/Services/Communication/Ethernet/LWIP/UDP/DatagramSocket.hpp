@@ -8,7 +8,7 @@
 
 class DatagramSocket {
 public:
-    struct udp_pcb* udp_control_block;
+    struct udp_pcb* udp_control_block = nullptr;
 
     IPV4 local_ip;
     uint32_t local_port;
@@ -33,14 +33,27 @@ public:
         u16_t port
     );
     bool send_packet(Packet& packet) {
+        if (is_disconnected || udp_control_block == nullptr) {
+            return false;
+        }
+        const size_t packet_size = packet.get_size();
         uint8_t* packet_buffer = packet.build();
+        if (packet_buffer == nullptr || packet_size == 0) {
+            return false;
+        }
 
-        struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet.size, PBUF_RAM);
-        pbuf_take(tx_buffer, packet_buffer, packet.size);
-        udp_send(udp_control_block, tx_buffer);
+        struct pbuf* tx_buffer = pbuf_alloc(PBUF_TRANSPORT, packet_size, PBUF_RAM);
+        if (tx_buffer == nullptr) {
+            return false;
+        }
+        if (pbuf_take(tx_buffer, packet_buffer, packet_size) != ERR_OK) {
+            pbuf_free(tx_buffer);
+            return false;
+        }
+        err_t send_error = udp_send(udp_control_block, tx_buffer);
         pbuf_free(tx_buffer);
 
-        return true;
+        return send_error == ERR_OK;
     }
 
     void close();

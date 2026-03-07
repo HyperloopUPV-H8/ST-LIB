@@ -18,6 +18,7 @@ private:
 
 public:
     static bool warning_triggered;
+    static bool warning_to_communicate;
 
     /**
      * @brief Triggers WarningHandler and format the warning message. The format works

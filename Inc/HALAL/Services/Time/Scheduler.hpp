@@ -15,23 +15,11 @@
 #include <cstdint>
 #include <functional>
 
-/* NOTE(vic): Esto cambiará pronto */
-#ifndef SCHEDULER_TIMER_IDX
-#define SCHEDULER_TIMER_IDX 2
-#endif
-
-#ifndef glue
-#define glue_(a, b) a##b
-#define glue(a, b) glue_(a, b)
-#endif
-#define SCHEDULER_TIMER_BASE glue(TIM, glue(SCHEDULER_TIMER_IDX, _BASE))
-
-// Used to reserve a TimerPeripheral
 #ifndef SIM_ON
 #include "stm32h7xx_hal_tim.h"
-#define SCHEDULER_HAL_TIM glue(htim, SCHEDULER_TIMER_IDX)
-extern TIM_HandleTypeDef SCHEDULER_HAL_TIM;
 #endif
+
+extern TIM_TypeDef* Scheduler_global_timer;
 
 struct Scheduler {
     using callback_t = void (*)();
@@ -39,7 +27,9 @@ struct Scheduler {
 
     static void start();
     static void update();
-    static inline uint64_t get_global_tick() { return global_tick_us_; }
+    static inline uint64_t get_global_tick() {
+        return global_tick_us_ + Scheduler_global_timer->CNT;
+    }
 
     static uint16_t register_task(uint32_t period_us, callback_t func);
     static bool unregister_task(uint16_t id);

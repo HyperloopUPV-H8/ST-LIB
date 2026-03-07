@@ -12,6 +12,8 @@ namespace ST_LIB {
 template <const TimerDomain::Timer& dev> struct TimerWrapper;
 
 template <const TimerDomain::Timer& dev> class Encoder {
+    friend struct TimerWrapper<dev>;
+
     static_assert(
         dev.e.pin_count == 2,
         "Encoder must have exactly 2 encoder pins, as it uses the whole timer"
@@ -26,23 +28,16 @@ template <const TimerDomain::Timer& dev> class Encoder {
     inline static TimerWrapper<dev>* timer;
     inline static bool is_on = false;
 
-public:
     Encoder(TimerWrapper<dev>* tim) {
         if (timer == nullptr) {
             init(tim);
         }
     }
 
+public:
     static void init(TimerWrapper<dev>* tim) {
-        timer = tim;
         TIM_Encoder_InitTypeDef sConfig = {0};
         TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-        tim->instance->hal_tim->Init.Prescaler = 5;
-        tim->instance->hal_tim->Init.CounterMode = TIM_COUNTERMODE_UP;
-        tim->instance->hal_tim->Init.Period = 55000;
-        tim->instance->hal_tim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-        tim->instance->hal_tim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
         sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
         sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
@@ -56,6 +51,7 @@ public:
 
         if (HAL_TIM_Encoder_Init(tim->instance->hal_tim, &sConfig) != HAL_OK) {
             ErrorHandler("Unable to init encoder");
+            return;
         }
 
         sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
@@ -63,7 +59,12 @@ public:
         if (HAL_TIMEx_MasterConfigSynchronization(tim->instance->hal_tim, &sMasterConfig) !=
             HAL_OK) {
             ErrorHandler("Unable to config master synchronization in encoder");
+            return;
         }
+
+        tim->instance->tim->PSC = 5;
+        tim->instance->tim->ARR = 55000;
+        timer = tim;
     }
 
     static void turn_on() {
@@ -85,13 +86,15 @@ public:
     static void turn_off() {
         if (!is_on)
             return;
+
         if (HAL_TIM_Encoder_Stop(timer->instance->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
             ErrorHandler("Unable to stop encoder");
+            return;
         }
         is_on = false;
     }
 
-    static inline void reset() { timer->instance->tim->CNT = UINT32_MAX / 2; }
+    static inline void reset() { timer->instance->tim->CNT = get_initial_counter_value(); }
 
     static inline uint32_t get_counter() { return timer->instance->tim->CNT; }
 

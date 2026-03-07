@@ -14,16 +14,59 @@ namespace ST_LIB {
 
 template <const TimerDomain::Timer& dev> struct TimerWrapper;
 
-template <
-    const TimerDomain::Timer& dev, 
-    const ST_LIB::TimerPin pin>
-class PWM {
+template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
+    friend TimerWrapper<dev>;
+
+    static consteval uint8_t get_channel_state_idx(const ST_LIB::TimerChannel ch) {
+        switch (ch) {
+        case TimerChannel::CHANNEL_1:
+        case TimerChannel::CHANNEL_1_NEGATED:
+        case TimerChannel::CHANNEL_2:
+        case TimerChannel::CHANNEL_2_NEGATED:
+        case TimerChannel::CHANNEL_3:
+        case TimerChannel::CHANNEL_3_NEGATED:
+        case TimerChannel::CHANNEL_4:
+        case TimerChannel::CHANNEL_5:
+        case TimerChannel::CHANNEL_6:
+            return (static_cast<uint8_t>(ch) &
+                    ~static_cast<uint8_t>(TimerChannel::CHANNEL_NEGATED_FLAG)) -
+                   1;
+
+        default:
+            ST_LIB::compile_error("unreachable");
+            return 0;
+        }
+    }
+
+    static consteval uint8_t get_channel_mul4(const ST_LIB::TimerChannel ch) {
+        switch (ch) {
+        case TimerChannel::CHANNEL_1:
+        case TimerChannel::CHANNEL_1_NEGATED:
+            return 0x00;
+        case TimerChannel::CHANNEL_2:
+        case TimerChannel::CHANNEL_2_NEGATED:
+            return 0x04;
+        case TimerChannel::CHANNEL_3:
+        case TimerChannel::CHANNEL_3_NEGATED:
+            return 0x08;
+        case TimerChannel::CHANNEL_4:
+            return 0x0C;
+        case TimerChannel::CHANNEL_5:
+            return 0x10;
+        case TimerChannel::CHANNEL_6:
+            return 0x14;
+
+        default:
+            ST_LIB::compile_error("unreachable");
+            return 0;
+        }
+    }
+
     TimerWrapper<dev>* timer;
     uint32_t* frequency;
     float* duty_cycle = nullptr;
     bool is_on = false;
 
-public:
     PWM(TimerWrapper<dev>* tim,
         uint32_t polarity,
         uint32_t negated_polarity,
@@ -48,6 +91,7 @@ public:
         timer->template set_output_compare_preload_enable<pin.channel>();
     }
 
+public:
     void turn_on() {
         if (this->is_on)
             return;

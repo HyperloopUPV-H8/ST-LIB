@@ -17,11 +17,14 @@
 
 class Socket : public OrderProtocol {
 private:
-    tcp_pcb* connection_control_block;
-    tcp_pcb* socket_control_block;
+    tcp_pcb* connection_control_block = nullptr;
+    tcp_pcb* socket_control_block = nullptr;
     queue<struct pbuf*> tx_packet_buffer;
     queue<struct pbuf*> rx_packet_buffer;
+    vector<uint8_t> rx_stream_buffer;
+    void clear_packet_queues();
     void process_data();
+    bool try_send_immediately(Order& order);
     static err_t connect_callback(void* arg, struct tcp_pcb* client_control_block, err_t error);
     static err_t receive_callback(
         void* arg,
@@ -39,6 +42,7 @@ private:
 
 public:
     enum SocketState { INACTIVE, CONNECTED, CLOSING };
+    static constexpr size_t MAX_TX_QUEUE_DEPTH = 64;
 
     IPV4 local_ip;
     uint32_t local_port;
@@ -49,6 +53,7 @@ public:
 
     static unordered_map<EthernetNode, Socket*> connecting_sockets;
     bool pending_connection_reset = false;
+    uint16_t connect_poll_ticks = 0;
     bool use_keep_alives{true};
     struct KeepaliveConfig {
         uint32_t inactivity_time_until_keepalive_ms = TCP_INACTIVITY_TIME_UNTIL_KEEPALIVE_MS;
@@ -95,36 +100,7 @@ public:
      * @return true if the data was sent successfully, false otherwise
      */
 
-    bool send_order(Order& order) override {
-        if (state != CONNECTED) {
-            reconnect();
-            return false;
-        }
-        struct memp* next_memory_pointer_in_packet_buffer_pool =
-            (*(memp_pools[PBUF_POOL_MEMORY_DESC_POSITION]->tab))->next;
-        if (next_memory_pointer_in_packet_buffer_pool == nullptr) {
-            if (socket_control_block->unsent != nullptr) {
-                tcp_output(socket_control_block);
-            } else {
-                memp_free_pool(
-                    memp_pools[PBUF_POOL_MEMORY_DESC_POSITION],
-                    next_memory_pointer_in_packet_buffer_pool
-                );
-            }
-            return false;
-        }
-
-        uint8_t* order_buffer = order.build();
-        if (order.get_size() > tcp_sndbuf(socket_control_block)) {
-            return false;
-        }
-
-        struct pbuf* packet = pbuf_alloc(PBUF_TRANSPORT, order.get_size(), PBUF_POOL);
-        pbuf_take(packet, order_buffer, order.get_size());
-        tx_packet_buffer.push(packet);
-        send();
-        return true;
-    }
+    bool send_order(Order& order) override;
     void send();
     bool is_connected();
 };

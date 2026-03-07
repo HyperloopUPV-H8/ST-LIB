@@ -10,11 +10,8 @@
 
 #include <stdint.h>
 
-/* NOTE(vic): Pido perdón a Boris pero es la mejor manera que se me ha ocurrido hacer esto */
-#define SCHEDULER_RCC_TIMER_ENABLE glue(glue(RCC_APB1LENR_TIM, SCHEDULER_TIMER_IDX), EN)
-#define SCHEDULER_GLOBAL_TIMER_IRQn glue(TIM, glue(SCHEDULER_TIMER_IDX, _IRQn))
+TIM_TypeDef* Scheduler_global_timer = nullptr;
 
-#define Scheduler_global_timer ((TIM_TypeDef*)SCHEDULER_TIMER_BASE)
 namespace {
 constexpr uint64_t kMaxIntervalUs = static_cast<uint64_t>(UINT32_MAX) / 2 + 1ULL;
 }
@@ -68,6 +65,8 @@ void scheduler_global_timer_callback(void* raw) {
 
 void Scheduler::start() {
     static_assert((Scheduler::FREQUENCY % 1'000'000) == 0u, "frequenct must be a multiple of 1MHz");
+    Scheduler_global_timer =
+        ST_LIB::TimerDomain::cmsis_timers[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
 
     uint32_t prescaler = (SystemCoreClock / Scheduler::FREQUENCY);
     // setup prescaler
@@ -133,13 +132,8 @@ void Scheduler::start() {
 
     if (prescaler == 0 || prescaler > 0xFFFF) {
         ErrorHandler("Invalid prescaler value: %u", prescaler);
+        return;
     }
-
-    // static_assert(prescaler < 0xFFFF, "Prescaler is 16 bit, so it must be in that range");
-    // static_assert(prescaler != 0, "Prescaler must be in the range [1, 65535]");
-#ifndef SIM_ON
-    RCC->APB1LENR |= SCHEDULER_RCC_TIMER_ENABLE;
-#endif
 
     Scheduler_global_timer->PSC = (uint16_t)prescaler;
     Scheduler_global_timer->ARR = 0;
@@ -147,9 +141,8 @@ void Scheduler::start() {
     Scheduler_global_timer->CR1 =
         LL_TIM_CLOCKDIVISION_DIV1 | (Scheduler_global_timer->CR1 & ~TIM_CR1_CKD);
 
-    // Temporary solution for TimerDomain
-    ST_LIB::TimerDomain::callbacks[ST_LIB::timer_idxmap[SCHEDULER_TIMER_IDX]] =
-        scheduler_global_timer_callback;
+    ST_LIB::TimerDomain::callbacks[ST_LIB::timer_idxmap[static_cast<uint8_t>(SCHEDULER_TIMER_DOMAIN
+    )]] = scheduler_global_timer_callback;
 
     Scheduler_global_timer->CNT = 0; /* Clear counter value */
 
