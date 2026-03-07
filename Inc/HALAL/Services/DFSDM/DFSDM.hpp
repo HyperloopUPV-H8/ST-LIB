@@ -47,9 +47,9 @@ namespace ST_LIB {
         Enable  = 1
     };
 
-    enum  class Rdma: uint8_t {
-        Enable = 0,
-        Disable = 1
+    enum  class Dma: uint8_t {
+        Disable = 0,
+        Enable = 1
     };
 
     enum  class Sync_Conversion : uint8_t {
@@ -121,7 +121,7 @@ namespace ST_LIB {
     uint16_t oversampling{1};
     uint16_t integrator{1};
 
-    Rdma rdma{Rdma::Disable};
+    Dma dma{Dma::Disable};
     Fast_Conversion fast{Fast_Conversion::Disable};
     Sync_Conversion rsync{Sync_Conversion::Independent};
     Regular_Mode rcont{Regular_Mode::Single};
@@ -236,7 +236,7 @@ namespace ST_LIB {
             this->buffer = buffer;
             channel = get_channel(pin);
             //remove in a future
-            if(config.rdma == Rdma::Enable){
+            if(config.dma == Dma::Enable){
                 compile_error("Not implemented DMA yet");
             }
 
@@ -293,7 +293,7 @@ namespace ST_LIB {
         
         uint32_t latency_cycles;
         Type_Conversion type_conv;
-        Rdma rdma;
+        Dma dma;
 
         uint8_t filter;
         uint8_t channel;
@@ -358,7 +358,7 @@ namespace ST_LIB {
     }
     static consteval uint32_t make_fltcr2(const Entry& e){
         uint32_t v = 0;
-        if(e.config.rdma == Rdma::Disable || e.config.conversion_complete_callback != nullptr){
+        if(e.config.dma == Dma::Disable || e.config.conversion_complete_callback != nullptr){
             v |= DFSDM_FLTCR2_REOCIE;
             v |= DFSDM_FLTCR2_JEOCIE;
         }
@@ -380,13 +380,13 @@ namespace ST_LIB {
         uint32_t v = 0;
         
         if(e.config.type_conv == Type_Conversion::Regular){
-            v |= (uint32_t(e.config.rdma)   << DFSDM_FLTCR1_RDMAEN_Pos);
+            v |= (uint32_t(e.config.dma)   << DFSDM_FLTCR1_RDMAEN_Pos);
             v |= (uint32_t(e.config.fast)   << DFSDM_FLTCR1_FAST_Pos);
             v |= (uint32_t(e.config.rsync)  << DFSDM_FLTCR1_RSYNC_Pos);
             v |= (uint32_t(e.config.rcont)  << DFSDM_FLTCR1_RCONT_Pos);
         }else if(e.config.type_conv == Type_Conversion::Injected){
             v |= DFSDM_FLTCR1_JSCAN; // activate conversion of the entire group
-            v |= (uint32_t)(e.config.rdma) << DFSDM_FLTCR1_JDMAEN_Pos;
+            v |= (uint32_t)(e.config.dma) << DFSDM_FLTCR1_JDMAEN_Pos;
             if(e.config.trigger_conv != Trigger_Timer_Source::Unused){
                 v |= DFSDM_FLTCR1_JEXTEN_0; //with the risings
                 if(filter == 0){
@@ -471,7 +471,7 @@ namespace ST_LIB {
             cfg.buffer_size = e.buffer_size;
             cfg.buffer = e.buffer;
             cfg.type_conv = e.config.type_conv;
-            cfg.rdma = e.config.rdma;
+            cfg.dma = e.config.dma;
 
             //add the callbacks
             cfg.overrun_callback = e.config.overrun_callback;
@@ -534,7 +534,7 @@ namespace ST_LIB {
         uint8_t channel;
         uint8_t filter;
         Type_Conversion type_conv;
-        Rdma rdma;
+        Dma dma;
         
         int32_t* buffer{};
         size_t length_buffer{};
@@ -802,7 +802,7 @@ namespace ST_LIB {
                 inst.type_conv = cfg.type_conv;
                 inst.filter = cfg.filter;
                 inst.channel = cfg.channel;
-                inst.rdma = cfg.rdma;
+                inst.dma = cfg.dma;
 
                 inst.buffer = cfg.buffer;
                 inst.length_buffer = cfg.buffer_size;
@@ -823,7 +823,7 @@ namespace ST_LIB {
                     inst.filter_regs->FLTFCR |= cfg.init_data_filter.FLTFCR;   
                     inst.filter_regs->FLTAWHTR |= cfg.init_data_filter.FLTAWHTR;
                     inst.filter_regs->FLTAWLTR |= cfg.init_data_filter.FLTAWLTR;
-                    inst.filter_regs->FLTJCHGR |= cfg.init_data_filter.FLTJCHGR;
+                    inst.filter_regs->FLTJCHGR = cfg.init_data_filter.FLTJCHGR;
                     
                     filters_configured[cfg.filter] = true;
                 }   
@@ -832,11 +832,11 @@ namespace ST_LIB {
                 inst.channel_regs->CHCFGR2 |= cfg.init_data_channel.CHCFGR2;
                 inst.channel_regs->CHAWSCDR |= cfg.init_data_channel.CHAWSCDR;
                 
-
-                //enable the filter
-                inst.filter_regs->FLTCR1 |= DFSDM_FLTCR1_DFEN;
                 //enable the channel
                 inst.channel_regs->CHCFGR1 |= DFSDM_CHCFGR1_CHEN;
+                //enable the filter
+                inst.filter_regs->FLTCR1 |= DFSDM_FLTCR1_DFEN;
+                
 
                 //activate the NVIC
                 if(filters_configured[cfg.filter] == true){
@@ -864,10 +864,12 @@ namespace ST_LIB {
         uint32_t isr = filter->FLTISR;
 
         if(isr & DFSDM_FLTISR_REOCF_Msk){
-            Instance* inst = channel_instances[filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATACH_Msk];
+            //Save it in the address provide by the user
+            int32_t data = filter->FLTRDATAR;
+            Instance* inst = channel_instances[(data & DFSDM_FLTRDATAR_RDATACH_Msk)>>DFSDM_FLTRDATAR_RDATACH_Pos];
             if(inst != nullptr && inst->buffer != nullptr){
-                if(inst->rdma == Rdma::Disable){
-                    inst->buffer[inst->idx] = (filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
+                if(inst->dma == Dma::Disable){
+                    inst->buffer[inst->idx] = (data & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
                     inst->idx = (inst->idx + 1) % inst->length_buffer;
                 }
                 if(inst->end_conversion_cb != nullptr){
@@ -876,17 +878,30 @@ namespace ST_LIB {
             }
         }
         if(isr & DFSDM_FLTISR_JEOCF_Msk){
-            //GUARDARLO EN LA DIRECCIÓN DE MEMORIA QUE ME PORPORCIONE EL USUARIO
-            Instance* inst = channel_instances[filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATACH_Msk];
+            //Save it in the address provide by the user
+            int32_t data = filter->FLTJDATAR;
+            Instance* inst = channel_instances[(data & DFSDM_FLTJDATAR_JDATACH_Msk) >> DFSDM_FLTJDATAR_JDATACH_Pos];
             if(inst != nullptr && inst->buffer != nullptr){
-                if(inst->rdma == Rdma::Disable){
-                    inst->buffer[inst->idx] = (filter->FLTRDATAR & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
+                if(inst->dma == Dma::Disable){
+                    inst->buffer[inst->idx] = (data & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
                     inst->idx = (inst->idx + 1) % inst->length_buffer;
                 }
                 if(inst->end_conversion_cb != nullptr){
                     inst->end_conversion_cb();
                 }
             }
+        }
+        if(isr & DFSDM_FLTISR_ROVRF_Msk){
+            Instance* inst = channel_instances[filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATACH_Msk];
+            if(inst != nullptr && inst->overrun_cb != nullptr) inst->overrun_cb();
+            //clear
+            filter->FLTICR |= DFSDM_FLTISR_ROVRF;
+        }
+        if(isr & DFSDM_FLTISR_JOVRF_Msk){
+            Instance* inst = channel_instances[filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATACH_Msk];
+            if(inst != nullptr && inst->overrun_cb != nullptr) inst->overrun_cb();
+            //clear
+            filter->FLTICR |= DFSDM_FLTISR_JOVRF;
         }
         if(isr & (channels_enabled << DFSDM_FLTICR_CLRSCDF_Pos)){
             uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_SCDF_Msk) >> DFSDM_FLTISR_SCDF_Pos;
@@ -903,15 +918,21 @@ namespace ST_LIB {
         //Analog watchdog
         if (isr & (DFSDM_FLTISR_AWDF << DFSDM_FLTISR_AWDF_Pos))
         {
-            filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWLTF;
-            filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWHTF;
-            //mirar como saber el canal que ha lanzado el watchdog
-            // if(filter->watchdog_cb != nullptr) watchdog_cb();
+            if(filter->FLTAWSR & DFSDM_FLTAWSR_AWHTF_Msk){
+                uint32_t ch = __builtin_ctz(filter->FLTAWSR & DFSDM_FLTAWSR_AWHTF_Msk);
+                if(channel_instances[ch] != nullptr && channel_instances[ch]->watchdog_cb != nullptr) channel_instances[ch]->watchdog_cb();
+                //clear
+                filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWHTF;
+            }
+            if(filter->FLTAWSR & DFSDM_FLTAWSR_AWLTF_Msk){
+                uint32_t ch = __builtin_ctz(filter->FLTAWSR & DFSDM_FLTAWSR_AWLTF_Msk);
+                if(channel_instances[ch] != nullptr && channel_instances[ch]->watchdog_cb != nullptr) channel_instances[ch]->watchdog_cb();
+                //clear
+                filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWLTF;
+            }
         }
     }
 };
-
-
 
 struct DFSDM_CLK_DOMAIN{
     static constexpr GPIODomain::Pin valid_clk_pins[] = {
