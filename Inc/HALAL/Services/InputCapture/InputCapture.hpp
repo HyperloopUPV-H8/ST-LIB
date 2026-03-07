@@ -72,6 +72,7 @@ public:
                 &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
             if ((*ch_state != HAL_TIM_CHANNEL_STATE_READY) || (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) {
                 ErrorHandler("Channels not ready");
+                return;
             }
 
             *ch_state = HAL_TIM_CHANNEL_STATE_BUSY;
@@ -92,6 +93,7 @@ public:
                 &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
             if ((*ch_state != HAL_TIM_CHANNEL_STATE_READY) || (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) {
                 ErrorHandler("Channels not ready");
+                return;
             }
 
             *ch_state = HAL_TIM_CHANNEL_STATE_BUSY;

@@ -31,6 +31,7 @@ static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t cc_channel
 {
     TIM_HandleTypeDef* htim = TimerDomain::hal_handles[timer_idx];
     htim->Instance->CNT = 0;
+    htim->Instance->SR &= ~cc_channel;
 
     uint32_t channel = __builtin_ffs(cc_channel) - 2;
     TimerDomain::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
