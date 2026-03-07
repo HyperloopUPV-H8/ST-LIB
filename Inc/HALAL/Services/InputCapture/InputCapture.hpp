@@ -23,11 +23,12 @@ template <
     const ST_LIB::TimerPin pin_rising,
     const ST_LIB::TimerChannel channel_falling>
 class InputCapture {
+    friend struct TimerWrapper<dev>;
+
     TimerWrapper<dev>* timer = nullptr;
     TimerDomain::InputCaptureInfo *info = nullptr;
     bool is_on = false;
 
-public:
     InputCapture(TimerWrapper<dev>* tim) {
         timer = tim;
 
@@ -59,6 +60,7 @@ public:
         sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
         timer->template config_input_compare_channel<channel_falling>(&sConfigIC);
     }
+public:
 
     void turn_on(void) {
         if (is_on)
