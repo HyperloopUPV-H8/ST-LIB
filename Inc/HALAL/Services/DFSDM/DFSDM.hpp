@@ -109,6 +109,10 @@ namespace ST_LIB {
         Regular,
         Injected
     };
+    enum class Injected_Mode: uint8_t{
+        Single,
+        Scan 
+    };
  struct Config_Channel {
 
     int32_t  offset{0};
@@ -125,7 +129,7 @@ namespace ST_LIB {
     Fast_Conversion fast{Fast_Conversion::Disable};
     Sync_Conversion rsync{Sync_Conversion::Independent};
     Regular_Mode rcont{Regular_Mode::Single};
-
+    Injected_Mode jscan{Injected_Mode::Scan};
     /* -------- Runtime protections -------- */
 
     Overrun overrun{Overrun::Disable};
@@ -385,7 +389,7 @@ namespace ST_LIB {
             v |= (uint32_t(e.config.rsync)  << DFSDM_FLTCR1_RSYNC_Pos);
             v |= (uint32_t(e.config.rcont)  << DFSDM_FLTCR1_RCONT_Pos);
         }else if(e.config.type_conv == Type_Conversion::Injected){
-            v |= DFSDM_FLTCR1_JSCAN; // activate conversion of the entire group
+            v |= uint32_t(e.config.jscan) << DFSDM_FLTCR1_JSCAN_Pos; // activate conversion of the entire group
             v |= (uint32_t)(e.config.dma) << DFSDM_FLTCR1_JDMAEN_Pos;
             if(e.config.trigger_conv != Trigger_Timer_Source::Unused){
                 v |= DFSDM_FLTCR1_JEXTEN_0; //with the risings
@@ -869,7 +873,7 @@ namespace ST_LIB {
             Instance* inst = channel_instances[(data & DFSDM_FLTRDATAR_RDATACH_Msk)>>DFSDM_FLTRDATAR_RDATACH_Pos];
             if(inst != nullptr && inst->buffer != nullptr){
                 if(inst->dma == Dma::Disable){
-                    inst->buffer[inst->idx] = (data & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
+                    inst->buffer[inst->idx] = int32_t(data & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
                     inst->idx = (inst->idx + 1) % inst->length_buffer;
                 }
                 if(inst->end_conversion_cb != nullptr){
@@ -883,7 +887,7 @@ namespace ST_LIB {
             Instance* inst = channel_instances[(data & DFSDM_FLTJDATAR_JDATACH_Msk) >> DFSDM_FLTJDATAR_JDATACH_Pos];
             if(inst != nullptr && inst->buffer != nullptr){
                 if(inst->dma == Dma::Disable){
-                    inst->buffer[inst->idx] = (data & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
+                    inst->buffer[inst->idx] = int32_t(data & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
                     inst->idx = (inst->idx + 1) % inst->length_buffer;
                 }
                 if(inst->end_conversion_cb != nullptr){

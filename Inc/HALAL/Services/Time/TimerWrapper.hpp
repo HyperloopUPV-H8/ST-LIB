@@ -247,7 +247,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
                                   "to get_pwm() [this method]");
         }
     }
-
+    
     template <TimerPin pin, TimerPin negated_pin>
     inline DualPWM<dev, pin, negated_pin> get_dual_pwm(
         uint32_t polarity = TIM_OCPOLARITY_HIGH,
