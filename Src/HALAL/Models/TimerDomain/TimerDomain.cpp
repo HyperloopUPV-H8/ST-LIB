@@ -3,7 +3,10 @@
 using namespace ST_LIB;
 
 #define CaptureCompareInterruptMask \
-    (TIM_DIER_CC1IE | TIM_DIER_CC2IE | TIM_DIER_CC3IE | TIM_DIER_CC4IE)
+    (TIM_SR_CC1IF | TIM_SR_CC2IF | TIM_SR_CC3IF | TIM_SR_CC4IF)
+
+#define CaptureCompareOvercaptureMask \
+    (TIM_SR_CC1IF | TIM_SR_CC2IF | TIM_SR_CC3IF | TIM_SR_CC4IF)
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
@@ -31,14 +34,18 @@ static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t cc_channel
 {
     TIM_HandleTypeDef* htim = TimerDomain::hal_handles[timer_idx];
     htim->Instance->CNT = 0;
-    htim->Instance->SR &= ~cc_channel;
 
     uint32_t channel = __builtin_ffs(cc_channel) - 2;
     TimerDomain::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
     if(info->channel_rising == channel) {
         // NOTE: CCR1 - CCR4 are contiguous
+        // NOTE: CCxIF flag is cleared by software by reading the captured data in CCRx
         info->value_rising = (float)(*(((uint32_t*)&htim->Instance->CCR1) + channel));
         
+        if((htim->Instance->SR & CaptureCompareOvercaptureMask) != 0) [[unlikely]] {
+            CLEAR_BIT(htim->Instance->SR, CaptureCompareOvercaptureMask);
+        }
+
         uint32_t ref_clock = TimerDomain::get_timer_frequency(htim->Instance) / (htim->Instance->PSC + 1);
         info->frequency = (uint32_t)((ref_clock / info->value_rising) + 0.5f);
     } else if(info->channel_falling == channel) {

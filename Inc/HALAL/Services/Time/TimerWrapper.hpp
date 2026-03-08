@@ -716,7 +716,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
             SET_BIT(tmpccer, (sConfig->ICPolarity >> 4U) & (TIM_CCER_CC2P | TIM_CCER_CC2NP));
 
             CLEAR_BIT(tmpccmrx, TIM_CCMR1_IC2PSC);
-            SET_BIT(tmpccmrx, sConfig->ICPrescaler << 8U);
+            SET_BIT(tmpccmrx, (sConfig->ICPrescaler << 8U) & TIM_CCMR1_IC2PSC);
         } else if constexpr((ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_3_NEGATED)) {
             CLEAR_BIT(tmpccer, TIM_CCER_CC3E);
 
@@ -733,7 +733,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
             SET_BIT(tmpccer, (sConfig->ICPolarity << 8U) & (TIM_CCER_CC3P | TIM_CCER_CC3NP));
 
             CLEAR_BIT(tmpccmrx, TIM_CCMR2_IC3PSC);
-            SET_BIT(tmpccmrx, sConfig->ICPrescaler);
+            SET_BIT(tmpccmrx, (sConfig->ICPrescaler) & TIM_CCMR2_IC3PSC);
         } else if constexpr(ch == TimerChannel::CHANNEL_4) {
             CLEAR_BIT(tmpccer, TIM_CCER_CC4E);
 
@@ -750,7 +750,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
             SET_BIT(tmpccer, (sConfig->ICPolarity << 12U) & (TIM_CCER_CC4P | TIM_CCER_CC4NP));
 
             CLEAR_BIT(tmpccmrx, TIM_CCMR2_IC4PSC);
-            SET_BIT(tmpccmrx, sConfig->ICPrescaler << 8U);
+            SET_BIT(tmpccmrx, (sConfig->ICPrescaler << 8U) & TIM_CCMR2_IC4PSC);
         }
 
         if constexpr (ch == TimerChannel::CHANNEL_1 || ch == TimerChannel::CHANNEL_2) {
