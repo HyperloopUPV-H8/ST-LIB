@@ -134,9 +134,9 @@ public:
             );
 
             volatile HAL_TIM_ChannelStateTypeDef* ch_state =
-                &timer->instance->hal_tim->ChannelState[TimerDomain::get_channel_state_idx(channel_falling)];
+                &timer->instance->hal_tim->ChannelState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
             volatile HAL_TIM_ChannelStateTypeDef* n_ch_state =
-                &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
+                &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
             *ch_state = HAL_TIM_CHANNEL_STATE_READY;
             *n_ch_state = HAL_TIM_CHANNEL_STATE_READY;
         }
@@ -147,7 +147,7 @@ public:
 
             CLEAR_BIT(
                 timer->instance->tim->CCER,
-                (uint32_t)(TIM_CCER_CC1E << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU))
+                (uint32_t)(TIM_CCER_CC1E << (TimerDomain::get_channel_mul4(channel_falling) & 0x1FU))
             );
 
             volatile HAL_TIM_ChannelStateTypeDef* ch_state =
