@@ -35,6 +35,13 @@ static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t cc_channel
     TIM_HandleTypeDef* htim = TimerDomain::hal_handles[timer_idx];
     htim->Instance->CNT = 0;
 
+    /* reasoning: 
+     * 1. __builtin_ffs(x) returns first set bit + 1
+     * 2. channels from 1 to 4 in SR are in bits 1,2,3,4
+     * 3. ffs(channel_bits) = 2,3,4,5
+     * 4. ffs(channel_bits) - 2 = 0,1,2,3
+     * 5. use {ffs(channel_bits) - 2} as an index
+     */
     uint32_t channel = __builtin_ffs(cc_channel) - 2;
     TimerDomain::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
     if(info->channel_rising == channel) {

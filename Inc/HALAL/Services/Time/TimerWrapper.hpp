@@ -301,10 +301,24 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
 
     inline Encoder<dev> get_encoder() { return Encoder<dev>(this); }
 
+    /* {rising channel, falling channel} must be {1,2} or {3,4} (any order) */
     template <ST_LIB::TimerPin rising_pin, ST_LIB::TimerChannel channel_falling>
     inline InputCapture<dev, rising_pin, channel_falling> get_input_capture(void)
     {
         static_assert(rising_pin.channel != channel_falling, "Rising and falling channels must be different");
+
+        /* channel 1 can only go with channel 2 */
+        static_assert(!((rising_pin.channel == TimerChannel::CHANNEL_1) && 
+            (channel_falling != TimerChannel::CHANNEL_2)), "Channel 1 must go with channel 2 for inputcapture");
+        static_assert(!((channel_falling == TimerChannel::CHANNEL_1) && 
+            (rising_pin.channel != TimerChannel::CHANNEL_2)), "Channel 1 must go with channel 2 for inputcapture");
+
+        /* channel 3 can only go with channel 4 */
+        static_assert(!((rising_pin.channel == TimerChannel::CHANNEL_3) && 
+            (channel_falling != TimerChannel::CHANNEL_4)), "Channel 3 must go with channel 4 for inputcapture");
+        static_assert(!((channel_falling == TimerChannel::CHANNEL_3) && 
+            (rising_pin.channel != TimerChannel::CHANNEL_4)), "Channel 3 must go with channel 4 for inputcapture");
+
         static_assert(rising_pin.af == TimerAF::InputCapture, "Pin must be configured as input capture");
         static_assert((static_cast<uint8_t>(channel_falling) - 1) <= 4, "Channel must be 1 to 4 for inputcapture");
         static_assert(this->is_CC2_instance, "Timer must have 2 or more Capture compare channels");
