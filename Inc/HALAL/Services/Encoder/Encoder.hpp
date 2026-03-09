@@ -63,7 +63,11 @@ public:
         }
 
         tim->instance->tim->PSC = 5;
-        tim->instance->tim->ARR = 55000;
+        if constexpr(tim->is_32bit_instance) {
+            tim->instance->tim->ARR = UINT32_MAX;
+        } else {
+            tim->instance->tim->ARR = UINT16_MAX;
+        }
         timer = tim;
     }
 
