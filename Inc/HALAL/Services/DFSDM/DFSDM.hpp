@@ -263,6 +263,39 @@ namespace ST_LIB {
                 compile_error("Why would a sane person need a filter of the watchdog higher than sinc3");
             }
         }
+        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config, int32_t*buffer) 
+        : pin(pin), 
+        gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None,GPIODomain::Speed::High,dfsdm_channel_af(pin)},
+        config(config),
+        buffer(buffer),
+        buffer_size(N)
+        {    
+            static_assert(N == 1, "N must be bigger than 0");
+            channel = get_channel(pin);
+            //remove in a future
+            if(config.dma == Dma::Enable){
+                compile_error("Not implemented DMA yet");
+            }
+
+            if(config.offset > OFFSET_MAX || config.offset < OFFSET_MIN){
+                compile_error("Your offset is bigger than the maximum size");
+            }
+            if(config.right_shift > 0x000000FF){
+                compile_error("Your right_shift is bigger than the maximum size");
+            }
+            if(config.integrator <= 0){
+                compile_error("DFSDM_FILTER: Integrator out of range");
+            }
+            if (!is_correct_oversampling(config.filter_type, config.oversampling)){
+                compile_error("DFSDM_FILTER: invalid oversampling for selected filter type");
+            } 
+            if(config.watchdog_oversampling > 32){
+                compile_error("DFSDM_Watchdog oversampling is bigger than the maximum allowed");
+            }
+            if(static_cast<uint32_t>(config.filter_wathdog) > 3){
+                compile_error("Why would a sane person need a filter of the watchdog higher than sinc3");
+            }
+        }
         template<class Ctx>
         consteval std::size_t inscribe(Ctx &ctx) const {
             const auto gpio_idx = gpio.inscribe(ctx); 
@@ -786,6 +819,7 @@ namespace ST_LIB {
        
         static inline std::array<Instance, N> instances{};
         static void init(std::span<const Config, N> cfgs,std::span<GPIODomain::Instance> gpio_instances) {
+            if(N == 0) return;
             std::array<bool,4> filters_configured = {false,false,false,false};
             RCC->APB2ENR |= RCC_APB2ENR_DFSDM1EN; //Activate the DFSDM clock
             for (size_t i = 0; i < N; ++i) {
@@ -836,27 +870,32 @@ namespace ST_LIB {
                 inst.channel_regs->CHCFGR2 |= cfg.init_data_channel.CHCFGR2;
                 inst.channel_regs->CHAWSCDR |= cfg.init_data_channel.CHAWSCDR;
                 
-                //enable the channel
-                inst.channel_regs->CHCFGR1 |= DFSDM_CHCFGR1_CHEN;
-                //enable the filter
-                inst.filter_regs->FLTCR1 |= DFSDM_FLTCR1_DFEN;
                 
-
-                //activate the NVIC
-                if(filters_configured[cfg.filter] == true){
-                    switch(inst.filter){
-                        case 0:  NVIC_EnableIRQ(DFSDM1_FLT0_IRQn);     break;
-                        case 1:  NVIC_EnableIRQ(DFSDM1_FLT1_IRQn);     break;
-                        case 2: NVIC_EnableIRQ(DFSDM1_FLT2_IRQn);      break;
-                        case 3: NVIC_EnableIRQ(DFSDM1_FLT3_IRQn);      break;
-                    }
-                }
                 //update channel_instances
                 channel_instances[inst.channel] = &inst;
                 channels_enabled |= 1 << inst.channel;
             }
-            //Activate the DFSDM GLOBAL Interface 
-            DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
+            if(N > 0){
+                //Activate the DFSDM GLOBAL Interface 
+                DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
+                for(int i = 0; i < 8; i++){
+                    channel_hw[i]->CHCFGR1 |= DFSDM_CHCFGR1_CHEN;
+                }
+                for(int i = 0; i < 4;i++){
+                    filter_hw[i]->FLTCR1 |= DFSDM_FLTCR1_DFEN;
+                }
+                //activate the NVIC
+                for(int i = 0; i < 4; i++){
+                    if(filters_configured[i] == true){
+                        switch(i){
+                            case 0:  NVIC_EnableIRQ(DFSDM1_FLT0_IRQn);     break;
+                            case 1:  NVIC_EnableIRQ(DFSDM1_FLT1_IRQn);     break;
+                            case 2: NVIC_EnableIRQ(DFSDM1_FLT2_IRQn);      break;
+                            case 3: NVIC_EnableIRQ(DFSDM1_FLT3_IRQn);      break;
+                        }
+                    }
+                } 
+            }
         }
     };
     
@@ -1051,7 +1090,7 @@ struct DFSDM_CLK_DOMAIN{
         struct Init {
             static inline std::array<Instance, N> instances{};
             static void init(std::span<const Config, N> cfgs,std::span<GPIODomain::Instance> gpio_instances) {
-                //add ckaie scdie
+                if(N == 0) return;
                 const auto &c = cfgs[0];
                 auto &inst = instances[0];
                 inst.gpio_instance = &gpio_instances[c.gpio_idx];
