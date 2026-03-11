@@ -62,7 +62,7 @@ public:
             return;
         }
 
-        //tim->instance->tim->PSC = 5;
+        tim->instance->tim->PSC = 5;
         if constexpr(tim->is_32bit_instance) {
             tim->instance->tim->ARR = 55000;
         } else {
