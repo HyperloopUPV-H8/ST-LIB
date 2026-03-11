@@ -42,9 +42,12 @@ class InputCapture {
 
         info->channel_rising = ch_rising;
         info->channel_falling = ch_falling;
-        info->value_rising = 0.0f;
+
+        info->value_falling = 0;
         info->duty_cycle = 0.0f;
+        info->value_rising = 0;
         info->frequency = 0;
+        info->period = 0;
 
         timer->enable_nvic();
 

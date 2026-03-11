@@ -33,24 +33,24 @@ TimerDomain::InputCaptureInfo TimerDomain::input_capture_info_backing[max_instan
 static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel)
 {
     TIM_HandleTypeDef* htim = TimerDomain::hal_handles[timer_idx];
-    //htim->Instance->CNT = 0;
 
     TimerDomain::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
     if(info->channel_rising == channel) {
         // NOTE: CCR1 - CCR4 are contiguous
         // NOTE: CCxIF flag is cleared by software by reading the captured data in CCRx
-        info->value_rising = (float)(*(((uint32_t*)&htim->Instance->CCR1) + channel));
-        
-        if((htim->Instance->SR & CaptureCompareOvercaptureMask) != 0) [[unlikely]] {
-            CLEAR_BIT(htim->Instance->SR, CaptureCompareOvercaptureMask);
+        uint32_t current = (*(((uint32_t*)&htim->Instance->CCR1) + channel));
+        uint32_t period = current - info->value_rising;
+
+        if((period != 0) && (info->value_falling < period)) {
+            uint32_t ref_clock = TimerDomain::get_timer_frequency(htim->Instance) / (htim->Instance->PSC + 1);
+            info->period = period;
+            info->frequency = ref_clock / period;
+            info->duty_cycle = ((float)info->value_falling * 100.0f) / (float)period;
         }
-
-        uint32_t ref_clock = TimerDomain::get_timer_frequency(htim->Instance) / (htim->Instance->PSC + 1);
-        info->frequency = (uint32_t)((ref_clock / info->value_rising) + 0.5f);
+        info->value_rising = current;
     } else if(info->channel_falling == channel) {
-        uint32_t falling_value = *(((uint32_t*)&htim->Instance->CCR1) + channel);
-
-        info->duty_cycle = ((float)falling_value * 100.0f) / info->value_rising;
+        uint32_t falling_value = *(((uint32_t*)&htim->Instance->CCR1) + channel) - info->value_rising;
+        if(falling_value < info->period) info->value_falling = falling_value;
     } else [[unlikely]] {
         ErrorHandler("TimerDomain::input_capture_info was modified");
     }
@@ -63,12 +63,15 @@ static void TIM_InterruptCallback(const uint32_t timer_idx)
         CLEAR_BIT(tim->SR, TIM_SR_UIF);
         TimerDomain::callbacks[timer_idx](TimerDomain::callback_data[timer_idx]);
     }
-    
-    uint32_t cc_channel = tim->SR & CaptureCompareInterruptMask;
-    while (cc_channel != 0) {
-        uint32_t channel = __builtin_ctz(cc_channel);
-        TIM_IC_CaptureCallback(timer_idx, channel - 1); // first bit is UIF
-        CLEAR_BIT(cc_channel, 1U << channel);
+
+    // NOTE: possible optimization: only do the channels possible for timer    
+    // Bit 0 = UIF, bits 1 - 4 = CCxIF
+    for (uint32_t ch = 1; ch < 5; ch++) {
+        uint32_t flag_mask = 1U << ch;
+        if(tim->SR & flag_mask) {
+            TIM_IC_CaptureCallback(timer_idx, ch - 1);
+            CLEAR_BIT(tim->SR, flag_mask);
+        }
     }
 }
 

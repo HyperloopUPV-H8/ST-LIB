@@ -244,8 +244,10 @@ extern TIM_HandleTypeDef htim24;
             uint8_t channel_rising;
             uint8_t channel_falling;
 
-            float value_rising;
-            
+            uint32_t value_rising;
+            uint32_t value_falling;
+            uint32_t period;
+
             float duty_cycle;
             uint32_t frequency;
         };
@@ -812,7 +814,7 @@ extern TIM_HandleTypeDef htim24;
 
         static inline uint32_t get_timer_frequency(TIM_TypeDef* tim) {
             uint32_t result;
-            if((tim == TIM2) || (tim == TIM3) || (tim == TIM4) || (tim == TIM5) ||
+            if ((tim == TIM2) || (tim == TIM3) || (tim == TIM4) || (tim == TIM5) ||
                (tim == TIM6) || (tim == TIM7) || (tim == TIM12) || (tim == TIM13) ||
                (tim == TIM14))
             {
@@ -820,16 +822,14 @@ extern TIM_HandleTypeDef htim24;
                 if ((RCC->D2CFGR & RCC_D2CFGR_D2PPRE1) != RCC_HCLK_DIV1) {
                     result *= 2;
                 }
-            }
-            else if((tim == TIM1) || (tim == TIM8) || (tim == TIM15) || (tim == TIM16) ||
+            } else if ((tim == TIM1) || (tim == TIM8) || (tim == TIM15) || (tim == TIM16) ||
                     (tim == TIM17) || (tim == TIM23) || (tim == TIM24))
             {
                 result = HAL_RCC_GetPCLK2Freq();
                 if ((RCC->D2CFGR & RCC_D2CFGR_D2PPRE2) != RCC_HCLK_DIV1) {
                     result *= 2;
                 }
-            }
-            else {
+            } else {
                 ErrorHandler("Invalid timer ptr");
             }
             
