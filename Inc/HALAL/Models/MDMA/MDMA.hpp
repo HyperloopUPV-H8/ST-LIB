@@ -76,7 +76,6 @@ public:
             nodeConfig.Init.DataAlignment = MDMA_DATAALIGN_RIGHT;
             nodeConfig.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
             nodeConfig.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
-            nodeConfig.Init.BufferTransferLength = 128;
             nodeConfig.Init.TransferTriggerMode = MDMA_FULL_TRANSFER;
             nodeConfig.Init.SourceBlockAddressOffset = 0;
             nodeConfig.Init.DestBlockAddressOffset = 0;
@@ -96,6 +95,17 @@ public:
             uint32_t dest_inc;
 
             size_t effective_size = size;
+
+            // The AHBS port (used for TCM) is 32-bit wide
+            const bool src_is_tcm =
+                ((reinterpret_cast<uintptr_t>(src) & 0xFF000000U) == 0x20000000U) ||
+                ((reinterpret_cast<uintptr_t>(src) & 0xFF000000U) == 0x00000000U);
+            const bool dst_is_tcm =
+                ((reinterpret_cast<uintptr_t>(dst) & 0xFF000000U) == 0x20000000U) ||
+                ((reinterpret_cast<uintptr_t>(dst) & 0xFF000000U) == 0x00000000U);
+            if ((src_is_tcm || dst_is_tcm) && effective_size > 4)
+                effective_size = 4; // Downgrade to WORD to stay within 32-bit AHBS width
+
             if (effective_size == 2 &&
                 ((reinterpret_cast<uintptr_t>(src) | reinterpret_cast<uintptr_t>(dst)) & 1))
                 effective_size = 1; // Odd address, so fallback to byte-wise
@@ -135,6 +145,15 @@ public:
             nodeConfig.Init.DestDataSize = dest_data_size;
             nodeConfig.Init.SourceInc = source_inc;
             nodeConfig.Init.DestinationInc = dest_inc;
+
+            // BufferTransferLength must be <= BlockDataLength and a multiple of the element size.
+            const uint32_t elem_size =
+                static_cast<uint32_t>(effective_size <= 1 ? 1 : effective_size);
+            uint32_t buf_len = static_cast<uint32_t>(std::min(size, static_cast<size_t>(128)));
+            buf_len = (buf_len / elem_size) * elem_size;
+            if (buf_len == 0)
+                buf_len = elem_size;
+            nodeConfig.Init.BufferTransferLength = buf_len;
 
             if (HAL_MDMA_LinkedList_CreateNode(&node, &nodeConfig) != HAL_OK) {
                 ErrorHandler("Error creating linked list in MDMA");
