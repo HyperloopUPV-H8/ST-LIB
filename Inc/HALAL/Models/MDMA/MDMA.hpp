@@ -147,8 +147,12 @@ public:
             nodeConfig.Init.DestinationInc = dest_inc;
 
             // BufferTransferLength must be <= BlockDataLength and a multiple of the element size.
+            // Derive the element size from the selected MDMA SourceDataSize, not directly from effective_size.
             const uint32_t elem_size =
-                static_cast<uint32_t>(effective_size <= 1 ? 1 : effective_size);
+                (source_data_size == MDMA_SRC_DATASIZE_HALFWORD)    ? 2U :
+                (source_data_size == MDMA_SRC_DATASIZE_WORD)        ? 4U :
+                (source_data_size == MDMA_SRC_DATASIZE_DOUBLEWORD)  ? 8U :
+                1U;
             uint32_t buf_len = static_cast<uint32_t>(std::min(size, static_cast<size_t>(128)));
             buf_len = (buf_len / elem_size) * elem_size;
             if (buf_len == 0)
