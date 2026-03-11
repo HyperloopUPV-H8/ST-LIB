@@ -153,10 +153,15 @@ public:
                 (source_data_size == MDMA_SRC_DATASIZE_WORD)        ? 4U :
                 (source_data_size == MDMA_SRC_DATASIZE_DOUBLEWORD)  ? 8U :
                 1U;
-            uint32_t buf_len = static_cast<uint32_t>(std::min(size, static_cast<size_t>(128)));
+            const uint32_t max_buf_len = 128U;
+            uint32_t buf_len = static_cast<uint32_t>(std::min(size, static_cast<size_t>(max_buf_len)));
             buf_len = (buf_len / elem_size) * elem_size;
-            if (buf_len == 0)
+            if (buf_len == 0) {
                 buf_len = elem_size;
+            }
+            if (buf_len > max_buf_len) {
+                buf_len = max_buf_len;
+            }
             nodeConfig.Init.BufferTransferLength = buf_len;
 
             if (HAL_MDMA_LinkedList_CreateNode(&node, &nodeConfig) != HAL_OK) {
