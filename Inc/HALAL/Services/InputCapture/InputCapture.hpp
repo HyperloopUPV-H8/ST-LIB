@@ -68,7 +68,12 @@ public:
     void turn_on(void) {
         if (is_on)
             return;
-        
+
+        /* STMicroelectronics' recommendation: Avoid undefined behaviour due to 
+         *  first interrupt being falling instead of rising by clearing CNT and SR */        
+        timer->instance->tim->CNT = 0;
+        timer->instance->tim->SR = 0;
+
         // HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising)
         {
             volatile HAL_TIM_ChannelStateTypeDef* ch_state =
