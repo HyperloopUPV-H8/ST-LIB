@@ -301,10 +301,22 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
 
     inline Encoder<dev> get_encoder() { return Encoder<dev>(this); }
 
+/* InputCapture prescaler values:
+ * PSC = 0, ARR = 0: frequency range = [16800, 610'000]
+ * PSC = 1, ARR = 0: frequency range = [15000, 610'000]
+ * PSC = 10, ARR = 0: frequency range = [880, 610'000]
+ * PSC = 40, ARR = 0: frequency range = [280, 610'000]
+ * PSC = 400, ARR = 0: frequency range = [18, 100'000] takes long to get good precision
+ * PSC = 2000, ARR = 0: frequency range = [8, 60'000] takes long to get good precision
+ **/
+#define IMD_IC_PRESCALER_VALUE 2000
+
     /* {rising channel, falling channel} must be {1,2} or {3,4} (any order) */
     template <ST_LIB::TimerPin rising_pin, ST_LIB::TimerChannel channel_falling>
-    inline InputCapture<dev, rising_pin, channel_falling> get_input_capture(void)
+    inline InputCapture<dev, rising_pin, channel_falling> get_input_capture(uint16_t prescaler = IMD_IC_PRESCALER_VALUE)
     {
+        instance->tim->PSC = prescaler;
+
         static_assert(rising_pin.channel != channel_falling, "Rising and falling channels must be different");
 
         /* channel 1 can only go with channel 2 */
