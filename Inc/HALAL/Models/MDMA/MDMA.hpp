@@ -75,25 +75,19 @@ public:
         size_t transfer_size{0};
 
         void reconfigure_ctcr() {
-            uintptr_t src = node.CSAR;
-            uintptr_t dst = node.CDAR;
-            size_t size = transfer_size;
-
-            size_t effective_size = size;
+            const uintptr_t src = node.CSAR;
+            const uintptr_t dst = node.CDAR;
+            const size_t size = transfer_size;
 
             const bool src_is_tcm =
-                ((src & 0xFF000000U) == 0x20000000U) || ((src & 0xFF000000U) == 0x00000000U);
+                (src < 0x00010000U) || (src >= 0x20000000U && src < 0x20020000U);
             const bool dst_is_tcm =
-                ((dst & 0xFF000000U) == 0x20000000U) || ((dst & 0xFF000000U) == 0x00000000U);
-            if ((src_is_tcm || dst_is_tcm) && effective_size > 4)
-                effective_size = 4;
+                (dst < 0x00010000U) || (dst >= 0x20000000U && dst < 0x20020000U);
+            const size_t max_elem = (src_is_tcm || dst_is_tcm) ? 4u : 8u;
 
-            if (effective_size == 2 && ((src | dst) & 1))
-                effective_size = 1;
-            else if (effective_size == 4 && ((src | dst) & 3))
-                effective_size = 1;
-            else if (effective_size == 8 && ((src | dst) & 7))
-                effective_size = 1;
+            const size_t size_gran = size & -size;
+            const size_t addr_gran = static_cast<size_t>((src | dst) & -(src | dst));
+            const size_t effective_size = std::min({size_gran, addr_gran, max_elem});
 
             uint32_t source_data_size, dest_data_size, source_inc, dest_inc;
             switch (static_cast<uint32_t>(effective_size)) {
@@ -123,13 +117,8 @@ public:
                 break;
             }
 
-            const uint32_t elem_size = (source_data_size == MDMA_SRC_DATASIZE_HALFWORD)     ? 2U
-                                       : (source_data_size == MDMA_SRC_DATASIZE_WORD)       ? 4U
-                                       : (source_data_size == MDMA_SRC_DATASIZE_DOUBLEWORD) ? 8U
-                                                                                            : 1U;
-            const uint32_t max_buf_len = 128U;
-            uint32_t buf_len =
-                static_cast<uint32_t>(std::min(size, static_cast<size_t>(max_buf_len)));
+            const uint32_t elem_size = static_cast<uint32_t>(effective_size);
+            uint32_t buf_len = static_cast<uint32_t>(std::min(size, static_cast<size_t>(128U)));
             buf_len = (buf_len / elem_size) * elem_size;
             if (buf_len == 0)
                 buf_len = elem_size;
@@ -169,25 +158,21 @@ public:
             uint32_t source_inc;
             uint32_t dest_inc;
 
-            size_t effective_size = size;
+            // The AHBS port (used for TCM) is 32-bit wide, so DOUBLEWORD beats are not supported.
+            const bool src_is_tcm = (reinterpret_cast<uintptr_t>(src) < 0x00010000U) ||
+                                    (reinterpret_cast<uintptr_t>(src) >= 0x20000000U &&
+                                     reinterpret_cast<uintptr_t>(src) < 0x20020000U);
+            const bool dst_is_tcm = (reinterpret_cast<uintptr_t>(dst) < 0x00010000U) ||
+                                    (reinterpret_cast<uintptr_t>(dst) >= 0x20000000U &&
+                                     reinterpret_cast<uintptr_t>(dst) < 0x20020000U);
+            const size_t max_elem = (src_is_tcm || dst_is_tcm) ? 4u : 8u;
 
-            // The AHBS port (used for TCM) is 32-bit wide
-            const bool src_is_tcm =
-                ((reinterpret_cast<uintptr_t>(src) & 0xFF000000U) == 0x20000000U) ||
-                ((reinterpret_cast<uintptr_t>(src) & 0xFF000000U) == 0x00000000U);
-            const bool dst_is_tcm =
-                ((reinterpret_cast<uintptr_t>(dst) & 0xFF000000U) == 0x20000000U) ||
-                ((reinterpret_cast<uintptr_t>(dst) & 0xFF000000U) == 0x00000000U);
-            if ((src_is_tcm || dst_is_tcm) && effective_size > 4)
-                effective_size = 4; // Downgrade to WORD to stay within 32-bit AHBS width
-
-            if (effective_size == 2 &&
-                ((reinterpret_cast<uintptr_t>(src) | reinterpret_cast<uintptr_t>(dst)) & 1))
-                effective_size = 1; // Odd address, so fallback to byte-wise
-            else if (effective_size == 4 && ((reinterpret_cast<uintptr_t>(src) | reinterpret_cast<uintptr_t>(dst)) & 3))
-                effective_size = 1; // Not word-aligned, so fallback to byte-wise
-            else if (effective_size == 8 && ((reinterpret_cast<uintptr_t>(src) | reinterpret_cast<uintptr_t>(dst)) & 7))
-                effective_size = 1; // Not doubleword-aligned, so fallback to byte-wise
+            const uintptr_t addr_or =
+                reinterpret_cast<uintptr_t>(src) | reinterpret_cast<uintptr_t>(dst);
+            const size_t size_gran = size & -size; // largest pow-2 dividing size
+            const size_t addr_gran =
+                static_cast<size_t>(addr_or & -addr_or); // largest pow-2 aligning both addresses
+            size_t effective_size = std::min({size_gran, addr_gran, max_elem});
 
             switch (static_cast<uint32_t>(effective_size)) {
             case 2:
@@ -222,27 +207,23 @@ public:
             nodeConfig.Init.DestinationInc = dest_inc;
 
             // BufferTransferLength must be <= BlockDataLength and a multiple of the element size.
-            // Derive the element size from the selected MDMA SourceDataSize, not directly from
-            // effective_size.
-            const uint32_t elem_size = (source_data_size == MDMA_SRC_DATASIZE_HALFWORD)     ? 2U
-                                       : (source_data_size == MDMA_SRC_DATASIZE_WORD)       ? 4U
-                                       : (source_data_size == MDMA_SRC_DATASIZE_DOUBLEWORD) ? 8U
-                                                                                            : 1U;
-            const uint32_t max_buf_len = 128U;
-            uint32_t buf_len =
-                static_cast<uint32_t>(std::min(size, static_cast<size_t>(max_buf_len)));
+            const uint32_t elem_size = static_cast<uint32_t>(effective_size);
+            uint32_t buf_len = static_cast<uint32_t>(std::min(size, static_cast<size_t>(128)));
             buf_len = (buf_len / elem_size) * elem_size;
-            if (buf_len == 0) {
+            if (buf_len == 0)
                 buf_len = elem_size;
-            }
-            if (buf_len > max_buf_len) {
-                buf_len = max_buf_len;
-            }
             nodeConfig.Init.BufferTransferLength = buf_len;
 
             if (HAL_MDMA_LinkedList_CreateNode(&node, &nodeConfig) != HAL_OK) {
                 ErrorHandler("Error creating linked list in MDMA");
             }
+
+            // HAL_MDMA_LinkedList_CreateNode only sets the request field in CTBR;
+            // bus routing bits must be set explicitly for TCM addresses.
+            if (src_is_tcm)
+                SET_BIT(node.CTBR, MDMA_CTBR_SBUS);
+            if (dst_is_tcm)
+                SET_BIT(node.CTBR, MDMA_CTBR_DBUS);
         }
     };
 
