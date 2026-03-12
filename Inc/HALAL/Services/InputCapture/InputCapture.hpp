@@ -178,7 +178,8 @@ public:
     }
 
     float get_duty_cycle(void) {
-        return info->duty_cycle;
+        // often you get a trash value in duty_cycle but the frequency is 0 so it's easily identifiable
+        return (info->frequency == 0) ? 0.0f : info->duty_cycle;
     }
 };
 
