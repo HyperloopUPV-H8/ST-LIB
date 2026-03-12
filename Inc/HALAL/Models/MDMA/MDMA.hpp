@@ -79,15 +79,10 @@ public:
             const uintptr_t dst = node.CDAR;
             const size_t size = transfer_size;
 
-            const bool src_is_tcm =
-                (src < 0x00010000U) || (src >= 0x20000000U && src < 0x20020000U);
-            const bool dst_is_tcm =
-                (dst < 0x00010000U) || (dst >= 0x20000000U && dst < 0x20020000U);
-            const size_t max_elem = (src_is_tcm || dst_is_tcm) ? 4u : 8u;
+            if (size == 0)
+                return;
 
-            const size_t size_gran = size & -size;
-            const size_t addr_gran = static_cast<size_t>((src | dst) & -(src | dst));
-            const size_t effective_size = std::min({size_gran, addr_gran, max_elem});
+            const size_t effective_size = compute_elem_size(src, dst, size);
 
             uint32_t source_data_size, dest_data_size, source_inc, dest_inc;
             switch (static_cast<uint32_t>(effective_size)) {
@@ -134,7 +129,27 @@ public:
             );
         }
 
+        static bool is_tcm(uintptr_t addr) {
+            return (addr < 0x00010000U) || (addr >= 0x20000000U && addr < 0x20020000U);
+        }
+
+        // Returns the largest power-of-2 element size (1/2/4/8) valid for both addresses and size.
+        // addr_or==0 (both null) is treated as maximally aligned rather than causing div-by-zero.
+        static size_t compute_elem_size(uintptr_t src, uintptr_t dst, size_t size) {
+            const size_t max_elem = (is_tcm(src) || is_tcm(dst)) ? 4u : 8u;
+            const size_t size_gran = size & -size;
+            const uintptr_t addr_or = src | dst;
+            const size_t addr_gran =
+                (addr_or != 0u) ? static_cast<size_t>(addr_or & -addr_or) : max_elem;
+            return std::min({size_gran, addr_gran, max_elem});
+        }
+
         void init_node(void* src, void* dst, size_t size) {
+            if (size == 0) {
+                ErrorHandler("MDMA: zero-length transfer is invalid");
+                return;
+            }
+
             MDMA_LinkNodeConfTypeDef nodeConfig{};
             nodeConfig.Init.DataAlignment = MDMA_DATAALIGN_RIGHT;
             nodeConfig.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
@@ -158,21 +173,11 @@ public:
             uint32_t source_inc;
             uint32_t dest_inc;
 
-            // The AHBS port (used for TCM) is 32-bit wide, so DOUBLEWORD beats are not supported.
-            const bool src_is_tcm = (reinterpret_cast<uintptr_t>(src) < 0x00010000U) ||
-                                    (reinterpret_cast<uintptr_t>(src) >= 0x20000000U &&
-                                     reinterpret_cast<uintptr_t>(src) < 0x20020000U);
-            const bool dst_is_tcm = (reinterpret_cast<uintptr_t>(dst) < 0x00010000U) ||
-                                    (reinterpret_cast<uintptr_t>(dst) >= 0x20000000U &&
-                                     reinterpret_cast<uintptr_t>(dst) < 0x20020000U);
-            const size_t max_elem = (src_is_tcm || dst_is_tcm) ? 4u : 8u;
-
-            const uintptr_t addr_or =
-                reinterpret_cast<uintptr_t>(src) | reinterpret_cast<uintptr_t>(dst);
-            const size_t size_gran = size & -size; // largest pow-2 dividing size
-            const size_t addr_gran =
-                static_cast<size_t>(addr_or & -addr_or); // largest pow-2 aligning both addresses
-            size_t effective_size = std::min({size_gran, addr_gran, max_elem});
+            const size_t effective_size = compute_elem_size(
+                reinterpret_cast<uintptr_t>(src),
+                reinterpret_cast<uintptr_t>(dst),
+                size
+            );
 
             switch (static_cast<uint32_t>(effective_size)) {
             case 2:
@@ -220,9 +225,9 @@ public:
 
             // HAL_MDMA_LinkedList_CreateNode only sets the request field in CTBR;
             // bus routing bits must be set explicitly for TCM addresses.
-            if (src_is_tcm)
+            if (is_tcm(reinterpret_cast<uintptr_t>(src)))
                 SET_BIT(node.CTBR, MDMA_CTBR_SBUS);
-            if (dst_is_tcm)
+            if (is_tcm(reinterpret_cast<uintptr_t>(dst)))
                 SET_BIT(node.CTBR, MDMA_CTBR_DBUS);
         }
     };
