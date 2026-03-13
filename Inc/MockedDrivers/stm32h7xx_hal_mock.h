@@ -648,6 +648,13 @@ typedef struct {
 } TIM_OC_InitTypeDef;
 
 typedef struct {
+    uint32_t ICPolarity;
+    uint32_t ICSelection;
+    uint32_t ICPrescaler;
+    uint32_t ICFilter;
+} TIM_IC_InitTypeDef;
+
+typedef struct {
     uint32_t EncoderMode;
     uint32_t IC1Polarity;
     uint32_t IC1Selection;
