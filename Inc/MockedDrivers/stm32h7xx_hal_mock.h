@@ -742,7 +742,12 @@ typedef struct {
 #define TIM_SMCR_ECE (1U << 14)
 
 #define TIM_DIER_UIE (1U << 0)
+#define TIM_DIER_CC1IE (1UL << 1)
+#define TIM_DIER_CC2IE (1UL << 2)
+#define TIM_DIER_CC3IE (1UL << 3)
+#define TIM_DIER_CC4IE (1UL << 4)
 #define TIM_DIER_BIE (1U << 7)
+
 #define TIM_SR_UIF (1U << 0)
 #define TIM_SR_COMIF (1U << 5)
 #define TIM_SR_TIF (1U << 6)
