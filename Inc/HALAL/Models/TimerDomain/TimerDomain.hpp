@@ -813,7 +813,7 @@ extern TIM_HandleTypeDef htim24;
         }
 
         static inline uint32_t get_timer_frequency(TIM_TypeDef* tim) {
-            uint32_t result;
+            uint32_t result = 0;
             if ((tim == TIM2) || (tim == TIM3) || (tim == TIM4) || (tim == TIM5) ||
                (tim == TIM6) || (tim == TIM7) || (tim == TIM12) || (tim == TIM13) ||
                (tim == TIM14))
