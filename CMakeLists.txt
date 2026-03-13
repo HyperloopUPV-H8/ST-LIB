@@ -282,7 +282,6 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/DMA/DMA2.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/PinModel/Pin.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp
-  # ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/ADC/ADC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/CORDIC/CORDIC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/FDCAN/FDCAN.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/I2C/I2C.cpp
@@ -371,8 +370,6 @@ set(STLIB_LOW_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ST-LIB_LOW.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sd/Sd.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/LookupSensor/LookupSensor.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/NTC/NTC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/SensorInterrupt/SensorInterrupt.cpp
 )
 
@@ -433,6 +430,7 @@ add_library(${STLIB_LIBRARY} OBJECT
 
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Scheduler.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp>
+  $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MPUManager/MPUManager.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_hal_adc.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_hal_dma.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_hal_spi.cpp>
