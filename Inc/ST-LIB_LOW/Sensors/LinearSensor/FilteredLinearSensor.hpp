@@ -26,12 +26,12 @@ public:
         : LinearSensor<Type>(adc, slope, offset, value), filter(filter) {}
 
     void read() {
-        if (this->adc == nullptr || this->value == nullptr) {
+        if (!this->is_configured()) {
             return;
         }
-        const float raw = this->adc->get_raw();
-        const float val = this->adc->get_value_from_raw(raw, this->vref);
-        *this->value = filter.compute(this->slope * static_cast<Type>(val) + this->offset);
+
+        *this->value =
+            filter.compute(this->compute_value_from_voltage(this->read_voltage(this->vref)));
     }
 };
 

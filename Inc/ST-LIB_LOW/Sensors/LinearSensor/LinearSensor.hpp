@@ -6,14 +6,13 @@
  */
 
 #pragma once
-#include <cstdint>
 #include <type_traits>
 
-#include "HALAL/Services/ADC/NewADC.hpp"
+#include "Sensors/Common/ADCSensor.hpp"
 
 template <class Type>
     requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
-class LinearSensor {
+class LinearSensor : protected ST_LIB::Sensors::ADCValueSensor<Type> {
 public:
     LinearSensor() = default;
     LinearSensor(
@@ -34,19 +33,21 @@ public:
     void read();
 
     void set_offset(Type new_offset);
-    Type get_offset();
+    [[nodiscard]] Type get_offset() const;
 
     void set_gain(Type new_gain);
-    Type get_gain();
+    [[nodiscard]] Type get_gain() const;
 
-    Type* get_value_pointer() const;
+    [[nodiscard]] Type* get_value_pointer() const;
 
 protected:
-    ST_LIB::ADCDomain::Instance* adc = nullptr;
-    Type slope;
-    Type offset;
-    Type* value = nullptr;
-    float vref = 3.3f;
+    using Base = ST_LIB::Sensors::ADCValueSensor<Type>;
+
+    [[nodiscard]] Type compute_value_from_voltage(float voltage) const;
+
+    Type slope{};
+    Type offset{};
+    float vref = ST_LIB::Sensors::kDefaultADCReferenceVoltage;
 };
 
 template <class Type>
@@ -58,7 +59,7 @@ LinearSensor<Type>::LinearSensor(
     Type* value,
     float vref
 )
-    : adc(&adc), slope(slope), offset(offset), value(value), vref(vref) {}
+    : Base(adc, value), slope(slope), offset(offset), vref(vref) {}
 
 template <class Type>
     requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
@@ -69,29 +70,34 @@ LinearSensor<Type>::LinearSensor(
     Type& value,
     float vref
 )
-    : LinearSensor::LinearSensor(adc, slope, offset, &value, vref) {}
+    : LinearSensor(adc, slope, offset, &value, vref) {}
 
 template <class Type>
     requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 void LinearSensor<Type>::read() {
-    if (adc == nullptr || value == nullptr) {
+    if (!this->is_configured()) {
         return;
     }
-    const float raw = adc->get_raw();
-    const float val = adc->get_value_from_raw(raw, vref);
 
-    *value = slope * (Type)val + offset;
+    *this->value = compute_value_from_voltage(this->read_voltage(vref));
 }
 
 template <class Type>
     requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
-Type LinearSensor<Type>::get_offset() {
+Type LinearSensor<Type>::compute_value_from_voltage(float voltage) const {
+    const Type sensor_voltage = static_cast<Type>(voltage);
+    return slope * sensor_voltage + offset;
+}
+
+template <class Type>
+    requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
+Type LinearSensor<Type>::get_offset() const {
     return offset;
 }
 
 template <class Type>
     requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
-Type LinearSensor<Type>::get_gain() {
+Type LinearSensor<Type>::get_gain() const {
     return slope;
 }
 
@@ -110,5 +116,5 @@ void LinearSensor<Type>::set_gain(Type new_gain) {
 template <class Type>
     requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 Type* LinearSensor<Type>::get_value_pointer() const {
-    return value;
+    return this->value;
 }
