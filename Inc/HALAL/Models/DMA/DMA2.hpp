@@ -1,13 +1,9 @@
 #pragma once
 #include "C++Utilities/CppUtils.hpp"
+#include "ErrorHandler/ErrorHandler.hpp"
 #include "stm32h7xx_hal.h"
 #include "main.h"
-#include "HALAL/Models/MPUManager/MPUManager.hpp"
-#include <cassert>
 #include <array>
-#include <variant>
-#include <functional>
-#include <set>
 
 using std::array;
 using std::size_t;
@@ -22,7 +18,7 @@ inline DMA_HandleTypeDef* dma_irq_table[16] = {nullptr};
 
 namespace ST_LIB {
 extern void compile_error(const char* msg);
-struct DMA_Domain {
+struct DMADomain {
 
     enum class Peripheral : uint8_t {
         none,
@@ -111,7 +107,7 @@ struct DMA_Domain {
     };
 
     template <Stream... Ss> struct DMA {
-        using domain = DMA_Domain;
+        using domain = DMADomain;
 
         std::array<Entry, sizeof...(Ss)> e{};
 
@@ -136,7 +132,7 @@ struct DMA_Domain {
         template <class Ctx> consteval array<size_t, sizeof...(Ss)> inscribe(Ctx& ctx) const {
             array<size_t, sizeof...(Ss)> indices{};
             for (size_t i = 0; i < sizeof...(Ss); i++) {
-                indices[i] = ctx.template add<DMA_Domain>(e[i], this);
+                indices[i] = ctx.template add<DMADomain>(e[i], this);
             }
             return indices;
         }
@@ -145,7 +141,7 @@ struct DMA_Domain {
     static constexpr std::size_t max_instances{MAX_STREAMS};
     static_assert(max_instances > 0, "The number of instances must be greater than 0");
 
-    static inline constexpr IRQn_Type get_irqn(Stream stream) {
+    static consteval IRQn_Type get_irqn(Stream stream) {
         if (stream == Stream::dma1_stream0)
             return DMA1_Stream0_IRQn;
         else if (stream == Stream::dma1_stream1)
@@ -181,16 +177,17 @@ struct DMA_Domain {
             return DMA2_Stream7_IRQn;
         else if (stream == Stream::none)
             return (IRQn_Type)0;
-        else
-            compile_error("No tiene que llegar aqui nunca, creo");
+        else {
+            compile_error("Invalid DMA stream");
+        }
         return (IRQn_Type)0;
     }
 
-    static constexpr inline bool is_one_of(Peripheral instance, auto... bases) {
+    static consteval bool is_one_of(Peripheral instance, auto... bases) {
         return ((instance == bases) || ...);
     }
 
-    static constexpr inline bool is_spi(Peripheral instance) {
+    static consteval bool is_spi(Peripheral instance) {
         return is_one_of(
             instance,
             Peripheral::spi1,
@@ -202,7 +199,7 @@ struct DMA_Domain {
         );
     }
 
-    static constexpr inline bool is_i2c(Peripheral instance) {
+    static consteval bool is_i2c(Peripheral instance) {
         return is_one_of(
             instance,
             Peripheral::i2c1,
@@ -212,19 +209,15 @@ struct DMA_Domain {
         );
     }
 
-    static constexpr inline bool is_adc(Peripheral instance) {
+    static consteval bool is_adc(Peripheral instance) {
         return is_one_of(instance, Peripheral::adc1, Peripheral::adc2, Peripheral::adc3);
     }
 
-    static constexpr inline bool is_fmac(Peripheral instance) {
-        return instance == Peripheral::fmac;
-    }
+    static consteval bool is_fmac(Peripheral instance) { return instance == Peripheral::fmac; }
 
-    static constexpr inline bool is_none(Peripheral instance) {
-        return instance == Peripheral::none;
-    }
+    static consteval bool is_none(Peripheral instance) { return instance == Peripheral::none; }
 
-    static consteval inline uint32_t get_Request(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_Request(Peripheral instance, uint8_t i) {
         if (instance == Peripheral::none)
             return DMA_REQUEST_MEM2MEM;
 
@@ -284,7 +277,7 @@ struct DMA_Domain {
         return 0;
     }
 
-    static consteval inline uint32_t get_Direction(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_Direction(Peripheral instance, uint8_t i) {
         if ((is_fmac(instance) && i == 0) || instance == Peripheral::none) {
             return DMA_MEMORY_TO_MEMORY;
         } else if ((is_i2c(instance) && i == 1) || (is_spi(instance) && i == 1) || (is_fmac(instance) && i == 1)) {
@@ -293,21 +286,21 @@ struct DMA_Domain {
         return DMA_PERIPH_TO_MEMORY;
     }
 
-    static consteval inline uint32_t get_PeriphInc(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_PeriphInc(Peripheral instance, uint8_t i) {
         if ((is_fmac(instance) && i == 0) || is_none(instance)) {
             return DMA_PINC_ENABLE;
         }
         return DMA_PINC_DISABLE;
     }
 
-    static consteval inline uint32_t get_MemInc(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_MemInc(Peripheral instance, uint8_t i) {
         if (is_fmac(instance) && i == 0) {
             return DMA_MINC_DISABLE;
         }
         return DMA_MINC_ENABLE;
     }
 
-    static consteval inline uint32_t get_PeriphDataAlignment(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_PeriphDataAlignment(Peripheral instance, uint8_t i) {
         if (is_spi(instance) || is_i2c(instance)) {
             return DMA_PDATAALIGN_BYTE;
         } else if (is_none(instance)) {
@@ -316,7 +309,7 @@ struct DMA_Domain {
         return DMA_PDATAALIGN_HALFWORD;
     }
 
-    static consteval inline uint32_t get_MemDataAlignment(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_MemDataAlignment(Peripheral instance, uint8_t i) {
         if (is_i2c(instance)) {
             return DMA_MDATAALIGN_WORD;
         } else if (is_spi(instance)) {
@@ -326,7 +319,7 @@ struct DMA_Domain {
         return DMA_MDATAALIGN_HALFWORD;
     }
 
-    static consteval inline uint32_t get_Mode(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_Mode(Peripheral instance, uint8_t i) {
         if (is_spi(instance) || is_fmac(instance) || is_none(instance)) {
             return DMA_NORMAL;
         }
@@ -334,7 +327,7 @@ struct DMA_Domain {
         return DMA_CIRCULAR;
     }
 
-    static consteval inline uint32_t get_Priority(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_Priority(Peripheral instance, uint8_t i) {
         if (is_fmac(instance)) {
             return DMA_PRIORITY_HIGH;
         }
@@ -342,30 +335,35 @@ struct DMA_Domain {
         return DMA_PRIORITY_LOW;
     }
 
-    static consteval inline uint32_t get_FIFOMode(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_FIFOMode(Peripheral instance, uint8_t i) {
         if (is_fmac(instance)) {
             return DMA_FIFOMODE_ENABLE;
         }
         return DMA_FIFOMODE_DISABLE;
     }
 
-    static consteval inline uint32_t get_FIFOThreshold(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_FIFOThreshold(Peripheral instance, uint8_t i) {
         if (is_spi(instance)) {
             return DMA_FIFO_THRESHOLD_FULL;
         }
         return DMA_FIFO_THRESHOLD_HALFFULL;
     }
 
-    static consteval inline uint32_t get_MemBurst(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_MemBurst(Peripheral instance, uint8_t i) {
         return DMA_MBURST_SINGLE;
     }
 
-    static consteval inline uint32_t get_PeriphBurst(Peripheral instance, uint8_t i) {
+    static consteval uint32_t get_PeriphBurst(Peripheral instance, uint8_t i) {
         return DMA_PBURST_SINGLE;
     }
 
+    static consteval bool get_NVICEnabled(Peripheral instance, uint8_t i) {
+        (void)i;
+        return !is_adc(instance);
+    }
+
     struct Config {
-        std::tuple<Peripheral, DMA_InitTypeDef, Stream, IRQn_Type, uint8_t> init_data{};
+        std::tuple<Peripheral, DMA_InitTypeDef, Stream, IRQn_Type, uint8_t, bool> init_data{};
     };
 
     template <size_t N> static consteval std::array<Config, N> build(span<const Entry> instances) {
@@ -432,7 +430,14 @@ struct DMA_Domain {
             DMA_InitStruct.MemBurst = get_MemBurst(e.instance, e.id);
             DMA_InitStruct.PeriphBurst = get_PeriphBurst(e.instance, e.id);
 
-            cfgs[i].init_data = std::make_tuple(e.instance, DMA_InitStruct, e.stream, e.irqn, e.id);
+            cfgs[i].init_data = std::make_tuple(
+                e.instance,
+                DMA_InitStruct,
+                e.stream,
+                e.irqn,
+                e.id,
+                get_NVICEnabled(e.instance, e.id)
+            );
         }
         return cfgs;
     }
@@ -451,11 +456,20 @@ struct DMA_Domain {
         static void init(std::span<const Config, N> cfgs) {
             if (N == 0)
                 return;
+
             __HAL_RCC_DMA1_CLK_ENABLE();
             __HAL_RCC_DMA2_CLK_ENABLE();
+
             for (std::size_t i = 0; i < N; ++i) {
                 const auto& e = cfgs[i];
-                auto [instance, dma_init, stream, irqn, id] = e.init_data;
+                auto [instance, dma_init, stream, irqn, id, nvic_enabled] = e.init_data;
+                (void)instance;
+                (void)id;
+
+                if (stream == Stream::none) {
+                    ErrorHandler("DMA stream must be selected before init");
+                    continue;
+                }
 
                 instances[i].dma = {};
                 instances[i].dma.Instance = stream_to_DMA_StreamTypeDef(stream);
@@ -463,13 +477,20 @@ struct DMA_Domain {
 
                 if (HAL_DMA_Init(&instances[i].dma) != HAL_OK) {
                     ErrorHandler("DMA Init failed");
-                } else {
-                    HAL_NVIC_SetPriority(irqn, 0, 0);
-                    HAL_NVIC_EnableIRQ(irqn);
-                    dma_irq_table[static_cast<uint8_t>(stream) - 1] = &instances[i].dma;
+                    continue;
                 }
+
+                dma_irq_table[static_cast<uint8_t>(stream) - 1] = &instances[i].dma;
+
+                if (!nvic_enabled) {
+                    continue;
+                }
+
+                HAL_NVIC_SetPriority(irqn, 0, 0);
+                HAL_NVIC_EnableIRQ(irqn);
             }
         }
     };
 };
+using DMA_Domain = DMADomain;
 } // namespace ST_LIB
