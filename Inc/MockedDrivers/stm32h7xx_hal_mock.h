@@ -754,7 +754,9 @@ typedef struct {
 #define TIM_SR_BIF (1U << 7)
 
 #define TIM_CCMR1_CC1S (3U << 0)
+#define TIM_CCMR1_IC1PSC (3U << 2)
 #define TIM_CCMR1_OC1PE (1U << 3)
+#define TIM_CCMR1_IC1F (0xFUL << 4)
 #define TIM_CCMR1_OC1M (7U << 4)
 #define TIM_CCMR1_CC2S (3U << 8)
 #define TIM_CCMR1_OC2PE (1U << 11)
