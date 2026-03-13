@@ -71,7 +71,8 @@ public:
             return;
 
         volatile HAL_TIM_ChannelStateTypeDef* state =
-            &timer->instance->hal_tim->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
+            &timer->instance->hal_tim
+                 ->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
             ErrorHandler("Channel not ready");
         }
@@ -104,7 +105,8 @@ public:
             return;
 
         volatile HAL_TIM_ChannelStateTypeDef* state =
-            &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(negated_pin.channel)];
+            &timer->instance->hal_tim
+                 ->ChannelNState[TimerDomain::get_channel_state_idx(negated_pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
             ErrorHandler("Channel not ready");
         }
@@ -162,11 +164,13 @@ public:
 
         CLEAR_BIT(
             timer->tim->CCER,
-            (uint32_t)(TIM_CCER_CC1NE << (TimerDomain::get_channel_mul4(negated_pin.channel) & 0x1FU))
+            (uint32_t)(TIM_CCER_CC1NE
+                       << (TimerDomain::get_channel_mul4(negated_pin.channel) & 0x1FU))
         );
 
         HAL_TIM_ChannelStateTypeDef* state =
-            &timer->instance->hal_tim.ChannelState[TimerDomain::get_channel_state_idx(negated_pin.channel)];
+            &timer->instance->hal_tim
+                 .ChannelState[TimerDomain::get_channel_state_idx(negated_pin.channel)];
         *state = HAL_TIM_CHANNEL_STATE_READY;
 
         if (timer->are_all_channels_free()) {

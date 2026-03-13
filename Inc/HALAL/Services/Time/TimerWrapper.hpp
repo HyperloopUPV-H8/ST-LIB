@@ -60,7 +60,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
          dev.e.request == TimerRequest::GeneralPurpose_15 ||
          dev.e.request == TimerRequest::GeneralPurpose_16 ||
          dev.e.request == TimerRequest::GeneralPurpose_17);
-    
+
     /* at least 2 capture/compare channels (see IS_TIM_CC2_INSTANCE for macro definition) */
     static constexpr bool is_CC2_instance =
         (dev.e.request == TimerRequest::Advanced_1 ||
@@ -313,33 +313,58 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
 
     /* {rising channel, falling channel} must be {1,2} or {3,4} (any order) */
     template <ST_LIB::TimerPin rising_pin, ST_LIB::TimerChannel channel_falling>
-    inline InputCapture<dev, rising_pin, channel_falling> get_input_capture(uint16_t prescaler = IMD_IC_PRESCALER_VALUE)
-    {
+    inline InputCapture<dev, rising_pin, channel_falling>
+    get_input_capture(uint16_t prescaler = IMD_IC_PRESCALER_VALUE) {
         instance->tim->PSC = prescaler;
 
-        static_assert(rising_pin.channel != channel_falling, "Rising and falling channels must be different");
+        static_assert(
+            rising_pin.channel != channel_falling,
+            "Rising and falling channels must be different"
+        );
 
         /* channel 1 can only go with channel 2 */
-        static_assert(!((rising_pin.channel == TimerChannel::CHANNEL_1) && 
-            (channel_falling != TimerChannel::CHANNEL_2)), "Channel 1 must go with channel 2 for inputcapture");
-        static_assert(!((channel_falling == TimerChannel::CHANNEL_1) && 
-            (rising_pin.channel != TimerChannel::CHANNEL_2)), "Channel 1 must go with channel 2 for inputcapture");
+        static_assert(
+            !((rising_pin.channel == TimerChannel::CHANNEL_1) &&
+              (channel_falling != TimerChannel::CHANNEL_2)),
+            "Channel 1 must go with channel 2 for inputcapture"
+        );
+        static_assert(
+            !((channel_falling == TimerChannel::CHANNEL_1) &&
+              (rising_pin.channel != TimerChannel::CHANNEL_2)),
+            "Channel 1 must go with channel 2 for inputcapture"
+        );
 
         /* channel 3 can only go with channel 4 */
-        static_assert(!((rising_pin.channel == TimerChannel::CHANNEL_3) && 
-            (channel_falling != TimerChannel::CHANNEL_4)), "Channel 3 must go with channel 4 for inputcapture");
-        static_assert(!((channel_falling == TimerChannel::CHANNEL_3) && 
-            (rising_pin.channel != TimerChannel::CHANNEL_4)), "Channel 3 must go with channel 4 for inputcapture");
+        static_assert(
+            !((rising_pin.channel == TimerChannel::CHANNEL_3) &&
+              (channel_falling != TimerChannel::CHANNEL_4)),
+            "Channel 3 must go with channel 4 for inputcapture"
+        );
+        static_assert(
+            !((channel_falling == TimerChannel::CHANNEL_3) &&
+              (rising_pin.channel != TimerChannel::CHANNEL_4)),
+            "Channel 3 must go with channel 4 for inputcapture"
+        );
 
-        static_assert(rising_pin.af == TimerAF::InputCapture, "Pin must be configured as input capture");
-        static_assert((static_cast<uint8_t>(channel_falling) - 1) <= 4, "Channel must be 1 to 4 for inputcapture");
+        static_assert(
+            rising_pin.af == TimerAF::InputCapture,
+            "Pin must be configured as input capture"
+        );
+        static_assert(
+            (static_cast<uint8_t>(channel_falling) - 1) <= 4,
+            "Channel must be 1 to 4 for inputcapture"
+        );
         static_assert(this->is_CC2_instance, "Timer must have 2 or more Capture compare channels");
 
-        if constexpr(channel_falling >= TimerChannel::CHANNEL_3 && !this->is_CC3_instance) {
-            ST_LIB::compile_error("Error: This timer does not have 3 or more Capture compare channels");
+        if constexpr (channel_falling >= TimerChannel::CHANNEL_3 && !this->is_CC3_instance) {
+            ST_LIB::compile_error(
+                "Error: This timer does not have 3 or more Capture compare channels"
+            );
         }
-        if constexpr(channel_falling == TimerChannel::CHANNEL_4 && !this->is_CC4_instance) {
-            ST_LIB::compile_error("Error: This timer does not have 4 or more Capture compare channels");
+        if constexpr (channel_falling == TimerChannel::CHANNEL_4 && !this->is_CC4_instance) {
+            ST_LIB::compile_error(
+                "Error: This timer does not have 4 or more Capture compare channels"
+            );
         }
 
         return InputCapture<dev, rising_pin, channel_falling>(this);
@@ -442,28 +467,26 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
     ///////////////////////////////////////////////////////
     // Below are methods used by other objects (internals)
 
-    template <ST_LIB::TimerChannel ch>
-    inline void enable_capture_compare_interrupt(void) {
-        if constexpr((ch == TimerChannel::CHANNEL_1) || (ch == TimerChannel::CHANNEL_1_NEGATED)) {
+    template <ST_LIB::TimerChannel ch> inline void enable_capture_compare_interrupt(void) {
+        if constexpr ((ch == TimerChannel::CHANNEL_1) || (ch == TimerChannel::CHANNEL_1_NEGATED)) {
             SET_BIT(instance->tim->DIER, TIM_IT_CC1);
-        } else if constexpr((ch == TimerChannel::CHANNEL_2) || (ch == TimerChannel::CHANNEL_2_NEGATED)) {
+        } else if constexpr ((ch == TimerChannel::CHANNEL_2) || (ch == TimerChannel::CHANNEL_2_NEGATED)) {
             SET_BIT(instance->tim->DIER, TIM_IT_CC2);
-        } else if constexpr((ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_3_NEGATED)) {
+        } else if constexpr ((ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_3_NEGATED)) {
             SET_BIT(instance->tim->DIER, TIM_IT_CC3);
-        } else if constexpr((ch == TimerChannel::CHANNEL_4) || (ch == TimerChannel::CHANNEL_4_NEGATED)) {
+        } else if constexpr ((ch == TimerChannel::CHANNEL_4) || (ch == TimerChannel::CHANNEL_4_NEGATED)) {
             SET_BIT(instance->tim->DIER, TIM_IT_CC4);
         }
     }
 
-    template <ST_LIB::TimerChannel ch>
-    inline void disable_capture_compare_interrupt(void) {
-        if constexpr((ch == TimerChannel::CHANNEL_1) || (ch == TimerChannel::CHANNEL_1_NEGATED)) {
+    template <ST_LIB::TimerChannel ch> inline void disable_capture_compare_interrupt(void) {
+        if constexpr ((ch == TimerChannel::CHANNEL_1) || (ch == TimerChannel::CHANNEL_1_NEGATED)) {
             CLEAR_BIT(instance->tim->DIER, TIM_IT_CC1);
-        } else if constexpr((ch == TimerChannel::CHANNEL_2) || (ch == TimerChannel::CHANNEL_2_NEGATED)) {
+        } else if constexpr ((ch == TimerChannel::CHANNEL_2) || (ch == TimerChannel::CHANNEL_2_NEGATED)) {
             CLEAR_BIT(instance->tim->DIER, TIM_IT_CC2);
-        } else if constexpr((ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_3_NEGATED)) {
+        } else if constexpr ((ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_3_NEGATED)) {
             CLEAR_BIT(instance->tim->DIER, TIM_IT_CC3);
-        } else if constexpr((ch == TimerChannel::CHANNEL_4) || (ch == TimerChannel::CHANNEL_4_NEGATED)) {
+        } else if constexpr ((ch == TimerChannel::CHANNEL_4) || (ch == TimerChannel::CHANNEL_4_NEGATED)) {
             CLEAR_BIT(instance->tim->DIER, TIM_IT_CC4);
         }
     }
@@ -688,7 +711,8 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
 
     /* NOTE(vic): Both config_output_compare_channel and config_input_compare_channel
      *            Could probably be done better if not using TIM_[OC/IC]_InitTypeDef structures */
-    template <ST_LIB::TimerChannel ch> inline void config_input_compare_channel(TIM_IC_InitTypeDef* sConfig) {
+    template <ST_LIB::TimerChannel ch>
+    inline void config_input_compare_channel(TIM_IC_InitTypeDef* sConfig) {
         if constexpr (!((ch == TimerChannel::CHANNEL_1) || (ch == TimerChannel::CHANNEL_2) ||
                         (ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_4))) {
             ST_LIB::compile_error("Only channels 1 to 4 can be configured as input compare");
@@ -704,12 +728,12 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
         } else if constexpr (ch == TimerChannel::CHANNEL_3 || ch == TimerChannel::CHANNEL_4) {
             tmpccmrx = instance->tim->CCMR2;
         }
-        
-        if constexpr((ch == TimerChannel::CHANNEL_1) || (ch == TimerChannel::CHANNEL_1_NEGATED)) {
+
+        if constexpr ((ch == TimerChannel::CHANNEL_1) || (ch == TimerChannel::CHANNEL_1_NEGATED)) {
             CLEAR_BIT(tmpccer, TIM_CCER_CC1E);
 
             /* Select the input */
-            if constexpr(this->is_CC2_instance) {
+            if constexpr (this->is_CC2_instance) {
                 CLEAR_BIT(tmpccmrx, TIM_CCMR1_CC1S);
                 SET_BIT(tmpccmrx, sConfig->ICSelection);
             } else {
@@ -723,10 +747,10 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
             /* Select the Polarity and set the CC1E Bit */
             CLEAR_BIT(tmpccer, TIM_CCER_CC1P | TIM_CCER_CC1NP);
             SET_BIT(tmpccer, sConfig->ICPolarity & (TIM_CCER_CC1P | TIM_CCER_CC1NP));
-            
+
             CLEAR_BIT(tmpccmrx, TIM_CCMR1_IC1PSC);
             SET_BIT(tmpccmrx, sConfig->ICPrescaler & TIM_CCMR1_IC1PSC);
-        } else if constexpr((ch == TimerChannel::CHANNEL_2) || (ch == TimerChannel::CHANNEL_2_NEGATED)) {
+        } else if constexpr ((ch == TimerChannel::CHANNEL_2) || (ch == TimerChannel::CHANNEL_2_NEGATED)) {
             CLEAR_BIT(tmpccer, TIM_CCER_CC2E);
 
             /* Select the input */
@@ -743,13 +767,13 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
 
             CLEAR_BIT(tmpccmrx, TIM_CCMR1_IC2PSC);
             SET_BIT(tmpccmrx, (sConfig->ICPrescaler << 8U) & TIM_CCMR1_IC2PSC);
-        } else if constexpr((ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_3_NEGATED)) {
+        } else if constexpr ((ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_3_NEGATED)) {
             CLEAR_BIT(tmpccer, TIM_CCER_CC3E);
 
             /* Select the Input */
             CLEAR_BIT(tmpccmrx, TIM_CCMR2_CC3S);
             SET_BIT(tmpccmrx, sConfig->ICSelection);
-            
+
             /* Set the filter */
             CLEAR_BIT(tmpccmrx, TIM_CCMR2_IC3F);
             SET_BIT(tmpccmrx, (sConfig->ICFilter << 4U) & TIM_CCMR2_IC3F);
@@ -760,7 +784,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
 
             CLEAR_BIT(tmpccmrx, TIM_CCMR2_IC3PSC);
             SET_BIT(tmpccmrx, (sConfig->ICPrescaler) & TIM_CCMR2_IC3PSC);
-        } else if constexpr(ch == TimerChannel::CHANNEL_4) {
+        } else if constexpr (ch == TimerChannel::CHANNEL_4) {
             CLEAR_BIT(tmpccer, TIM_CCER_CC4E);
 
             /* Select the Input */
