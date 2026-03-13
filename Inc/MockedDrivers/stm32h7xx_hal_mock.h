@@ -759,18 +759,23 @@ typedef struct {
 #define TIM_CCMR1_IC1F (0xFUL << 4)
 #define TIM_CCMR1_OC1M (7U << 4)
 #define TIM_CCMR1_CC2S (3U << 8)
+#define TIM_CCMR1_IC2PSC (3U << 10)
 #define TIM_CCMR1_OC2PE (1U << 11)
 #define TIM_CCMR1_OC2M (7U << 12)
+#define TIM_CCMR1_IC2F (0xFUL << 12)
 
 #define TIM_CCMR1_CC1S_0 (0x1UL << 0)
 #define TIM_CCMR1_CC1S_1 (0x2UL << 0)
 
 #define TIM_CCMR2_CC3S (3U << 0)
+#define TIM_CCMR2_IC3PSC (3U << 2)
 #define TIM_CCMR2_OC3PE (1U << 3)
 #define TIM_CCMR2_OC3M (7U << 4)
+#define TIM_CCMR2_IC3F (0xFUL << 4)
 #define TIM_CCMR2_CC4S (3U << 8)
 #define TIM_CCMR2_OC4PE (1U << 11)
 #define TIM_CCMR2_OC4M (7U << 12)
+#define TIM_CCMR2_IC4F (0xFUL << 12)
 
 #define TIM_CCMR3_OC5PE (1U << 3)
 #define TIM_CCMR3_OC5M (7U << 4)
