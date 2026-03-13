@@ -755,8 +755,8 @@ typedef struct {
 #define TIM_CCMR1_OC2PE (1U << 11)
 #define TIM_CCMR1_OC2M (7U << 12)
 
-#define TIM_CCMR1_CC1S_0 (0x1UL << TIM_CCMR1_CC1S_Pos)
-#define TIM_CCMR1_CC1S_1 (0x2UL << TIM_CCMR1_CC1S_Pos)
+#define TIM_CCMR1_CC1S_0 (0x1UL << 0)
+#define TIM_CCMR1_CC1S_1 (0x2UL << 0)
 
 #define TIM_CCMR2_CC3S (3U << 0)
 #define TIM_CCMR2_OC3PE (1U << 3)
