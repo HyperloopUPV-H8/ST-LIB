@@ -25,13 +25,12 @@ public:
     }
 
     void process() override {
-        if (this->callback != nullptr && state_machine.is_on &&
-            state_machine.get_current_state_id() == state)
+        if (this->callback != nullptr && state_machine.get_current_state_id() == state)
             this->callback();
     }
 
     void parse(OrderProtocol* socket, uint8_t* data) override {
-        if (state_machine.is_on && state_machine.get_current_state_id() == state)
+        if (state_machine.get_current_state_id() == state)
             StackOrder<BufferLength, Types...>::parse(data);
     }
 };
