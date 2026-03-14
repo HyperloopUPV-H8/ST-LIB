@@ -158,7 +158,9 @@ void Scheduler::update() {
         Task& task = tasks_[bit_index];
         task.callback();
         if (!task.repeating) [[unlikely]] {
+            // TODO: Lock from here
             release_slot(static_cast<uint8_t>(bit_index));
+            // TODO: Unlock here
         }
     }
 }
