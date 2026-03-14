@@ -3,6 +3,7 @@
 #include "HALAL/Models/GPIO.hpp"
 #include "HALAL/Models/Pin.hpp"
 #include "HALAL/Models/DMA/DMA2.hpp"
+#include "HALAL/Models/MPU.hpp"
 
 #define Oversampling_MAX 1024
 #define Oversampling_MAX_Filter_4 215
@@ -849,56 +850,44 @@ struct Config_Filter{
                 return channel;
             }
         };
-    __attribute__((section(".mpu_ram_d1_nc.buffer"))) alignas(32)
-    static inline int32_t DFSDM_Buffer_Pool[MAX_BUFFER_SIZE_TOTAL];
     static inline Instance* channel_instances[DFSDM_CHANNEL_DOMAIN::max_instances] = {nullptr}; 
     template <std::size_t N,std::array<Config,N> cfgs> struct Init {
         static constexpr FilterBufferSizes Sizes = calculate_total_sizes(cfgs);
-        //Filter Buffers
-        static inline int32_t* Buffer_Filter0;
-        static inline int32_t* Buffer_Filter1;
-        static inline int32_t* Buffer_Filter2;
-        static inline int32_t* Buffer_Filter3;
-
         
+        // Filter Buffers - directly placed in D1 non-cached memory using MPU macro
+        D1_NC static inline int32_t Buffer_Filter0[Sizes.filter_0_total > 0 ? Sizes.filter_0_total : 1]{};
+        D1_NC static inline int32_t Buffer_Filter1[Sizes.filter_1_total > 0 ? Sizes.filter_1_total : 1]{};
+        D1_NC static inline int32_t Buffer_Filter2[Sizes.filter_2_total > 0 ? Sizes.filter_2_total : 1]{};
+        D1_NC static inline int32_t Buffer_Filter3[Sizes.filter_3_total > 0 ? Sizes.filter_3_total : 1]{};
+
         static inline std::array<Instance, N> instances{};
 
         static uint32_t get_buffer(uint8_t filter){
             switch(filter){
                 case 0: 
-                    return reinterpret_cast<uint32_t>(Buffer_Filter0);
+                    return reinterpret_cast<uint32_t>(&Buffer_Filter0[0]);
                 case 1:
-                    return reinterpret_cast<uint32_t>(Buffer_Filter1);
+                    return reinterpret_cast<uint32_t>(&Buffer_Filter1[0]);
                 case 2:
-                    return reinterpret_cast<uint32_t>(Buffer_Filter2);
+                    return reinterpret_cast<uint32_t>(&Buffer_Filter2[0]);
                 case 3:
-                    return reinterpret_cast<uint32_t>(Buffer_Filter3);
+                    return reinterpret_cast<uint32_t>(&Buffer_Filter3[0]);
             }
             return 0;
         }
+        
         static int32_t* get_buffer_pointer(uint8_t filter){
              switch(filter){
                 case 0: 
-                    return Buffer_Filter0;
+                    return &Buffer_Filter0[0];
                 case 1:
-                    return Buffer_Filter1;
+                    return &Buffer_Filter1[0];
                 case 2:
-                    return Buffer_Filter2;
+                    return &Buffer_Filter2[0];
                 case 3:
-                    return Buffer_Filter3;
+                    return &Buffer_Filter3[0];
             }
-            return 0;
-        }
-        static void assign_buffers(){
-            uint32_t offset = 0;
-            Buffer_Filter0 = &DFSDM_Buffer_Pool[offset];
-            offset += Sizes.filter_0_total;
-            Buffer_Filter1 = &DFSDM_Buffer_Pool[offset];
-            offset += Sizes.filter_1_total;
-            Buffer_Filter2 = &DFSDM_Buffer_Pool[offset];
-            offset += Sizes.filter_2_total;
-            Buffer_Filter3 = &DFSDM_Buffer_Pool[offset];
-            offset += Sizes.filter_3_total;
+            return nullptr;
         }
         static void init(std::span<GPIODomain::Instance> gpio_instances,std::span<DMA_Domain::Instance> dma_instances) {
             if(N == 0) return;
@@ -927,7 +916,6 @@ struct Config_Filter{
                 inst.dma_enable = cfg.dma_enable;
 
                 inst.length_buffer = cfg.buffer_size;
-                assign_buffers();
                 inst.buffer = get_buffer_pointer(cfg.filter);
                 //callbacks
                 inst.overrun_cb = cfg.overrun_callback;
