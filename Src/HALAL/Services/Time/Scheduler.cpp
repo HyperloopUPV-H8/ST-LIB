@@ -35,8 +35,6 @@ inline void Scheduler::set_at(uint8_t idx, uint8_t id) {
     uint32_t shift = idx * 4;
     uint64_t clearmask = ~(0xFF << shift);
     Scheduler::sorted_task_ids_ = (sorted_task_ids_ & clearmask) | (id << shift);
-    // sorted_task_ids_ |= ((id & 0x0F) << shift); // This is also an option in case id is
-    // incorrect, I don't think it's necessary though
 }
 inline uint8_t Scheduler::front_id() { return *((uint8_t*)&sorted_task_ids_) & 0xF; }
 inline void Scheduler::pop_front() {
@@ -68,6 +66,7 @@ void Scheduler::start() {
     Scheduler_global_timer =
         ST_LIB::TimerDomain::cmsis_timers[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
 
+    // TODO: change this to use TimerDomain::get_timer_clock()?
     uint32_t prescaler = (SystemCoreClock / Scheduler::FREQUENCY);
     // setup prescaler
     {
@@ -155,7 +154,7 @@ void Scheduler::start() {
 void Scheduler::update() {
     while (ready_bitmap_ != 0u) {
         uint32_t bit_index = static_cast<uint32_t>(__builtin_ctz(ready_bitmap_));
-        ready_bitmap_ &= ~(1u << bit_index); // Clear the bit
+        CLEAR_BIT(ready_bitmap_, 1u << bit_index);
         Task& task = tasks_[bit_index];
         task.callback();
         if (!task.repeating) [[unlikely]] {
@@ -319,7 +318,7 @@ uint16_t Scheduler::register_task(uint32_t period_us, callback_t func) {
         return static_cast<uint8_t>(Scheduler::INVALID_ID);
 
     uint8_t slot = allocate_slot();
-    if (slot == Scheduler::INVALID_ID)
+    if (slot == Scheduler::INVALID_ID) [[unlikely]]
         return slot;
 
     Task& task = tasks_[slot];
@@ -343,14 +342,14 @@ uint16_t Scheduler::set_timeout(uint32_t microseconds, callback_t func) {
         return static_cast<uint8_t>(Scheduler::INVALID_ID);
 
     uint8_t slot = allocate_slot();
-    if (slot == Scheduler::INVALID_ID)
+    if (slot == Scheduler::INVALID_ID) [[unlikely]]
         return slot;
 
     Task& task = tasks_[slot];
     task.callback = func;
     task.period_us = microseconds;
     task.repeating = false;
-    task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + microseconds);
+    task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + microseconds);
     task.id = slot + Scheduler::timeout_idx_ * Scheduler::kMaxTasks;
 
     // Add 2 instead of 1 so overflow doesn't make timeout_idx == 0,

@@ -23,7 +23,8 @@ extern TIM_TypeDef* Scheduler_global_timer;
 
 struct Scheduler {
     using callback_t = void (*)();
-    static constexpr uint32_t INVALID_ID = 0xFFu;
+    // NOTE: Changed to 0xFE since set_timeout() only outputs odd ids and it could theoretically output 0xFF
+    static constexpr uint32_t INVALID_ID = 0xFEU;
 
     static void start();
     static void update();
@@ -37,13 +38,8 @@ struct Scheduler {
     static uint16_t set_timeout(uint32_t microseconds, callback_t func);
     static bool cancel_timeout(uint16_t id);
 
-    // static void global_timer_callback();
-
-    // Have to be public because SCHEDULER_GLOBAL_TIMER_CALLBACK won't work
-    // otherwise
-    // static const uint32_t global_timer_base = SCHEDULER_TIMER_BASE;
+    // internal
     static void on_timer_update();
-
 #ifndef SIM_ON
 private:
 #endif
@@ -56,6 +52,9 @@ private:
     };
 
     static constexpr std::size_t kMaxTasks = 16;
+    static_assert((INVALID_ID % 2) == 0, "INVALID_ID must be an even number");
+    static_assert(INVALID_ID >= kMaxTasks, "INVALID_ID must not be a possible task id");
+
     static_assert((kMaxTasks & (kMaxTasks - 1)) == 0, "kMaxTasks must be a power of two");
     static constexpr uint32_t FREQUENCY = 1'000'000u; // 1 MHz -> 1us precision
 
