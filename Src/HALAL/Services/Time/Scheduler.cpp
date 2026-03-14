@@ -303,7 +303,9 @@ void Scheduler::on_timer_update() {
         if (diff > 0) [[likely]] {
             break; // Task is in the future, stop processing
         }
+        // TODO: Lock from here
         pop_front();
+        // TODO: Unlock here
         
         //ready_bitmap_ |= (1u << candidate_id); // mark task as ready
         uint32_t new_ready_bmp = ready_bitmap_ | (1U << candidate_id);
@@ -311,11 +313,15 @@ void Scheduler::on_timer_update() {
 
         if (task.repeating) [[likely]] {
             task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);
+            // TODO: Lock from here
             insert_sorted(candidate_id);
+            // TODO: Unlock here
         }
     }
 
+    // TODO: Lock from here
     schedule_next_interval();
+    // TODO: Unlock here
 }
 
 uint16_t Scheduler::register_task(uint32_t period_us, callback_t func) {
