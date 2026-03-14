@@ -2,7 +2,7 @@
 
 #include "HALAL/Models/GPIO.hpp"
 #include "HALAL/Models/Pin.hpp"
-
+#include "HALAL/Models/DMA/DMA2.hpp"
 
 #define Oversampling_MAX 1024
 #define Oversampling_MAX_Filter_4 215
@@ -11,7 +11,7 @@
 #define OFFSET_MAX  (1 << 23) - 1
 #define OFFSET_MIN  -(1 << 23)
 using ST_LIB::GPIODomain;
-
+using ST_LIB::DMA_Domain;
 namespace ST_LIB {
     using Callback = void(*)(void);
     extern void compile_error(const char *msg);
@@ -114,25 +114,12 @@ namespace ST_LIB {
         Scan 
     };
  struct Config_Channel {
-
     int32_t  offset{0};
     uint32_t right_shift{0};
     SPICKSel spi_clock_sel{SPICKSel::CLK_DIVIDED_2_RISING};
     SPI_Type spi_type{SPI_Type::SPI_RISING};
-    Type_Conversion type_conv{Type_Conversion::Regular};
-    Trigger_Timer_Source trigger_conv{Trigger_Timer_Source::Unused};
-    Filter_Type filter_type{Filter_Type::FastSinc};
-    uint16_t oversampling{1};
-    uint16_t integrator{1};
-
-    Dma dma{Dma::Disable};
-    Fast_Conversion fast{Fast_Conversion::Disable};
-    Sync_Conversion rsync{Sync_Conversion::Independent};
-    Regular_Mode rcont{Regular_Mode::Single};
-    Injected_Mode jscan{Injected_Mode::Scan};
-    /* -------- Runtime protections -------- */
-
-    Overrun overrun{Overrun::Disable};
+   
+    /* -------- Runtime protections -------- */ 
     Clock_Absence clock_absence{Clock_Absence::Disable};
     Short_Circuit short_circuit{Short_Circuit::Disable};
     Extreme_Detector extreme_detector{Extreme_Detector::Disable};
@@ -140,15 +127,34 @@ namespace ST_LIB {
     uint8_t short_circuit_count{0xFF};
 
     /* -------- Analog watchdog -------- */
-
     Analog_Watchdog watchdog{Analog_Watchdog::Disable};
-    Analog_Watchdog_Mode watchdog_mode{Analog_Watchdog_Mode::After_Filter};
+    
+    
     //If Mode Watchdog == After filter
-    Filter_Type filter_wathdog{Filter_Type::Sinc2};
+    Filter_Type filter_watchdog{Filter_Type::Sinc2};
     uint8_t watchdog_oversampling{5};
+    
+
+};
+struct Config_Filter{
+    uint8_t filter{0};
+    Trigger_Timer_Source trigger_conv{Trigger_Timer_Source::Unused};
+    Filter_Type filter_type{Filter_Type::FastSinc};
+    uint16_t oversampling{1};
+    uint16_t integrator{1};
+    Type_Conversion type_conv{Type_Conversion::Regular};
+    Dma dma{Dma::Disable};
+    Fast_Conversion fast{Fast_Conversion::Disable};
+    Sync_Conversion rsync{Sync_Conversion::Independent};
+    Regular_Mode rcont{Regular_Mode::Single};
+    Injected_Mode jscan{Injected_Mode::Scan};
+
+    Overrun overrun{Overrun::Disable};
+
+    Analog_Watchdog watchdog{Analog_Watchdog::Enable};
+    Analog_Watchdog_Mode watchdog_mode{Analog_Watchdog_Mode::After_Filter};
     int32_t watchdog_low_threshold{0x10000000};
     int32_t watchdog_high_threshold{0x7FFFFFFF};
-
     //callbacks
     Callback watchdog_callback{nullptr};
     Callback conversion_complete_callback{nullptr};
@@ -156,7 +162,6 @@ namespace ST_LIB {
     Callback clock_absence_callback{nullptr};
     Callback short_circuit_callback{nullptr};
 };
-    
     static constexpr std::array<std::pair<GPIODomain::Pin,uint8_t>,Possible_Pin_Channel> pin_to_channel =
     {{
         {PE4,3},{PC0,4},{PC1,0},{PC3,1},{PC5,2},
@@ -211,98 +216,122 @@ namespace ST_LIB {
         }  
         return GPIODomain::AlternateFunction::AF3; //In any other case
     }
+    static consteval DMA_Domain::Peripheral get_dma_peripheral(uint8_t filter){
+        switch (filter){
+            case 0: return DMA_Domain::Peripheral::dfsdm_filter0;
+            case 1: return DMA_Domain::Peripheral::dfsdm_filter1;
+            case 2: return DMA_Domain::Peripheral::dfsdm_filter2;
+            case 3: return DMA_Domain::Peripheral::dfsdm_filter3;
+        }
+        compile_error("Cannot be different than 0,1,2,3");
+    }
     struct Entry{
-        Config_Channel config;
+        Config_Channel config_channel;
+        Config_Filter config_filter;
         uint8_t channel;
         size_t gpio_idx;
+        size_t dma_idx;
         int32_t* buffer;
         size_t buffer_size;
-
     };
-
+    
     static constexpr size_t max_instances{8};
-    template <size_t N>
+    template <size_t N,DMA_Domain::Stream stream>
     struct DFSDM_CHANNEL{
         using domain = DFSDM_CHANNEL_DOMAIN;
         const GPIODomain::Pin& pin;
+        DMA_Domain::DMA<stream> dma;
         GPIODomain::GPIO gpio;
-        const Config_Channel config;
+        const Config_Channel config_channel;
+        const Config_Filter config_filter;
         uint8_t channel;
         int32_t* buffer;
         size_t buffer_size;
-        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config, int32_t (&buffer)[N]) 
+        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config_channel,const Config_Filter config_filter, int32_t (&buffer)[N]) 
         : pin(pin), 
+        dma(get_dma_peripheral(config_filter.filter)),
         gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None,GPIODomain::Speed::High,dfsdm_channel_af(pin)},
-        config(config),
+        config_channel(config_channel),
+        config_filter(config_filter),
         buffer_size(N)
         {    
             static_assert(N != 0, "N must be bigger than 0");
             this->buffer = buffer;
             channel = get_channel(pin);
             //remove in a future
-            if(config.dma == Dma::Enable){
+
+            if(config_filter.dma == Dma::Enable){
                 compile_error("Not implemented DMA yet");
             }
-
-            if(config.offset > OFFSET_MAX || config.offset < OFFSET_MIN){
+            if(config_filter.filter > 3){
+                compile_error("Solo hay 4 filtros [0..3]");
+            }
+            if(config_channel.offset > OFFSET_MAX || config_channel.offset < OFFSET_MIN){
                 compile_error("Your offset is bigger than the maximum size");
             }
-            if(config.right_shift > 0x000000FF){
+            if(config_channel.right_shift > 0x000000FF){
                 compile_error("Your right_shift is bigger than the maximum size");
             }
-            if(config.integrator <= 0){
+            if(config_filter.integrator <= 0){
                 compile_error("DFSDM_FILTER: Integrator out of range");
             }
-            if (!is_correct_oversampling(config.filter_type, config.oversampling)){
+            if (!is_correct_oversampling(config_filter.filter_type, config_filter.oversampling)){
                 compile_error("DFSDM_FILTER: invalid oversampling for selected filter type");
             } 
-            if(config.watchdog_oversampling > 32){
+            if(config_channel.watchdog_oversampling > 32){
                 compile_error("DFSDM_Watchdog oversampling is bigger than the maximum allowed");
             }
-            if(static_cast<uint32_t>(config.filter_wathdog) > 3){
+            if(static_cast<uint32_t>(config_channel.filter_watchdog) > 3){
                 compile_error("Why would a sane person need a filter of the watchdog higher than sinc3");
             }
         }
-        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config, int32_t*buffer) 
+        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config_channel,const Config_Filter config_filter, int32_t*buffer) 
         : pin(pin), 
+        dma{get_dma_peripheral(config_filter.filter)},
         gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None,GPIODomain::Speed::High,dfsdm_channel_af(pin)},
-        config(config),
+        config_channel(config_channel),
+        config_filter(config_filter),
         buffer(buffer),
         buffer_size(N)
         {    
             static_assert(N == 1, "N must be bigger than 0");
             channel = get_channel(pin);
             //remove in a future
-            if(config.dma == Dma::Enable){
+            if(config_filter.dma == Dma::Enable){
                 compile_error("Not implemented DMA yet");
             }
-
-            if(config.offset > OFFSET_MAX || config.offset < OFFSET_MIN){
+            if(config_filter.filter > 3){
+                compile_error("Filter can not be bigger than 3");
+            }
+            if(config_channel.offset > OFFSET_MAX || config_channel.offset < OFFSET_MIN){
                 compile_error("Your offset is bigger than the maximum size");
             }
-            if(config.right_shift > 0x000000FF){
+            if(config_channel.right_shift > 0x000000FF){
                 compile_error("Your right_shift is bigger than the maximum size");
             }
-            if(config.integrator <= 0){
+            if(config_filter.integrator <= 0){
                 compile_error("DFSDM_FILTER: Integrator out of range");
             }
-            if (!is_correct_oversampling(config.filter_type, config.oversampling)){
+            if (!is_correct_oversampling(config_filter.filter_type, config_filter.oversampling)){
                 compile_error("DFSDM_FILTER: invalid oversampling for selected filter type");
             } 
-            if(config.watchdog_oversampling > 32){
+            if(config_channel.watchdog_oversampling > 32){
                 compile_error("DFSDM_Watchdog oversampling is bigger than the maximum allowed");
             }
-            if(static_cast<uint32_t>(config.filter_wathdog) > 3){
+            if(static_cast<uint32_t>(config_channel.filter_watchdog) > 3){
                 compile_error("Why would a sane person need a filter of the watchdog higher than sinc3");
             }
         }
         template<class Ctx>
         consteval std::size_t inscribe(Ctx &ctx) const {
             const auto gpio_idx = gpio.inscribe(ctx); 
+            const auto dma_idx = dma.inscribe(ctx);
             Entry e{
-                .config = config,
+                .config_channel = config_channel,
+                .config_filter = config_filter,
                 .channel = channel,
                 .gpio_idx = gpio_idx,
+                .dma_idx = dma_idx,
                 .buffer = buffer,
                 .buffer_size = buffer_size
             };
@@ -325,12 +354,13 @@ namespace ST_LIB {
     };
     struct Config {
         size_t gpio_idx;
+        size_t dma_idx;
         FilterConfig init_data_filter;
         ChannelConfig init_data_channel; 
         
         uint32_t latency_cycles;
         Type_Conversion type_conv;
-        Dma dma;
+        Dma dma_enable;
 
         uint8_t filter;
         uint8_t channel;
@@ -346,20 +376,20 @@ namespace ST_LIB {
         Callback short_circuit_callback{nullptr};
     };
     static consteval uint32_t compute_latency(const Entry& e){
-        const uint32_t fosr = e.config.oversampling;
-        const uint32_t iosr = e.config.integrator;
+        const uint32_t fosr = e.config_filter.oversampling;
+        const uint32_t iosr = e.config_filter.integrator;
 
-        if (e.config.fast == Fast_Conversion::Enable &&
-            e.config.rcont == Regular_Mode::Continuous)
+        if (e.config_filter.fast == Fast_Conversion::Enable &&
+            e.config_filter.rcont == Regular_Mode::Continuous)
         {
             return fosr * iosr;
         }
 
-        if (e.config.filter_type == Filter_Type::FastSinc) {
+        if (e.config_filter.filter_type == Filter_Type::FastSinc) {
             return fosr * (iosr - 1 + 4) + 2;
         }
 
-        const uint32_t ford = static_cast<uint32_t>(e.config.filter_type);
+        const uint32_t ford = static_cast<uint32_t>(e.config_filter.filter_type);
         return fosr * (iosr - 1 + ford) + ford;
     }
     static consteval uint32_t get_trigger(Trigger_Timer_Source trig){
@@ -385,9 +415,9 @@ namespace ST_LIB {
     static consteval uint32_t make_fltfcr(const Entry& e)
     {
         return
-            (uint32_t(e.config.filter_type) << DFSDM_FLTFCR_FORD_Pos) |
-            (uint32_t(e.config.oversampling -1) << DFSDM_FLTFCR_FOSR_Pos) |
-            (uint32_t(e.config.integrator - 1) << DFSDM_FLTFCR_IOSR_Pos);
+            (uint32_t(e.config_filter.filter_type) << DFSDM_FLTFCR_FORD_Pos) |
+            (uint32_t(e.config_filter.oversampling -1) << DFSDM_FLTFCR_FOSR_Pos) |
+            (uint32_t(e.config_filter.integrator - 1) << DFSDM_FLTFCR_IOSR_Pos);
     }
     static consteval uint32_t make_fltcr2_global(){
         //Activate the interrupt, to activate the continous detection, then the channel can 
@@ -395,18 +425,18 @@ namespace ST_LIB {
     }
     static consteval uint32_t make_fltcr2(const Entry& e){
         uint32_t v = 0;
-        if(e.config.dma == Dma::Disable || e.config.conversion_complete_callback != nullptr){
+        if(e.config_filter.dma == Dma::Disable || e.config_filter.conversion_complete_callback != nullptr){
             v |= DFSDM_FLTCR2_REOCIE;
             v |= DFSDM_FLTCR2_JEOCIE;
         }
-        if(e.config.watchdog == Analog_Watchdog::Enable){
+        if(e.config_filter.watchdog == Analog_Watchdog::Enable){
             v |= DFSDM_FLTCR2_AWDIE;
             v |= 1 << (DFSDM_FLTCR2_AWDCH_Pos + e.channel);
         } 
-        if (e.config.extreme_detector == Extreme_Detector::Enable){
+        if (e.config_channel.extreme_detector == Extreme_Detector::Enable){
             v |= 1 << (DFSDM_FLTCR2_EXCH_Pos + e.channel);
         }
-        if(e.config.overrun == Overrun::Enable){
+        if(e.config_filter.overrun == Overrun::Enable){
              v |= DFSDM_FLTCR2_JOVRIE;
              v |= DFSDM_FLTCR2_ROVRIE;
         }
@@ -416,53 +446,53 @@ namespace ST_LIB {
     {
         uint32_t v = 0;
         
-        if(e.config.type_conv == Type_Conversion::Regular){
-            v |= (uint32_t(e.config.dma)   << DFSDM_FLTCR1_RDMAEN_Pos);
-            v |= (uint32_t(e.config.fast)   << DFSDM_FLTCR1_FAST_Pos);
-            v |= (uint32_t(e.config.rsync)  << DFSDM_FLTCR1_RSYNC_Pos);
-            v |= (uint32_t(e.config.rcont)  << DFSDM_FLTCR1_RCONT_Pos);
-        }else if(e.config.type_conv == Type_Conversion::Injected){
-            v |= uint32_t(e.config.jscan) << DFSDM_FLTCR1_JSCAN_Pos; // activate conversion of the entire group
-            v |= (uint32_t)(e.config.dma) << DFSDM_FLTCR1_JDMAEN_Pos;
-            if(e.config.trigger_conv != Trigger_Timer_Source::Unused){
+        if(e.config_filter.type_conv == Type_Conversion::Regular){
+            v |= (uint32_t(e.config_filter.dma)   << DFSDM_FLTCR1_RDMAEN_Pos);
+            v |= (uint32_t(e.config_filter.fast)   << DFSDM_FLTCR1_FAST_Pos);
+            v |= (uint32_t(e.config_filter.rsync)  << DFSDM_FLTCR1_RSYNC_Pos);
+            v |= (uint32_t(e.config_filter.rcont)  << DFSDM_FLTCR1_RCONT_Pos);
+        }else if(e.config_filter.type_conv == Type_Conversion::Injected){
+            v |= uint32_t(e.config_filter.jscan) << DFSDM_FLTCR1_JSCAN_Pos; // activate conversion of the entire group
+            v |= (uint32_t)(e.config_filter.dma) << DFSDM_FLTCR1_JDMAEN_Pos;
+            if(e.config_filter.trigger_conv != Trigger_Timer_Source::Unused){
                 v |= DFSDM_FLTCR1_JEXTEN_0; //with the risings
                 if(filter == 0){
-                    v |= get_trigger(e.config.trigger_conv) << DFSDM_FLTCR1_JEXTSEL_Pos;
+                    v |= get_trigger(e.config_filter.trigger_conv) << DFSDM_FLTCR1_JEXTSEL_Pos;
                 }
-                if(e.config.rsync == Sync_Conversion::Sync_With_Flt0){
+                if(e.config_filter.rsync == Sync_Conversion::Sync_With_Flt0){
                     v |= DFSDM_FLTCR1_JSYNC;
                     
                 }else{
-                    v |= get_trigger(e.config.trigger_conv) << DFSDM_FLTCR1_JEXTSEL_Pos;
+                    v |= get_trigger(e.config_filter.trigger_conv) << DFSDM_FLTCR1_JEXTSEL_Pos;
                 }
             } 
         }
-        v |= uint32_t(e.config.watchdog_mode) << DFSDM_FLTCR1_AWFSEL_Pos;
+        v |= uint32_t(e.config_filter.watchdog_mode) << DFSDM_FLTCR1_AWFSEL_Pos;
         return v;
     }
     static consteval uint32_t make_fltawhtr(const Entry& e){
         uint32_t v = 0;        
-        if (e.config.watchdog_mode == Analog_Watchdog_Mode::Channel_Data)
-            v |= (e.config.watchdog_high_threshold & 0xFFFF) << (DFSDM_FLTAWHTR_AWHT_Pos + DFSDM_FLTAWHTR_AWHT_Pos);
+        if (e.config_filter.watchdog_mode == Analog_Watchdog_Mode::Channel_Data)
+            v |= (e.config_filter.watchdog_high_threshold & 0xFFFF) << (DFSDM_FLTAWHTR_AWHT_Pos + DFSDM_FLTAWHTR_AWHT_Pos);
         else
-            v |= (e.config.watchdog_high_threshold & 0xFFFFFF) << DFSDM_FLTAWHTR_AWHT_Pos;
+            v |= (e.config_filter.watchdog_high_threshold & 0xFFFFFF) << DFSDM_FLTAWHTR_AWHT_Pos;
         return v;
     }
     static consteval uint32_t make_fltawltr(const Entry& e){
         uint32_t v = 0;        
-        if (e.config.watchdog_mode == Analog_Watchdog_Mode::Channel_Data)
-            v |= (e.config.watchdog_low_threshold & 0xFFFF) << (DFSDM_FLTAWHTR_AWHT_Pos + DFSDM_FLTAWHTR_AWHT_Pos);
+        if (e.config_filter.watchdog_mode == Analog_Watchdog_Mode::Channel_Data)
+            v |= (e.config_filter.watchdog_low_threshold & 0xFFFF) << (DFSDM_FLTAWHTR_AWHT_Pos + DFSDM_FLTAWHTR_AWHT_Pos);
         else
-            v |= (e.config.watchdog_low_threshold & 0xFFFFFF) << DFSDM_FLTAWHTR_AWHT_Pos;
+            v |= (e.config_filter.watchdog_low_threshold & 0xFFFFFF) << DFSDM_FLTAWHTR_AWHT_Pos;
         return v;
     }
     //Channel
     static consteval uint32_t make_chawscdr(const Entry& e){
         uint32_t v = 0;
-        v |= uint32_t(e.config.short_circuit_count) << DFSDM_CHAWSCDR_SCDT_Pos;
-        if(e.config.watchdog == Analog_Watchdog::Enable){
-            v |= static_cast<uint32_t>(e.config.filter_wathdog) << DFSDM_CHAWSCDR_AWFORD_Pos;
-            v |= static_cast<uint32_t>((e.config.watchdog_oversampling-1) & 0xF) << DFSDM_CHAWSCDR_AWFOSR_Pos;
+        v |= uint32_t(e.config_channel.short_circuit_count) << DFSDM_CHAWSCDR_SCDT_Pos;
+        if(e.config_channel.watchdog == Analog_Watchdog::Enable){
+            v |= static_cast<uint32_t>(e.config_channel.filter_watchdog) << DFSDM_CHAWSCDR_AWFORD_Pos;
+            v |= static_cast<uint32_t>((e.config_channel.watchdog_oversampling-1) & 0xF) << DFSDM_CHAWSCDR_AWFOSR_Pos;
         }
         return v;
     }
@@ -471,18 +501,18 @@ namespace ST_LIB {
         //DATPACK = 0  -> Standard mode
         //DATMPX = 0 -> Comes from an external serial input
         //Chinsel = 0 -> channel input are taken from pin of the same channel y
-        v |= uint32_t(e.config.spi_clock_sel) << DFSDM_CHCFGR1_SPICKSEL_Pos;
-        v |= uint32_t (e.config.spi_type) << DFSDM_CHCFGR1_SITP_Pos;
-        v |= uint32_t(e.config.clock_absence) << DFSDM_CHCFGR1_CKABEN_Pos;
-        v |= uint32_t(e.config.short_circuit) << DFSDM_CHCFGR1_SCDEN_Pos;
+        v |= uint32_t(e.config_channel.spi_clock_sel) << DFSDM_CHCFGR1_SPICKSEL_Pos;
+        v |= uint32_t (e.config_channel.spi_type) << DFSDM_CHCFGR1_SITP_Pos;
+        v |= uint32_t(e.config_channel.clock_absence) << DFSDM_CHCFGR1_CKABEN_Pos;
+        v |= uint32_t(e.config_channel.short_circuit) << DFSDM_CHCFGR1_SCDEN_Pos;
 
         return v;
 
     }
     static consteval uint32_t make_chcfgr2(const Entry& e){
         uint32_t v = 0;
-        v |= (e.config.offset & 0x00FFFFFF) << DFSDM_CHCFGR2_OFFSET_Pos;
-        v |= uint8_t(e.config.right_shift & 0x0F) << DFSDM_CHCFGR2_DTRBS_Pos;
+        v |= (e.config_channel.offset & 0x00FFFFFF) << DFSDM_CHCFGR2_OFFSET_Pos;
+        v |= uint8_t(e.config_channel.right_shift & 0x0F) << DFSDM_CHCFGR2_DTRBS_Pos;
         return v;
     }
 
@@ -492,7 +522,6 @@ namespace ST_LIB {
         std::array<Config, N> cfgs{};
         std::array<bool,8> channels_used{false};
         std::array<int8_t,4> filters_used{-1,-1,-1,-1};
-         bool filter_per_channel = (N <= 4) ? true : false;
 
         for (size_t i = 0; i < N; ++i) {
             const Entry &e = entries[i];
@@ -504,23 +533,21 @@ namespace ST_LIB {
             Config& cfg = cfgs[i];
             
             cfg.gpio_idx = e.gpio_idx;
+            cfg.dma_idx = e.dma_idx;
             cfg.channel = e.channel;
             cfg.buffer_size = e.buffer_size;
             cfg.buffer = e.buffer;
-            cfg.type_conv = e.config.type_conv;
-            cfg.dma = e.config.dma;
-
+            cfg.type_conv = e.config_filter.type_conv;
+            cfg.dma_enable = e.config_filter.dma;
+            cfg.filter = e.config_filter.filter;
             //add the callbacks
-            cfg.overrun_callback = e.config.overrun_callback;
-            cfg.clock_absence_callback = e.config.clock_absence_callback;
-            cfg.short_circuit_callback = e.config.short_circuit_callback;
-            cfg.watchdog_callback = e.config.watchdog_callback;
-            cfg.conversion_complete_callback = e.config.conversion_complete_callback;
-            if(filter_per_channel){
-                cfg.filter = i;
-            }else{
-                cfg.filter = e.channel / 2;
-            }
+            cfg.overrun_callback = e.config_filter.overrun_callback;
+            cfg.clock_absence_callback = e.config_filter.clock_absence_callback;
+            cfg.short_circuit_callback = e.config_filter.short_circuit_callback;
+            cfg.watchdog_callback = e.config_filter.watchdog_callback;
+            cfg.conversion_complete_callback = e.config_filter.conversion_complete_callback;
+            
+            
             cfg.init_data_filter.FLTCR1 |= make_fltcr1(e,cfg.filter);
             cfg.init_data_filter.FLTCR2 |= make_fltcr2(e);
             cfg.init_data_filter.FLTFCR  |= make_fltfcr(e);
@@ -529,7 +556,7 @@ namespace ST_LIB {
             cfg.init_data_channel.CHAWSCDR |= make_chawscdr(e);
             cfg.init_data_filter.FLTAWHTR |= make_fltawhtr(e);
             cfg.init_data_filter.FLTAWLTR |= make_fltawltr(e);
-            if(e.config.type_conv == Type_Conversion::Injected) cfg.init_data_filter.FLTJCHGR |= 1 << e.channel;
+            if(e.config_filter.type_conv == Type_Conversion::Injected) cfg.init_data_filter.FLTJCHGR |= 1 << e.channel;
             if(cfg.filter == 0) cfg.init_data_filter.FLTCR2 |= make_fltcr2_global();
 
             cfg.latency_cycles = compute_latency(e);
@@ -555,9 +582,26 @@ namespace ST_LIB {
         return cfgs;
     }
 
+        static inline uint8_t channels_enabled{};
+        static constexpr DFSDM_Filter_TypeDef* filter_hw[4] = {
+            DFSDM1_Filter0,
+            DFSDM1_Filter1,
+            DFSDM1_Filter2,
+            DFSDM1_Filter3
+        };
+        static constexpr DFSDM_Channel_TypeDef* channel_hw[8] = {
+            DFSDM1_Channel0,
+            DFSDM1_Channel1,
+            DFSDM1_Channel2,
+            DFSDM1_Channel3,
+            DFSDM1_Channel4,
+            DFSDM1_Channel5,
+            DFSDM1_Channel6,
+            DFSDM1_Channel7
+        };
     struct Instance {
         GPIODomain::Instance *gpio_instance;
-
+        DMA_Domain::Instance *dma_instance;
         DFSDM_Filter_TypeDef *filter_regs{};
         DFSDM_Channel_TypeDef *channel_regs{};
 
@@ -571,13 +615,95 @@ namespace ST_LIB {
         uint8_t channel;
         uint8_t filter;
         Type_Conversion type_conv;
-        Dma dma;
+        Dma dma_enable;
         
         int32_t* buffer{};
         size_t length_buffer{};
         size_t idx{};
+        
+    template <std::size_t N> struct Init {
+        static inline std::array<Instance, N> instances{};
+        static void init(std::span<const Config, N> cfgs,std::span<GPIODomain::Instance> gpio_instances,std::span<DMA_Domain::Instance> dma_instances) {
+            if(N == 0) return;
+            std::array<bool,4> filters_configured = {false,false,false,false};
+            RCC->APB2ENR |= RCC_APB2ENR_DFSDM1EN; //Activate the DFSDM clock
+            for (size_t i = 0; i < N; ++i) {
+                const Config &cfg = cfgs[i];
+                filter_hw[cfg.filter]->FLTCR1 &= ~DFSDM_FLTCR1_DFEN;
+                channel_hw[cfg.channel]->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
+            }
+            for (std::size_t i = 0; i < N; ++i) {
+                const Config &cfg = cfgs[i];
+                Instance &inst = instances[i];
+                
+                inst.gpio_instance = &gpio_instances[cfg.gpio_idx];
+
+                inst.filter_regs = filter_hw[cfg.filter];
+                inst.channel_regs = channel_hw[cfg.channel];
+
+                inst.latency_cycles = cfg.latency_cycles;
+                inst.type_conv = cfg.type_conv;
+                inst.filter = cfg.filter;
+                inst.channel = cfg.channel;
+                inst.dma_enable = cfg.dma_enable;
+
+                inst.buffer = cfg.buffer;
+                inst.length_buffer = cfg.buffer_size;
+
+                //callbacks
+                inst.overrun_cb = cfg.overrun_callback;
+                inst.short_circuit_cb = cfg.short_circuit_callback;
+                inst.watchdog_cb = cfg.watchdog_callback;
+                inst.end_conversion_cb = cfg.conversion_complete_callback;
+                if(!filters_configured[cfg.filter]){
+                    //add everything to the register of the filter
+                    inst.filter_regs->FLTCR1 |= cfg.init_data_filter.FLTCR1;
+                    if(inst.type_conv == Type_Conversion::Regular){
+                        inst.filter_regs->FLTCR1 &= ~DFSDM_FLTCR1_RCH_Msk;
+                        inst.filter_regs->FLTCR1 |= uint32_t(inst.channel) << DFSDM_FLTCR1_RCH_Pos;
+                    }
+                    inst.filter_regs->FLTCR2 |= cfg.init_data_filter.FLTCR2;
+                    inst.filter_regs->FLTFCR |= cfg.init_data_filter.FLTFCR;   
+                    inst.filter_regs->FLTAWHTR |= cfg.init_data_filter.FLTAWHTR;
+                    inst.filter_regs->FLTAWLTR |= cfg.init_data_filter.FLTAWLTR;
+                    inst.filter_regs->FLTJCHGR = cfg.init_data_filter.FLTJCHGR;
+                    
+                    filters_configured[cfg.filter] = true;
+                }   
+                //add everything to the channel register
+                inst.channel_regs->CHCFGR1 |= cfg.init_data_channel.CHCFGR1;
+                inst.channel_regs->CHCFGR2 |= cfg.init_data_channel.CHCFGR2;
+                inst.channel_regs->CHAWSCDR |= cfg.init_data_channel.CHAWSCDR;
+                
+                
+                //update channel_instances
+                channel_instances[inst.channel] = &inst;
+                channels_enabled |= 1 << inst.channel;
+            }
+            if(N > 0){
+                //Activate the DFSDM GLOBAL Interface 
+                DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
+                for(int i = 0; i < 8; i++){
+                    channel_hw[i]->CHCFGR1 |= DFSDM_CHCFGR1_CHEN;
+                }
+                for(int i = 0; i < 4;i++){
+                    filter_hw[i]->FLTCR1 |= DFSDM_FLTCR1_DFEN;
+                }
+                //activate the NVIC
+                for(int i = 0; i < 4; i++){
+                    if(filters_configured[i] == true){
+                        switch(i){
+                            case 0:  NVIC_EnableIRQ(DFSDM1_FLT0_IRQn);     break;
+                            case 1:  NVIC_EnableIRQ(DFSDM1_FLT1_IRQn);     break;
+                            case 2: NVIC_EnableIRQ(DFSDM1_FLT2_IRQn);      break;
+                            case 3: NVIC_EnableIRQ(DFSDM1_FLT3_IRQn);      break;
+                        }
+                    }
+                } 
+            }
+        }
         private:
-            //split in differents categories the enable to clearness
+
             bool is_enabled_channel() const{
                 return (channel_regs->CHCFGR1 & DFSDM_CHCFGR1_CHEN_Msk);
             }
@@ -627,13 +753,32 @@ namespace ST_LIB {
                 //only disable channel 
                 channel_regs->CHCFGR1 &= ~(DFSDM_CHCFGR1_CHEN_Msk);
             }
-            /*channel functions */
+            
             void enable_clock_absence_detector(){
                 channel_regs->CHCFGR1 |= DFSDM_CHCFGR1_CKABEN;
             }
             void enable_short_circuit_detector(){
                 channel_regs->CHCFGR1 |= DFSDM_CHCFGR1_SCDEN;
             }
+            void disable_clock_absence_detector(){
+                channel_regs->CHCFGR1 &= (~DFSDM_CHCFGR1_CKABEN);
+            }
+            void disable_short_circuit_detector(){
+                channel_regs->CHCFGR1 &= (~DFSDM_CHCFGR1_SCDEN);
+            }
+            void enable_overrun(){
+                filter_regs->FLTCR2 |= DFSDM_FLTCR2_ROVRIE;
+            }
+            void disable_overrun(){
+                filter_regs->FLTCR2 &= (~DFSDM_FLTCR2_ROVRIE);
+            }
+            void enable_watchdog(){
+                filter_regs->FLTCR2 |= DFSDM_FLTCR2_AWDCH;
+            }
+            void disable_watchdog(){
+                filter_regs->FLTCR2 &= (~DFSDM_FLTCR2_AWDCH);
+            }
+            /*channel functions */
             void change_offset(int32_t offset){
                 channel_regs->CHCFGR2 &= ~(DFSDM_CHCFGR2_OFFSET_Msk);
                 channel_regs->CHCFGR2 |= (offset & 0x00FFFFFF) << DFSDM_CHCFGR2_OFFSET_Pos;
@@ -796,185 +941,87 @@ namespace ST_LIB {
                 }
                 return channel;
             }
+        };
+        
     };
     static inline Instance* channel_instances[DFSDM_CHANNEL_DOMAIN::max_instances] = {nullptr}; 
-    static inline uint8_t channels_enabled{};
-    static constexpr DFSDM_Filter_TypeDef* filter_hw[4] = {
-            DFSDM1_Filter0,
-            DFSDM1_Filter1,
-            DFSDM1_Filter2,
-            DFSDM1_Filter3
-        };
-        static constexpr DFSDM_Channel_TypeDef* channel_hw[8] = {
-            DFSDM1_Channel0,
-            DFSDM1_Channel1,
-            DFSDM1_Channel2,
-            DFSDM1_Channel3,
-            DFSDM1_Channel4,
-            DFSDM1_Channel5,
-            DFSDM1_Channel6,
-            DFSDM1_Channel7
-        };
-    template <std::size_t N> struct Init {
-       
-        static inline std::array<Instance, N> instances{};
-        static void init(std::span<const Config, N> cfgs,std::span<GPIODomain::Instance> gpio_instances) {
-            if(N == 0) return;
-            std::array<bool,4> filters_configured = {false,false,false,false};
-            RCC->APB2ENR |= RCC_APB2ENR_DFSDM1EN; //Activate the DFSDM clock
-            for (size_t i = 0; i < N; ++i) {
-                const Config &cfg = cfgs[i];
-                filter_hw[cfg.filter]->FLTCR1 &= ~DFSDM_FLTCR1_DFEN;
-                channel_hw[cfg.channel]->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
-            }
-            for (std::size_t i = 0; i < N; ++i) {
-                const Config &cfg = cfgs[i];
-                Instance &inst = instances[i];
-                
-                inst.gpio_instance = &gpio_instances[cfg.gpio_idx];
-
-                inst.filter_regs = filter_hw[cfg.filter];
-                inst.channel_regs = channel_hw[cfg.channel];
-
-                inst.latency_cycles = cfg.latency_cycles;
-                inst.type_conv = cfg.type_conv;
-                inst.filter = cfg.filter;
-                inst.channel = cfg.channel;
-                inst.dma = cfg.dma;
-
-                inst.buffer = cfg.buffer;
-                inst.length_buffer = cfg.buffer_size;
-
-                //callbacks
-                inst.overrun_cb = cfg.overrun_callback;
-                inst.short_circuit_cb = cfg.short_circuit_callback;
-                inst.watchdog_cb = cfg.watchdog_callback;
-                inst.end_conversion_cb = cfg.conversion_complete_callback;
-                if(!filters_configured[cfg.filter]){
-                    //add everything to the register of the filter
-                    inst.filter_regs->FLTCR1 |= cfg.init_data_filter.FLTCR1;
-                    if(inst.type_conv == Type_Conversion::Regular){
-                        inst.filter_regs->FLTCR1 &= ~DFSDM_FLTCR1_RCH_Msk;
-                        inst.filter_regs->FLTCR1 |= uint32_t(inst.channel) << DFSDM_FLTCR1_RCH_Pos;
-                    }
-                    inst.filter_regs->FLTCR2 |= cfg.init_data_filter.FLTCR2;
-                    inst.filter_regs->FLTFCR |= cfg.init_data_filter.FLTFCR;   
-                    inst.filter_regs->FLTAWHTR |= cfg.init_data_filter.FLTAWHTR;
-                    inst.filter_regs->FLTAWLTR |= cfg.init_data_filter.FLTAWLTR;
-                    inst.filter_regs->FLTJCHGR = cfg.init_data_filter.FLTJCHGR;
-                    
-                    filters_configured[cfg.filter] = true;
-                }   
-                //add everything to the channel register
-                inst.channel_regs->CHCFGR1 |= cfg.init_data_channel.CHCFGR1;
-                inst.channel_regs->CHCFGR2 |= cfg.init_data_channel.CHCFGR2;
-                inst.channel_regs->CHAWSCDR |= cfg.init_data_channel.CHAWSCDR;
-                
-                
-                //update channel_instances
-                channel_instances[inst.channel] = &inst;
-                channels_enabled |= 1 << inst.channel;
-            }
-            if(N > 0){
-                //Activate the DFSDM GLOBAL Interface 
-                DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
-                for(int i = 0; i < 8; i++){
-                    channel_hw[i]->CHCFGR1 |= DFSDM_CHCFGR1_CHEN;
-                }
-                for(int i = 0; i < 4;i++){
-                    filter_hw[i]->FLTCR1 |= DFSDM_FLTCR1_DFEN;
-                }
-                //activate the NVIC
-                for(int i = 0; i < 4; i++){
-                    if(filters_configured[i] == true){
-                        switch(i){
-                            case 0:  NVIC_EnableIRQ(DFSDM1_FLT0_IRQn);     break;
-                            case 1:  NVIC_EnableIRQ(DFSDM1_FLT1_IRQn);     break;
-                            case 2: NVIC_EnableIRQ(DFSDM1_FLT2_IRQn);      break;
-                            case 3: NVIC_EnableIRQ(DFSDM1_FLT3_IRQn);      break;
-                        }
-                    }
-                } 
-            }
-        }
-    };
-    
     static void handle_irq(uint8_t filter_index)
-    {
-
-        DFSDM_Filter_TypeDef* filter = filter_hw[filter_index];
-
-        uint32_t isr = filter->FLTISR;
-
-        if(isr & DFSDM_FLTISR_REOCF_Msk){
-            //Save it in the address provide by the user
-            int32_t data = filter->FLTRDATAR;
-            Instance* inst = channel_instances[(data & DFSDM_FLTRDATAR_RDATACH_Msk)>>DFSDM_FLTRDATAR_RDATACH_Pos];
-            if(inst != nullptr && inst->buffer != nullptr){
-                if(inst->dma == Dma::Disable){
-                    inst->buffer[inst->idx] = int32_t(data & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
-                    inst->idx = (inst->idx + 1) % inst->length_buffer;
-                }
-                if(inst->end_conversion_cb != nullptr){
-                    inst->end_conversion_cb();
-                }
-            }
-        }
-        if(isr & DFSDM_FLTISR_JEOCF_Msk){
-            //Save it in the address provide by the user
-            int32_t data = filter->FLTJDATAR;
-            Instance* inst = channel_instances[(data & DFSDM_FLTJDATAR_JDATACH_Msk) >> DFSDM_FLTJDATAR_JDATACH_Pos];
-            if(inst != nullptr && inst->buffer != nullptr){
-                if(inst->dma == Dma::Disable){
-                    inst->buffer[inst->idx] = int32_t(data & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
-                    inst->idx = (inst->idx + 1) % inst->length_buffer;
-                }
-                if(inst->end_conversion_cb != nullptr){
-                    inst->end_conversion_cb();
-                }
-            }
-        }
-        if(isr & DFSDM_FLTISR_ROVRF_Msk){
-            Instance* inst = channel_instances[filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATACH_Msk];
-            if(inst != nullptr && inst->overrun_cb != nullptr) inst->overrun_cb();
-            //clear
-            filter->FLTICR |= DFSDM_FLTISR_ROVRF;
-        }
-        if(isr & DFSDM_FLTISR_JOVRF_Msk){
-            Instance* inst = channel_instances[filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATACH_Msk];
-            if(inst != nullptr && inst->overrun_cb != nullptr) inst->overrun_cb();
-            //clear
-            filter->FLTICR |= DFSDM_FLTISR_JOVRF;
-        }
-        if(isr & (channels_enabled << DFSDM_FLTICR_CLRSCDF_Pos)){
-            uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_SCDF_Msk) >> DFSDM_FLTISR_SCDF_Pos;
-            if(channel_instances[ch] != nullptr && channel_instances[ch]->short_circuit_cb != nullptr) channel_instances[ch]->short_circuit_cb();
-            //clear
-            filter->FLTICR |= DFSDM_FLTICR_CLRSCDF;
-        }
-        if(isr & (channels_enabled << DFSDM_FLTISR_CKABF_Pos)){
-            uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_CKABF_Msk)>> DFSDM_FLTISR_CKABF_Pos;
-            if(channel_instances[ch] != nullptr && channel_instances[ch]->clock_absence_cb != nullptr) channel_instances[ch]->clock_absence_cb();
-            //clear
-            filter->FLTICR |= DFSDM_FLTICR_CLRCKABF;
-        }
-        //Analog watchdog
-        if (isr & (DFSDM_FLTISR_AWDF << DFSDM_FLTISR_AWDF_Pos))
         {
-            if(filter->FLTAWSR & DFSDM_FLTAWSR_AWHTF_Msk){
-                uint32_t ch = __builtin_ctz(filter->FLTAWSR & DFSDM_FLTAWSR_AWHTF_Msk);
-                if(channel_instances[ch] != nullptr && channel_instances[ch]->watchdog_cb != nullptr) channel_instances[ch]->watchdog_cb();
-                //clear
-                filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWHTF;
+
+            DFSDM_Filter_TypeDef* filter = filter_hw[filter_index];
+
+            uint32_t isr = filter->FLTISR;
+
+            if(isr & DFSDM_FLTISR_REOCF_Msk){
+                //Save it in the address provide by the user
+                int32_t data = filter->FLTRDATAR;
+                Instance* inst = channel_instances[(data & DFSDM_FLTRDATAR_RDATACH_Msk)>>DFSDM_FLTRDATAR_RDATACH_Pos];
+                if(inst != nullptr && inst->buffer != nullptr){
+                    if(inst->dma_enable == Dma::Disable){
+                        inst->buffer[inst->idx] = int32_t(data & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
+                        inst->idx = (inst->idx + 1) % inst->length_buffer;
+                    }
+                    if(inst->end_conversion_cb != nullptr){
+                        inst->end_conversion_cb();
+                    }
+                }
             }
-            if(filter->FLTAWSR & DFSDM_FLTAWSR_AWLTF_Msk){
-                uint32_t ch = __builtin_ctz(filter->FLTAWSR & DFSDM_FLTAWSR_AWLTF_Msk);
-                if(channel_instances[ch] != nullptr && channel_instances[ch]->watchdog_cb != nullptr) channel_instances[ch]->watchdog_cb();
+            if(isr & DFSDM_FLTISR_JEOCF_Msk){
+                //Save it in the address provide by the user
+                int32_t data = filter->FLTJDATAR;
+                Instance* inst = channel_instances[(data & DFSDM_FLTJDATAR_JDATACH_Msk) >> DFSDM_FLTJDATAR_JDATACH_Pos];
+                if(inst != nullptr && inst->buffer != nullptr){
+                    if(inst->dma_enable == Dma::Disable){
+                        inst->buffer[inst->idx] = int32_t(data & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
+                        inst->idx = (inst->idx + 1) % inst->length_buffer;
+                    }
+                    if(inst->end_conversion_cb != nullptr){
+                        inst->end_conversion_cb();
+                    }
+                }
+            }
+            if(isr & DFSDM_FLTISR_ROVRF_Msk){
+                Instance* inst = channel_instances[filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATACH_Msk];
+                if(inst != nullptr && inst->overrun_cb != nullptr) inst->overrun_cb();
                 //clear
-                filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWLTF;
+                filter->FLTICR |= DFSDM_FLTISR_ROVRF;
+            }
+            if(isr & DFSDM_FLTISR_JOVRF_Msk){
+                Instance* inst = channel_instances[filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATACH_Msk];
+                if(inst != nullptr && inst->overrun_cb != nullptr) inst->overrun_cb();
+                //clear
+                filter->FLTICR |= DFSDM_FLTISR_JOVRF;
+            }
+            if(isr & (channels_enabled << DFSDM_FLTICR_CLRSCDF_Pos)){
+                uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_SCDF_Msk) >> DFSDM_FLTISR_SCDF_Pos;
+                if(channel_instances[ch] != nullptr && channel_instances[ch]->short_circuit_cb != nullptr) channel_instances[ch]->short_circuit_cb();
+                //clear
+                filter->FLTICR |= DFSDM_FLTICR_CLRSCDF;
+            }
+            if(isr & (channels_enabled << DFSDM_FLTISR_CKABF_Pos)){
+                uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_CKABF_Msk)>> DFSDM_FLTISR_CKABF_Pos;
+                if(channel_instances[ch] != nullptr && channel_instances[ch]->clock_absence_cb != nullptr) channel_instances[ch]->clock_absence_cb();
+                //clear
+                filter->FLTICR |= DFSDM_FLTICR_CLRCKABF;
+            }
+            //Analog watchdog
+            if (isr & (DFSDM_FLTISR_AWDF << DFSDM_FLTISR_AWDF_Pos))
+            {
+                if(filter->FLTAWSR & DFSDM_FLTAWSR_AWHTF_Msk){
+                    uint32_t ch = __builtin_ctz(filter->FLTAWSR & DFSDM_FLTAWSR_AWHTF_Msk);
+                    if(channel_instances[ch] != nullptr && channel_instances[ch]->watchdog_cb != nullptr) channel_instances[ch]->watchdog_cb();
+                    //clear
+                    filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWHTF;
+                }
+                if(filter->FLTAWSR & DFSDM_FLTAWSR_AWLTF_Msk){
+                    uint32_t ch = __builtin_ctz(filter->FLTAWSR & DFSDM_FLTAWSR_AWLTF_Msk);
+                    if(channel_instances[ch] != nullptr && channel_instances[ch]->watchdog_cb != nullptr) channel_instances[ch]->watchdog_cb();
+                    //clear
+                    filter->FLTAWCFR = DFSDM_FLTAWCFR_CLRAWLTF;
+                }
             }
         }
-    }
+    
 };
 
 struct DFSDM_CLK_DOMAIN{
