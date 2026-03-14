@@ -325,11 +325,14 @@ uint16_t Scheduler::register_task(uint32_t period_us, callback_t func) {
     task.callback = func;
     task.period_us = period_us;
     task.repeating = true;
+    task.id = static_cast<uint32_t>(slot);
+
+    // TODO: Lock from here
     task.next_fire_us =
         static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + period_us);
-    task.id = static_cast<uint32_t>(slot);
     insert_sorted(slot);
     schedule_next_interval();
+    // TODO: Unlock here
     return task.id;
 }
 
@@ -349,15 +352,17 @@ uint16_t Scheduler::set_timeout(uint32_t microseconds, callback_t func) {
     task.callback = func;
     task.period_us = microseconds;
     task.repeating = false;
-    task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + microseconds);
     task.id = slot + Scheduler::timeout_idx_ * Scheduler::kMaxTasks;
-
     // Add 2 instead of 1 so overflow doesn't make timeout_idx == 0,
     // we need it to never be 0
     Scheduler::timeout_idx_ += 2;
 
+    // TODO: Lock from here
+    task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + microseconds);
     insert_sorted(slot);
     schedule_next_interval();
+    // TODO: Unlock here
+
     return task.id;
 }
 
@@ -367,9 +372,11 @@ bool Scheduler::unregister_task(uint16_t id) {
     if (free_bitmap_ & (1UL << id))
         return false;
 
+    // TODO: Lock from here
     remove_sorted(id);
     release_slot(id);
     schedule_next_interval();
+    // TODO: Unlock here
     return true;
 }
 
@@ -383,8 +390,10 @@ bool Scheduler::cancel_timeout(uint16_t id) {
     if (free_bitmap_ & (1UL << idx))
         return false;
 
+    // TODO: Lock from here
     remove_sorted(idx);
     release_slot(idx);
     schedule_next_interval();
+    // TODO: Unlock here
     return true;
 }

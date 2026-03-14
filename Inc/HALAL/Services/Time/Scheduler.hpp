@@ -23,8 +23,10 @@ extern TIM_TypeDef* Scheduler_global_timer;
 
 struct Scheduler {
     using callback_t = void (*)();
-    // NOTE: Changed to 0xFE since set_timeout() only outputs odd ids and it could theoretically output 0xFF
-    static constexpr uint32_t INVALID_ID = 0xFEU;
+    static constexpr uint32_t kMaxTasks = 16;
+    // INVALID_ID must be an even multiple of kMaxTasks.
+    // if it isn't it could theoretically be used as an id in set_timeout
+    static constexpr uint32_t INVALID_ID = 2*kMaxTasks;
 
     static void start();
     static void update();
@@ -51,8 +53,7 @@ private:
         bool repeating{false};
     };
 
-    static constexpr std::size_t kMaxTasks = 16;
-    static_assert((INVALID_ID % 2) == 0, "INVALID_ID must be an even number");
+    static_assert(((INVALID_ID/kMaxTasks) % 2) == 0, "INVALID_ID must be an even multiple of kMaxTasks");
     static_assert(INVALID_ID >= kMaxTasks, "INVALID_ID must not be a possible task id");
 
     static_assert((kMaxTasks & (kMaxTasks - 1)) == 0, "kMaxTasks must be a power of two");
