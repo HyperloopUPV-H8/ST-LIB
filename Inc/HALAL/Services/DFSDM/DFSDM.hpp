@@ -10,6 +10,7 @@
 #define Possible_Pin_Channel 20
 #define OFFSET_MAX  (1 << 23) - 1
 #define OFFSET_MIN  -(1 << 23)
+#define MAX_BUFFER_SIZE_TOTAL 1024
 using ST_LIB::GPIODomain;
 using ST_LIB::DMA_Domain;
 namespace ST_LIB {
@@ -137,10 +138,11 @@ namespace ST_LIB {
 
 };
 struct Config_Filter{
+    size_t length_buffer{1};
     uint8_t filter{0};
     Trigger_Timer_Source trigger_conv{Trigger_Timer_Source::Unused};
     Filter_Type filter_type{Filter_Type::FastSinc};
-    uint16_t oversampling{1};
+    uint16_t oversampling{32};
     uint16_t integrator{1};
     Type_Conversion type_conv{Type_Conversion::Regular};
     Dma dma{Dma::Disable};
@@ -151,7 +153,7 @@ struct Config_Filter{
 
     Overrun overrun{Overrun::Disable};
 
-    Analog_Watchdog watchdog{Analog_Watchdog::Enable};
+    Analog_Watchdog watchdog{Analog_Watchdog::Disable};
     Analog_Watchdog_Mode watchdog_mode{Analog_Watchdog_Mode::After_Filter};
     int32_t watchdog_low_threshold{0x10000000};
     int32_t watchdog_high_threshold{0x7FFFFFFF};
@@ -231,12 +233,11 @@ struct Config_Filter{
         uint8_t channel;
         size_t gpio_idx;
         size_t dma_idx;
-        int32_t* buffer;
         size_t buffer_size;
     };
     
     static constexpr size_t max_instances{8};
-    template <size_t N,DMA_Domain::Stream stream>
+    template <DMA_Domain::Stream stream>
     struct DFSDM_CHANNEL{
         using domain = DFSDM_CHANNEL_DOMAIN;
         const GPIODomain::Pin& pin;
@@ -245,24 +246,17 @@ struct Config_Filter{
         const Config_Channel config_channel;
         const Config_Filter config_filter;
         uint8_t channel;
-        int32_t* buffer;
         size_t buffer_size;
-        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config_channel,const Config_Filter config_filter, int32_t (&buffer)[N]) 
+        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config_channel,const Config_Filter config_filter) 
         : pin(pin), 
         dma(get_dma_peripheral(config_filter.filter)),
         gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None,GPIODomain::Speed::High,dfsdm_channel_af(pin)},
         config_channel(config_channel),
         config_filter(config_filter),
-        buffer_size(N)
+        buffer_size(config_filter.length_buffer)
         {    
-            static_assert(N != 0, "N must be bigger than 0");
-            this->buffer = buffer;
             channel = get_channel(pin);
-            //remove in a future
-
-            if(config_filter.dma == Dma::Enable){
-                compile_error("Not implemented DMA yet");
-            }
+            
             if(config_filter.filter > 3){
                 compile_error("Solo hay 4 filtros [0..3]");
             }
@@ -285,43 +279,7 @@ struct Config_Filter{
                 compile_error("Why would a sane person need a filter of the watchdog higher than sinc3");
             }
         }
-        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config_channel,const Config_Filter config_filter, int32_t*buffer) 
-        : pin(pin), 
-        dma{get_dma_peripheral(config_filter.filter)},
-        gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None,GPIODomain::Speed::High,dfsdm_channel_af(pin)},
-        config_channel(config_channel),
-        config_filter(config_filter),
-        buffer(buffer),
-        buffer_size(N)
-        {    
-            static_assert(N == 1, "N must be bigger than 0");
-            channel = get_channel(pin);
-            //remove in a future
-            if(config_filter.dma == Dma::Enable){
-                compile_error("Not implemented DMA yet");
-            }
-            if(config_filter.filter > 3){
-                compile_error("Filter can not be bigger than 3");
-            }
-            if(config_channel.offset > OFFSET_MAX || config_channel.offset < OFFSET_MIN){
-                compile_error("Your offset is bigger than the maximum size");
-            }
-            if(config_channel.right_shift > 0x000000FF){
-                compile_error("Your right_shift is bigger than the maximum size");
-            }
-            if(config_filter.integrator <= 0){
-                compile_error("DFSDM_FILTER: Integrator out of range");
-            }
-            if (!is_correct_oversampling(config_filter.filter_type, config_filter.oversampling)){
-                compile_error("DFSDM_FILTER: invalid oversampling for selected filter type");
-            } 
-            if(config_channel.watchdog_oversampling > 32){
-                compile_error("DFSDM_Watchdog oversampling is bigger than the maximum allowed");
-            }
-            if(static_cast<uint32_t>(config_channel.filter_watchdog) > 3){
-                compile_error("Why would a sane person need a filter of the watchdog higher than sinc3");
-            }
-        }
+    
         template<class Ctx>
         consteval std::size_t inscribe(Ctx &ctx) const {
             const auto gpio_idx = gpio.inscribe(ctx); 
@@ -331,8 +289,7 @@ struct Config_Filter{
                 .config_filter = config_filter,
                 .channel = channel,
                 .gpio_idx = gpio_idx,
-                .dma_idx = dma_idx,
-                .buffer = buffer,
+                .dma_idx = dma_idx[0],//There can only be one stream
                 .buffer_size = buffer_size
             };
             return ctx.template add<DFSDM_CHANNEL_DOMAIN>(e, this);
@@ -363,6 +320,7 @@ struct Config_Filter{
         Dma dma_enable;
 
         uint8_t filter;
+        uint8_t filter_samples;
         uint8_t channel;
         
         size_t buffer_size;
@@ -536,10 +494,10 @@ struct Config_Filter{
             cfg.dma_idx = e.dma_idx;
             cfg.channel = e.channel;
             cfg.buffer_size = e.buffer_size;
-            cfg.buffer = e.buffer;
             cfg.type_conv = e.config_filter.type_conv;
             cfg.dma_enable = e.config_filter.dma;
             cfg.filter = e.config_filter.filter;
+            cfg.filter_samples = e.buffer_size;
             //add the callbacks
             cfg.overrun_callback = e.config_filter.overrun_callback;
             cfg.clock_absence_callback = e.config_filter.clock_absence_callback;
@@ -565,7 +523,8 @@ struct Config_Filter{
                     (cfgs[filters_used[cfg.filter]].init_data_filter.FLTCR2 & 0xFF) != (cfg.init_data_filter.FLTCR2 & 0xFF) ||
                     cfgs[filters_used[cfg.filter]].init_data_filter.FLTFCR != cfg.init_data_filter.FLTFCR ||
                     cfgs[filters_used[cfg.filter]].init_data_filter.FLTAWLTR != cfg.init_data_filter.FLTAWLTR ||
-                    cfgs[filters_used[cfg.filter]].init_data_filter.FLTAWHTR != cfg.init_data_filter.FLTAWHTR){
+                    cfgs[filters_used[cfg.filter]].init_data_filter.FLTAWHTR != cfg.init_data_filter.FLTAWHTR ||
+                    cfgs[filters_used[cfg.filter]].filter_samples != cfg.filter_samples){
                         compile_error("You have two channels that goes to the same filter with different filter configuration");
                 }
                 //have the same thing in every register of the filter
@@ -581,7 +540,41 @@ struct Config_Filter{
         }
         return cfgs;
     }
-
+    struct FilterBufferSizes{
+        size_t filter_0_total = 0;
+        size_t filter_1_total = 0;
+        size_t filter_2_total = 0;
+        size_t filter_3_total = 0;
+    };
+    static consteval FilterBufferSizes calculate_total_sizes(std::span<const Config> configs){
+        size_t filter0,filter1,filter2,filter3;
+        filter0 = filter1 = filter2 = filter3 = 0;
+        for(const auto& cfg : configs){ // must be the same the buffer_size for the same filter
+            switch(cfg.filter){
+                case 0:
+                    filter0 = cfg.buffer_size;
+                    break;
+                case 1:
+                    filter1 = cfg.buffer_size;
+                    break;
+                case 2:
+                    filter2 = cfg.buffer_size;
+                    break;
+                case 3: 
+                    filter3 = cfg.buffer_size;
+                    break;
+            }
+        }
+        if((filter0 + filter1 + filter2 + filter3) > MAX_BUFFER_SIZE_TOTAL){
+            compile_error("Has superado el tamaño maximo total permitido");
+        }
+        FilterBufferSizes sizes;
+        sizes.filter_0_total = filter0;
+        sizes.filter_1_total = filter1;
+        sizes.filter_2_total = filter2;
+        sizes.filter_3_total = filter3;
+        return sizes;
+    }
         static inline uint8_t channels_enabled{};
         static constexpr DFSDM_Filter_TypeDef* filter_hw[4] = {
             DFSDM1_Filter0,
@@ -619,89 +612,7 @@ struct Config_Filter{
         
         int32_t* buffer{};
         size_t length_buffer{};
-        size_t idx{};
-        
-    template <std::size_t N> struct Init {
-        static inline std::array<Instance, N> instances{};
-        static void init(std::span<const Config, N> cfgs,std::span<GPIODomain::Instance> gpio_instances,std::span<DMA_Domain::Instance> dma_instances) {
-            if(N == 0) return;
-            std::array<bool,4> filters_configured = {false,false,false,false};
-            RCC->APB2ENR |= RCC_APB2ENR_DFSDM1EN; //Activate the DFSDM clock
-            for (size_t i = 0; i < N; ++i) {
-                const Config &cfg = cfgs[i];
-                filter_hw[cfg.filter]->FLTCR1 &= ~DFSDM_FLTCR1_DFEN;
-                channel_hw[cfg.channel]->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
-            }
-            for (std::size_t i = 0; i < N; ++i) {
-                const Config &cfg = cfgs[i];
-                Instance &inst = instances[i];
-                
-                inst.gpio_instance = &gpio_instances[cfg.gpio_idx];
 
-                inst.filter_regs = filter_hw[cfg.filter];
-                inst.channel_regs = channel_hw[cfg.channel];
-
-                inst.latency_cycles = cfg.latency_cycles;
-                inst.type_conv = cfg.type_conv;
-                inst.filter = cfg.filter;
-                inst.channel = cfg.channel;
-                inst.dma_enable = cfg.dma_enable;
-
-                inst.buffer = cfg.buffer;
-                inst.length_buffer = cfg.buffer_size;
-
-                //callbacks
-                inst.overrun_cb = cfg.overrun_callback;
-                inst.short_circuit_cb = cfg.short_circuit_callback;
-                inst.watchdog_cb = cfg.watchdog_callback;
-                inst.end_conversion_cb = cfg.conversion_complete_callback;
-                if(!filters_configured[cfg.filter]){
-                    //add everything to the register of the filter
-                    inst.filter_regs->FLTCR1 |= cfg.init_data_filter.FLTCR1;
-                    if(inst.type_conv == Type_Conversion::Regular){
-                        inst.filter_regs->FLTCR1 &= ~DFSDM_FLTCR1_RCH_Msk;
-                        inst.filter_regs->FLTCR1 |= uint32_t(inst.channel) << DFSDM_FLTCR1_RCH_Pos;
-                    }
-                    inst.filter_regs->FLTCR2 |= cfg.init_data_filter.FLTCR2;
-                    inst.filter_regs->FLTFCR |= cfg.init_data_filter.FLTFCR;   
-                    inst.filter_regs->FLTAWHTR |= cfg.init_data_filter.FLTAWHTR;
-                    inst.filter_regs->FLTAWLTR |= cfg.init_data_filter.FLTAWLTR;
-                    inst.filter_regs->FLTJCHGR = cfg.init_data_filter.FLTJCHGR;
-                    
-                    filters_configured[cfg.filter] = true;
-                }   
-                //add everything to the channel register
-                inst.channel_regs->CHCFGR1 |= cfg.init_data_channel.CHCFGR1;
-                inst.channel_regs->CHCFGR2 |= cfg.init_data_channel.CHCFGR2;
-                inst.channel_regs->CHAWSCDR |= cfg.init_data_channel.CHAWSCDR;
-                
-                
-                //update channel_instances
-                channel_instances[inst.channel] = &inst;
-                channels_enabled |= 1 << inst.channel;
-            }
-            if(N > 0){
-                //Activate the DFSDM GLOBAL Interface 
-                DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
-                for(int i = 0; i < 8; i++){
-                    channel_hw[i]->CHCFGR1 |= DFSDM_CHCFGR1_CHEN;
-                }
-                for(int i = 0; i < 4;i++){
-                    filter_hw[i]->FLTCR1 |= DFSDM_FLTCR1_DFEN;
-                }
-                //activate the NVIC
-                for(int i = 0; i < 4; i++){
-                    if(filters_configured[i] == true){
-                        switch(i){
-                            case 0:  NVIC_EnableIRQ(DFSDM1_FLT0_IRQn);     break;
-                            case 1:  NVIC_EnableIRQ(DFSDM1_FLT1_IRQn);     break;
-                            case 2: NVIC_EnableIRQ(DFSDM1_FLT2_IRQn);      break;
-                            case 3: NVIC_EnableIRQ(DFSDM1_FLT3_IRQn);      break;
-                        }
-                    }
-                } 
-            }
-        }
         private:
 
             bool is_enabled_channel() const{
@@ -814,16 +725,7 @@ struct Config_Filter{
                 
                 if(was_enabled_filter) enable_filter();
             }
-            void read_this_channel_in_regular_mode(){
-                bool was_enabled_filter = is_enabled_filter();
-                if(was_enabled_filter) disable_filter();
-
-                filter_regs->FLTCR1 &= ~DFSDM_FLTCR1_RCH_Msk;
-                filter_regs->FLTCR1 |= (uint32_t(this->channel) << DFSDM_FLTCR1_RCONT_Pos);
-            
-                if(was_enabled_filter) enable_filter();
-                start();
-            }
+    
             bool modify_oversampling(uint16_t oversampling) {
                 if (oversampling == 0) return false;
 
@@ -872,7 +774,12 @@ struct Config_Filter{
                 if (was_enabled_filter) enable_filter();
                 return true;
             }
-
+            int32_t read(size_t pos){
+                if(pos >= this->length_buffer){
+                    return 0;
+                }
+                return ((this->buffer[pos] & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos); // The constants values are the same for regular than injected
+            }
             uint32_t check_latency_cycles() {
                 return filter_regs->FLTCNVTIMR >> DFSDM_FLTCNVTIMR_CNVCNT_Pos;
             }
@@ -942,11 +849,161 @@ struct Config_Filter{
                 return channel;
             }
         };
-        
-    };
+    __attribute__((section(".mpu_ram_d1_nc.buffer"))) alignas(32)
+    static inline int32_t DFSDM_Buffer_Pool[MAX_BUFFER_SIZE_TOTAL];
     static inline Instance* channel_instances[DFSDM_CHANNEL_DOMAIN::max_instances] = {nullptr}; 
+    template <std::size_t N,std::array<Config,N> cfgs> struct Init {
+        static constexpr FilterBufferSizes Sizes = calculate_total_sizes(cfgs);
+        //Filter Buffers
+        static inline int32_t* Buffer_Filter0;
+        static inline int32_t* Buffer_Filter1;
+        static inline int32_t* Buffer_Filter2;
+        static inline int32_t* Buffer_Filter3;
+
+        
+        static inline std::array<Instance, N> instances{};
+
+        static uint32_t get_buffer(uint8_t filter){
+            switch(filter){
+                case 0: 
+                    return reinterpret_cast<uint32_t>(Buffer_Filter0);
+                case 1:
+                    return reinterpret_cast<uint32_t>(Buffer_Filter1);
+                case 2:
+                    return reinterpret_cast<uint32_t>(Buffer_Filter2);
+                case 3:
+                    return reinterpret_cast<uint32_t>(Buffer_Filter3);
+            }
+            return 0;
+        }
+        static int32_t* get_buffer_pointer(uint8_t filter){
+             switch(filter){
+                case 0: 
+                    return Buffer_Filter0;
+                case 1:
+                    return Buffer_Filter1;
+                case 2:
+                    return Buffer_Filter2;
+                case 3:
+                    return Buffer_Filter3;
+            }
+            return 0;
+        }
+        static void assign_buffers(){
+            uint32_t offset = 0;
+            Buffer_Filter0 = &DFSDM_Buffer_Pool[offset];
+            offset += Sizes.filter_0_total;
+            Buffer_Filter1 = &DFSDM_Buffer_Pool[offset];
+            offset += Sizes.filter_1_total;
+            Buffer_Filter2 = &DFSDM_Buffer_Pool[offset];
+            offset += Sizes.filter_2_total;
+            Buffer_Filter3 = &DFSDM_Buffer_Pool[offset];
+            offset += Sizes.filter_3_total;
+        }
+        static void init(std::span<GPIODomain::Instance> gpio_instances,std::span<DMA_Domain::Instance> dma_instances) {
+            if(N == 0) return;
+            std::array<bool,4> filters_configured = {false,false,false,false};
+            RCC->APB2ENR |= RCC_APB2ENR_DFSDM1EN; //Activate the DFSDM clock
+            for (size_t i = 0; i < N; ++i) {
+                const Config &cfg = cfgs[i];
+                filter_hw[cfg.filter]->FLTCR1 &= ~DFSDM_FLTCR1_DFEN;
+                channel_hw[cfg.channel]->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
+            }
+            for (std::size_t i = 0; i < N; ++i) {
+                const Config &cfg = cfgs[i];
+                Instance &inst = instances[i];
+                
+                inst.gpio_instance = &gpio_instances[cfg.gpio_idx];
+                inst.dma_instance = &dma_instances[cfg.dma_idx];
+
+                
+                inst.filter_regs = filter_hw[cfg.filter];
+                inst.channel_regs = channel_hw[cfg.channel];
+
+                inst.latency_cycles = cfg.latency_cycles;
+                inst.type_conv = cfg.type_conv;
+                inst.filter = cfg.filter;
+                inst.channel = cfg.channel;
+                inst.dma_enable = cfg.dma_enable;
+
+                inst.length_buffer = cfg.buffer_size;
+                assign_buffers();
+                inst.buffer = get_buffer_pointer(cfg.filter);
+                //callbacks
+                inst.overrun_cb = cfg.overrun_callback;
+                inst.short_circuit_cb = cfg.short_circuit_callback;
+                inst.watchdog_cb = cfg.watchdog_callback;
+                inst.end_conversion_cb = cfg.conversion_complete_callback;
+
+                if(!filters_configured[cfg.filter]){
+                    //add everything to the register of the filter
+                    inst.filter_regs->FLTCR1 |= cfg.init_data_filter.FLTCR1;
+                    if(inst.type_conv == Type_Conversion::Regular){
+                        inst.filter_regs->FLTCR1 &= ~DFSDM_FLTCR1_RCH_Msk;
+                        inst.filter_regs->FLTCR1 |= uint32_t(inst.channel) << DFSDM_FLTCR1_RCH_Pos;
+                    }
+                    inst.filter_regs->FLTCR2 |= cfg.init_data_filter.FLTCR2;
+                    inst.filter_regs->FLTFCR |= cfg.init_data_filter.FLTFCR;   
+                    inst.filter_regs->FLTAWHTR |= cfg.init_data_filter.FLTAWHTR;
+                    inst.filter_regs->FLTAWLTR |= cfg.init_data_filter.FLTAWLTR;
+                    inst.filter_regs->FLTJCHGR = cfg.init_data_filter.FLTJCHGR;
+                    
+                    filters_configured[cfg.filter] = true;
+
+                    //add dma
+                    if(cfg.dma_enable == Dma::Enable){
+                        uint32_t SrcAddress;
+                        if(inst.type_conv == Type_Conversion::Regular){
+                            SrcAddress = (uint32_t)&filter_hw[inst.filter]->FLTRDATAR;
+                        }else{
+                            SrcAddress = (uint32_t)&filter_hw[inst.filter]->FLTJDATAR;
+                        }
+                        uint32_t DstAddress = get_buffer(inst.filter);
+                        inst.dma_instance->start(SrcAddress,DstAddress,inst.length_buffer);                        
+                    }
+                }   
+                //add everything to the channel register
+                inst.channel_regs->CHCFGR1 |= cfg.init_data_channel.CHCFGR1;
+                inst.channel_regs->CHCFGR2 |= cfg.init_data_channel.CHCFGR2;
+                inst.channel_regs->CHAWSCDR |= cfg.init_data_channel.CHAWSCDR;
+                
+                
+                //update channel_instances
+                channel_instances[inst.channel] = &inst;
+                channels_enabled |= 1 << inst.channel;
+            }
+            if(N > 0){;
+                //Activate the DFSDM GLOBAL Interface 
+                DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
+                for(int i = 0; i < 8; i++){
+                    if(channels_enabled & (1 << i)){
+                        channel_hw[i]->CHCFGR1 |= DFSDM_CHCFGR1_CHEN;
+                    }
+                    
+                }
+                for(int i = 0; i < 4;i++){
+                    if(filters_configured[i] == true){
+                        filter_hw[i]->FLTCR1 |= DFSDM_FLTCR1_DFEN;
+                    }
+                    
+                }
+                //activate the NVIC
+                for(int i = 0; i < 4; i++){
+                    if(filters_configured[i] == true){
+                        switch(i){
+                            case 0:  NVIC_EnableIRQ(DFSDM1_FLT0_IRQn);     break;
+                            case 1:  NVIC_EnableIRQ(DFSDM1_FLT1_IRQn);     break;
+                            case 2: NVIC_EnableIRQ(DFSDM1_FLT2_IRQn);      break;
+                            case 3: NVIC_EnableIRQ(DFSDM1_FLT3_IRQn);      break;
+                        }
+                    }
+                } 
+            }
+        }
+    };
+    static inline volatile size_t idx_filter[4] = {};
     static void handle_irq(uint8_t filter_index)
-        {
+    {
 
             DFSDM_Filter_TypeDef* filter = filter_hw[filter_index];
 
@@ -958,8 +1015,8 @@ struct Config_Filter{
                 Instance* inst = channel_instances[(data & DFSDM_FLTRDATAR_RDATACH_Msk)>>DFSDM_FLTRDATAR_RDATACH_Pos];
                 if(inst != nullptr && inst->buffer != nullptr){
                     if(inst->dma_enable == Dma::Disable){
-                        inst->buffer[inst->idx] = int32_t(data & DFSDM_FLTRDATAR_RDATA_Msk) >> DFSDM_FLTRDATAR_RDATA_Pos;
-                        inst->idx = (inst->idx + 1) % inst->length_buffer;
+                        inst->buffer[idx_filter[inst->filter]] = data;
+                        idx_filter[inst->filter] = (idx_filter[inst->filter] + 1) % inst->length_buffer;
                     }
                     if(inst->end_conversion_cb != nullptr){
                         inst->end_conversion_cb();
@@ -972,8 +1029,8 @@ struct Config_Filter{
                 Instance* inst = channel_instances[(data & DFSDM_FLTJDATAR_JDATACH_Msk) >> DFSDM_FLTJDATAR_JDATACH_Pos];
                 if(inst != nullptr && inst->buffer != nullptr){
                     if(inst->dma_enable == Dma::Disable){
-                        inst->buffer[inst->idx] = int32_t(data & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos;
-                        inst->idx = (inst->idx + 1) % inst->length_buffer;
+                        inst->buffer[idx_filter[inst->filter]] = data;
+                        idx_filter[inst->filter] = (idx_filter[inst->filter] + 1) % inst->length_buffer;
                     }
                     if(inst->end_conversion_cb != nullptr){
                         inst->end_conversion_cb();
@@ -1021,9 +1078,7 @@ struct Config_Filter{
                 }
             }
         }
-    
-};
-
+    };
 struct DFSDM_CLK_DOMAIN{
     static constexpr GPIODomain::Pin valid_clk_pins[] = {
             {GPIODomain::Port::C,GPIO_PIN_2}, 
