@@ -154,7 +154,11 @@ void Scheduler::start() {
 void Scheduler::update() {
     while (ready_bitmap_ != 0u) {
         uint32_t bit_index = static_cast<uint32_t>(__builtin_ctz(ready_bitmap_));
-        CLEAR_BIT(ready_bitmap_, 1u << bit_index);
+
+        //CLEAR_BIT(ready_bitmap_, 1u << bit_index);
+        uint32_t new_ready_bitmap = ready_bitmap_ & ~(1U << bit_index);
+        __STREXW(new_ready_bitmap, (volatile uint32_t*)&ready_bitmap_);
+
         Task& task = tasks_[bit_index];
         task.callback();
         if (!task.repeating) [[unlikely]] {
@@ -300,7 +304,10 @@ void Scheduler::on_timer_update() {
             break; // Task is in the future, stop processing
         }
         pop_front();
-        ready_bitmap_ |= (1u << candidate_id); // mark task as ready
+        
+        //ready_bitmap_ |= (1u << candidate_id); // mark task as ready
+        uint32_t new_ready_bmp = ready_bitmap_ | (1U << candidate_id);
+        __STREXW(new_ready_bmp, (volatile uint32_t*)&ready_bitmap_);
 
         if (task.repeating) [[likely]] {
             task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);
