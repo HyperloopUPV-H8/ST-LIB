@@ -10,8 +10,9 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Models/DMA/DMA2.hpp"
 #include "HALAL/Models/GPIO.hpp"
-#include "HALAL/Models/MPUManager/MPUManager.hpp"
+
 #include "HALAL/Models/Pin.hpp"
+#include "HALAL/Models/MPU.hpp"
 
 using std::array;
 using std::size_t;
@@ -250,7 +251,32 @@ struct ADCDomain {
         return regular_ranks[zero_based_rank];
     }
 
-    static inline std::array<uint16_t*, 3> dma_buffers{nullptr, nullptr, nullptr};
+    struct BufferSizes {
+        std::size_t adc1_size = 0;
+        std::size_t adc2_size = 0;
+        std::size_t adc3_size = 0;
+    };
+
+    static consteval BufferSizes calculate_buffer_sizes(span<const Config> cfgs) {
+        BufferSizes sizes;
+        for (const auto& cfg : cfgs) {
+            switch (cfg.peripheral) {
+            case Peripheral::ADC_1:
+                sizes.adc1_size++;
+                break;
+            case Peripheral::ADC_2:
+                sizes.adc2_size++;
+                break;
+            case Peripheral::ADC_3:
+                sizes.adc3_size++;
+                break;
+            case Peripheral::AUTO:
+                compile_error("ADC: peripheral not resolved");
+                break;
+            }
+        }
+        return sizes;
+    }
 
     static consteval bool is_valid_channel(Channel ch) {
         switch (ch) {
@@ -646,21 +672,7 @@ struct ADCDomain {
         return nullptr;
     }
 
-    static uint16_t* ensure_dma_buffer(Peripheral peripheral) {
-        const uint8_t pidx = peripheral_index(peripheral);
-        if (dma_buffers[pidx] == nullptr) {
-            dma_buffers[pidx] = static_cast<uint16_t*>(MPUManager::allocate_non_cached_memory(
-                sizeof(uint16_t) * max_channels_per_peripheral
-            ));
-        }
-        if (dma_buffers[pidx] == nullptr) {
-            ErrorHandler("ADC DMA buffer allocation failed");
-            return nullptr;
-        }
 
-        std::fill_n(dma_buffers[pidx], max_channels_per_peripheral, uint16_t{0});
-        return dma_buffers[pidx];
-    }
 
     struct Instance {
         ADC_HandleTypeDef* handle = nullptr;
@@ -723,8 +735,15 @@ struct ADCDomain {
         }
     };
 
-    template <std::size_t N> struct Init {
+    template <std::size_t N, std::array<Config, N> cfgs> struct Init {
         static inline std::array<Instance, N> instances{};
+
+        static constexpr auto buffer_sizes = calculate_buffer_sizes(cfgs);
+
+        // Static DMA buffers in non-cached D1 RAM, sized to actual usage
+        D1_NC static inline std::array<uint16_t, buffer_sizes.adc1_size > 0 ? buffer_sizes.adc1_size : 1> dma_buffer_adc1{};
+        D1_NC static inline std::array<uint16_t, buffer_sizes.adc2_size > 0 ? buffer_sizes.adc2_size : 1> dma_buffer_adc2{};
+        D1_NC static inline std::array<uint16_t, buffer_sizes.adc3_size > 0 ? buffer_sizes.adc3_size : 1> dma_buffer_adc3{};
 
         static constexpr bool is_resolved_config(const Config& cfg) {
             return cfg.peripheral != Peripheral::AUTO && cfg.channel != Channel::AUTO;
@@ -742,6 +761,59 @@ struct ADCDomain {
                 break;
             }
             return &hadc1;
+        }
+
+        static uint16_t* get_dma_buffer(Peripheral peripheral) {
+            uint16_t* buffer = nullptr;
+            size_t buffer_size = 0;
+            
+            switch (peripheral) {
+            case Peripheral::ADC_1:
+                buffer = dma_buffer_adc1.data();
+                buffer_size = buffer_sizes.adc1_size;
+                break;
+            case Peripheral::ADC_2:
+                buffer = dma_buffer_adc2.data();
+                buffer_size = buffer_sizes.adc2_size;
+                break;
+            case Peripheral::ADC_3:
+                buffer = dma_buffer_adc3.data();
+                buffer_size = buffer_sizes.adc3_size;
+                break;
+            case Peripheral::AUTO:
+                break;
+            }
+            
+            if (buffer == nullptr || buffer_size == 0) {
+                ErrorHandler("ADC DMA buffer not available");
+                return nullptr;
+            }
+
+            std::fill_n(buffer, buffer_size, uint16_t{0});
+            return buffer;
+        }
+
+        static uint16_t* get_dma_slot(Peripheral peripheral, uint8_t index) {
+            switch (peripheral) {
+            case Peripheral::ADC_1:
+                if (index < buffer_sizes.adc1_size) {
+                    return &dma_buffer_adc1[index];
+                }
+                break;
+            case Peripheral::ADC_2:
+                if (index < buffer_sizes.adc2_size) {
+                    return &dma_buffer_adc2[index];
+                }
+                break;
+            case Peripheral::ADC_3:
+                if (index < buffer_sizes.adc3_size) {
+                    return &dma_buffer_adc3[index];
+                }
+                break;
+            case Peripheral::AUTO:
+                break;
+            }
+            return nullptr;
         }
 
         static void configure_peripheral(const Config& cfg, uint8_t channel_count) {
@@ -833,8 +905,7 @@ struct ADCDomain {
                     ErrorHandler("ADC DMA instance unavailable");
                     continue;
                 }
-
-                uint16_t* buffer = ensure_dma_buffer(peripheral);
+                uint16_t* buffer = get_dma_buffer(peripheral);
                 if (buffer == nullptr) {
                     continue;
                 }
@@ -898,9 +969,7 @@ struct ADCDomain {
                 instances[i].sample_time = cfg.sample_time;
                 instances[i].resolution = cfg.resolution;
                 instances[i].output = cfg.output;
-                instances[i].dma_slot = (periph_ready[pidx] && dma_buffers[pidx] != nullptr)
-                                            ? &dma_buffers[pidx][instance_ranks[i]]
-                                            : nullptr;
+                instances[i].dma_slot = periph_ready[pidx] ? get_dma_slot(cfg.peripheral, instance_ranks[i]) : nullptr;
             }
         }
     };
