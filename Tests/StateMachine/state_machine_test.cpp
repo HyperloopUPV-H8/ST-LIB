@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "ST-LIB_LOW/StateMachine/StateMachine.hpp"
+#include "HALAL/Models/TimerDomain/TimerDomain.hpp"
 #include "HALAL/Services/Time/Scheduler.hpp"
 
 TIM_TypeDef* ST_LIB::TimerDomain::cmsis_timers[16] = {
