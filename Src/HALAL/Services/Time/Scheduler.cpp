@@ -308,12 +308,12 @@ void Scheduler::on_timer_update() {
         pop_front();
         SchedUnlock();
 
-        ready_bitmap_ |= (1u << candidate_id); // mark task as ready
+        // mark task as ready
+        SET_BIT(ready_bitmap_, 1u << candidate_id);
 
         if (task.repeating) [[likely]] {
             SchedLock();
-            task.next_fire_us =
-                static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + task.period_us);
+            task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);
             insert_sorted(candidate_id);
             SchedUnlock();
         }
