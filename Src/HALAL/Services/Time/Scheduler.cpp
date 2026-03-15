@@ -10,6 +10,9 @@
 
 #include <stdint.h>
 
+#define SchedLock()   NVIC_DisableIRQ(SCHEDULER_GLOBAL_TIMER_IRQn)
+#define SchedUnlock() NVIC_EnableIRQ(SCHEDULER_GLOBAL_TIMER_IRQn)
+
 TIM_TypeDef* Scheduler_global_timer = nullptr;
 
 namespace {
@@ -155,16 +158,14 @@ void Scheduler::update() {
     while (ready_bitmap_ != 0u) {
         uint32_t bit_index = static_cast<uint32_t>(__builtin_ctz(ready_bitmap_));
 
-        //CLEAR_BIT(ready_bitmap_, 1u << bit_index);
-        uint32_t new_ready_bitmap = ready_bitmap_ & ~(1U << bit_index);
-        __STREXW(new_ready_bitmap, (volatile uint32_t*)&ready_bitmap_);
+        CLEAR_BIT(ready_bitmap_, 1u << bit_index);
 
         Task& task = tasks_[bit_index];
         task.callback();
         if (!task.repeating) [[unlikely]] {
-            // TODO: Lock from here
+            SchedLock();
             release_slot(static_cast<uint8_t>(bit_index));
-            // TODO: Unlock here
+            SchedUnlock();
         }
     }
 }
@@ -303,25 +304,23 @@ void Scheduler::on_timer_update() {
         if (diff > 0) [[likely]] {
             break; // Task is in the future, stop processing
         }
-        // TODO: Lock from here
+        SchedLock();
         pop_front();
-        // TODO: Unlock here
+        SchedUnlock();
         
-        //ready_bitmap_ |= (1u << candidate_id); // mark task as ready
-        uint32_t new_ready_bmp = ready_bitmap_ | (1U << candidate_id);
-        __STREXW(new_ready_bmp, (volatile uint32_t*)&ready_bitmap_);
+        ready_bitmap_ |= (1u << candidate_id); // mark task as ready
 
         if (task.repeating) [[likely]] {
             task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);
-            // TODO: Lock from here
+            SchedLock();
             insert_sorted(candidate_id);
-            // TODO: Unlock here
+            SchedUnlock();
         }
     }
 
-    // TODO: Lock from here
+    SchedLock();
     schedule_next_interval();
-    // TODO: Unlock here
+    SchedUnlock();
 }
 
 uint16_t Scheduler::register_task(uint32_t period_us, callback_t func) {
@@ -342,12 +341,12 @@ uint16_t Scheduler::register_task(uint32_t period_us, callback_t func) {
     task.repeating = true;
     task.id = static_cast<uint32_t>(slot);
 
-    // TODO: Lock from here
+    SchedLock();
     task.next_fire_us =
         static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + period_us);
     insert_sorted(slot);
     schedule_next_interval();
-    // TODO: Unlock here
+    SchedUnlock();
     return task.id;
 }
 
@@ -372,11 +371,11 @@ uint16_t Scheduler::set_timeout(uint32_t microseconds, callback_t func) {
     // we need it to never be 0
     Scheduler::timeout_idx_ += 2;
 
-    // TODO: Lock from here
+    SchedLock();
     task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + microseconds);
     insert_sorted(slot);
     schedule_next_interval();
-    // TODO: Unlock here
+    SchedUnlock();
 
     return task.id;
 }
@@ -387,11 +386,11 @@ bool Scheduler::unregister_task(uint16_t id) {
     if (free_bitmap_ & (1UL << id))
         return false;
 
-    // TODO: Lock from here
+    SchedLock();
     remove_sorted(id);
     release_slot(id);
     schedule_next_interval();
-    // TODO: Unlock here
+    SchedUnlock();
     return true;
 }
 
@@ -405,10 +404,10 @@ bool Scheduler::cancel_timeout(uint16_t id) {
     if (free_bitmap_ & (1UL << idx))
         return false;
 
-    // TODO: Lock from here
+    SchedLock();
     remove_sorted(idx);
     release_slot(idx);
     schedule_next_interval();
-    // TODO: Unlock here
+    SchedUnlock();
     return true;
 }
