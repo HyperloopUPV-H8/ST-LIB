@@ -1,26 +1,7 @@
 #include <gtest/gtest.h>
 #include "ST-LIB_LOW/StateMachine/StateMachine.hpp"
-#include "HALAL/Models/TimerDomain/TimerDomain.hpp"
 #include "HALAL/Services/Time/Scheduler.hpp"
-
-TIM_TypeDef* ST_LIB::TimerDomain::cmsis_timers[16] = {
-    [0] = TIM2_BASE,
-    [1] = TIM3_BASE,
-    [2] = TIM4_BASE,
-    [3] = TIM5_BASE,
-    [4] = TIM23_BASE,
-    [5] = TIM24_BASE,
-    [6] = TIM12_BASE,
-    [7] = TIM13_BASE,
-    [8] = TIM14_BASE,
-    [9] = TIM15_BASE,
-    [10] = TIM16_BASE,
-    [11] = TIM17_BASE,
-    [12] = TIM6_BASE,
-    [13] = TIM7_BASE,
-    [14] = TIM1_BASE,
-    [15] = TIM8_BASE,
-};
+#include "HALAL/Models/TimerDomain/TimerDomain.hpp"
 
 enum class MasterState { A, B, C };
 
@@ -85,6 +66,9 @@ static void reset_test_state() {
     TIM2_BASE->SR = 0;
     TIM2_BASE->CR1 = 0;
     TIM2_BASE->DIER = 0;
+
+    Scheduler_global_timer =
+        ST_LIB::TimerDomain::cmsis_timers[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
 }
 
 static void tick_scheduler(int ticks) {

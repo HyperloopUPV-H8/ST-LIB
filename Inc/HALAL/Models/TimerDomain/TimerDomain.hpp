@@ -26,8 +26,7 @@
     (SCHEDULER_TIMER_DOMAIN != 23) && (SCHEDULER_TIMER_DOMAIN != 24)
 #error Scheduler timer must be a 32 bit timer
 #endif
-
-#define SCHEDULER_GLOBAL_TIMER_IRQn glue(TIM, glue(SCHEDULER_TIMER_DOMAIN, _IRQn))
+extern TIM_TypeDef* Scheduler_global_timer;
 
 // NOTE: only works for static arrays
 #define ARRAY_LENGTH(a) (sizeof(a) / sizeof(*a))
@@ -676,8 +675,8 @@ TimerXList
             static inline std::array<Instance, N> instances{};
 
             static void init(std::span<const Config, N> cfgs) {
-                TIM_TypeDef* sched_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
-                rcc_enable_timer(sched_timer);
+                Scheduler_global_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
+                rcc_enable_timer(Scheduler_global_timer);
 
                 for (std::size_t i = 0; i < N; i++) {
                     const Config& e = cfgs[i];

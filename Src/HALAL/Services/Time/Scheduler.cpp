@@ -10,6 +10,8 @@
 
 #include <stdint.h>
 
+#define SCHEDULER_GLOBAL_TIMER_IRQn glue(TIM, glue(SCHEDULER_TIMER_DOMAIN, _IRQn))
+
 #define SchedLock() NVIC_DisableIRQ(SCHEDULER_GLOBAL_TIMER_IRQn)
 #define SchedUnlock() NVIC_EnableIRQ(SCHEDULER_GLOBAL_TIMER_IRQn)
 
