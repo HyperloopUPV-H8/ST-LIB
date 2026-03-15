@@ -2,6 +2,25 @@
 #include "ST-LIB_LOW/StateMachine/StateMachine.hpp"
 #include "HALAL/Services/Time/Scheduler.hpp"
 
+TIM_TypeDef* ST_LIB::TimerDomain::cmsis_timers[16] = {
+    [0] = TIM2_BASE,
+    [1] = TIM3_BASE,
+    [2] = TIM4_BASE,
+    [3] = TIM5_BASE,
+    [4] = TIM23_BASE,
+    [5] = TIM24_BASE,
+    [6] = TIM12_BASE,
+    [7] = TIM13_BASE,
+    [8] = TIM14_BASE,
+    [9] = TIM15_BASE,
+    [10] = TIM16_BASE,
+    [11] = TIM17_BASE,
+    [12] = TIM6_BASE,
+    [13] = TIM7_BASE,
+    [14] = TIM1_BASE,
+    [15] = TIM8_BASE,
+};
+
 enum class MasterState { A, B, C };
 
 enum class SubState { S1, S2 };
