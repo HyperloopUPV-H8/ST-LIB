@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define SchedLock()   NVIC_DisableIRQ(SCHEDULER_GLOBAL_TIMER_IRQn)
+#define SchedLock() NVIC_DisableIRQ(SCHEDULER_GLOBAL_TIMER_IRQn)
 #define SchedUnlock() NVIC_EnableIRQ(SCHEDULER_GLOBAL_TIMER_IRQn)
 
 TIM_TypeDef* Scheduler_global_timer = nullptr;
@@ -307,7 +307,7 @@ void Scheduler::on_timer_update() {
         SchedLock();
         pop_front();
         SchedUnlock();
-        
+
         ready_bitmap_ |= (1u << candidate_id); // mark task as ready
 
         if (task.repeating) [[likely]] {

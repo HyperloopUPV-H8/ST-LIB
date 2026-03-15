@@ -26,7 +26,7 @@ struct Scheduler {
     static constexpr uint32_t kMaxTasks = 16;
     // INVALID_ID must be an even multiple of kMaxTasks.
     // if it isn't it could theoretically be used as an id in set_timeout
-    static constexpr uint32_t INVALID_ID = 2*kMaxTasks;
+    static constexpr uint32_t INVALID_ID = 2 * kMaxTasks;
 
     static void start();
     static void update();
@@ -53,7 +53,10 @@ private:
         bool repeating{false};
     };
 
-    static_assert(((INVALID_ID/kMaxTasks) % 2) == 0, "INVALID_ID must be an even multiple of kMaxTasks");
+    static_assert(
+        ((INVALID_ID/kMaxTasks) % 2) == 0,
+        "INVALID_ID must be an even multiple of kMaxTasks"
+    );
     static_assert(INVALID_ID >= kMaxTasks, "INVALID_ID must not be a possible task id");
 
     static_assert((kMaxTasks & (kMaxTasks - 1)) == 0, "kMaxTasks must be a power of two");
