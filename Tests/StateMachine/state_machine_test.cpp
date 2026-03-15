@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "ST-LIB_LOW/StateMachine/StateMachine.hpp"
 #include "HALAL/Services/Time/Scheduler.hpp"
+#include "HALAL/Models/TimerDomain/TimerDomain.hpp"
 
 enum class MasterState { A, B, C };
 
@@ -65,6 +66,9 @@ static void reset_test_state() {
     TIM2_BASE->SR = 0;
     TIM2_BASE->CR1 = 0;
     TIM2_BASE->DIER = 0;
+
+    Scheduler_global_timer =
+        ST_LIB::TimerDomain::cmsis_timers[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
 }
 
 static void tick_scheduler(int ticks) {
