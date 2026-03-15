@@ -26,6 +26,27 @@
             "stopAtEntry": false,
             "MIMode": "lldb",
             "preLaunchTask": "CMake: build"
-        }
+        },
+        {
+            "name": "Debug ST-LIB tests (simulator) [gdb]",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/build/simulator/Tests/st-lib-test",
+            "args": [
+                "--gtest_break_on_failure"
+            ],
+            "cwd": "${workspaceFolder}",
+            "externalConsole": false,
+            "stopAtEntry": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "CMake: build"
+        },
     ]
 }
