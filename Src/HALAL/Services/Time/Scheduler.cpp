@@ -312,16 +312,12 @@ void Scheduler::on_timer_update() {
         SET_BIT(ready_bitmap_, 1u << candidate_id);
 
         if (task.repeating) [[likely]] {
-            SchedLock();
             task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);
             insert_sorted(candidate_id);
-            SchedUnlock();
         }
     }
 
-    SchedLock();
     schedule_next_interval();
-    SchedUnlock();
 }
 
 uint16_t Scheduler::register_task(uint32_t period_us, callback_t func) {
