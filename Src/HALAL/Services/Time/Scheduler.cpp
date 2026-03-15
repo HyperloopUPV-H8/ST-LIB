@@ -304,9 +304,7 @@ void Scheduler::on_timer_update() {
         if (diff > 0) [[likely]] {
             break; // Task is in the future, stop processing
         }
-        SchedLock();
         pop_front();
-        SchedUnlock();
 
         // mark task as ready
         SET_BIT(ready_bitmap_, 1u << candidate_id);
