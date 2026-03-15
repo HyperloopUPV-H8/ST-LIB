@@ -54,7 +54,7 @@ private:
     };
 
     static_assert(
-        ((INVALID_ID/kMaxTasks) % 2) == 0,
+        ((INVALID_ID / kMaxTasks) % 2) == 0,
         "INVALID_ID must be an even multiple of kMaxTasks"
     );
     static_assert(INVALID_ID >= kMaxTasks, "INVALID_ID must not be a possible task id");

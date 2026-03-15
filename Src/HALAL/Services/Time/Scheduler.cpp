@@ -311,8 +311,9 @@ void Scheduler::on_timer_update() {
         ready_bitmap_ |= (1u << candidate_id); // mark task as ready
 
         if (task.repeating) [[likely]] {
-            task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);
             SchedLock();
+            task.next_fire_us =
+                static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + task.period_us);
             insert_sorted(candidate_id);
             SchedUnlock();
         }
@@ -372,7 +373,8 @@ uint16_t Scheduler::set_timeout(uint32_t microseconds, callback_t func) {
     Scheduler::timeout_idx_ += 2;
 
     SchedLock();
-    task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + microseconds);
+    task.next_fire_us =
+        static_cast<uint32_t>(global_tick_us_ + Scheduler_global_timer->CNT + microseconds);
     insert_sorted(slot);
     schedule_next_interval();
     SchedUnlock();
