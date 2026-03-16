@@ -20,6 +20,7 @@
 #endif
 
 extern TIM_TypeDef* Scheduler_global_timer;
+void scheduler_global_timer_callback(void *raw);
 
 struct Scheduler {
     using callback_t = void (*)();
