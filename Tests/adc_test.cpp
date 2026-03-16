@@ -51,6 +51,8 @@ consteval std::array<ST_LIB::DMADomain::Config, TotalN> build_dma_cfgs(
 inline float compile_time_output = 0.0f;
 inline float synthesized_dma_output_0 = 0.0f;
 inline float synthesized_dma_output_1 = 0.0f;
+inline float adc_test_template_output_0 = 0.0f;
+inline float adc_test_template_output_1 = 0.0f;
 
 constexpr std::array<ST_LIB::ADCDomain::Entry, 1> auto_entry{{
     {.gpio_idx = 0,
@@ -240,6 +242,67 @@ static_assert(!std::get<5>(adc_dma_cfg[1].init_data));
 static_assert(!std::get<5>(adc_dma_cfg[2].init_data));
 static_assert(std::get<1>(adc_dma_cfg[0].init_data).MemDataAlignment == DMA_MDATAALIGN_HALFWORD);
 
+constexpr std::array<ST_LIB::ADCDomain::Config, 1> single_adc1_init_cfgs{{
+    {.gpio_idx = 0,
+     .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_1,
+     .channel = ST_LIB::ADCDomain::Channel::CH16,
+     .resolution = ST_LIB::ADCDomain::Resolution::BITS_12,
+     .sample_time = ST_LIB::ADCDomain::SampleTime::CYCLES_8_5,
+     .prescaler = ST_LIB::ADCDomain::ClockPrescaler::DIV1,
+     .sample_rate_hz = 0,
+     .dma_request = DMA_REQUEST_ADC1,
+     .output = &adc_test_template_output_0},
+}};
+
+constexpr std::array<ST_LIB::ADCDomain::Config, 2> shared_adc1_init_cfgs{{
+    {.gpio_idx = 0,
+     .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_1,
+     .channel = ST_LIB::ADCDomain::Channel::CH16,
+     .resolution = ST_LIB::ADCDomain::Resolution::BITS_12,
+     .sample_time = ST_LIB::ADCDomain::SampleTime::CYCLES_8_5,
+     .prescaler = ST_LIB::ADCDomain::ClockPrescaler::DIV1,
+     .sample_rate_hz = 0,
+     .dma_request = DMA_REQUEST_ADC1,
+     .output = &adc_test_template_output_0},
+    {.gpio_idx = 1,
+     .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_1,
+     .channel = ST_LIB::ADCDomain::Channel::CH15,
+     .resolution = ST_LIB::ADCDomain::Resolution::BITS_12,
+     .sample_time = ST_LIB::ADCDomain::SampleTime::CYCLES_8_5,
+     .prescaler = ST_LIB::ADCDomain::ClockPrescaler::DIV1,
+     .sample_rate_hz = 0,
+     .dma_request = DMA_REQUEST_ADC1,
+     .output = &adc_test_template_output_1},
+}};
+
+constexpr std::array<ST_LIB::ADCDomain::Config, 2> split_adc12_init_cfgs{{
+    {.gpio_idx = 0,
+     .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_1,
+     .channel = ST_LIB::ADCDomain::Channel::CH16,
+     .resolution = ST_LIB::ADCDomain::Resolution::BITS_12,
+     .sample_time = ST_LIB::ADCDomain::SampleTime::CYCLES_8_5,
+     .prescaler = ST_LIB::ADCDomain::ClockPrescaler::DIV1,
+     .sample_rate_hz = 0,
+     .dma_request = DMA_REQUEST_ADC1,
+     .output = &adc_test_template_output_0},
+    {.gpio_idx = 1,
+     .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_2,
+     .channel = ST_LIB::ADCDomain::Channel::CH2,
+     .resolution = ST_LIB::ADCDomain::Resolution::BITS_12,
+     .sample_time = ST_LIB::ADCDomain::SampleTime::CYCLES_8_5,
+     .prescaler = ST_LIB::ADCDomain::ClockPrescaler::DIV1,
+     .sample_rate_hz = 0,
+     .dma_request = DMA_REQUEST_ADC2,
+     .output = &adc_test_template_output_1},
+}};
+
+template <std::size_t N, const std::array<ST_LIB::ADCDomain::Config, N>& Cfgs>
+using ADCInit = ST_LIB::ADCDomain::Init<N, Cfgs>;
+
+using SingleADCInit = ADCInit<1, single_adc1_init_cfgs>;
+using SharedADCInit = ADCInit<2, shared_adc1_init_cfgs>;
+using SplitADCInit = ADCInit<2, split_adc12_init_cfgs>;
+
 void clear_nvic_enables() {
     for (auto& reg : NVIC->ISER) {
         reg = 0U;
@@ -266,10 +329,10 @@ protected:
 
     void SetUp() override { reset_runtime_state(); }
 
-    template <std::size_t N>
+    template <std::size_t N, const std::array<ST_LIB::ADCDomain::Config, N>& InitCfgs>
     void init_adc_with_dma(const std::array<ST_LIB::ADCDomain::Config, N>& cfgs) {
         ST_LIB::DMADomain::Init<3>::init(adc_dma_cfg);
-        ST_LIB::ADCDomain::Init<N>::init(
+        ADCInit<N, InitCfgs>::init(
             cfgs,
             std::span<ST_LIB::GPIODomain::Instance>{},
             std::span<ST_LIB::DMADomain::Instance>(ST_LIB::DMADomain::Init<3>::instances)
@@ -289,7 +352,7 @@ TEST_F(ADCTest, BuildTimeDMASynthesisCreatesSingleDMAForSharedADCPeripheral) {
     constexpr std::size_t adcN = std::tuple_size_v<decltype(shared_adc_cfgs)>;
 
     ST_LIB::DMADomain::Init<dmaN>::init(synthesized_shared_adc_dma_cfg);
-    ST_LIB::ADCDomain::Init<adcN>::init(
+    ADCInit<adcN, shared_adc_cfgs>::init(
         shared_adc_cfgs,
         std::span<ST_LIB::GPIODomain::Instance>{},
         std::span<ST_LIB::DMADomain::Instance>(ST_LIB::DMADomain::Init<dmaN>::instances)
@@ -315,7 +378,7 @@ TEST_F(ADCTest, InitWithExternalDMAStartsCircularTransferAndLinksHandle) {
          .output = &output},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
 
     EXPECT_EQ(hadc1.Instance, ADC1);
     EXPECT_EQ(hadc1.Init.ConversionDataManagement, ADC_CONVERSIONDATA_DMA_CIRCULAR);
@@ -351,10 +414,10 @@ TEST_F(ADCTest, ReadUsesLatestDMABufferValueWithoutPolling) {
          .output = &output},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 2048U);
 
-    auto& adc = ST_LIB::ADCDomain::Init<1>::instances[0];
+    auto& adc = SingleADCInit::instances[0];
     adc.read(3.3f, 1U);
 
     EXPECT_EQ(ST_LIB::MockedHAL::adc_get_dma_value(ADC1, 0), 2048U);
@@ -394,12 +457,12 @@ TEST_F(ADCTest, MultiChannelDMAUsesSequenceSlotsPerPeripheral) {
          .output = &out1},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<2, shared_adc1_init_cfgs>(cfgs);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 1024U);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_15, 3072U);
 
-    auto& adc0 = ST_LIB::ADCDomain::Init<2>::instances[0];
-    auto& adc1 = ST_LIB::ADCDomain::Init<2>::instances[1];
+    auto& adc0 = SharedADCInit::instances[0];
+    auto& adc1 = SharedADCInit::instances[1];
     adc0.read(3.3f, 1U);
     adc1.read(3.3f, 1U);
 
@@ -440,12 +503,12 @@ TEST_F(ADCTest, SeparatePeripheralsUseIndependentDMAHandlesAndBuffers) {
          .output = &out2},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<2, split_adc12_init_cfgs>(cfgs);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 500U);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC2, ADC_CHANNEL_2, 3000U);
 
-    auto& adc1 = ST_LIB::ADCDomain::Init<2>::instances[0];
-    auto& adc2 = ST_LIB::ADCDomain::Init<2>::instances[1];
+    auto& adc1 = SplitADCInit::instances[0];
+    auto& adc2 = SplitADCInit::instances[1];
     adc1.read(3.3f, 1U);
     adc2.read(3.3f, 1U);
 
@@ -471,10 +534,10 @@ TEST_F(ADCTest, Resolution10BitDMAClampsRawBufferToResolutionRange) {
          .output = &output},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 4095U);
 
-    auto& adc = ST_LIB::ADCDomain::Init<1>::instances[0];
+    auto& adc = SingleADCInit::instances[0];
     adc.read(3.3f, 1U);
 
     EXPECT_EQ(ST_LIB::MockedHAL::adc_get_dma_value(ADC1, 0), 1023U);
@@ -497,7 +560,7 @@ TEST_F(ADCTest, InitWithoutDMAInstancesFailsInsteadOfConfiguringDMAAtRuntime) {
          .output = &output},
     }};
 
-    ST_LIB::ADCDomain::Init<1>::init(cfgs);
+    SingleADCInit::init(cfgs);
 
     EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
     EXPECT_EQ(hadc1.DMA_Handle, nullptr);
@@ -522,12 +585,12 @@ TEST_F(ADCTest, DMAStartFailureTriggersErrorPathAndLeavesInstanceUnreadable) {
          .output = &output},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
 
     EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
     EXPECT_FALSE(ST_LIB::MockedHAL::adc_is_dma_running(ADC1));
-    EXPECT_EQ(ST_LIB::ADCDomain::Init<1>::instances[0].handle, nullptr);
-    EXPECT_FLOAT_EQ(ST_LIB::ADCDomain::Init<1>::instances[0].get_raw(), 0.0f);
+    EXPECT_EQ(SingleADCInit::instances[0].handle, nullptr);
+    EXPECT_FLOAT_EQ(SingleADCInit::instances[0].get_raw(), 0.0f);
 }
 
 TEST_F(ADCTest, UnresolvedConfigDoesNotAliasAResolvedPeripheralInstance) {
@@ -556,13 +619,13 @@ TEST_F(ADCTest, UnresolvedConfigDoesNotAliasAResolvedPeripheralInstance) {
          .output = &resolved},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<2, shared_adc1_init_cfgs>(cfgs);
 
     EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
-    EXPECT_EQ(ST_LIB::ADCDomain::Init<2>::instances[0].handle, nullptr);
-    EXPECT_EQ(ST_LIB::ADCDomain::Init<2>::instances[0].dma_slot, nullptr);
-    EXPECT_EQ(ST_LIB::ADCDomain::Init<2>::instances[1].handle, &hadc1);
-    EXPECT_NE(ST_LIB::ADCDomain::Init<2>::instances[1].dma_slot, nullptr);
+    EXPECT_EQ(SharedADCInit::instances[0].handle, nullptr);
+    EXPECT_EQ(SharedADCInit::instances[0].dma_slot, nullptr);
+    EXPECT_EQ(SharedADCInit::instances[1].handle, &hadc1);
+    EXPECT_NE(SharedADCInit::instances[1].dma_slot, nullptr);
 }
 
 TEST_F(ADCTest, TimedDMAWaitsForSequenceAndTransferCompletionBeforeUpdatingBuffer) {
@@ -586,9 +649,9 @@ TEST_F(ADCTest, TimedDMAWaitsForSequenceAndTransferCompletionBeforeUpdatingBuffe
         return (time_ns < 1'000ULL) ? 321U : 654U;
     });
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
 
-    auto& adc = ST_LIB::ADCDomain::Init<1>::instances[0];
+    auto& adc = SingleADCInit::instances[0];
     const uint64_t sequence_period_ns = ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);
     ASSERT_GT(sequence_period_ns, 0U);
     EXPECT_EQ(ST_LIB::MockedHAL::adc_get_dma_value(ADC1, 0), 0U);
@@ -641,7 +704,7 @@ TEST_F(ADCTest, TimedDMADetectsOverrunWhenTransferCannotKeepUp) {
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 1'000U);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_15, 2'000U);
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<2, shared_adc1_init_cfgs>(cfgs);
 
     const uint64_t sequence_period_ns = ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);
     ASSERT_GT(sequence_period_ns, 0U);
@@ -686,7 +749,7 @@ TEST_F(ADCTest, TimedDMASharedBusContentionShowsUpWithSimultaneousADCs) {
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 1'111U);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC2, ADC_CHANNEL_2, 2'222U);
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<2, split_adc12_init_cfgs>(cfgs);
 
     const uint64_t sequence_period_ns = ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);
     ASSERT_EQ(sequence_period_ns, ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC2));
@@ -748,7 +811,7 @@ TEST_F(ADCTest, TimedDMAFrequencySweepSeparatesStableAndUnstableOperatingRegions
                 ST_LIB::MockedHAL::adc_enable_timed_dma(ADC1, true);
                 ST_LIB::MockedHAL::adc_set_kernel_clock_hz(ADC1, 64'000'000ULL);
                 ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 777U);
-                init_adc_with_dma(cfgs);
+                init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
 
                 const uint64_t sequence_period_ns =
                     ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);
@@ -764,7 +827,7 @@ TEST_F(ADCTest, TimedDMAFrequencySweepSeparatesStableAndUnstableOperatingRegions
                 ST_LIB::MockedHAL::adc_enable_timed_dma(ADC1, true);
                 ST_LIB::MockedHAL::adc_set_kernel_clock_hz(ADC1, 64'000'000ULL);
                 ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 777U);
-                init_adc_with_dma(cfgs);
+                init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
 
                 const uint64_t unstable_period_ns =
                     ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);

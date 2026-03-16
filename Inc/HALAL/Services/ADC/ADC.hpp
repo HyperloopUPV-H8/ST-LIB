@@ -12,7 +12,12 @@
 #include "HALAL/Models/GPIO.hpp"
 
 #include "HALAL/Models/Pin.hpp"
+#ifdef SIM_ON
+#define STLIB_ADC_DMA_BUFFER_ATTR
+#else
 #include "HALAL/Models/MPU.hpp"
+#define STLIB_ADC_DMA_BUFFER_ATTR D1_NC
+#endif
 
 using std::array;
 using std::size_t;
@@ -744,7 +749,7 @@ struct ADCDomain {
             "ADC DMA buffer size exceeds max_instances"
         );
 
-        alignas(32) D1_NC
+        alignas(32) STLIB_ADC_DMA_BUFFER_ATTR
             static inline uint16_t dma_buffer_pool[total_dma_slots > 0 ? total_dma_slots : 1]{};
 
         static constexpr bool is_resolved_config(const Config& cfg) {
@@ -997,5 +1002,7 @@ struct ADCDomain {
 };
 
 #endif // HAL_ADC_MODULE_ENABLED
+
+#undef STLIB_ADC_DMA_BUFFER_ATTR
 
 } // namespace ST_LIB

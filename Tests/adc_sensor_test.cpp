@@ -17,6 +17,9 @@
 
 namespace {
 
+inline float adc_sensor_template_output_0 = 0.0f;
+inline float adc_sensor_template_output_1 = 0.0f;
+
 constexpr std::array<ST_LIB::DMADomain::Entry, 2> adc_dma_entries{{
     {.instance = ST_LIB::DMADomain::Peripheral::adc1,
      .stream = ST_LIB::DMADomain::Stream::dma1_stream0,
@@ -30,6 +33,45 @@ constexpr std::array<ST_LIB::DMADomain::Entry, 2> adc_dma_entries{{
 
 constexpr auto adc_dma_cfg =
     ST_LIB::DMADomain::build<2>(std::span<const ST_LIB::DMADomain::Entry, 2>{adc_dma_entries});
+
+constexpr std::array<ST_LIB::ADCDomain::Config, 1> single_adc1_init_cfgs{{
+    {.gpio_idx = 0,
+     .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_1,
+     .channel = ST_LIB::ADCDomain::Channel::CH16,
+     .resolution = ST_LIB::ADCDomain::Resolution::BITS_12,
+     .sample_time = ST_LIB::ADCDomain::SampleTime::CYCLES_8_5,
+     .prescaler = ST_LIB::ADCDomain::ClockPrescaler::DIV1,
+     .sample_rate_hz = 0,
+     .dma_request = DMA_REQUEST_ADC1,
+     .output = &adc_sensor_template_output_0},
+}};
+
+constexpr std::array<ST_LIB::ADCDomain::Config, 2> split_adc12_init_cfgs{{
+    {.gpio_idx = 0,
+     .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_1,
+     .channel = ST_LIB::ADCDomain::Channel::CH16,
+     .resolution = ST_LIB::ADCDomain::Resolution::BITS_12,
+     .sample_time = ST_LIB::ADCDomain::SampleTime::CYCLES_8_5,
+     .prescaler = ST_LIB::ADCDomain::ClockPrescaler::DIV1,
+     .sample_rate_hz = 0,
+     .dma_request = DMA_REQUEST_ADC1,
+     .output = &adc_sensor_template_output_0},
+    {.gpio_idx = 1,
+     .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_2,
+     .channel = ST_LIB::ADCDomain::Channel::CH2,
+     .resolution = ST_LIB::ADCDomain::Resolution::BITS_16,
+     .sample_time = ST_LIB::ADCDomain::SampleTime::CYCLES_8_5,
+     .prescaler = ST_LIB::ADCDomain::ClockPrescaler::DIV1,
+     .sample_rate_hz = 0,
+     .dma_request = DMA_REQUEST_ADC2,
+     .output = &adc_sensor_template_output_1},
+}};
+
+template <std::size_t N, const std::array<ST_LIB::ADCDomain::Config, N>& Cfgs>
+using ADCInit = ST_LIB::ADCDomain::Init<N, Cfgs>;
+
+using SingleADCInit = ADCInit<1, single_adc1_init_cfgs>;
+using SplitADCInit = ADCInit<2, split_adc12_init_cfgs>;
 
 void clear_nvic_enables() {
     for (auto& reg : NVIC->ISER) {
@@ -52,10 +94,10 @@ protected:
         clear_dma_irq_table();
     }
 
-    template <std::size_t N>
+    template <std::size_t N, const std::array<ST_LIB::ADCDomain::Config, N>& InitCfgs>
     void init_adc_with_dma(const std::array<ST_LIB::ADCDomain::Config, N>& cfgs) {
         ST_LIB::DMADomain::Init<2>::init(adc_dma_cfg);
-        ST_LIB::ADCDomain::Init<N>::init(
+        ADCInit<N, InitCfgs>::init(
             cfgs,
             std::span<ST_LIB::GPIODomain::Instance>{},
             std::span<ST_LIB::DMADomain::Instance>(ST_LIB::DMADomain::Init<2>::instances)
@@ -77,10 +119,10 @@ TEST_F(ADCSensorTest, LinearSensorUsesNormalizedADCVoltageForItsTransferFunction
          .output = &output},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 512U);
 
-    LinearSensor<float> sensor(ST_LIB::ADCDomain::Init<1>::instances[0], 2.0f, -1.0f, output, 5.0f);
+    LinearSensor<float> sensor(SingleADCInit::instances[0], 2.0f, -1.0f, output, 5.0f);
     sensor.read();
 
     EXPECT_NEAR(output, 2.0f * ((512.0f / 1023.0f) * 5.0f) - 1.0f, 0.001f);
@@ -100,12 +142,11 @@ TEST_F(ADCSensorTest, FilteredLinearSensorReusesTheSameADCConversionPath) {
          .output = &output},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 2048U);
 
     MovingAverage<1> filter;
-    FilteredLinearSensor<float, 1>
-        sensor(ST_LIB::ADCDomain::Init<1>::instances[0], 2.0f, 1.0f, output, filter);
+    FilteredLinearSensor<float, 1> sensor(SingleADCInit::instances[0], 2.0f, 1.0f, output, filter);
 
     sensor.read();
     sensor.read();
@@ -138,15 +179,10 @@ TEST_F(ADCSensorTest, LookupSensorMapsEquivalentNormalizedReadingsAcrossResoluti
          .output = nullptr},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<2, split_adc12_init_cfgs>(cfgs);
 
-    LookupSensor span_sensor(
-        ST_LIB::ADCDomain::Init<2>::instances[0],
-        std::span<const double>(table),
-        out12
-    );
-    LookupSensor
-        ptr_sensor(ST_LIB::ADCDomain::Init<2>::instances[1], table.data(), table.size(), out16);
+    LookupSensor span_sensor(SplitADCInit::instances[0], std::span<const double>(table), out12);
+    LookupSensor ptr_sensor(SplitADCInit::instances[1], table.data(), table.size(), out16);
 
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 2048U);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC2, ADC_CHANNEL_2, 32768U);
@@ -180,12 +216,12 @@ TEST_F(ADCSensorTest, PT100ReadsFromADCVoltageAndSupportsFilteredMode) {
          .output = &direct_output},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 2048U);
 
-    PT100<1> direct_sensor(ST_LIB::ADCDomain::Init<1>::instances[0], direct_output);
+    PT100<1> direct_sensor(SingleADCInit::instances[0], direct_output);
     MovingAverage<1> filter;
-    PT100<1> filtered_sensor(ST_LIB::ADCDomain::Init<1>::instances[0], filtered_output, filter);
+    PT100<1> filtered_sensor(SingleADCInit::instances[0], filtered_output, filter);
 
     direct_sensor.read();
     filtered_sensor.read();
@@ -222,10 +258,10 @@ TEST_F(ADCSensorTest, NTCUsesNormalizedADCCountsAcrossResolutions) {
          .output = nullptr},
     }};
 
-    init_adc_with_dma(cfgs);
+    init_adc_with_dma<2, split_adc12_init_cfgs>(cfgs);
 
-    NTC ntc12(ST_LIB::ADCDomain::Init<2>::instances[0], out12);
-    NTC ntc16(ST_LIB::ADCDomain::Init<2>::instances[1], out16);
+    NTC ntc12(SplitADCInit::instances[0], out12);
+    NTC ntc16(SplitADCInit::instances[1], out16);
 
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 2047U);
     ST_LIB::MockedHAL::adc_set_channel_raw(ADC2, ADC_CHANNEL_2, 32767U);
