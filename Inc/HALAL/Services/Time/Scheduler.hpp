@@ -31,6 +31,7 @@ struct Scheduler {
     static constexpr uint32_t INVALID_ID = 2 * kMaxTasks;
 
     // temporary, will be removed
+    [[deprecated]]
     static inline void start() {}
     static void update();
     static inline uint64_t get_global_tick() {
