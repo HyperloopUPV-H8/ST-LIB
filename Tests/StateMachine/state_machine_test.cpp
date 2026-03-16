@@ -155,6 +155,8 @@ protected:
         test_nested_machine.get_states()[1].unregister_all_timed_actions();
 
         reset_test_state();
+
+        Scheduler_start();
     }
 };
 
@@ -216,8 +218,6 @@ TEST_F(StateMachineTest, MasterStateChangeExitsNested) {
 TEST_F(StateMachineTest, CyclicActionsRun) {
     test_machine.start();
 
-    Scheduler::start();
-
     tick_scheduler(100);
     tick_scheduler(10000);
 
@@ -242,7 +242,6 @@ static int check_transition_task_count = 0;
 
 TEST_F(StateMachineTest, StressTestWithScheduler) {
     test_machine.start();
-    Scheduler::start();
 
     custom_task_count = 0;
     check_transition_task_count = 0;
