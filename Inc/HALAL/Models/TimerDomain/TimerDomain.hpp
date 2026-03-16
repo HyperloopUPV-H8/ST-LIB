@@ -678,7 +678,8 @@ TimerXList
 
             static void init(std::span<const Config, N> cfgs) {
                 Scheduler_global_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
-                callbacks[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]] = Scheduler_global_timer_callback;
+                callbacks[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]] = 
+                    Scheduler_global_timer_callback;
                 rcc_enable_timer(Scheduler_global_timer);
                 Scheduler_start();
 
