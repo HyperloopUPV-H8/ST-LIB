@@ -27,7 +27,7 @@
 #error Scheduler timer must be a 32 bit timer
 #endif
 extern TIM_TypeDef* Scheduler_global_timer;
-void Scheduler_global_timer_callback(void *raw);
+void Scheduler_global_timer_callback(void* raw);
 void Scheduler_start(void);
 
 // NOTE: only works for static arrays
