@@ -60,18 +60,18 @@ inline void Scheduler::global_timer_enable() {
 }
 
 // ----------------------------
-void scheduler_global_timer_callback(void* raw) {
+void Scheduler_global_timer_callback(void* raw) {
     (void)raw;
     Scheduler::on_timer_update();
 }
 // ----------------------------
 
-void Scheduler::start() {
+void Scheduler_start(void) {
     static_assert((Scheduler::FREQUENCY % 1'000'000) == 0u, "frequenct must be a multiple of 1MHz");
     Scheduler_global_timer =
         ST_LIB::TimerDomain::cmsis_timers[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
     ST_LIB::TimerDomain::callbacks[ST_LIB::timer_idxmap[static_cast<uint8_t>(SCHEDULER_TIMER_DOMAIN
-    )]] = scheduler_global_timer_callback;
+    )]] = Scheduler_global_timer_callback;
 
     // TODO: change this to use TimerDomain::get_timer_clock()?
     uint32_t prescaler = (SystemCoreClock / Scheduler::FREQUENCY);
