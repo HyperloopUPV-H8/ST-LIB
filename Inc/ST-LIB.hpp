@@ -266,7 +266,7 @@ template <auto&... devs> struct Board {
             DigitalInputDomain::Init<dinN>::instances
         );
         EthernetDomain::Init<ethN>::init(cfg.eth_cfgs, DigitalOutputDomain::Init<doutN>::instances);
-        ADCDomain::Init<adcN>::init(
+        ADCDomain::Init<adcN, cfg.adc_cfgs>::init(
             cfg.adc_cfgs,
             GPIODomain::Init<gpioN>::instances,
             DMADomain::Init<dmaN>::instances
@@ -297,6 +297,8 @@ template <auto&... devs> struct Board {
 
         if constexpr (std::is_same_v<Domain, MPUDomain>) {
             return Domain::template Init<N, cfg.mpu_cfgs>::instances[idx];
+        } else if constexpr (std::is_same_v<Domain, ADCDomain>) {
+            return Domain::template Init<N, cfg.adc_cfgs>::instances[idx];
         } else {
             return Domain::template Init<N>::instances[idx];
         }
