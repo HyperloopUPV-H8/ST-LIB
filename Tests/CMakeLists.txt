@@ -22,6 +22,7 @@ add_executable(${STLIB_TEST_EXECUTABLE}
     ${CMAKE_CURRENT_LIST_DIR}/Time/encoder_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Time/scheduler_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Time/timer_wrapper_test.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/StateMachine/state_machine_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/adc_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/spi2_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/dma2_test.cpp

@@ -47,6 +47,7 @@ public:
             } else {
                 CLEAR_BIT(node.CTBR, MDMA_CTBR_DBUS);
             }
+            reconfigure_ctcr();
         }
         void set_source(void* source) {
             uint32_t source_address = reinterpret_cast<uint32_t>(source);
@@ -59,6 +60,7 @@ public:
             } else {
                 CLEAR_BIT(node.CTBR, MDMA_CTBR_SBUS);
             }
+            reconfigure_ctcr();
         }
         auto get_node() -> MDMA_LinkNodeTypeDef* { return &node; }
         auto get_size() -> uint32_t { return node.CBNDTR; }
@@ -70,13 +72,88 @@ public:
 
     private:
         alignas(8) MDMA_LinkNodeTypeDef node;
+        size_t transfer_size{0};
+
+        void reconfigure_ctcr() {
+            const uintptr_t src = node.CSAR;
+            const uintptr_t dst = node.CDAR;
+            const size_t size = transfer_size;
+
+            if (size == 0)
+                return;
+
+            const size_t effective_size = compute_elem_size(src, dst, size);
+
+            uint32_t source_data_size, dest_data_size, source_inc, dest_inc;
+            switch (static_cast<uint32_t>(effective_size)) {
+            case 2:
+                source_data_size = MDMA_SRC_DATASIZE_HALFWORD;
+                dest_data_size = MDMA_DEST_DATASIZE_HALFWORD;
+                source_inc = MDMA_SRC_INC_HALFWORD;
+                dest_inc = MDMA_DEST_INC_HALFWORD;
+                break;
+            case 4:
+                source_data_size = MDMA_SRC_DATASIZE_WORD;
+                dest_data_size = MDMA_DEST_DATASIZE_WORD;
+                source_inc = MDMA_SRC_INC_WORD;
+                dest_inc = MDMA_DEST_INC_WORD;
+                break;
+            case 8:
+                source_data_size = MDMA_SRC_DATASIZE_DOUBLEWORD;
+                dest_data_size = MDMA_DEST_DATASIZE_DOUBLEWORD;
+                source_inc = MDMA_SRC_INC_DOUBLEWORD;
+                dest_inc = MDMA_DEST_INC_DOUBLEWORD;
+                break;
+            default:
+                source_data_size = MDMA_SRC_DATASIZE_BYTE;
+                dest_data_size = MDMA_DEST_DATASIZE_BYTE;
+                source_inc = MDMA_SRC_INC_BYTE;
+                dest_inc = MDMA_DEST_INC_BYTE;
+                break;
+            }
+
+            const uint32_t elem_size = static_cast<uint32_t>(effective_size);
+            uint32_t buf_len = static_cast<uint32_t>(std::min(size, static_cast<size_t>(128U)));
+            buf_len = (buf_len / elem_size) * elem_size;
+            if (buf_len == 0)
+                buf_len = elem_size;
+
+            // SINCOS/DINCOS must be included: MDMA_SRC_INC_* constants encode both
+            // SINC and SINCOS (increment offset size) bits together.
+            MODIFY_REG(
+                node.CTCR,
+                MDMA_CTCR_SINC | MDMA_CTCR_SINCOS | MDMA_CTCR_DINC | MDMA_CTCR_DINCOS |
+                    MDMA_CTCR_SSIZE | MDMA_CTCR_DSIZE | MDMA_CTCR_TLEN,
+                source_inc | dest_inc | source_data_size | dest_data_size |
+                    ((buf_len - 1U) << MDMA_CTCR_TLEN_Pos)
+            );
+        }
+
+        static bool is_tcm(uintptr_t addr) {
+            return (addr < 0x00010000U) || (addr >= 0x20000000U && addr < 0x20020000U);
+        }
+
+        // Returns the largest power-of-2 element size (1/2/4/8) valid for both addresses and size.
+        // addr_or==0 (both null) is treated as maximally aligned rather than causing div-by-zero.
+        static size_t compute_elem_size(uintptr_t src, uintptr_t dst, size_t size) {
+            const size_t max_elem = (is_tcm(src) || is_tcm(dst)) ? 4u : 8u;
+            const size_t size_gran = size & -size;
+            const uintptr_t addr_or = src | dst;
+            const size_t addr_gran =
+                (addr_or != 0u) ? static_cast<size_t>(addr_or & -addr_or) : max_elem;
+            return std::min({size_gran, addr_gran, max_elem});
+        }
 
         void init_node(void* src, void* dst, size_t size) {
+            if (size == 0) {
+                ErrorHandler("MDMA: zero-length transfer is invalid");
+                return;
+            }
+
             MDMA_LinkNodeConfTypeDef nodeConfig{};
             nodeConfig.Init.DataAlignment = MDMA_DATAALIGN_RIGHT;
             nodeConfig.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
             nodeConfig.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
-            nodeConfig.Init.BufferTransferLength = 128;
             nodeConfig.Init.TransferTriggerMode = MDMA_FULL_TRANSFER;
             nodeConfig.Init.SourceBlockAddressOffset = 0;
             nodeConfig.Init.DestBlockAddressOffset = 0;
@@ -86,6 +163,7 @@ public:
             nodeConfig.Init.Request = MDMA_REQUEST_SW;
 
             this->node = {};
+            this->transfer_size = size;
             nodeConfig.SrcAddress = reinterpret_cast<uint32_t>(src);
             nodeConfig.DstAddress = reinterpret_cast<uint32_t>(dst);
             nodeConfig.BlockDataLength = static_cast<uint32_t>(size);
@@ -95,14 +173,11 @@ public:
             uint32_t source_inc;
             uint32_t dest_inc;
 
-            size_t effective_size = size;
-            if (effective_size == 2 &&
-                ((reinterpret_cast<uintptr_t>(src) | reinterpret_cast<uintptr_t>(dst)) & 1))
-                effective_size = 1; // Odd address, so fallback to byte-wise
-            else if (effective_size == 4 && ((reinterpret_cast<uintptr_t>(src) | reinterpret_cast<uintptr_t>(dst)) & 3))
-                effective_size = 1; // Not word-aligned, so fallback to byte-wise
-            else if (effective_size == 8 && ((reinterpret_cast<uintptr_t>(src) | reinterpret_cast<uintptr_t>(dst)) & 7))
-                effective_size = 1; // Not doubleword-aligned, so fallback to byte-wise
+            const size_t effective_size = compute_elem_size(
+                reinterpret_cast<uintptr_t>(src),
+                reinterpret_cast<uintptr_t>(dst),
+                size
+            );
 
             switch (static_cast<uint32_t>(effective_size)) {
             case 2:
@@ -136,9 +211,24 @@ public:
             nodeConfig.Init.SourceInc = source_inc;
             nodeConfig.Init.DestinationInc = dest_inc;
 
+            // BufferTransferLength must be <= BlockDataLength and a multiple of the element size.
+            const uint32_t elem_size = static_cast<uint32_t>(effective_size);
+            uint32_t buf_len = static_cast<uint32_t>(std::min(size, static_cast<size_t>(128)));
+            buf_len = (buf_len / elem_size) * elem_size;
+            if (buf_len == 0)
+                buf_len = elem_size;
+            nodeConfig.Init.BufferTransferLength = buf_len;
+
             if (HAL_MDMA_LinkedList_CreateNode(&node, &nodeConfig) != HAL_OK) {
                 ErrorHandler("Error creating linked list in MDMA");
             }
+
+            // HAL_MDMA_LinkedList_CreateNode only sets the request field in CTBR;
+            // bus routing bits must be set explicitly for TCM addresses.
+            if (is_tcm(reinterpret_cast<uintptr_t>(src)))
+                SET_BIT(node.CTBR, MDMA_CTBR_SBUS);
+            if (is_tcm(reinterpret_cast<uintptr_t>(dst)))
+                SET_BIT(node.CTBR, MDMA_CTBR_DBUS);
         }
     };
 
