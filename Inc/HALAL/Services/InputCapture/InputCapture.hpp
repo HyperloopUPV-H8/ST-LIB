@@ -26,7 +26,7 @@ class InputCapture {
     friend struct TimerWrapper<dev>;
 
     TimerWrapper<dev>* timer = nullptr;
-    TimerDomain::InputCaptureInfo *info = nullptr;
+    TimerDomain::InputCaptureInfo* info = nullptr;
     bool is_on = false;
 
     InputCapture(TimerWrapper<dev>* tim) {
@@ -35,8 +35,7 @@ class InputCapture {
         // Setup TimerDomain
         uint8_t ch_rising = static_cast<uint8_t>(pin_rising.channel) - 1;
         uint8_t ch_falling = static_cast<uint8_t>(channel_falling) - 1;
-        info =
-            &TimerDomain::input_capture_info_backing[tim->instance->timer_idx][ch_rising];
+        info = &TimerDomain::input_capture_info_backing[tim->instance->timer_idx][ch_rising];
         TimerDomain::input_capture_info[tim->instance->timer_idx][ch_rising] = info;
         TimerDomain::input_capture_info[tim->instance->timer_idx][ch_falling] = info;
 
@@ -63,24 +62,27 @@ class InputCapture {
         sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
         timer->template config_input_compare_channel<channel_falling>(&sConfigIC);
     }
-public:
 
+public:
     void turn_on(void) {
         if (is_on)
             return;
 
-        /* STMicroelectronics' recommendation: Avoid undefined behaviour due to 
-         *  first interrupt being falling instead of rising by clearing CNT and SR */        
+        /* STMicroelectronics' recommendation: Avoid undefined behaviour due to
+         *  first interrupt being falling instead of rising by clearing CNT and SR */
         timer->instance->tim->CNT = 0;
         timer->instance->tim->SR = 0;
 
         // HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising)
         {
             volatile HAL_TIM_ChannelStateTypeDef* ch_state =
-                &timer->instance->hal_tim->ChannelState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
+                &timer->instance->hal_tim
+                     ->ChannelState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
             volatile HAL_TIM_ChannelStateTypeDef* n_ch_state =
-                &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
-            if ((*ch_state != HAL_TIM_CHANNEL_STATE_READY) || (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) {
+                &timer->instance->hal_tim
+                     ->ChannelNState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
+            if ((*ch_state != HAL_TIM_CHANNEL_STATE_READY) ||
+                (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) {
                 ErrorHandler("Channels not ready");
                 return;
             }
@@ -90,18 +92,21 @@ public:
 
             timer->template enable_capture_compare_interrupt<pin_rising.channel>();
             uint32_t enableCCx = TIM_CCER_CC1E
-                            << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU
-                            ); /* 0x1FU = 31 bits max shift */
+                                 << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU
+                                    ); /* 0x1FU = 31 bits max shift */
             SET_BIT(timer->instance->tim->CCER, enableCCx);
         }
 
         // HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_falling)
         {
             volatile HAL_TIM_ChannelStateTypeDef* ch_state =
-                &timer->instance->hal_tim->ChannelState[TimerDomain::get_channel_state_idx(channel_falling)];
+                &timer->instance->hal_tim
+                     ->ChannelState[TimerDomain::get_channel_state_idx(channel_falling)];
             volatile HAL_TIM_ChannelStateTypeDef* n_ch_state =
-                &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
-            if ((*ch_state != HAL_TIM_CHANNEL_STATE_READY) || (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) {
+                &timer->instance->hal_tim
+                     ->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
+            if ((*ch_state != HAL_TIM_CHANNEL_STATE_READY) ||
+                (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) {
                 ErrorHandler("Channels not ready");
                 return;
             }
@@ -111,8 +116,8 @@ public:
 
             timer->template enable_capture_compare_interrupt<channel_falling>();
             uint32_t enableCCx = TIM_CCER_CC1E
-                            << (TimerDomain::get_channel_mul4(channel_falling) & 0x1FU
-                            ); /* 0x1FU = 31 bits max shift */
+                                 << (TimerDomain::get_channel_mul4(channel_falling) & 0x1FU
+                                    ); /* 0x1FU = 31 bits max shift */
             SET_BIT(timer->instance->tim->CCER, enableCCx);
         }
 
@@ -124,48 +129,54 @@ public:
         } else {
             timer->counter_enable();
         }
-        
+
         is_on = true;
     }
 
     void turn_off(void) {
-        if(!is_on)
+        if (!is_on)
             return;
-    
+
         // HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_rising)
         {
             timer->template disable_capture_compare_interrupt<pin_rising.channel>();
 
             CLEAR_BIT(
                 timer->instance->tim->CCER,
-                (uint32_t)(TIM_CCER_CC1E << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU))
+                (uint32_t)(TIM_CCER_CC1E
+                           << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU))
             );
 
             volatile HAL_TIM_ChannelStateTypeDef* ch_state =
-                &timer->instance->hal_tim->ChannelState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
+                &timer->instance->hal_tim
+                     ->ChannelState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
             volatile HAL_TIM_ChannelStateTypeDef* n_ch_state =
-                &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
+                &timer->instance->hal_tim
+                     ->ChannelNState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
             *ch_state = HAL_TIM_CHANNEL_STATE_READY;
             *n_ch_state = HAL_TIM_CHANNEL_STATE_READY;
         }
-        
+
         // HAL_TIM_IC_Stop_IT(instance.peripheral->handle, instance.channel_falling)
         {
             timer->template disable_capture_compare_interrupt<channel_falling>();
 
             CLEAR_BIT(
                 timer->instance->tim->CCER,
-                (uint32_t)(TIM_CCER_CC1E << (TimerDomain::get_channel_mul4(channel_falling) & 0x1FU))
+                (uint32_t)(TIM_CCER_CC1E
+                           << (TimerDomain::get_channel_mul4(channel_falling) & 0x1FU))
             );
 
             volatile HAL_TIM_ChannelStateTypeDef* ch_state =
-                &timer->instance->hal_tim->ChannelState[TimerDomain::get_channel_state_idx(channel_falling)];
+                &timer->instance->hal_tim
+                     ->ChannelState[TimerDomain::get_channel_state_idx(channel_falling)];
             volatile HAL_TIM_ChannelStateTypeDef* n_ch_state =
-                &timer->instance->hal_tim->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
+                &timer->instance->hal_tim
+                     ->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
             *ch_state = HAL_TIM_CHANNEL_STATE_READY;
             *n_ch_state = HAL_TIM_CHANNEL_STATE_READY;
         }
-        
+
         if (timer->are_all_channels_free()) {
             timer->counter_disable();
         }
@@ -173,16 +184,15 @@ public:
         is_on = false;
     }
 
-    uint32_t get_frequency(void) {
-        return info->frequency;
-    }
+    uint32_t get_frequency(void) { return info->frequency; }
 
     float get_duty_cycle(void) {
-        // often you get a trash value in duty_cycle but the frequency is 0 so it's easily identifiable
+        // often you get a trash value in duty_cycle but the frequency is 0 so it's easily
+        // identifiable
         return (info->frequency == 0) ? 0.0f : info->duty_cycle;
     }
 };
 
-};
+}; // namespace ST_LIB
 
 #endif // HAL_TIM_MODULE_ENABLED

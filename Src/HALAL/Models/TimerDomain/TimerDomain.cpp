@@ -2,11 +2,9 @@
 
 using namespace ST_LIB;
 
-#define CaptureCompareInterruptMask \
-    (TIM_SR_CC1IF | TIM_SR_CC2IF | TIM_SR_CC3IF | TIM_SR_CC4IF)
+#define CaptureCompareInterruptMask (TIM_SR_CC1IF | TIM_SR_CC2IF | TIM_SR_CC3IF | TIM_SR_CC4IF)
 
-#define CaptureCompareOvercaptureMask \
-    (TIM_SR_CC1IF | TIM_SR_CC2IF | TIM_SR_CC3IF | TIM_SR_CC4IF)
+#define CaptureCompareOvercaptureMask (TIM_SR_CC1IF | TIM_SR_CC2IF | TIM_SR_CC3IF | TIM_SR_CC4IF)
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
@@ -27,44 +25,47 @@ TIM_HandleTypeDef htim24;
 
 void (*TimerDomain::callbacks[TimerDomain::max_instances])(void*) = {nullptr};
 void* TimerDomain::callback_data[TimerDomain::max_instances] = {nullptr};
-TimerDomain::InputCaptureInfo* TimerDomain::input_capture_info[max_instances][input_capture_channels];
-TimerDomain::InputCaptureInfo TimerDomain::input_capture_info_backing[max_instances][input_capture_channels];
+TimerDomain::InputCaptureInfo* TimerDomain::input_capture_info[max_instances]
+                                                              [input_capture_channels];
+TimerDomain::InputCaptureInfo TimerDomain::input_capture_info_backing[max_instances]
+                                                                     [input_capture_channels];
 
-static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel)
-{
+static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel) {
     TIM_HandleTypeDef* htim = TimerDomain::hal_handles[timer_idx];
 
     TimerDomain::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
-    if(info->channel_rising == channel) {
+    if (info->channel_rising == channel) {
         // NOTE: CCR1 - CCR4 are contiguous
         // NOTE: CCxIF flag is cleared by software by reading the captured data in CCRx
         uint32_t current = (*(((uint32_t*)&htim->Instance->CCR1) + channel));
         uint32_t period = current - info->value_rising;
 
-        if((period != 0) && (info->value_falling < period)) {
-            uint32_t ref_clock = TimerDomain::get_timer_frequency(htim->Instance) / (htim->Instance->PSC + 1);
+        if ((period != 0) && (info->value_falling < period)) {
+            uint32_t ref_clock =
+                TimerDomain::get_timer_frequency(htim->Instance) / (htim->Instance->PSC + 1);
             info->period = period;
             info->frequency = ref_clock / period;
             info->duty_cycle = ((float)info->value_falling * 100.0f) / (float)period;
         }
         info->value_rising = current;
-    } else if(info->channel_falling == channel) {
-        uint32_t falling_value = *(((uint32_t*)&htim->Instance->CCR1) + channel) - info->value_rising;
-        if(falling_value < info->period) info->value_falling = falling_value;
+    } else if (info->channel_falling == channel) {
+        uint32_t falling_value =
+            *(((uint32_t*)&htim->Instance->CCR1) + channel) - info->value_rising;
+        if (falling_value < info->period)
+            info->value_falling = falling_value;
     } else [[unlikely]] {
         ErrorHandler("TimerDomain::input_capture_info was modified");
     }
 }
 
-static void TIM_InterruptCallback(const uint32_t timer_idx)
-{
+static void TIM_InterruptCallback(const uint32_t timer_idx) {
     TIM_TypeDef* tim = TimerDomain::cmsis_timers[timer_idx];
-    if(tim->SR & TIM_SR_UIF) {
+    if (tim->SR & TIM_SR_UIF) {
         CLEAR_BIT(tim->SR, TIM_SR_UIF);
         TimerDomain::callbacks[timer_idx](TimerDomain::callback_data[timer_idx]);
     }
 
-    // NOTE: possible optimization: only do the channels possible for timer    
+    // NOTE: possible optimization: only do the channels possible for timer
     // Bit 0 = UIF, bits 1 - 4 = CCxIF
     for (uint32_t ch = 1; ch < 5; ch++) {
         uint32_t flag_mask = 1U << ch;
@@ -75,25 +76,15 @@ static void TIM_InterruptCallback(const uint32_t timer_idx)
     }
 }
 
-extern "C" void TIM1_UP_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[1]);
-}
+extern "C" void TIM1_UP_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[1]); }
 
-extern "C" void TIM2_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[2]);
-}
+extern "C" void TIM2_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[2]); }
 
-extern "C" void TIM3_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[3]);
-}
+extern "C" void TIM3_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[3]); }
 
-extern "C" void TIM4_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[4]);
-}
+extern "C" void TIM4_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[4]); }
 
-extern "C" void TIM5_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[5]);
-}
+extern "C" void TIM5_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[5]); }
 
 extern "C" void TIM6_DAC_IRQHandler(void) {
     // NOTE: Basic timers have no capture compare channels
@@ -113,7 +104,7 @@ extern "C" void TIM8_BRK_TIM12_IRQHandler(void) {
 
     TIM_TypeDef* tim8 = TimerDomain::cmsis_timers[tim8_idx];
     TIM_TypeDef* tim12 = TimerDomain::cmsis_timers[tim12_idx];
-    
+
     if ((tim12->SR & TIM_SR_UIF) != 0) {
         CLEAR_BIT(tim12->SR, TIM_SR_UIF);
         TimerDomain::callbacks[tim12_idx](TimerDomain::callback_data[tim12_idx]);
@@ -140,7 +131,7 @@ extern "C" void TIM8_UP_TIM13_IRQHandler(void) {
 
     TIM_TypeDef* tim8 = TimerDomain::cmsis_timers[tim8_idx];
     TIM_TypeDef* tim13 = TimerDomain::cmsis_timers[tim13_idx];
-    
+
     if ((tim13->SR & TIM_SR_UIF) != 0) {
         CLEAR_BIT(tim13->SR, TIM_SR_UIF);
         TimerDomain::callbacks[tim13_idx](TimerDomain::callback_data[tim13_idx]);
@@ -196,22 +187,12 @@ extern "C" void TIM8_TRG_COM_TIM14_IRQHandler(void) {
     }
 }
 
-extern "C" void TIM15_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[15]);
-}
+extern "C" void TIM15_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[15]); }
 
-extern "C" void TIM16_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[16]);
-}
+extern "C" void TIM16_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[16]); }
 
-extern "C" void TIM17_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[17]);
-}
+extern "C" void TIM17_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[17]); }
 
-extern "C" void TIM23_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[23]);
-}
+extern "C" void TIM23_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[23]); }
 
-extern "C" void TIM24_IRQHandler(void) {
-    TIM_InterruptCallback(timer_idxmap[24]);
-}
+extern "C" void TIM24_IRQHandler(void) { TIM_InterruptCallback(timer_idxmap[24]); }
