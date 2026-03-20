@@ -4,7 +4,7 @@
 #endif
 
 #ifdef BOARD
-#define REPS 600000 // Three times faster because the board frequency
+#define REPS 800000 // Three times faster because the board frequency
 #endif
 
 #ifndef HARDFAULT_BOOT_BLINK_CYCLES
