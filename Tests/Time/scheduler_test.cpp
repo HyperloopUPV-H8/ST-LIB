@@ -34,7 +34,7 @@ protected:
 
 TEST_F(SchedulerTests, GetAt) {
     Scheduler::sorted_task_ids_ = 0xFEDCBA9876543210ULL;
-    for(uint64_t i = 0; i < 16; i++) {
+    for (uint64_t i = 0; i < 16; i++) {
         uint64_t val = Scheduler::get_at(i);
         EXPECT_EQ(val, i);
     }
