@@ -11,9 +11,9 @@
 
 /* To allow debugging of inline functions only when testing */
 #ifdef SIM_ON
-# define HYPER_INLINE inline
+#define HYPER_INLINE inline
 #else
-# define HYPER_INLINE
+#define HYPER_INLINE
 #endif
 
 #include "stm32h7xx_ll_tim_wrapper.h"
