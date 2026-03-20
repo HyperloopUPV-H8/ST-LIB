@@ -763,7 +763,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
 
             /* Select the Polarity and set the CC2E Bit */
             CLEAR_BIT(tmpccer, TIM_CCER_CC2P | TIM_CCER_CC2NP);
-            SET_BIT(tmpccer, (sConfig->ICPolarity >> 4U) & (TIM_CCER_CC2P | TIM_CCER_CC2NP));
+            SET_BIT(tmpccer, (sConfig->ICPolarity << 4U) & (TIM_CCER_CC2P | TIM_CCER_CC2NP));
 
             CLEAR_BIT(tmpccmrx, TIM_CCMR1_IC2PSC);
             SET_BIT(tmpccmrx, (sConfig->ICPrescaler << 8U) & TIM_CCMR1_IC2PSC);
