@@ -169,7 +169,7 @@ void Scheduler::update() {
     }
 }
 
-inline uint64_t Scheduler::get_global_tick() {
+uint64_t Scheduler::get_global_tick() {
     SchedLock();
     uint64_t val = global_tick_us_ + Scheduler_global_timer->CNT;
     SchedUnlock();
