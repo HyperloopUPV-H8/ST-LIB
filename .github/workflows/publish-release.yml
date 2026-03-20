@@ -1,0 +1,80 @@
+name: Publish Release
+
+on:
+  pull_request_target:
+    branches:
+      - development
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  publish-release:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'release/next'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout merged release commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+
+      - name: Read release version
+        id: version
+        run: |
+          version="$(tr -d '\n' < VERSION)"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Export release notes
+        run: |
+          python3 tools/release.py latest-notes > .release-notes.md
+          cat .release-notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check whether the tag already exists
+        id: tag
+        run: |
+          if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create git tag
+        if: steps.tag.outputs.exists != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.version.outputs.tag }}" "${{ github.event.pull_request.merge_commit_sha }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Check whether the GitHub release already exists
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub release
+        if: steps.release.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease_flag=""
+          case "${{ steps.version.outputs.version }}" in
+            *-*)
+              prerelease_flag="--prerelease"
+              ;;
+          esac
+
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes-file .release-notes.md \
+            ${prerelease_flag}
