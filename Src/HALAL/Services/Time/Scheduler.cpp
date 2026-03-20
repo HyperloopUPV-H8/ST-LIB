@@ -31,21 +31,6 @@ uint64_t Scheduler::global_tick_us_{0};
 uint32_t Scheduler::current_interval_us_{0};
 uint16_t Scheduler::timeout_idx_{1};
 
-inline uint8_t Scheduler::get_at(uint8_t idx) {
-    return (uint8_t)((sorted_task_ids_ >> (idx * 4)) & 0xF);
-}
-inline void Scheduler::set_at(uint8_t idx, uint8_t id) {
-    uint32_t shift = idx * 4;
-    uint64_t clearmask = ~(0xFFULL << shift);
-    Scheduler::sorted_task_ids_ = (sorted_task_ids_ & clearmask) | (id << shift);
-}
-inline uint8_t Scheduler::front_id() { return *((uint8_t*)&sorted_task_ids_) & 0xF; }
-inline void Scheduler::pop_front() {
-    // O(1) remove of logical index 0
-    Scheduler::active_task_count_--;
-    Scheduler::sorted_task_ids_ >>= 4;
-}
-
 // ----------------------------
 
 inline void Scheduler::global_timer_disable() {
@@ -303,7 +288,7 @@ void Scheduler::schedule_next_interval() {
     Scheduler::global_timer_enable();
 }
 
-void Scheduler::on_timer_update() {
+inline void Scheduler::on_timer_update() {
     global_tick_us_ += current_interval_us_;
 
     while (active_task_count_ > 0) { // Pop all due tasks, several might be due in the same tick
