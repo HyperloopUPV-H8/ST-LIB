@@ -35,7 +35,7 @@ static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel) {
     if (info->channel_rising == channel) {
         // NOTE: CCR1 - CCR4 are contiguous
         // NOTE: CCxIF flag is cleared by software by reading the captured data in CCRx
-        uint32_t current = (*(((uint32_t*)&htim->Instance->CCR1) + channel));
+        uint32_t current = (*(((volatile uint32_t*)&htim->Instance->CCR1) + channel));
         uint32_t period = current - info->value_rising;
 
         if ((period != 0) && (info->value_falling < period)) {
@@ -48,7 +48,7 @@ static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel) {
         info->value_rising = current;
     } else if (info->channel_falling == channel) {
         uint32_t falling_value =
-            *(((uint32_t*)&htim->Instance->CCR1) + channel) - info->value_rising;
+            *(((volatile uint32_t*)&htim->Instance->CCR1) + channel) - info->value_rising;
         if (falling_value < info->period)
             info->value_falling = falling_value;
     } else [[unlikely]] {
