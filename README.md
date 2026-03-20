@@ -22,6 +22,7 @@ ctest --preset simulator-all
 - Setup: [`docs/setup.md`](docs/setup.md)
 - Build and presets: [`docs/build-and-presets.md`](docs/build-and-presets.md)
 - Testing: [`docs/testing.md`](docs/testing.md)
+- Releases: [`docs/releases.md`](docs/releases.md)
 
 ## Recommended Presets
 

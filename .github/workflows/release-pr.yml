@@ -1,0 +1,104 @@
+name: Prepare Release PR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - development
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare-release-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute release state
+        id: versions
+        run: |
+          current_version="$(tr -d '\n' < VERSION)"
+          next_version="$(python3 tools/release.py next-version)"
+          echo "current_version=${current_version}" >> "$GITHUB_OUTPUT"
+          echo "next_version=${next_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Skip when nothing releasable is pending
+        if: steps.versions.outputs.current_version == steps.versions.outputs.next_version
+        run: |
+          echo "No releasable changesets are pending."
+          python3 tools/release.py preview --format markdown >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prepare release branch
+        if: steps.versions.outputs.current_version != steps.versions.outputs.next_version
+        id: prepare
+        run: |
+          python3 tools/release.py apply --output .release-version
+          release_version="$(tr -d '\n' < .release-version)"
+          echo "release_version=${release_version}" >> "$GITHUB_OUTPUT"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C release/next
+          git add VERSION CHANGELOG.md .changesets
+          git commit -m "chore(release): prepare v${release_version}"
+          git push --force --set-upstream origin release/next
+
+      - name: Create or update release PR
+        if: steps.versions.outputs.current_version != steps.versions.outputs.next_version
+        uses: actions/github-script@v7
+        env:
+          RELEASE_VERSION: ${{ steps.prepare.outputs.release_version }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const head = `${owner}:release/next`;
+            const base = 'development';
+            const title = `chore(release): prepare v${process.env.RELEASE_VERSION}`;
+            const marker = '<!-- st-lib-release-pr -->';
+            const body = [
+              marker,
+              '',
+              'This PR was prepared automatically from the pending ST-LIB changesets.',
+              '',
+              `- Version: \`v${process.env.RELEASE_VERSION}\``,
+              '- Source of truth: `VERSION`',
+              '- Release notes source: `CHANGELOG.md`',
+            ].join('\n');
+
+            const { data: pulls } = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'open',
+              head,
+              base,
+            });
+
+            if (pulls.length > 0) {
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pulls[0].number,
+                title,
+                body,
+              });
+            } else {
+              await github.rest.pulls.create({
+                owner,
+                repo,
+                title,
+                head: 'release/next',
+                base,
+                body,
+              });
+            }

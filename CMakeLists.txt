@@ -1,10 +1,19 @@
 cmake_minimum_required(VERSION 3.14)
 
+file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/VERSION" STLIB_VERSION_FULL LIMIT_COUNT 1)
+if(NOT STLIB_VERSION_FULL)
+  message(FATAL_ERROR "Could not read ST-LIB version from VERSION")
+endif()
+string(REGEX MATCH "^[0-9]+\\.[0-9]+\\.[0-9]+" STLIB_PROJECT_VERSION "${STLIB_VERSION_FULL}")
+if(NOT STLIB_PROJECT_VERSION)
+  message(FATAL_ERROR "VERSION must start with a semantic version core, got: ${STLIB_VERSION_FULL}")
+endif()
+
 if(DEFINED STLIB_NAME_SUFFIX)
-  project(ST-LIB-${STLIB_NAME_SUFFIX} C CXX)
+  project(ST-LIB-${STLIB_NAME_SUFFIX} VERSION ${STLIB_PROJECT_VERSION} LANGUAGES C CXX)
   set(STLIB_LIBRARY st-lib-${STLIB_NAME_SUFFIX})
 else()
-  project(ST-LIB C CXX)
+  project(ST-LIB VERSION ${STLIB_PROJECT_VERSION} LANGUAGES C CXX)
   set(STLIB_LIBRARY st-lib)
 endif()
 if(NOT PROJECT_IS_TOP_LEVEL)
@@ -273,7 +282,6 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/DMA/DMA2.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/PinModel/Pin.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp
-  # ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/ADC/ADC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/CORDIC/CORDIC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/FDCAN/FDCAN.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/I2C/I2C.cpp
@@ -362,8 +370,6 @@ set(STLIB_LOW_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ST-LIB_LOW.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sd/Sd.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/LookupSensor/LookupSensor.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/NTC/NTC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/SensorInterrupt/SensorInterrupt.cpp
 )
 
@@ -424,6 +430,7 @@ add_library(${STLIB_LIBRARY} OBJECT
 
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Scheduler.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp>
+  $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MPUManager/MPUManager.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_hal_adc.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_hal_dma.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/MockedDrivers/mocked_hal_spi.cpp>

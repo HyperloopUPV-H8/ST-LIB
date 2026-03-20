@@ -1,14 +1,14 @@
 #pragma once
 #include <cstddef>
-#include <cstdint>
 
 #include "Control/Blocks/MovingAverage.hpp"
-#include "HALAL/Services/ADC/NewADC.hpp"
+#include "Sensors/Common/ADCSensor.hpp"
 
-template <size_t N> class PT100 {
+template <size_t N> class PT100 : protected ST_LIB::Sensors::ADCValueSensor<float> {
 public:
     static constexpr float k = 841.836735;
     static constexpr float offset = -492.204082;
+    static constexpr float reference_voltage = ST_LIB::Sensors::kDefaultADCReferenceVoltage;
     MovingAverage<N>* filter = nullptr;
 
     PT100(ST_LIB::ADCDomain::Instance& adc, float* value, MovingAverage<N>& filter);
@@ -20,34 +20,34 @@ public:
     void read();
 
 protected:
-    ST_LIB::ADCDomain::Instance* adc = nullptr;
-    float* value = nullptr;
+    using Base = ST_LIB::Sensors::ADCValueSensor<float>;
 };
 
 template <size_t N>
 PT100<N>::PT100(ST_LIB::ADCDomain::Instance& adc, float* value, MovingAverage<N>& filter)
-    : adc(&adc), value(value), filter(&filter) {}
+    : Base(adc, value), filter(&filter) {}
 
 template <size_t N>
 PT100<N>::PT100(ST_LIB::ADCDomain::Instance& adc, float& value, MovingAverage<N>& filter)
-    : adc(&adc), value(&value), filter(&filter) {}
+    : Base(adc, &value), filter(&filter) {}
 
 template <size_t N>
-PT100<N>::PT100(ST_LIB::ADCDomain::Instance& adc, float* value) : adc(&adc), value(value) {}
+PT100<N>::PT100(ST_LIB::ADCDomain::Instance& adc, float* value) : Base(adc, value) {}
 
 template <size_t N>
-PT100<N>::PT100(ST_LIB::ADCDomain::Instance& adc, float& value) : adc(&adc), value(&value) {}
+PT100<N>::PT100(ST_LIB::ADCDomain::Instance& adc, float& value) : Base(adc, &value) {}
 
 template <size_t N> void PT100<N>::read() {
-    if (adc == nullptr || value == nullptr) {
+    if (!this->is_configured()) {
         return;
     }
-    const float raw = adc->get_raw();
-    const float val = adc->get_value_from_raw(raw, 3.3f);
+
+    const float val = this->read_voltage(reference_voltage);
     if (filter != nullptr) {
         filter->input(k / val + offset);
         filter->execute();
-        *value = filter->output_value;
-    } else
-        *value = k / val + offset;
+        *this->value = filter->output_value;
+    } else {
+        *this->value = k / val + offset;
+    }
 }

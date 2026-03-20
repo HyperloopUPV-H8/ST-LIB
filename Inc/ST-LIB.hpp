@@ -28,6 +28,8 @@ public:
 
 namespace ST_LIB {
 extern void compile_error(const char* msg);
+
+// The contract of BuildCtx/Board is documented in docs/st-lib-board-contract.md.
 template <typename... Domains> struct BuildCtx {
     template <typename D> using Decl = typename D::Entry;
     template <typename D> static constexpr std::size_t max_count_v = D::max_instances;
@@ -86,7 +88,7 @@ using DomainsCtx = BuildCtx<
     MPUDomain,
     GPIODomain,
     TimerDomain,
-    DMA_Domain,
+    DMADomain,
     SPIDomain,
     DigitalOutputDomain,
     DigitalInputDomain,
@@ -95,6 +97,46 @@ using DomainsCtx = BuildCtx<
     EthernetDomain,
     ADCDomain,
     EXTIDomain /* PWMDomain, ...*/>;
+
+namespace BuildUtils {
+
+template <std::size_t TotalN, std::size_t... ExtraNs>
+consteval std::array<DMADomain::Entry, TotalN> merge_dma_entries(
+    std::span<const DMADomain::Entry> base_entries,
+    const std::array<DMADomain::Entry, ExtraNs>&... extra_entries
+) {
+    if (base_entries.size() + (ExtraNs + ...) != TotalN) {
+        compile_error("DMA merged entry count mismatch");
+    }
+
+    std::array<DMADomain::Entry, TotalN> merged{};
+    std::size_t cursor = 0;
+
+    for (const auto& entry : base_entries) {
+        merged[cursor++] = entry;
+    }
+
+    auto append = [&]<std::size_t N>(const std::array<DMADomain::Entry, N>& entries) {
+        for (const auto& entry : entries) {
+            merged[cursor++] = entry;
+        }
+    };
+    (append(extra_entries), ...);
+
+    return merged;
+}
+
+template <std::size_t TotalN, std::size_t... ExtraNs>
+consteval std::array<DMADomain::Config, TotalN> build_dma_configs(
+    std::span<const DMADomain::Entry> base_entries,
+    const std::array<DMADomain::Entry, ExtraNs>&... extra_entries
+) {
+    return DMADomain::template build<TotalN>(std::span<const DMADomain::Entry, TotalN>{
+        merge_dma_entries<TotalN>(base_entries, extra_entries...)
+    });
+}
+
+} // namespace BuildUtils
 
 template <auto&... devs> struct Board {
     static consteval auto build_ctx() {
@@ -113,14 +155,24 @@ template <auto&... devs> struct Board {
         constexpr std::size_t mpuN = domain_size<MPUDomain>();
         constexpr std::size_t gpioN = domain_size<GPIODomain>();
         constexpr std::size_t timN = domain_size<TimerDomain>();
-        constexpr std::size_t dmaN = domain_size<DMA_Domain>();
+        constexpr std::size_t adcN = domain_size<ADCDomain>();
+        constexpr auto adc_cfgs = ADCDomain::template build<adcN>(ctx.template span<ADCDomain>());
+        constexpr std::size_t adc_dma_extraN = ADCDomain::dma_contribution_count(
+            std::span<const ADCDomain::Config, adcN>{adc_cfgs},
+            ctx.template span<DMADomain>()
+        );
+        constexpr auto adc_dma_entries =
+            ADCDomain::template build_dma_contributions<adc_dma_extraN>(
+                ctx.template span<DMADomain>(),
+                std::span<const ADCDomain::Config, adcN>{adc_cfgs}
+            );
         constexpr std::size_t spiN = domain_size<SPIDomain>();
         constexpr std::size_t doutN = domain_size<DigitalOutputDomain>();
         constexpr std::size_t dinN = domain_size<DigitalInputDomain>();
         constexpr std::size_t mdmaPacketN = domain_size<MdmaPacketDomain>();
         constexpr std::size_t sdN = domain_size<SdDomain>();
         constexpr std::size_t ethN = domain_size<EthernetDomain>();
-        constexpr std::size_t adcN = domain_size<ADCDomain>();
+        constexpr std::size_t dmaN = domain_size<DMADomain>() + adc_dma_extraN;
         constexpr std::size_t extiN = domain_size<EXTIDomain>();
         // ...
 
@@ -128,7 +180,7 @@ template <auto&... devs> struct Board {
             std::array<MPUDomain::Config, mpuN> mpu_cfgs;
             std::array<GPIODomain::Config, gpioN> gpio_cfgs;
             std::array<TimerDomain::Config, timN> tim_cfgs;
-            std::array<DMA_Domain::Config, dmaN> dma_cfgs;
+            std::array<DMADomain::Config, dmaN> dma_cfgs;
             std::array<SPIDomain::Config, spiN> spi_cfgs;
             std::array<DigitalOutputDomain::Config, doutN> dout_cfgs;
             std::array<DigitalInputDomain::Config, dinN> din_cfgs;
@@ -144,7 +196,10 @@ template <auto&... devs> struct Board {
             .mpu_cfgs = MPUDomain::template build<mpuN>(ctx.template span<MPUDomain>()),
             .gpio_cfgs = GPIODomain::template build<gpioN>(ctx.template span<GPIODomain>()),
             .tim_cfgs = TimerDomain::template build<timN>(ctx.template span<TimerDomain>()),
-            .dma_cfgs = DMA_Domain::template build<dmaN>(ctx.template span<DMA_Domain>()),
+            .dma_cfgs = BuildUtils::build_dma_configs<dmaN>(
+                ctx.template span<DMADomain>(),
+                adc_dma_entries
+            ),
             .spi_cfgs = SPIDomain::template build<spiN>(ctx.template span<SPIDomain>()),
             .dout_cfgs =
                 DigitalOutputDomain::template build<doutN>(ctx.template span<DigitalOutputDomain>()
@@ -156,7 +211,7 @@ template <auto&... devs> struct Board {
                 ),
             .sd_cfgs = SdDomain::template build<sdN>(ctx.template span<SdDomain>()),
             .eth_cfgs = EthernetDomain::template build<ethN>(ctx.template span<EthernetDomain>()),
-            .adc_cfgs = ADCDomain::template build<adcN>(ctx.template span<ADCDomain>()),
+            .adc_cfgs = adc_cfgs,
             .exti_cfgs = EXTIDomain::template build<extiN>(ctx.template span<EXTIDomain>()),
             // ...
         };
@@ -168,7 +223,7 @@ template <auto&... devs> struct Board {
         constexpr std::size_t mpuN = domain_size<MPUDomain>();
         constexpr std::size_t gpioN = domain_size<GPIODomain>();
         constexpr std::size_t timN = domain_size<TimerDomain>();
-        constexpr std::size_t dmaN = domain_size<DMA_Domain>();
+        constexpr std::size_t dmaN = std::tuple_size_v<decltype(cfg.dma_cfgs)>;
         constexpr std::size_t spiN = domain_size<SPIDomain>();
         constexpr std::size_t doutN = domain_size<DigitalOutputDomain>();
         constexpr std::size_t dinN = domain_size<DigitalInputDomain>();
@@ -193,11 +248,11 @@ template <auto&... devs> struct Board {
         MPUDomain::Init<mpuN, cfg.mpu_cfgs>::init();
         GPIODomain::Init<gpioN>::init(cfg.gpio_cfgs);
         TimerDomain::Init<timN>::init(cfg.tim_cfgs);
-        DMA_Domain::Init<dmaN>::init(cfg.dma_cfgs);
+        DMADomain::Init<dmaN>::init(cfg.dma_cfgs);
         SPIDomain::Init<spiN>::init(
             cfg.spi_cfgs,
             GPIODomain::Init<gpioN>::instances,
-            DMA_Domain::Init<dmaN>::instances
+            DMADomain::Init<dmaN>::instances
         );
         DigitalOutputDomain::Init<doutN>::init(cfg.dout_cfgs, GPIODomain::Init<gpioN>::instances);
         DigitalInputDomain::Init<dinN>::init(cfg.din_cfgs, GPIODomain::Init<gpioN>::instances);
@@ -211,7 +266,11 @@ template <auto&... devs> struct Board {
             DigitalInputDomain::Init<dinN>::instances
         );
         EthernetDomain::Init<ethN>::init(cfg.eth_cfgs, DigitalOutputDomain::Init<doutN>::instances);
-        ADCDomain::Init<adcN>::init(cfg.adc_cfgs, GPIODomain::Init<gpioN>::instances);
+        ADCDomain::Init<adcN, cfg.adc_cfgs>::init(
+            cfg.adc_cfgs,
+            GPIODomain::Init<gpioN>::instances,
+            DMADomain::Init<dmaN>::instances
+        );
         EXTIDomain::Init<extiN>::init(cfg.exti_cfgs,
                                       GPIODomain::Init<gpioN>::instances); // ...
     }
@@ -238,6 +297,8 @@ template <auto&... devs> struct Board {
 
         if constexpr (std::is_same_v<Domain, MPUDomain>) {
             return Domain::template Init<N, cfg.mpu_cfgs>::instances[idx];
+        } else if constexpr (std::is_same_v<Domain, ADCDomain>) {
+            return Domain::template Init<N, cfg.adc_cfgs>::instances[idx];
         } else {
             return Domain::template Init<N>::instances[idx];
         }
