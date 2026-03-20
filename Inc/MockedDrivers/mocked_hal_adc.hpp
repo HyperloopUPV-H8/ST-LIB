@@ -2,8 +2,6 @@
 
 #include "hal_wrapper.h"
 
-#include <cstddef>
-#include <cstdint>
 #include <functional>
 
 namespace ST_LIB::MockedHAL {

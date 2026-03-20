@@ -2,9 +2,6 @@
 
 #include "hal_wrapper.h"
 
-#include <cstddef>
-#include <cstdint>
-
 namespace ST_LIB::MockedHAL {
 
 enum class DMAOperation : uint8_t {

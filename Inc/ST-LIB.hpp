@@ -105,6 +105,10 @@ consteval std::array<DMADomain::Entry, TotalN> merge_dma_entries(
     std::span<const DMADomain::Entry> base_entries,
     const std::array<DMADomain::Entry, ExtraNs>&... extra_entries
 ) {
+    if (base_entries.size() + (ExtraNs + ...) != TotalN) {
+        compile_error("DMA merged entry count mismatch");
+    }
+
     std::array<DMADomain::Entry, TotalN> merged{};
     std::size_t cursor = 0;
 
@@ -118,10 +122,6 @@ consteval std::array<DMADomain::Entry, TotalN> merge_dma_entries(
         }
     };
     (append(extra_entries), ...);
-
-    if (cursor != TotalN) {
-        compile_error("DMA merged entry count mismatch");
-    }
 
     return merged;
 }

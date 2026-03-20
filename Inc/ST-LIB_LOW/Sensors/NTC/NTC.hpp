@@ -9,7 +9,6 @@
 This NTC class is not generic. It is only for 10k Ohm, 1976Beta value NTCs.
 */
 #pragma once
-#include <cstddef>
 
 #include "Sensors/Common/ADCSensor.hpp"
 

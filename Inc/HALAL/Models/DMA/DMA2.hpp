@@ -367,6 +367,10 @@ struct DMADomain {
     };
 
     template <size_t N> static consteval std::array<Config, N> build(span<const Entry> instances) {
+        if (instances.size() != N) {
+            compile_error("DMA entry count mismatch");
+        }
+
         std::array<Config, N> cfgs{};
         std::array<Entry, N> ents;
         for (size_t i = 0; i < N; ++i)
@@ -466,16 +470,17 @@ struct DMADomain {
                 (void)instance;
                 (void)id;
 
+                instances[i].dma = {};
                 if (stream == Stream::none) {
                     ErrorHandler("DMA stream must be selected before init");
                     continue;
                 }
 
-                instances[i].dma = {};
                 instances[i].dma.Instance = stream_to_DMA_StreamTypeDef(stream);
                 instances[i].dma.Init = dma_init;
 
                 if (HAL_DMA_Init(&instances[i].dma) != HAL_OK) {
+                    instances[i].dma = {};
                     ErrorHandler("DMA Init failed");
                     continue;
                 }
