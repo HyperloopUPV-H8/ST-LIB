@@ -74,24 +74,25 @@ public:
         timer->instance->tim->SR = 0;
 
         // HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_rising)
+        volatile HAL_TIM_ChannelStateTypeDef* chx_1_state;
+        volatile HAL_TIM_ChannelStateTypeDef* chx_1_n_state;
+        uint32_t enableCCx_1;
         {
-            volatile HAL_TIM_ChannelStateTypeDef* ch_state =
-                &timer->instance->hal_tim
+            chx_1_state = &timer->instance->hal_tim
                      ->ChannelState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
-            volatile HAL_TIM_ChannelStateTypeDef* n_ch_state =
-                &timer->instance->hal_tim
+            chx_1_n_state = &timer->instance->hal_tim
                      ->ChannelNState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
-            if ((*ch_state != HAL_TIM_CHANNEL_STATE_READY) ||
-                (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) {
+            if ((*chx_1_state != HAL_TIM_CHANNEL_STATE_READY) ||
+                (*chx_1_n_state != HAL_TIM_CHANNEL_STATE_READY)) {
                 ErrorHandler("Channels not ready");
                 return;
             }
 
-            *ch_state = HAL_TIM_CHANNEL_STATE_BUSY;
-            *n_ch_state = HAL_TIM_CHANNEL_STATE_BUSY;
+            *chx_1_state = HAL_TIM_CHANNEL_STATE_BUSY;
+            *chx_1_n_state = HAL_TIM_CHANNEL_STATE_BUSY;
 
             timer->template enable_capture_compare_interrupt<pin_rising.channel>();
-            uint32_t enableCCx = TIM_CCER_CC1E
+            enableCCx_1 = TIM_CCER_CC1E
                                  << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU
                                     ); /* 0x1FU = 31 bits max shift */
             SET_BIT(timer->instance->tim->CCER, enableCCx);
@@ -106,8 +107,13 @@ public:
                 &timer->instance->hal_tim
                      ->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
             if ((*ch_state != HAL_TIM_CHANNEL_STATE_READY) ||
-                (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) {
+                (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) [[unlikely]] {
                 ErrorHandler("Channels not ready");
+
+                timer->template disable_capture_compare_interrupt<pin_rising.channel>();
+                CLEAR_BIT(timer->instance->tim->CCER, enableCCx_1);
+                *chx_1_state = HAL_TIM_CHANNEL_STATE_READY;
+                *chx_1_n_state = HAL_TIM_CHANNEL_STATE_READY;
                 return;
             }
 
