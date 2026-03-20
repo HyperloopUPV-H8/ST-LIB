@@ -279,8 +279,8 @@ void Scheduler::schedule_next_interval() {
         }
 
         Scheduler_global_timer->ARR = current_interval_us_ - 1u;
-        if (Scheduler_global_timer->CNT > current_interval_us_) [[unlikely]] {
-            uint32_t offset = Scheduler_global_timer->CNT - current_interval_us_;
+        if (Scheduler_global_timer->CNT > Scheduler_global_timer->ARR) [[unlikely]] {
+            uint32_t offset = Scheduler_global_timer->CNT - Scheduler_global_timer->ARR;
             Scheduler_global_timer->CNT = 0;
             global_tick_us_ += offset;
         }
