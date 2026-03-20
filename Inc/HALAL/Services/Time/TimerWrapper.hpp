@@ -351,7 +351,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
             "Pin must be configured as input capture"
         );
         static_assert(
-            (static_cast<uint8_t>(channel_falling) - 1) <= 4,
+            (static_cast<uint8_t>(channel_falling)) <= 4,
             "Channel must be 1 to 4 for inputcapture"
         );
         static_assert(this->is_CC2_instance, "Timer must have 2 or more Capture compare channels");
