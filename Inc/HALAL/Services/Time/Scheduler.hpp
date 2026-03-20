@@ -105,7 +105,7 @@ private:
         uint64_t clearmask = ~(0xFFULL << shift);
         Scheduler::sorted_task_ids_ = (sorted_task_ids_ & clearmask) | (id << shift);
     }
-    static HYPER_INLINE uint8_t front_id()  { return *((uint8_t*)&sorted_task_ids_) & 0xF; }
+    static HYPER_INLINE uint8_t front_id() { return *((uint8_t*)&sorted_task_ids_) & 0xF; }
     static HYPER_INLINE void pop_front() {
         Scheduler::active_task_count_--;
         Scheduler::sorted_task_ids_ >>= 4;
