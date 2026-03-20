@@ -288,12 +288,12 @@ void Scheduler::schedule_next_interval() {
         SET_BIT(Scheduler_global_timer->EGR, TIM_EGR_UG); // This should cause an interrupt
     } else {
         if (diff < -1) [[unlikely]] {
-            current_interval_us_ = static_cast<uint32_t>(0 - diff) - 1u;
+            current_interval_us_ = static_cast<uint32_t>(0 - diff);
         } else {
-            current_interval_us_ = static_cast<uint32_t>(diff) - 1u;
+            current_interval_us_ = static_cast<uint32_t>(diff);
         }
 
-        Scheduler_global_timer->ARR = current_interval_us_;
+        Scheduler_global_timer->ARR = current_interval_us_ - 1u;
         if (Scheduler_global_timer->CNT > current_interval_us_) [[unlikely]] {
             uint32_t offset = Scheduler_global_timer->CNT - current_interval_us_;
             Scheduler_global_timer->CNT = 0;
