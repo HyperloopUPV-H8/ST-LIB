@@ -45,7 +45,7 @@ TEST_F(SchedulerTests, SetAt) {
     for (uint64_t i = 0; i < 16; i++) {
         Scheduler::sorted_task_ids_ = original;
         Scheduler::set_at(i, 0xF);
-        EXPECT_EQ(Scheduler::sorted_task_ids_, original | (0xFULL << (i*4)));
+        EXPECT_EQ(Scheduler::sorted_task_ids_, original | (0xFULL << (i * 4)));
     }
 }
 
