@@ -219,29 +219,69 @@ def build_preview_markdown(root: Path) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
-def git_changed_changesets(root: Path, base: str, head: str) -> list[Path]:
+def relevant_changeset_path(root: Path, path_str: str) -> Path | None:
+    path = Path(path_str)
+    if (
+        len(path.parts) == 2
+        and path.parts[0] == ".changesets"
+        and path.suffix == ".md"
+        and path.name not in IGNORED_CHANGESET_FILES
+    ):
+        return root / path
+    return None
+
+
+def git_changed_changesets(root: Path, base: str, head: str) -> tuple[list[Path], list[Path]]:
     result = subprocess.run(
-        ["git", "diff", "--name-only", "--diff-filter=AMRT", f"{base}...{head}", "--"],
+        ["git", "-c", "diff.renames=false", "diff", "--name-status", f"{base}...{head}", "--"],
         cwd=root,
         check=True,
         capture_output=True,
         text=True,
     )
-    changed_files = []
-    for raw_path in result.stdout.splitlines():
-        path = Path(raw_path)
-        if (
-            len(path.parts) == 2
-            and path.parts[0] == ".changesets"
-            and path.suffix == ".md"
-            and path.name not in IGNORED_CHANGESET_FILES
-        ):
-            changed_files.append(root / path)
-    return sorted(changed_files)
+    changed_files: list[Path] = []
+    deleted_files: list[Path] = []
+
+    for raw_line in result.stdout.splitlines():
+        if not raw_line.strip():
+            continue
+
+        parts = raw_line.split("\t")
+        status = parts[0]
+
+        if status.startswith(("R", "C")):
+            if len(parts) < 3:
+                continue
+            old_path = relevant_changeset_path(root, parts[1])
+            new_path = relevant_changeset_path(root, parts[2])
+            if old_path is not None and new_path is None:
+                deleted_files.append(old_path)
+            elif new_path is not None:
+                changed_files.append(new_path)
+            continue
+
+        if len(parts) < 2:
+            continue
+
+        path = relevant_changeset_path(root, parts[1])
+        if path is None:
+            continue
+        if status == "D":
+            deleted_files.append(path)
+        else:
+            changed_files.append(path)
+
+    return sorted(set(changed_files)), sorted(set(deleted_files))
 
 
 def validate_pr_changeset(root: Path, base: str, head: str) -> int:
-    changed_changesets = git_changed_changesets(root, base, head)
+    changed_changesets, deleted_changesets = git_changed_changesets(root, base, head)
+    if deleted_changesets:
+        joined = ", ".join(str(path.relative_to(root)) for path in deleted_changesets)
+        raise ValueError(
+            "PRs must not delete changeset files under .changesets/. "
+            f"Deleted changesets: {joined}"
+        )
     if len(changed_changesets) != 1:
         joined = ", ".join(str(path.relative_to(root)) for path in changed_changesets) or "none"
         raise ValueError(
@@ -268,32 +308,64 @@ def build_changelog_entry(version: str, changesets: list[Changeset]) -> str:
         for item in items:
             lines.append(f"- {item.summary}")
             if item.details:
-                lines.append(f"  {item.details}")
+                for detail_line in item.details.splitlines():
+                    lines.append(f"  {detail_line}" if detail_line else "  ")
         lines.append("")
 
     return "\n".join(lines).rstrip()
 
 
-def prepend_changelog_entry(root: Path, entry: str) -> None:
-    changelog_file = changelog_path(root)
-    existing = changelog_file.read_text(encoding="utf-8")
+def render_changelog_with_entry(existing: str, entry: str) -> str:
     heading_match = re.search(r"^## ", existing, flags=re.MULTILINE)
     if heading_match:
         insertion_point = heading_match.start()
-        new_text = existing[:insertion_point].rstrip() + "\n\n" + entry + "\n\n" + existing[insertion_point:].lstrip()
+        return (
+            existing[:insertion_point].rstrip()
+            + "\n\n"
+            + entry
+            + "\n\n"
+            + existing[insertion_point:].lstrip()
+        )
     else:
-        new_text = existing.rstrip() + "\n\n" + entry + "\n"
-    changelog_file.write_text(new_text, encoding="utf-8")
+        return existing.rstrip() + "\n\n" + entry + "\n"
 
 
-def archive_changesets(root: Path, version: str, changesets: list[Changeset]) -> None:
+def archive_changesets(root: Path, version: str, changesets: list[Changeset]) -> list[tuple[Path, Path]]:
     archive_directory = changeset_dir(root) / "archive" / f"v{version}"
     archive_directory.mkdir(parents=True, exist_ok=True)
-    for changeset in changesets:
-        destination = archive_directory / changeset.path.name
+    destinations = [(changeset.path, archive_directory / changeset.path.name) for changeset in changesets]
+
+    for _, destination in destinations:
         if destination.exists():
             raise FileExistsError(f"Archive destination already exists: {destination}")
-        shutil.move(str(changeset.path), destination)
+
+    moved_changesets: list[tuple[Path, Path]] = []
+    try:
+        for changeset in changesets:
+            destination = archive_directory / changeset.path.name
+            shutil.move(str(changeset.path), destination)
+            moved_changesets.append((changeset.path, destination))
+    except Exception:
+        rollback_archived_changesets(root, moved_changesets)
+        raise
+    return moved_changesets
+
+
+def rollback_archived_changesets(root: Path, moved_changesets: list[tuple[Path, Path]]) -> None:
+    archive_root = changeset_dir(root) / "archive"
+    for source, destination in reversed(moved_changesets):
+        if destination.exists():
+            shutil.move(str(destination), source)
+
+        current = destination.parent
+        while current != archive_root.parent:
+            try:
+                current.rmdir()
+            except OSError:
+                break
+            current = current.parent
+            if current == archive_root.parent:
+                break
 
 
 def apply_release(root: Path) -> str:
@@ -309,9 +381,25 @@ def apply_release(root: Path) -> str:
             "Pending changesets exist, but all are marked 'none'; nothing to release yet"
         )
 
-    version_path(root).write_text(computed_next_version + "\n", encoding="utf-8")
-    prepend_changelog_entry(root, build_changelog_entry(computed_next_version, changesets))
-    archive_changesets(root, computed_next_version, changesets)
+    version_file = version_path(root)
+    changelog_file = changelog_path(root)
+    original_version = version_file.read_text(encoding="utf-8")
+    original_changelog = changelog_file.read_text(encoding="utf-8")
+    updated_changelog = render_changelog_with_entry(
+        original_changelog, build_changelog_entry(computed_next_version, changesets)
+    )
+
+    moved_changesets: list[tuple[Path, Path]] = []
+    try:
+        moved_changesets = archive_changesets(root, computed_next_version, changesets)
+        changelog_file.write_text(updated_changelog, encoding="utf-8")
+        version_file.write_text(computed_next_version + "\n", encoding="utf-8")
+    except Exception:
+        if moved_changesets:
+            rollback_archived_changesets(root, moved_changesets)
+        changelog_file.write_text(original_changelog, encoding="utf-8")
+        version_file.write_text(original_version, encoding="utf-8")
+        raise
     return computed_next_version
 
 

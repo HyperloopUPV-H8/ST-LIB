@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   publish-release:
-    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'release/next'
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'release/next' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
 
     steps:

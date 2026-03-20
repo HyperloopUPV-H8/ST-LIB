@@ -66,13 +66,15 @@ jobs:
             const base = 'development';
             const title = `chore(release): prepare v${process.env.RELEASE_VERSION}`;
             const marker = '<!-- st-lib-release-pr -->';
-            const body = `${marker}
-
-            This PR was prepared automatically from the pending ST-LIB changesets.
-
-            - Version: \`v${process.env.RELEASE_VERSION}\`
-            - Source of truth: \`VERSION\`
-            - Release notes source: \`CHANGELOG.md\``;
+            const body = [
+              marker,
+              '',
+              'This PR was prepared automatically from the pending ST-LIB changesets.',
+              '',
+              `- Version: \`v${process.env.RELEASE_VERSION}\``,
+              '- Source of truth: `VERSION`',
+              '- Release notes source: `CHANGELOG.md`',
+            ].join('\n');
 
             const { data: pulls } = await github.rest.pulls.list({
               owner,
