@@ -95,7 +95,7 @@ public:
             enableCCx_1 = TIM_CCER_CC1E
                                  << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU
                                     ); /* 0x1FU = 31 bits max shift */
-            SET_BIT(timer->instance->tim->CCER, enableCCx);
+            SET_BIT(timer->instance->tim->CCER, enableCCx_1);
         }
 
         // HAL_TIM_IC_Start_IT(instance.peripheral->handle, instance.channel_falling)
