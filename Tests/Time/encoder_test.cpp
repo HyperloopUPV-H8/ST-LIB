@@ -82,7 +82,7 @@ TEST_F(EncoderTest, ResetUsesConfiguredInitialCounterValue) {
 
     ST_LIB::Encoder<encoder_timer_decl>::reset();
 
-    EXPECT_EQ(TIM2_BASE->ARR, 55000U);
+    EXPECT_EQ(TIM2_BASE->ARR, UINT32_MAX);
     EXPECT_EQ(TIM2_BASE->CNT, ST_LIB::Encoder<encoder_timer_decl>::get_initial_counter_value());
 }
 

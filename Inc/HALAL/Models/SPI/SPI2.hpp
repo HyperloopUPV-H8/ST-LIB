@@ -16,7 +16,7 @@
 #include "HALAL/Models/DMA/DMA2.hpp"
 #include "HALAL/Models/SPI/SPIConfig.hpp"
 
-using ST_LIB::DMA_Domain;
+using ST_LIB::DMADomain;
 using ST_LIB::GPIODomain;
 using ST_LIB::SPIConfigTypes;
 
@@ -195,7 +195,7 @@ struct SPIDomain {
      *              Request Object
      * =========================================
      */
-    template <DMA_Domain::Stream dma_rx_stream, DMA_Domain::Stream dma_tx_stream> struct Device {
+    template <DMADomain::Stream dma_rx_stream, DMADomain::Stream dma_tx_stream> struct Device {
         using domain = SPIDomain;
 
         SPIPeripheral peripheral;
@@ -208,7 +208,7 @@ struct SPIDomain {
         GPIODomain::GPIO mosi_gpio;
         std::optional<GPIODomain::GPIO> nss_gpio;
 
-        DMA_Domain::DMA<dma_rx_stream, dma_tx_stream> dma_rx_tx;
+        DMADomain::DMA<dma_rx_stream, dma_tx_stream> dma_rx_tx;
 
         consteval Device(
             SPIMode mode,
@@ -475,20 +475,20 @@ struct SPIDomain {
             }
         }
 
-        static consteval DMA_Domain::Peripheral dma_peripheral(SPIPeripheral peripheral) {
+        static consteval DMADomain::Peripheral dma_peripheral(SPIPeripheral peripheral) {
             switch (peripheral) {
             case SPIPeripheral::spi1:
-                return DMA_Domain::Peripheral::spi1;
+                return DMADomain::Peripheral::spi1;
             case SPIPeripheral::spi2:
-                return DMA_Domain::Peripheral::spi2;
+                return DMADomain::Peripheral::spi2;
             case SPIPeripheral::spi3:
-                return DMA_Domain::Peripheral::spi3;
+                return DMADomain::Peripheral::spi3;
             case SPIPeripheral::spi4:
-                return DMA_Domain::Peripheral::spi4;
+                return DMADomain::Peripheral::spi4;
             case SPIPeripheral::spi5:
-                return DMA_Domain::Peripheral::spi5;
+                return DMADomain::Peripheral::spi5;
             case SPIPeripheral::spi6:
-                return DMA_Domain::Peripheral::spi6;
+                return DMADomain::Peripheral::spi6;
             default:
                 compile_error("Invalid SPI peripheral specified in SPIDomain::Device");
             }
@@ -1331,7 +1331,7 @@ struct SPIDomain {
         static void init(
             std::span<const Config, N> cfgs,
             std::span<GPIODomain::Instance> gpio_instances,
-            std::span<DMA_Domain::Instance> dma_peripherals
+            std::span<DMADomain::Instance> dma_peripherals
         ) {
             for (std::size_t i = 0; i < N; ++i) {
                 const auto& e = cfgs[i];
@@ -1398,7 +1398,7 @@ struct SPIDomain {
                 auto& dma_rx = dma_peripherals[e.dma_rx_idx];
                 auto& dma_tx = dma_peripherals[e.dma_tx_idx];
 
-                // DMA handles are already configured and initialized by DMA_Domain
+                // DMA handles are already configured and initialized by DMADomain
                 hspi.hdmarx = &dma_rx.dma;
                 hspi.hdmatx = &dma_tx.dma;
 

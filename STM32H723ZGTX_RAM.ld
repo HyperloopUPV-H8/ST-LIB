@@ -142,7 +142,7 @@ SECTIONS
   } >RAM_D1
 
   /* MPU D1 Non-Cached Section */
-  .mpu_ram_d1_nc :
+  .mpu_ram_d1_nc (NOLOAD) :
   {
     . = ALIGN(32);
     __mpu_d1_nc_start = ABSOLUTE(.);
@@ -211,7 +211,7 @@ SECTIONS
   } >DTCMRAM
 
   /* MPU D2 Non-Cached Section */
-  .mpu_ram_d2_nc :
+  .mpu_ram_d2_nc (NOLOAD) :
   {
     . = ALIGN(32);
     __mpu_d2_nc_start = ABSOLUTE(.);
@@ -237,7 +237,7 @@ SECTIONS
   __mpu_d2_nc_end = ABSOLUTE(.);
 
   /* MPU D3 Non-Cached Section */
-  .mpu_ram_d3_nc :
+  .mpu_ram_d3_nc (NOLOAD) :
   {
     . = ALIGN(32);
     __mpu_d3_nc_start = ABSOLUTE(.);
@@ -273,7 +273,7 @@ SECTIONS
   } >ITCMRAM
 
   /* MPU D1 Cached Section */
-  .ram_d1 :
+  .ram_d1 (NOLOAD) :
   {
     . = ALIGN(32);
 
@@ -285,7 +285,7 @@ SECTIONS
   } >RAM_D1
 
   /* MPU D2 Cached Section */
-  .ram_d2 :
+  .ram_d2 (NOLOAD) :
   {
     . = ALIGN(32);
 
@@ -297,7 +297,7 @@ SECTIONS
   } >RAM_D2
 
   /* MPU D3 Cached Section */
-  .ram_d3 :
+  .ram_d3 (NOLOAD) :
   {
     . = ALIGN(32);
 

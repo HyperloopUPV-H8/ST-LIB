@@ -20,6 +20,8 @@
 #endif
 
 extern TIM_TypeDef* Scheduler_global_timer;
+void Scheduler_global_timer_callback(void* raw);
+void Scheduler_start(void);
 
 struct Scheduler {
     using callback_t = void (*)();
@@ -28,7 +30,8 @@ struct Scheduler {
     // if it isn't it could theoretically be used as an id in set_timeout
     static constexpr uint32_t INVALID_ID = 2 * kMaxTasks;
 
-    static void start();
+    // temporary, will be removed
+    [[deprecated]] static inline void start() {}
     static void update();
     static inline uint64_t get_global_tick() {
         return global_tick_us_ + Scheduler_global_timer->CNT;
@@ -42,6 +45,8 @@ struct Scheduler {
 
     // internal
     static void on_timer_update();
+    static void schedule_next_interval();
+    static constexpr uint32_t FREQUENCY = 1'000'000u; // 1 MHz -> 1us precision
 #ifndef SIM_ON
 private:
 #endif
@@ -60,7 +65,6 @@ private:
     static_assert(INVALID_ID >= kMaxTasks, "INVALID_ID must not be a possible task id");
 
     static_assert((kMaxTasks & (kMaxTasks - 1)) == 0, "kMaxTasks must be a power of two");
-    static constexpr uint32_t FREQUENCY = 1'000'000u; // 1 MHz -> 1us precision
 
     static std::array<Task, kMaxTasks> tasks_;
     static_assert(
@@ -86,8 +90,6 @@ private:
     static inline void release_slot(uint8_t id);
     static void insert_sorted(uint8_t id);
     static void remove_sorted(uint8_t id);
-    static void schedule_next_interval();
-    static inline void configure_timer_for_interval(uint32_t microseconds);
 
     // helpers
     static inline uint8_t get_at(uint8_t idx);

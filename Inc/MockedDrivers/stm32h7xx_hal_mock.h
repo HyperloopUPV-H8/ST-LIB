@@ -244,6 +244,8 @@ typedef enum {
 
 typedef enum { HAL_UNLOCKED = 0x00U, HAL_LOCKED = 0x01U } HAL_LockTypeDef;
 
+typedef struct __DMA_HandleTypeDef DMA_HandleTypeDef;
+
 typedef struct {
     uint32_t ClockPrescaler;
     uint32_t Resolution;
@@ -267,6 +269,7 @@ typedef struct {
 typedef struct __ADC_HandleTypeDef {
     ADC_TypeDef* Instance;
     ADC_InitTypeDef Init;
+    DMA_HandleTypeDef* DMA_Handle;
     HAL_LockTypeDef Lock;
     volatile uint32_t State;
     volatile uint32_t ErrorCode;
@@ -336,14 +339,32 @@ typedef struct {
 #define ADC_CHANNEL_VBAT 32U
 
 #define ADC_SCAN_DISABLE 0U
+#define ADC_SCAN_ENABLE 1U
 #define ADC_EOC_SINGLE_CONV 0U
+#define ADC_EOC_SEQ_CONV 1U
 #define ADC_SOFTWARE_START 0U
 #define ADC_EXTERNALTRIGCONVEDGE_NONE 0U
 #define ADC_CONVERSIONDATA_DR 0U
+#define ADC_CONVERSIONDATA_DMA_CIRCULAR 1U
 #define ADC_SAMPLING_MODE_NORMAL 0U
 #define ADC_OVR_DATA_PRESERVED 0U
 #define ADC_LEFTBITSHIFT_NONE 0U
-#define ADC_REGULAR_RANK_1 1U
+#define ADC_REGULAR_RANK_1 0x100U
+#define ADC_REGULAR_RANK_2 0x101U
+#define ADC_REGULAR_RANK_3 0x102U
+#define ADC_REGULAR_RANK_4 0x103U
+#define ADC_REGULAR_RANK_5 0x104U
+#define ADC_REGULAR_RANK_6 0x105U
+#define ADC_REGULAR_RANK_7 0x106U
+#define ADC_REGULAR_RANK_8 0x107U
+#define ADC_REGULAR_RANK_9 0x108U
+#define ADC_REGULAR_RANK_10 0x109U
+#define ADC_REGULAR_RANK_11 0x10AU
+#define ADC_REGULAR_RANK_12 0x10BU
+#define ADC_REGULAR_RANK_13 0x10CU
+#define ADC_REGULAR_RANK_14 0x10DU
+#define ADC_REGULAR_RANK_15 0x10EU
+#define ADC_REGULAR_RANK_16 0x10FU
 #define ADC_SINGLE_ENDED 0U
 #define ADC_OFFSET_NONE 0U
 
@@ -369,11 +390,11 @@ typedef struct {
     uint32_t PeriphBurst;
 } DMA_InitTypeDef;
 
-typedef struct __DMA_HandleTypeDef {
+struct __DMA_HandleTypeDef {
     DMA_Stream_TypeDef* Instance;
     DMA_InitTypeDef Init;
     void* Parent;
-} DMA_HandleTypeDef;
+};
 
 #define DMA_REQUEST_MEM2MEM 0x000U
 #define DMA_REQUEST_ADC1 0x001U
@@ -836,9 +857,11 @@ HAL_StatusTypeDef HAL_ADC_Init(ADC_HandleTypeDef* hadc);
 HAL_StatusTypeDef HAL_ADC_DeInit(ADC_HandleTypeDef* hadc);
 HAL_StatusTypeDef HAL_ADC_ConfigChannel(ADC_HandleTypeDef* hadc, ADC_ChannelConfTypeDef* sConfig);
 HAL_StatusTypeDef HAL_ADC_Start(ADC_HandleTypeDef* hadc);
+HAL_StatusTypeDef HAL_ADC_Start_DMA(ADC_HandleTypeDef* hadc, uint32_t* pData, uint32_t Length);
 HAL_StatusTypeDef HAL_ADC_PollForConversion(ADC_HandleTypeDef* hadc, uint32_t Timeout);
 uint32_t HAL_ADC_GetValue(const ADC_HandleTypeDef* hadc);
 HAL_StatusTypeDef HAL_ADC_Stop(ADC_HandleTypeDef* hadc);
+HAL_StatusTypeDef HAL_ADC_Stop_DMA(ADC_HandleTypeDef* hadc);
 uint32_t HAL_ADC_GetState(const ADC_HandleTypeDef* hadc);
 uint32_t HAL_ADC_GetError(const ADC_HandleTypeDef* hadc);
 

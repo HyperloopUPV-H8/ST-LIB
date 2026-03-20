@@ -27,6 +27,8 @@ protected:
         TIM2_BASE->SR = 0;
         TIM2_BASE->CR1 = 0;
         TIM2_BASE->DIER = 0;
+
+        Scheduler_start();
     }
 };
 

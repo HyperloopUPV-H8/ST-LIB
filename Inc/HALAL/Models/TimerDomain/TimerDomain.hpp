@@ -27,6 +27,8 @@
 #error Scheduler timer must be a 32 bit timer
 #endif
 extern TIM_TypeDef* Scheduler_global_timer;
+void Scheduler_global_timer_callback(void* raw);
+void Scheduler_start(void);
 
 // NOTE: only works for static arrays
 #define ARRAY_LENGTH(a) (sizeof(a) / sizeof(*a))
@@ -707,8 +709,12 @@ struct TimerDomain {
 
         static void init(std::span<const Config, N> cfgs) {
             Scheduler_global_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
+                callbacks[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]] =
+                    Scheduler_global_timer_callback;
             rcc_enable_timer(Scheduler_global_timer);
+                Scheduler_start();
 
+            TimerDomain::callbacks[0] = TIM_Default_Callback;
             TimerDomain::callbacks[1] = TIM_Default_Callback;
             TimerDomain::callbacks[2] = TIM_Default_Callback;
             TimerDomain::callbacks[3] = TIM_Default_Callback;
