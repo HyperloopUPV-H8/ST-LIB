@@ -40,6 +40,15 @@ TEST_F(SchedulerTests, GetAt) {
     }
 }
 
+TEST_F(SchedulerTests, SetAt) {
+    uint64_t original = 0x1EDCBA9876543210ULL;
+    for (uint64_t i = 0; i < 16; i++) {
+        Scheduler::sorted_task_ids_ = original;
+        Scheduler::set_at(i, 0xF);
+        EXPECT_EQ(Scheduler::sorted_task_ids_, original | (0xFULL << (i*4)));
+    }
+}
+
 TEST_F(SchedulerTests, FreeBitmap) {
     Scheduler::register_task(10, &fake_workload);
     EXPECT_EQ(Scheduler::free_bitmap_, 0xFFFF'FFFE);

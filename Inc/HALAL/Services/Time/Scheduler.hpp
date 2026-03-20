@@ -101,9 +101,9 @@ private:
         return (uint8_t)((sorted_task_ids_ >> (idx * 4)) & 0xF);
     }
     static HYPER_INLINE void set_at(uint8_t idx, uint8_t id) {
-        uint32_t shift = idx * 4;
-        uint64_t clearmask = ~(0xFFULL << shift);
-        Scheduler::sorted_task_ids_ = (sorted_task_ids_ & clearmask) | (id << shift);
+        uint64_t shift = idx * 4;
+        uint64_t clearmask = ~(0x0FULL << shift);
+        Scheduler::sorted_task_ids_ = (sorted_task_ids_ & clearmask) | ((uint64_t)id << shift);
     }
     static HYPER_INLINE uint8_t front_id() { return *((uint8_t*)&sorted_task_ids_) & 0xF; }
     static HYPER_INLINE void pop_front() {
