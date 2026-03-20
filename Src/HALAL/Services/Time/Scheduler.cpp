@@ -282,7 +282,7 @@ void Scheduler::schedule_next_interval() {
     Task& next_task = tasks_[next_id];
     int32_t diff = (int32_t)(next_task.next_fire_us - static_cast<uint32_t>(global_tick_us_));
     SchedUnlock();
-    
+
     if (diff >= -1 && diff <= 1) [[unlikely]] {
         current_interval_us_ = 1;
         SET_BIT(Scheduler_global_timer->EGR, TIM_EGR_UG); // This should cause an interrupt
@@ -325,9 +325,7 @@ void Scheduler::on_timer_update() {
         SchedUnlock();
     }
 
-    //SchedLock();
     schedule_next_interval();
-    //SchedUnlock();
 }
 
 uint16_t Scheduler::register_task(uint32_t period_us, callback_t func) {
