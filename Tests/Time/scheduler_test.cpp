@@ -49,6 +49,15 @@ TEST_F(SchedulerTests, SetAt) {
     }
 }
 
+TEST_F(SchedulerTests, FrontId_PopFront) {
+    Scheduler::sorted_task_ids_ = 0xFEDCBA9876543210ULL;
+    for (uint8_t i = 0; i < 16; i++) {
+        uint8_t id = Scheduler::front_id();
+        Scheduler::pop_front();
+        EXPECT_EQ(id, i);
+    }
+}
+
 TEST_F(SchedulerTests, FreeBitmap) {
     Scheduler::register_task(10, &fake_workload);
     EXPECT_EQ(Scheduler::free_bitmap_, 0xFFFF'FFFE);
