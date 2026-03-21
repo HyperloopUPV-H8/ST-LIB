@@ -95,8 +95,8 @@ public:
 
             timer->template enable_capture_compare_interrupt<pin_rising.channel>();
             enableCCx_1 = TIM_CCER_CC1E
-                            << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU
-                               ); /* 0x1FU = 31 bits max shift */
+                          << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU
+                             ); /* 0x1FU = 31 bits max shift */
             SET_BIT(timer->instance->tim->CCER, enableCCx_1);
         }
 
