@@ -73,7 +73,8 @@ if(NOT STM32_CLT_ROOT)
     endif()
 
     get_filename_component(_stm32_arm_gcc_realpath "${_stm32_arm_gcc}" REALPATH)
-    string(REGEX MATCH "STM32CubeCLT[_-]([0-9]+\\.[0-9]+\\.[0-9]+)" _stm32_path_match "${_stm32_arm_gcc_realpath}")
+    string(TOLOWER "${_stm32_arm_gcc_realpath}" _stm32_arm_gcc_lower)
+    string(REGEX MATCH "stm32cubeclt[_-]([0-9]+\\.[0-9]+\\.[0-9]+)" _stm32_path_match "${_stm32_arm_gcc_lower}")
 
     if(NOT CMAKE_MATCH_1)
         message(FATAL_ERROR
