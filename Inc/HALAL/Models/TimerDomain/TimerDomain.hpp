@@ -709,10 +709,7 @@ struct TimerDomain {
 
         static void init(std::span<const Config, N> cfgs) {
             Scheduler_global_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
-                callbacks[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]] =
-                    Scheduler_global_timer_callback;
             rcc_enable_timer(Scheduler_global_timer);
-                Scheduler_start();
 
             TimerDomain::callbacks[0] = TIM_Default_Callback;
             TimerDomain::callbacks[1] = TIM_Default_Callback;
@@ -730,6 +727,10 @@ struct TimerDomain {
             TimerDomain::callbacks[13] = TIM_Default_Callback;
             TimerDomain::callbacks[14] = TIM_Default_Callback;
             TimerDomain::callbacks[15] = TIM_Default_Callback;
+
+            callbacks[ST_LIB::timer_idxmap[SCHEDULER_TIMER_DOMAIN]] =
+                Scheduler_global_timer_callback;
+            Scheduler_start();
 
             for (std::size_t i = 0; i < N; i++) {
                 const Config& e = cfgs[i];

@@ -144,7 +144,8 @@ public:
         );
 
         HAL_TIM_ChannelStateTypeDef* state =
-            &timer->instance->hal_tim->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
+            &timer->instance->hal_tim
+                 ->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
         *state = HAL_TIM_CHANNEL_STATE_READY;
 
         if (timer->are_all_channels_free()) {
@@ -170,7 +171,7 @@ public:
 
         HAL_TIM_ChannelStateTypeDef* state =
             &timer->instance->hal_tim
-                 .ChannelState[TimerDomain::get_channel_state_idx(negated_pin.channel)];
+                 ->ChannelState[TimerDomain::get_channel_state_idx(negated_pin.channel)];
         *state = HAL_TIM_CHANNEL_STATE_READY;
 
         if (timer->are_all_channels_free()) {

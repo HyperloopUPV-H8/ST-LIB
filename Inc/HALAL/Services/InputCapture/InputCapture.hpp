@@ -78,9 +78,11 @@ public:
         volatile HAL_TIM_ChannelStateTypeDef* chx_1_n_state;
         uint32_t enableCCx_1;
         {
-            chx_1_state = &timer->instance->hal_tim
+            chx_1_state =
+                &timer->instance->hal_tim
                      ->ChannelState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
-            chx_1_n_state = &timer->instance->hal_tim
+            chx_1_n_state =
+                &timer->instance->hal_tim
                      ->ChannelNState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
             if ((*chx_1_state != HAL_TIM_CHANNEL_STATE_READY) ||
                 (*chx_1_n_state != HAL_TIM_CHANNEL_STATE_READY)) {
@@ -93,8 +95,8 @@ public:
 
             timer->template enable_capture_compare_interrupt<pin_rising.channel>();
             enableCCx_1 = TIM_CCER_CC1E
-                                 << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU
-                                    ); /* 0x1FU = 31 bits max shift */
+                            << (TimerDomain::get_channel_mul4(pin_rising.channel) & 0x1FU
+                               ); /* 0x1FU = 31 bits max shift */
             SET_BIT(timer->instance->tim->CCER, enableCCx_1);
         }
 
