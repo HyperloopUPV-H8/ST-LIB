@@ -1,12 +1,22 @@
 #ifndef __HARD_FAULT_TRACE
-
 #define __HARD_FAULT_TRACE
 #include <string.h>
+#include <stdint.h>
 #include "stm32h7xx_ll_gpio_wrapper.h"
 #include "stm32h7xx_ll_bus_wrapper.h"
 #include "stm32h7xx_ll_tim_wrapper.h"
-#define METADATA_FLASH_ADDR (0x080DFD00) // Metadata pool flash address
-#define HF_FLASH_ADDR (0x080C0000U)      // Hard_fault_flash address
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern uint32_t _metadata;
+extern uint32_t _hf_log;
+#ifdef __cplusplus
+}
+#endif
+
+#define METADATA_FLASH_ADDR ((uint32_t)&_metadata) // Metadata pool flash address
+#define HF_FLASH_ADDR ((uint32_t)&_hf_log)      // Hard_fault_flash address
 #define HF_FLAG_VALUE (0xFF00FF00U) // Flag to know if already is written information in the flash
 #define METADATA_FLASH_SIZE (0X100U)
 #define HARD_FAULT_FLASH_SIZE (0X200U)

@@ -236,6 +236,7 @@ template <auto&... devs> struct Board {
 
 #ifdef HAL_IWDG_MODULE_ENABLED
         Watchdog::check_reset_flag();
+        Hard_fault_check();
 #endif
         HAL_Init();
         HALconfig::system_clock();
