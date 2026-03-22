@@ -15,8 +15,8 @@ extern uint32_t _hf_log;
 }
 #endif
 
-#define METADATA_FLASH_ADDR ((uint32_t)&_metadata) // Metadata pool flash address
-#define HF_FLASH_ADDR ((uint32_t)&_hf_log)      // Hard_fault_flash address
+#define METADATA_FLASH_ADDR ((uint32_t) & _metadata) // Metadata pool flash address
+#define HF_FLASH_ADDR ((uint32_t) & _hf_log)         // Hard_fault_flash address
 #define HF_FLAG_VALUE (0xFF00FF00U) // Flag to know if already is written information in the flash
 #define METADATA_FLASH_SIZE (0X100U)
 #define HARD_FAULT_FLASH_SIZE (0X200U)

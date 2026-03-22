@@ -47,7 +47,7 @@ MEMORY
   ITCMRAM (xrw)    : ORIGIN = 0x00000000,   LENGTH = 64K
   DTCMRAM (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
   FLASH    (rx)    : ORIGIN = 0x08000000,   LENGTH = 1024K-128K-128K
-  FLASH_ST (rx)    : ORIGIN = 0x080C0000,   LENGTH = 128K 
+  FLASH_ST (rx)    : ORIGIN = 0x080C0000,   LENGTH = 128K
   FLASH_BT (rx)    : ORIGIN = 0x080E0000,   LENGTH = 128K
   RAM_D1  (xrw)    : ORIGIN = 0x24000000,   LENGTH = 320K
   RAM_D2  (xrw)    : ORIGIN = 0x30000000,   LENGTH = 32K
@@ -201,9 +201,9 @@ SECTIONS
     KEEP(*(.hardfault_log));
     . += 0x200;
   } >FLASH_ST
-  
+
   . = ALIGN(4);
-  
+
   .metadata_pool :
   {
     . = ALIGN(4);
