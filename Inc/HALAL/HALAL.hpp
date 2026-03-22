@@ -12,7 +12,7 @@
 #include "HALAL/Services/Flash/Flash.hpp"
 #include "HALAL/Services/Flash/FlashTests/Flash_Test.hpp"
 
-#include "HALAL/Services/ADC/NewADC.hpp"
+#include "HALAL/Services/ADC/ADC.hpp"
 
 // To be implemented
 // #include "HALAL/Services/PWM/DualPhasedPWM/DualPhasedPWM.hpp"

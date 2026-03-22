@@ -62,19 +62,19 @@ constexpr auto compile_time_cfg =
 static_assert(compile_time_cfg[0].peripheral == ST_LIB::SPIDomain::SPIPeripheral::spi2);
 static_assert(compile_time_cfg[0].mode == ST_LIB::SPIDomain::SPIMode::MASTER);
 
-constexpr std::array<ST_LIB::DMA_Domain::Entry, 2> dma_entries{{
-    {.instance = ST_LIB::DMA_Domain::Peripheral::spi2,
-     .stream = ST_LIB::DMA_Domain::Stream::dma1_stream0,
+constexpr std::array<ST_LIB::DMADomain::Entry, 2> dma_entries{{
+    {.instance = ST_LIB::DMADomain::Peripheral::spi2,
+     .stream = ST_LIB::DMADomain::Stream::dma1_stream0,
      .irqn = DMA1_Stream0_IRQn,
      .id = 0},
-    {.instance = ST_LIB::DMA_Domain::Peripheral::spi2,
-     .stream = ST_LIB::DMA_Domain::Stream::dma1_stream1,
+    {.instance = ST_LIB::DMADomain::Peripheral::spi2,
+     .stream = ST_LIB::DMADomain::Stream::dma1_stream1,
      .irqn = DMA1_Stream1_IRQn,
      .id = 1},
 }};
 
 constexpr auto dma_cfg =
-    ST_LIB::DMA_Domain::build<2>(std::span<const ST_LIB::DMA_Domain::Entry, 2>{dma_entries});
+    ST_LIB::DMADomain::build<2>(std::span<const ST_LIB::DMADomain::Entry, 2>{dma_entries});
 
 void clear_nvic_enables() {
     for (auto& reg : NVIC->ISER) {
@@ -102,7 +102,7 @@ protected:
         for (auto& inst : ST_LIB::SPIDomain::spi_instances) {
             inst = nullptr;
         }
-        ST_LIB::DMA_Domain::Init<2>::init(dma_cfg);
+        ST_LIB::DMADomain::Init<2>::init(dma_cfg);
     }
 
     template <ST_LIB::SPIDomain::SPIMode Mode, ST_LIB::SPIConfigTypes::DataSize DataSize>
@@ -128,7 +128,7 @@ protected:
         ST_LIB::SPIDomain::Init<1>::init(
             cfgs,
             std::span<ST_LIB::GPIODomain::Instance>{},
-            std::span<ST_LIB::DMA_Domain::Instance>(ST_LIB::DMA_Domain::Init<2>::instances)
+            std::span<ST_LIB::DMADomain::Instance>(ST_LIB::DMADomain::Init<2>::instances)
         );
         return ST_LIB::SPIDomain::Init<1>::instances[0];
     }
@@ -148,25 +148,25 @@ TEST_F(SPI2Test, InitMasterConfiguresPeripheralDMAAndNVIC) {
     EXPECT_EQ(hspi->Init.DataSize, 7U);
     EXPECT_EQ(hspi->Init.BaudRatePrescaler, SPI_BAUDRATEPRESCALER_4);
 
-    EXPECT_EQ(hspi->hdmarx, &ST_LIB::DMA_Domain::Init<2>::instances[0].dma);
-    EXPECT_EQ(hspi->hdmatx, &ST_LIB::DMA_Domain::Init<2>::instances[1].dma);
+    EXPECT_EQ(hspi->hdmarx, &ST_LIB::DMADomain::Init<2>::instances[0].dma);
+    EXPECT_EQ(hspi->hdmatx, &ST_LIB::DMADomain::Init<2>::instances[1].dma);
     EXPECT_EQ(hspi->hdmarx->Parent, hspi);
     EXPECT_EQ(hspi->hdmatx->Parent, hspi);
 
     EXPECT_EQ(
-        ST_LIB::DMA_Domain::Init<2>::instances[0].dma.Init.PeriphDataAlignment,
+        ST_LIB::DMADomain::Init<2>::instances[0].dma.Init.PeriphDataAlignment,
         DMA_PDATAALIGN_BYTE
     );
     EXPECT_EQ(
-        ST_LIB::DMA_Domain::Init<2>::instances[0].dma.Init.MemDataAlignment,
+        ST_LIB::DMADomain::Init<2>::instances[0].dma.Init.MemDataAlignment,
         DMA_MDATAALIGN_BYTE
     );
     EXPECT_EQ(
-        ST_LIB::DMA_Domain::Init<2>::instances[1].dma.Init.PeriphDataAlignment,
+        ST_LIB::DMADomain::Init<2>::instances[1].dma.Init.PeriphDataAlignment,
         DMA_PDATAALIGN_BYTE
     );
     EXPECT_EQ(
-        ST_LIB::DMA_Domain::Init<2>::instances[1].dma.Init.MemDataAlignment,
+        ST_LIB::DMADomain::Init<2>::instances[1].dma.Init.MemDataAlignment,
         DMA_MDATAALIGN_BYTE
     );
 
@@ -186,19 +186,19 @@ TEST_F(SPI2Test, InitWith32BitDataUsesWordAlignmentAndPrescaler) {
     EXPECT_EQ(hspi->Init.BaudRatePrescaler, SPI_BAUDRATEPRESCALER_8);
 
     EXPECT_EQ(
-        ST_LIB::DMA_Domain::Init<2>::instances[0].dma.Init.PeriphDataAlignment,
+        ST_LIB::DMADomain::Init<2>::instances[0].dma.Init.PeriphDataAlignment,
         DMA_PDATAALIGN_WORD
     );
     EXPECT_EQ(
-        ST_LIB::DMA_Domain::Init<2>::instances[0].dma.Init.MemDataAlignment,
+        ST_LIB::DMADomain::Init<2>::instances[0].dma.Init.MemDataAlignment,
         DMA_MDATAALIGN_WORD
     );
     EXPECT_EQ(
-        ST_LIB::DMA_Domain::Init<2>::instances[1].dma.Init.PeriphDataAlignment,
+        ST_LIB::DMADomain::Init<2>::instances[1].dma.Init.PeriphDataAlignment,
         DMA_PDATAALIGN_WORD
     );
     EXPECT_EQ(
-        ST_LIB::DMA_Domain::Init<2>::instances[1].dma.Init.MemDataAlignment,
+        ST_LIB::DMADomain::Init<2>::instances[1].dma.Init.MemDataAlignment,
         DMA_MDATAALIGN_WORD
     );
 }
