@@ -893,7 +893,7 @@ struct ADCDomain {
             hadc->Init.SamplingMode = ADC_SAMPLING_MODE_NORMAL;
             hadc->Init.DMAContinuousRequests = ENABLE;
 #endif
-            hadc->Init.Overrun = ADC_OVR_DATA_PRESERVED;
+            hadc->Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
             hadc->Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
             hadc->Init.OversamplingMode = DISABLE;
         }
@@ -964,6 +964,17 @@ struct ADCDomain {
 
                 if (HAL_ADC_Init(hadc) != HAL_OK) {
                     ErrorHandler("ADC Init failed");
+                    continue;
+                }
+
+#if defined(ADC_VER_V5_V90)
+                constexpr uint32_t calibration_mode = ADC_CALIB_OFFSET_LINEARITY;
+#else
+                constexpr uint32_t calibration_mode = ADC_CALIB_OFFSET;
+#endif
+                if (HAL_ADCEx_Calibration_Start(hadc, calibration_mode, ADC_SINGLE_ENDED) !=
+                    HAL_OK) {
+                    ErrorHandler("ADC calibration failed");
                     continue;
                 }
 
