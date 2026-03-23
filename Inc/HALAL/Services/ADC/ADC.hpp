@@ -236,14 +236,14 @@ struct ADCDomain {
     };
 
     struct PeripheralDiagnostic {
-        Peripheral peripheral = Peripheral::AUTO;
-        InitStage stage = InitStage::NOT_ATTEMPTED;
-        uint32_t dma_request = 0;
-        uint32_t adc_error_code = 0;
-        uint32_t dma_error_code = 0;
-        HAL_StatusTypeDef hal_status = HAL_OK;
-        uint8_t channel_count = 0;
-        uint8_t configured_channels = 0;
+        Peripheral peripheral;
+        InitStage stage;
+        uint32_t dma_request;
+        uint32_t adc_error_code;
+        uint32_t dma_error_code;
+        HAL_StatusTypeDef hal_status;
+        uint8_t channel_count;
+        uint8_t configured_channels;
     };
 
     static inline std::array<PeripheralDiagnostic, 3> diagnostics{};
@@ -951,8 +951,16 @@ struct ADCDomain {
                 instance = {};
             }
             for (uint8_t pidx = 0; pidx < diagnostics.size(); ++pidx) {
-                diagnostics[pidx] = {};
-                diagnostics[pidx].peripheral = peripheral_from_index(pidx);
+                diagnostics[pidx] = PeripheralDiagnostic{
+                    .peripheral = peripheral_from_index(pidx),
+                    .stage = InitStage::NOT_ATTEMPTED,
+                    .dma_request = 0U,
+                    .adc_error_code = 0U,
+                    .dma_error_code = 0U,
+                    .hal_status = HAL_OK,
+                    .channel_count = 0U,
+                    .configured_channels = 0U,
+                };
             }
 
             for (std::size_t i = 0; i < N; ++i) {
