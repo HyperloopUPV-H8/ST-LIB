@@ -224,6 +224,30 @@ struct ADCDomain {
         float* output;
     };
 
+    enum class InitStage : uint8_t {
+        NOT_ATTEMPTED,
+        DMA_LOOKUP_FAILED,
+        BUFFER_UNAVAILABLE,
+        HAL_INIT_FAILED,
+        CALIBRATION_FAILED,
+        CHANNEL_CONFIG_FAILED,
+        DMA_START_FAILED,
+        READY,
+    };
+
+    struct PeripheralDiagnostic {
+        Peripheral peripheral = Peripheral::AUTO;
+        InitStage stage = InitStage::NOT_ATTEMPTED;
+        uint32_t dma_request = 0;
+        uint32_t adc_error_code = 0;
+        uint32_t dma_error_code = 0;
+        HAL_StatusTypeDef hal_status = HAL_OK;
+        uint8_t channel_count = 0;
+        uint8_t configured_channels = 0;
+    };
+
+    static inline std::array<PeripheralDiagnostic, 3> diagnostics{};
+
     static constexpr uint8_t peripheral_index(Peripheral p) {
         switch (p) {
         case Peripheral::AUTO:
@@ -249,6 +273,20 @@ struct ADCDomain {
         default:
             return Peripheral::ADC_1;
         }
+    }
+
+    static constexpr const char* peripheral_name(Peripheral p) {
+        switch (p) {
+        case Peripheral::ADC_1:
+            return "ADC1";
+        case Peripheral::ADC_2:
+            return "ADC2";
+        case Peripheral::ADC_3:
+            return "ADC3";
+        case Peripheral::AUTO:
+            return "AUTO";
+        }
+        return "ADC?";
     }
 
     static consteval DMADomain::Peripheral dma_peripheral(Peripheral p) {
@@ -912,6 +950,10 @@ struct ADCDomain {
             for (auto& instance : instances) {
                 instance = {};
             }
+            for (uint8_t pidx = 0; pidx < diagnostics.size(); ++pidx) {
+                diagnostics[pidx] = {};
+                diagnostics[pidx].peripheral = peripheral_from_index(pidx);
+            }
 
             for (std::size_t i = 0; i < N; ++i) {
                 const auto& cfg = runtime_cfgs[i];
@@ -930,6 +972,9 @@ struct ADCDomain {
                 }
 
                 const Peripheral peripheral = peripheral_from_index(pidx);
+                auto& diagnostic = diagnostics[pidx];
+                diagnostic.peripheral = peripheral;
+                diagnostic.channel_count = channel_count;
                 const Config* first_cfg = nullptr;
                 for (const auto& cfg : runtime_cfgs) {
                     if (cfg.peripheral == peripheral) {
@@ -941,6 +986,7 @@ struct ADCDomain {
                 if (first_cfg == nullptr) {
                     continue;
                 }
+                diagnostic.dma_request = first_cfg->dma_request;
 
                 ADC_HandleTypeDef* hadc = handle_for(peripheral);
                 if (hadc->Instance != nullptr && hadc->DMA_Handle != nullptr) {
@@ -950,11 +996,17 @@ struct ADCDomain {
                 DMADomain::Instance* dma_instance =
                     find_dma_instance(first_cfg->dma_request, dma_peripherals);
                 if (dma_instance == nullptr) {
-                    ErrorHandler("ADC DMA instance unavailable");
+                    diagnostic.stage = InitStage::DMA_LOOKUP_FAILED;
+                    ErrorHandler(
+                        "ADC %s DMA instance unavailable (req=%lu)",
+                        peripheral_name(peripheral),
+                        static_cast<unsigned long>(first_cfg->dma_request)
+                    );
                     continue;
                 }
                 uint16_t* buffer = get_dma_buffer(peripheral);
                 if (buffer == nullptr) {
+                    diagnostic.stage = InitStage::BUFFER_UNAVAILABLE;
                     continue;
                 }
 
@@ -962,8 +1014,22 @@ struct ADCDomain {
                 dma_instance->dma.Parent = hadc;
                 configure_peripheral(*first_cfg, channel_count);
 
-                if (HAL_ADC_Init(hadc) != HAL_OK) {
-                    ErrorHandler("ADC Init failed");
+                const HAL_StatusTypeDef init_status = HAL_ADC_Init(hadc);
+                diagnostic.hal_status = init_status;
+                diagnostic.adc_error_code = hadc->ErrorCode;
+                diagnostic.dma_error_code =
+                    (hadc->DMA_Handle != nullptr) ? hadc->DMA_Handle->ErrorCode : 0U;
+                if (init_status != HAL_OK) {
+                    diagnostic.stage = InitStage::HAL_INIT_FAILED;
+                    ErrorHandler(
+                        "ADC %s init failed (status=%ld err=0x%08lx dma_err=0x%08lx presc=%lu nch=%u)",
+                        peripheral_name(peripheral),
+                        static_cast<long>(init_status),
+                        static_cast<unsigned long>(diagnostic.adc_error_code),
+                        static_cast<unsigned long>(diagnostic.dma_error_code),
+                        static_cast<unsigned long>(first_cfg->prescaler),
+                        static_cast<unsigned>(channel_count)
+                    );
                     continue;
                 }
 
@@ -972,9 +1038,18 @@ struct ADCDomain {
 #else
                 constexpr uint32_t calibration_mode = ADC_CALIB_OFFSET;
 #endif
-                if (HAL_ADCEx_Calibration_Start(hadc, calibration_mode, ADC_SINGLE_ENDED) !=
-                    HAL_OK) {
-                    ErrorHandler("ADC calibration failed");
+                const HAL_StatusTypeDef calibration_status =
+                    HAL_ADCEx_Calibration_Start(hadc, calibration_mode, ADC_SINGLE_ENDED);
+                diagnostic.hal_status = calibration_status;
+                diagnostic.adc_error_code = hadc->ErrorCode;
+                if (calibration_status != HAL_OK) {
+                    diagnostic.stage = InitStage::CALIBRATION_FAILED;
+                    ErrorHandler(
+                        "ADC %s calibration failed (status=%ld err=0x%08lx)",
+                        peripheral_name(peripheral),
+                        static_cast<long>(calibration_status),
+                        static_cast<unsigned long>(diagnostic.adc_error_code)
+                    );
                     continue;
                 }
 
@@ -996,8 +1071,20 @@ struct ADCDomain {
                     sConfig.OffsetSignedSaturation = DISABLE;
 #endif
 
-                    if (HAL_ADC_ConfigChannel(hadc, &sConfig) != HAL_OK) {
-                        ErrorHandler("ADC channel configuration failed");
+                    const HAL_StatusTypeDef channel_status = HAL_ADC_ConfigChannel(hadc, &sConfig);
+                    diagnostic.hal_status = channel_status;
+                    diagnostic.adc_error_code = hadc->ErrorCode;
+                    if (channel_status != HAL_OK) {
+                        diagnostic.stage = InitStage::CHANNEL_CONFIG_FAILED;
+                        diagnostic.configured_channels = rank;
+                        ErrorHandler(
+                            "ADC %s channel config failed (status=%ld err=0x%08lx ch=0x%08lx rank=%u)",
+                            peripheral_name(peripheral),
+                            static_cast<long>(channel_status),
+                            static_cast<unsigned long>(diagnostic.adc_error_code),
+                            static_cast<unsigned long>(cfg.channel),
+                            static_cast<unsigned>(rank + 1U)
+                        );
                         config_error = true;
                         break;
                     }
@@ -1008,12 +1095,28 @@ struct ADCDomain {
                     continue;
                 }
 
-                if (HAL_ADC_Start_DMA(hadc, reinterpret_cast<uint32_t*>(buffer), channel_count) !=
-                    HAL_OK) {
-                    ErrorHandler("ADC DMA start failed");
+                const HAL_StatusTypeDef dma_start_status =
+                    HAL_ADC_Start_DMA(hadc, reinterpret_cast<uint32_t*>(buffer), channel_count);
+                diagnostic.hal_status = dma_start_status;
+                diagnostic.adc_error_code = hadc->ErrorCode;
+                diagnostic.dma_error_code =
+                    (hadc->DMA_Handle != nullptr) ? hadc->DMA_Handle->ErrorCode : 0U;
+                if (dma_start_status != HAL_OK) {
+                    diagnostic.stage = InitStage::DMA_START_FAILED;
+                    diagnostic.configured_channels = rank;
+                    ErrorHandler(
+                        "ADC %s DMA start failed (status=%ld err=0x%08lx dma_err=0x%08lx nch=%u)",
+                        peripheral_name(peripheral),
+                        static_cast<long>(dma_start_status),
+                        static_cast<unsigned long>(diagnostic.adc_error_code),
+                        static_cast<unsigned long>(diagnostic.dma_error_code),
+                        static_cast<unsigned>(channel_count)
+                    );
                     continue;
                 }
 
+                diagnostic.stage = InitStage::READY;
+                diagnostic.configured_channels = rank;
                 periph_ready[pidx] = true;
             }
 
