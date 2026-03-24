@@ -9,16 +9,21 @@
 This NTC class is not generic. It is only for 10k Ohm, 1976Beta value NTCs.
 */
 #pragma once
-#include <cstdint>
 
-#include "HALAL/Services/ADC/NewADC.hpp"
+#include "Sensors/Common/ADCSensor.hpp"
 
-class NTC {
+class NTC : protected ST_LIB::Sensors::ADCValueSensor<float> {
 public:
     NTC() = default;
-    NTC(ST_LIB::ADCDomain::Instance& adc, float* src);
-    NTC(ST_LIB::ADCDomain::Instance& adc, float& src);
-    void read();
+    NTC(ST_LIB::ADCDomain::Instance& adc, float* src) : Base(adc, src) {}
+    NTC(ST_LIB::ADCDomain::Instance& adc, float& src) : Base(adc, &src) {}
+    void read() {
+        if (!this->is_configured()) {
+            return;
+        }
+
+        *this->value = static_cast<float>(NTC_table[this->scaled_index(table_max_index)]) * 0.1f;
+    }
 
 private:
     static constexpr int NTC_table[4096] = {
@@ -297,6 +302,7 @@ private:
         -625, -632, -640, -648, -657, -666, -677, -688, -700, -714, -729, -748, -770, -797, -835,
         -873
     };
-    float* value = nullptr;
-    ST_LIB::ADCDomain::Instance* adc = nullptr;
+    using Base = ST_LIB::Sensors::ADCValueSensor<float>;
+
+    static constexpr std::size_t table_max_index = 4095U;
 };

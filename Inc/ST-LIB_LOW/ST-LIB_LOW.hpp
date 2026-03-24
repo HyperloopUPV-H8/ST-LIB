@@ -15,7 +15,6 @@
 // #include "Sensors/Sensor/Sensor.hpp" // To be implemented when InputCapture is done
 #include "Sensors/DigitalSensor/DigitalSensor.hpp"
 #include "Sensors/SensorInterrupt/SensorInterrupt.hpp"
-#include "Sensors/LinearSensor/LinearSensor.hpp"
 #include "Sensors/LookupSensor/LookupSensor.hpp"
 #include "Sensors/EncoderSensor/NewEncoderSensor.hpp"
 // #include "Sensors/PWMSensor/PWMSensor.hpp" // To be implemented when InputCapture is done
