@@ -223,7 +223,11 @@ struct DMADomain {
     static consteval bool is_fmac(Peripheral instance) { return instance == Peripheral::fmac; }
 
     static consteval bool is_none(Peripheral instance) { return instance == Peripheral::none; }
-
+    
+    static consteval bool is_dfsdm(Peripheral instance) { 
+        return is_one_of(instance,Peripheral::dfsdm_filter0,Peripheral::dfsdm_filter1,Peripheral::dfsdm_filter2,Peripheral::dfsdm_filter3); 
+    }
+    
     static consteval uint32_t get_Request(Peripheral instance, uint8_t i) {
         if (instance == Peripheral::none)
             return DMA_REQUEST_MEM2MEM;

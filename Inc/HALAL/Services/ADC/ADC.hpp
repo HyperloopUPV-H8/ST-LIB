@@ -262,7 +262,7 @@ struct ADCDomain {
         std::size_t adc3_size = 0;
     };
 
-    static consteval BufferSizes calculate_buffer_sizes(span<const Config> cfgs) {
+    static consteval BufferSizes _buffer_sizes(span<const Config> cfgs) {
         BufferSizes sizes;
         for (const auto& cfg : cfgs) {
             switch (cfg.peripheral) {
@@ -741,7 +741,7 @@ struct ADCDomain {
     template <std::size_t N, std::array<Config, N> cfgs> struct Init {
         static inline std::array<Instance, N> instances{};
 
-        static constexpr auto buffer_sizes = calculate_buffer_sizes(cfgs);
+        static constexpr auto buffer_sizes = _buffer_sizes(cfgs);
         static constexpr std::size_t total_dma_slots =
             buffer_sizes.adc1_size + buffer_sizes.adc2_size + buffer_sizes.adc3_size;
         static_assert(

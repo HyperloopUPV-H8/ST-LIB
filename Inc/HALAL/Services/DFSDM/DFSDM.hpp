@@ -1,8 +1,12 @@
 #pragma once
 
+#include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Models/GPIO.hpp"
 #include "HALAL/Models/Pin.hpp"
 #include "HALAL/Models/DMA/DMA2.hpp"
+#include "HALAL/Models/MPU.hpp"
+
+#define STLIB_DFSDM_DMA_BUFFER_ATTR D1_NC 
 
 #define Oversampling_MAX 1024
 #define Oversampling_MAX_Filter_4 215
@@ -232,16 +236,13 @@ struct Config_Filter{
         Config_Filter config_filter;
         uint8_t channel;
         size_t gpio_idx;
-        size_t dma_idx;
         size_t buffer_size;
     };
     
     static constexpr size_t max_instances{8};
-    template <DMA_Domain::Stream stream>
     struct DFSDM_CHANNEL{
         using domain = DFSDM_CHANNEL_DOMAIN;
         const GPIODomain::Pin& pin;
-        DMA_Domain::DMA<stream> dma;
         GPIODomain::GPIO gpio;
         const Config_Channel config_channel;
         const Config_Filter config_filter;
@@ -249,14 +250,12 @@ struct Config_Filter{
         size_t buffer_size;
         consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config_channel,const Config_Filter config_filter) 
         : pin(pin), 
-        dma(get_dma_peripheral(config_filter.filter)),
         gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None,GPIODomain::Speed::High,dfsdm_channel_af(pin)},
         config_channel(config_channel),
         config_filter(config_filter),
         buffer_size(config_filter.length_buffer)
-        {    
+        {   
             channel = get_channel(pin);
-            
             if(config_filter.filter > 3){
                 compile_error("Solo hay 4 filtros [0..3]");
             }
@@ -283,13 +282,11 @@ struct Config_Filter{
         template<class Ctx>
         consteval std::size_t inscribe(Ctx &ctx) const {
             const auto gpio_idx = gpio.inscribe(ctx); 
-            const auto dma_idx = dma.inscribe(ctx);
             Entry e{
                 .config_channel = config_channel,
                 .config_filter = config_filter,
                 .channel = channel,
                 .gpio_idx = gpio_idx,
-                .dma_idx = dma_idx[0],//There can only be one stream
                 .buffer_size = buffer_size
             };
             return ctx.template add<DFSDM_CHANNEL_DOMAIN>(e, this);
@@ -311,7 +308,7 @@ struct Config_Filter{
     };
     struct Config {
         size_t gpio_idx;
-        size_t dma_idx;
+        size_t dma_request;
         FilterConfig init_data_filter;
         ChannelConfig init_data_channel; 
         
@@ -320,11 +317,10 @@ struct Config_Filter{
         Dma dma_enable;
 
         uint8_t filter;
-        uint8_t filter_samples;
         uint8_t channel;
         
         size_t buffer_size;
-        int32_t* buffer;
+        size_t buffer_pos_ini;
 
         //callbacks
         Callback watchdog_callback{nullptr};
@@ -333,6 +329,49 @@ struct Config_Filter{
         Callback clock_absence_callback{nullptr};
         Callback short_circuit_callback{nullptr};
     };
+    static consteval DMADomain::Peripheral dma_filter(uint8_t filter){
+        switch(filter){
+            case 0: return DMADomain::Peripheral::dfsdm_filter0;
+            case 1: return DMADomain::Peripheral::dfsdm_filter1;
+            case 2: return DMADomain::Peripheral::dfsdm_filter2;
+            case 3: return DMADomain::Peripheral::dfsdm_filter3;
+            default:
+                compile_error("There is not other filter");
+                break;
+        }
+        return DMADomain::Peripheral::dfsdm_filter0;
+    }
+
+    static consteval uint32_t dma_request(uint8_t filter){
+        return DMADomain::get_Request(dma_filter(filter),0);
+    }
+    struct BufferSizes{
+        std::size_t filter0 = 0;
+        std::size_t filter1  = 0;
+        std::size_t filter2 = 0;
+        std::size_t filter3 = 0;
+    };
+    static consteval BufferSizes calculate_buffer_sizes(span<const Config> cfgs){
+        BufferSizes sizes;
+        for(const auto& cfg : cfgs){
+            switch(cfg.filter){
+                case 0:
+                    sizes.filter0 += cfg.buffer_size;
+                    break;
+                case 1:
+                    sizes.filter1 += cfg.buffer_size;
+                    break;
+                case 2:
+                    sizes.filter2 += cfg.buffer_size;
+                    break;
+                case 3:
+                    sizes.filter3 += cfg.buffer_size;
+                    break;
+            }
+        }
+        return sizes;
+    }
+
     static consteval uint32_t compute_latency(const Entry& e){
         const uint32_t fosr = e.config_filter.oversampling;
         const uint32_t iosr = e.config_filter.integrator;
@@ -480,7 +519,6 @@ struct Config_Filter{
         std::array<Config, N> cfgs{};
         std::array<bool,8> channels_used{false};
         std::array<int8_t,4> filters_used{-1,-1,-1,-1};
-
         for (size_t i = 0; i < N; ++i) {
             const Entry &e = entries[i];
 
@@ -491,13 +529,13 @@ struct Config_Filter{
             Config& cfg = cfgs[i];
             
             cfg.gpio_idx = e.gpio_idx;
-            cfg.dma_idx = e.dma_idx;
+            cfg.dma_request = dma_request(e.config_filter.filter);
             cfg.channel = e.channel;
             cfg.buffer_size = e.buffer_size;
             cfg.type_conv = e.config_filter.type_conv;
             cfg.dma_enable = e.config_filter.dma;
             cfg.filter = e.config_filter.filter;
-            cfg.filter_samples = e.buffer_size;
+
             //add the callbacks
             cfg.overrun_callback = e.config_filter.overrun_callback;
             cfg.clock_absence_callback = e.config_filter.clock_absence_callback;
@@ -524,8 +562,9 @@ struct Config_Filter{
                     cfgs[filters_used[cfg.filter]].init_data_filter.FLTFCR != cfg.init_data_filter.FLTFCR ||
                     cfgs[filters_used[cfg.filter]].init_data_filter.FLTAWLTR != cfg.init_data_filter.FLTAWLTR ||
                     cfgs[filters_used[cfg.filter]].init_data_filter.FLTAWHTR != cfg.init_data_filter.FLTAWHTR ||
-                    cfgs[filters_used[cfg.filter]].filter_samples != cfg.filter_samples){
-                        compile_error("You have two channels that goes to the same filter with different filter configuration");
+                    cfgs[filters_used[cfg.filter]].dma_enable != cfg.dma_enable)
+                {
+                    compile_error("You have two channels that goes to the same filter with different filter configuration");
                 }
                 //have the same thing in every register of the filter
                 //Channel group conversion in injected mode
@@ -536,62 +575,131 @@ struct Config_Filter{
                 cfg.init_data_filter.FLTCR2 = cfgs[filters_used[cfg.filter]].init_data_filter.FLTCR2;
                 //Watchdog and Extreme detector channel enabled
             }
-            filters_used[cfg.filter] = i;    
+            filters_used[cfg.filter] = i; 
+        }
+        //check that dma buffer size is 1 if there is more than one channel per filter and add the buffer_pos_ini to every channel
+        std::array<std::array<uint8_t,8>,4> channels_filter = {};
+        for(size_t i = 0; i < N; i++){
+                channels_filter[cfgs[i].filter][cfgs[i].channel] = cfgs[i].buffer_size;
+                uint8_t active_channels = 0;
+                //active channels
+                for(size_t j = 0; j < 8; j++){
+                    if(channels_filter[cfgs[i].filter][j] != 0){
+                        active_channels++;
+                    }
+                }
+                // validate buffers
+                if(active_channels > 1 && cfgs[i].dma_enable == Dma::Enable){
+                   //Look the entry because the data that I want to check is easier to access
+                    if(entries[i].config_filter.type_conv == Type_Conversion::Regular){
+                        compile_error("Not allowed Regular conversion + DMA + Multiple channel in the same filter");
+                    }
+                    for(size_t j = 0; j < 8; j++){
+                        if(channels_filter[cfgs[i].filter][j] > 1){
+                            compile_error("Only allowed buffer_size = 1 when multiple DMA channels are used in the same filter");
+                        }
+                    }
+                }
+        }
+        //give the buffer_pos to every channel
+        std::array<uint8_t,4> buffer_pos{0,0,0,0};
+        for(std::size_t i = 0; i < N; i++){
+            cfgs[i].buffer_pos_ini = buffer_pos[cfgs[i].filter];
+            buffer_pos[cfgs[i].filter] += cfgs[i].buffer_size;
         }
         return cfgs;
     }
-    struct FilterBufferSizes{
-        size_t filter_0_total = 0;
-        size_t filter_1_total = 0;
-        size_t filter_2_total = 0;
-        size_t filter_3_total = 0;
-    };
-    static consteval FilterBufferSizes calculate_total_sizes(std::span<const Config> configs){
-        size_t filter0,filter1,filter2,filter3;
-        filter0 = filter1 = filter2 = filter3 = 0;
-        for(const auto& cfg : configs){ // must be the same the buffer_size for the same filter
-            switch(cfg.filter){
-                case 0:
-                    filter0 = cfg.buffer_size;
-                    break;
-                case 1:
-                    filter1 = cfg.buffer_size;
-                    break;
-                case 2:
-                    filter2 = cfg.buffer_size;
-                    break;
-                case 3: 
-                    filter3 = cfg.buffer_size;
-                    break;
+    static consteval std::size_t dma_entries_for_filter(uint8_t filter, span<const DMADomain::Entry> dma_entries) {
+        std::size_t count = 0;
+        for (const auto& entry : dma_entries) {
+            if (entry.instance != dma_filter(filter)) {
+                continue;
+            }
+            if (entry.id != 0U) {   
+                compile_error("DFSDM: DMA for DFSDM filters must use stream id 0");
+            }
+            ++count;
+        }
+        return count;
+    }
+    static consteval bool uses_filter_dma(uint8_t filter, span<const Config> cfgs){
+        for(const auto& cfg : cfgs) {
+            if(cfg.filter == filter && cfg.dma_enable == Dma::Enable){
+                return true;
             }
         }
-        if((filter0 + filter1 + filter2 + filter3) > MAX_BUFFER_SIZE_TOTAL){
-            compile_error("Has superado el tamaño maximo total permitido");
-        }
-        FilterBufferSizes sizes;
-        sizes.filter_0_total = filter0;
-        sizes.filter_1_total = filter1;
-        sizes.filter_2_total = filter2;
-        sizes.filter_3_total = filter3;
-        return sizes;
+        return false;
     }
-        static inline uint8_t channels_enabled{};
-        static constexpr DFSDM_Filter_TypeDef* filter_hw[4] = {
-            DFSDM1_Filter0,
-            DFSDM1_Filter1,
-            DFSDM1_Filter2,
-            DFSDM1_Filter3
-        };
-        static constexpr DFSDM_Channel_TypeDef* channel_hw[8] = {
-            DFSDM1_Channel0,
-            DFSDM1_Channel1,
-            DFSDM1_Channel2,
-            DFSDM1_Channel3,
-            DFSDM1_Channel4,
-            DFSDM1_Channel5,
-            DFSDM1_Channel6,
-            DFSDM1_Channel7
-        };
+    static consteval std::size_t dma_contribution_count(span<const Config> cfgs, span<const DMADomain::Entry> dma_entries) {
+        std::size_t count = 0;
+        for (uint8_t fidx = 0; fidx < 4U; ++fidx) {
+            if (!uses_filter_dma(fidx, cfgs)) {
+                continue;
+            }
+
+            const auto existing = dma_entries_for_filter(fidx, dma_entries);
+            if (existing > 1U) {
+                compile_error("DFSDM: multiple DMA streams configured for the same DFSDM filter");
+            }
+            if (existing == 0U) {
+                ++count;
+            }
+        }
+        return count;
+    }
+    template <std::size_t ExtraN>
+    static consteval std::array<DMADomain::Entry, ExtraN>
+    build_dma_contributions(span<const DMADomain::Entry> dma_entries, span<const Config> cfgs) {
+        std::array<DMADomain::Entry, ExtraN> extra{};
+        std::size_t cursor = 0;
+
+        for (uint8_t fidx = 0; fidx < 4U; ++fidx) {
+            if (!uses_filter_dma(fidx, cfgs)) {
+                continue;
+            }
+            const auto existing = dma_entries_for_filter(fidx, dma_entries);
+            if (existing == 0U) {
+                extra[cursor++] = {
+                    .instance = dma_filter(fidx),
+                    .stream = DMADomain::Stream::none,
+                    .irqn = static_cast<IRQn_Type>(0),
+                    .id = 0,
+                };
+            }
+        }
+
+        if (cursor != ExtraN) {
+            compile_error("DFSDM: DMA contribution size mismatch");
+        }
+
+        return extra;
+    }
+    static inline uint8_t channels_enabled{};
+    static constexpr DFSDM_Filter_TypeDef* filter_hw[4] = {
+        DFSDM1_Filter0,
+        DFSDM1_Filter1,
+        DFSDM1_Filter2,
+        DFSDM1_Filter3
+    };
+    static constexpr DFSDM_Channel_TypeDef* channel_hw[8] = {
+        DFSDM1_Channel0,
+        DFSDM1_Channel1,
+        DFSDM1_Channel2,
+        DFSDM1_Channel3,
+        DFSDM1_Channel4,
+        DFSDM1_Channel5,
+        DFSDM1_Channel6,
+        DFSDM1_Channel7
+    };
+    static DMADomain::Instance*
+    find_dma_instance(uint32_t request, std::span<DMADomain::Instance> dma_peripherals) {
+        for (auto& dma_instance : dma_peripherals) {
+            if (dma_instance.dma.Init.Request == request) {
+                return &dma_instance;
+            }
+        }
+        return nullptr;
+    }
     struct Instance {
         GPIODomain::Instance *gpio_instance;
         DMA_Domain::Instance *dma_instance;
@@ -610,11 +718,10 @@ struct Config_Filter{
         Type_Conversion type_conv;
         Dma dma_enable;
         
-        int32_t* buffer{};
+        volatile int32_t* buffer = nullptr;
         size_t length_buffer{};
 
         private:
-
             bool is_enabled_channel() const{
                 return (channel_regs->CHCFGR1 & DFSDM_CHCFGR1_CHEN_Msk);
             }
@@ -776,7 +883,7 @@ struct Config_Filter{
             }
             int32_t read(size_t pos){
                 if(pos >= this->length_buffer){
-                    return 0;
+                    ErrorHandler("DFSDM: Trying to access to a memory section that is not from the channel buffer");
                 }
                 return ((this->buffer[pos] & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos); // The constants values are the same for regular than injected
             }
@@ -853,32 +960,39 @@ struct Config_Filter{
     static inline int32_t DFSDM_Buffer_Pool[MAX_BUFFER_SIZE_TOTAL];
     static inline Instance* channel_instances[DFSDM_CHANNEL_DOMAIN::max_instances] = {nullptr}; 
     template <std::size_t N,std::array<Config,N> cfgs> struct Init {
-        static constexpr FilterBufferSizes Sizes = calculate_total_sizes(cfgs);
+        static constexpr auto sizes = calculate_buffer_sizes(cfgs);
+        //calculamos tamaño tanto para filtros con DMA como para los que no tienen
+        static constexpr std::size_t total_slots = sizes.filter0 + sizes.filter1 + sizes.filter2 + sizes.filter3;
+        
+        static_assert(total_slots <= max_instances, "DFSDM DMA buffer size exceeds max_instances"); 
         //Filter Buffers
-        static inline int32_t* Buffer_Filter0;
-        static inline int32_t* Buffer_Filter1;
-        static inline int32_t* Buffer_Filter2;
-        static inline int32_t* Buffer_Filter3;
+        alignas(32) STLIB_DFSDM_DMA_BUFFER_ATTR
+        static inline int32_t Buffer_Filter0[sizes.filter0 > 0 ? sizes.filter0 : 1]{};
+        alignas(32) STLIB_DFSDM_DMA_BUFFER_ATTR
+        static inline int32_t Buffer_Filter1[sizes.filter1 > 0 ? sizes.filter1 : 1]{};
+        alignas(32) STLIB_DFSDM_DMA_BUFFER_ATTR
+        static inline int32_t Buffer_Filter2[sizes.filter2 > 0 ? sizes.filter2 : 1]{};
+        alignas(32) STLIB_DFSDM_DMA_BUFFER_ATTR
+        static inline int32_t Buffer_Filter3[sizes.filter3 > 0 ? sizes.filter3 : 1]{};
 
         
         static inline std::array<Instance, N> instances{};
 
-        static uint32_t get_buffer(uint8_t filter){
+        static constexpr std::size_t buffer_size_for(uint8_t filter){
             switch(filter){
-                case 0: 
-                    return reinterpret_cast<uint32_t>(Buffer_Filter0);
+                case 0:
+                    return sizes.filter0;
                 case 1:
-                    return reinterpret_cast<uint32_t>(Buffer_Filter1);
+                    return sizes.filter1;
                 case 2:
-                    return reinterpret_cast<uint32_t>(Buffer_Filter2);
+                    return sizes.filter2;
                 case 3:
-                    return reinterpret_cast<uint32_t>(Buffer_Filter3);
+                    return sizes.filter3;
             }
-            return 0;
         }
-        static int32_t* get_buffer_pointer(uint8_t filter){
-             switch(filter){
-                case 0: 
+        static int32_t* get_buffer_filter(uint8_t filter){
+            switch (filter){
+                case 0:
                     return Buffer_Filter0;
                 case 1:
                     return Buffer_Filter1;
@@ -887,19 +1001,12 @@ struct Config_Filter{
                 case 3:
                     return Buffer_Filter3;
             }
-            return 0;
         }
-        static void assign_buffers(){
-            uint32_t offset = 0;
-            Buffer_Filter0 = &DFSDM_Buffer_Pool[offset];
-            offset += Sizes.filter_0_total;
-            Buffer_Filter1 = &DFSDM_Buffer_Pool[offset];
-            offset += Sizes.filter_1_total;
-            Buffer_Filter2 = &DFSDM_Buffer_Pool[offset];
-            offset += Sizes.filter_2_total;
-            Buffer_Filter3 = &DFSDM_Buffer_Pool[offset];
-            offset += Sizes.filter_3_total;
+        
+        static int32_t* get_buffer_pointer(const Config cfg){
+            return get_buffer_filter(cfg.filter) + cfg.buffer_pos_ini;
         }
+
         static void init(std::span<GPIODomain::Instance> gpio_instances,std::span<DMA_Domain::Instance> dma_instances) {
             if(N == 0) return;
             std::array<bool,4> filters_configured = {false,false,false,false};
@@ -914,7 +1021,7 @@ struct Config_Filter{
                 Instance &inst = instances[i];
                 
                 inst.gpio_instance = &gpio_instances[cfg.gpio_idx];
-                inst.dma_instance = &dma_instances[cfg.dma_idx];
+                inst.dma_instance = find_dma_instance(cfg.dma_request,dma_instances);
 
                 
                 inst.filter_regs = filter_hw[cfg.filter];
@@ -927,8 +1034,7 @@ struct Config_Filter{
                 inst.dma_enable = cfg.dma_enable;
 
                 inst.length_buffer = cfg.buffer_size;
-                assign_buffers();
-                inst.buffer = get_buffer_pointer(cfg.filter);
+                inst.buffer = get_buffer_pointer(cfg);
                 //callbacks
                 inst.overrun_cb = cfg.overrun_callback;
                 inst.short_circuit_cb = cfg.short_circuit_callback;
@@ -958,8 +1064,8 @@ struct Config_Filter{
                         }else{
                             SrcAddress = (uint32_t)&filter_hw[inst.filter]->FLTJDATAR;
                         }
-                        uint32_t DstAddress = get_buffer(inst.filter);
-                        inst.dma_instance->start(SrcAddress,DstAddress,inst.length_buffer);                        
+                        uint32_t DstAddress = reinterpret_cast<uint32_t>(get_buffer_filter(inst.filter));//Transform the pointer to a value 
+                        inst.dma_instance->start(SrcAddress,DstAddress,buffer_size_for(inst.filter));                        
                     }
                 }   
                 //add everything to the channel register
