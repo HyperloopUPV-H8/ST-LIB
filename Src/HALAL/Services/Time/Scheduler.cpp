@@ -1,5 +1,5 @@
 /*
- * Scheduler.hpp
+ * Scheduler.cpp
  *
  * Created on: 17 nov. 2025
  *     Author: Victor (coauthor Stephan)
@@ -30,23 +30,6 @@ uint32_t Scheduler::free_bitmap_{0xFFFF'FFFF};
 uint64_t Scheduler::global_tick_us_{0};
 uint32_t Scheduler::current_interval_us_{0};
 uint16_t Scheduler::timeout_idx_{1};
-
-inline uint8_t Scheduler::get_at(uint8_t idx) {
-    int word_idx = idx > 7;
-    uint32_t shift = (idx & 7) << 2;
-    return (((uint32_t*)&sorted_task_ids_)[word_idx] & (0x0F << shift)) >> shift;
-}
-inline void Scheduler::set_at(uint8_t idx, uint8_t id) {
-    uint32_t shift = idx * 4;
-    uint64_t clearmask = ~(0xFF << shift);
-    Scheduler::sorted_task_ids_ = (sorted_task_ids_ & clearmask) | (id << shift);
-}
-inline uint8_t Scheduler::front_id() { return *((uint8_t*)&sorted_task_ids_) & 0xF; }
-inline void Scheduler::pop_front() {
-    // O(1) remove of logical index 0
-    Scheduler::active_task_count_--;
-    Scheduler::sorted_task_ids_ >>= 4;
-}
 
 // ----------------------------
 
@@ -159,16 +142,24 @@ void Scheduler::update() {
     while (ready_bitmap_ != 0u) {
         uint32_t bit_index = static_cast<uint32_t>(__builtin_ctz(ready_bitmap_));
 
-        CLEAR_BIT(ready_bitmap_, 1u << bit_index);
-
         Task& task = tasks_[bit_index];
+
         task.callback();
+
+        SchedLock();
+        CLEAR_BIT(ready_bitmap_, 1u << bit_index);
         if (!task.repeating) [[unlikely]] {
-            SchedLock();
             release_slot(static_cast<uint8_t>(bit_index));
-            SchedUnlock();
         }
+        SchedUnlock();
     }
+}
+
+uint64_t Scheduler::get_global_tick() {
+    SchedLock();
+    uint64_t val = global_tick_us_ + Scheduler_global_timer->CNT;
+    SchedUnlock();
+    return val;
 }
 
 inline uint8_t Scheduler::allocate_slot() {
@@ -272,9 +263,12 @@ void Scheduler::schedule_next_interval() {
         return;
     }
 
+    SchedLock();
     uint8_t next_id = Scheduler::front_id(); // sorted_task_ids_[0]
     Task& next_task = tasks_[next_id];
     int32_t diff = (int32_t)(next_task.next_fire_us - static_cast<uint32_t>(global_tick_us_));
+    SchedUnlock();
+
     if (diff >= -1 && diff <= 1) [[unlikely]] {
         current_interval_us_ = 1;
         SET_BIT(Scheduler_global_timer->EGR, TIM_EGR_UG); // This should cause an interrupt
@@ -284,18 +278,18 @@ void Scheduler::schedule_next_interval() {
         } else {
             current_interval_us_ = static_cast<uint32_t>(diff);
         }
-        Scheduler_global_timer->ARR = static_cast<uint32_t>(current_interval_us_ - 1u);
-        while (Scheduler_global_timer->CNT > Scheduler_global_timer->ARR) [[unlikely]] {
-            uint32_t offset = Scheduler_global_timer->CNT - Scheduler_global_timer->ARR;
-            current_interval_us_ = offset;
-            SET_BIT(Scheduler_global_timer->EGR, TIM_EGR_UG); // This should cause an interrupt
-            Scheduler_global_timer->CNT = Scheduler_global_timer->CNT + offset;
+
+        Scheduler_global_timer->ARR = current_interval_us_ - 1u;
+        if (Scheduler_global_timer->CNT > Scheduler_global_timer->ARR) [[unlikely]] {
+            uint32_t cnt_temp = Scheduler_global_timer->CNT;
+            Scheduler_global_timer->CNT = 0;
+            global_tick_us_ += cnt_temp;
         }
     }
     Scheduler::global_timer_enable();
 }
 
-void Scheduler::on_timer_update() {
+inline void Scheduler::on_timer_update() {
     global_tick_us_ += current_interval_us_;
 
     while (active_task_count_ > 0) { // Pop all due tasks, several might be due in the same tick
@@ -305,15 +299,20 @@ void Scheduler::on_timer_update() {
         if (diff > 0) [[likely]] {
             break; // Task is in the future, stop processing
         }
+        uint32_t task_bit = 1u << candidate_id;
+
+        SchedLock();
         pop_front();
-
         // mark task as ready
-        SET_BIT(ready_bitmap_, 1u << candidate_id);
-
+        if ((ready_bitmap_ & task_bit) != 0) [[unlikely]] {
+            ErrorHandler("Too slow, could not execute task %u in time", candidate_id);
+        }
+        SET_BIT(ready_bitmap_, task_bit);
         if (task.repeating) [[likely]] {
             task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);
             insert_sorted(candidate_id);
         }
+        SchedUnlock();
     }
 
     schedule_next_interval();
