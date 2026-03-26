@@ -136,7 +136,7 @@ TimerXList
         Basic_6 = 6,
         Basic_7 = 7,
     };
-    enum class SelectionTrigger1: uint32_t {
+    enum class SelectionTrigger1 : uint32_t {
         Reset = TIM_TRGO_RESET,
         Enable = TIM_TRGO_ENABLE,
         Update = TIM_TRGO_UPDATE,
@@ -146,7 +146,7 @@ TimerXList
         Compare_channel3 = TIM_TRGO_OC3REF,
         Compare_channel4 = TIM_TRGO_OC4REF
     };
-    enum class SelectionTrigger2: uint32_t {
+    enum class SelectionTrigger2 : uint32_t {
         Reset = TIM_TRGO2_RESET,
         Enable = TIM_TRGO2_ENABLE,
         Update = TIM_TRGO2_UPDATE,
@@ -498,19 +498,17 @@ TimerXList
                 : e(ent.name,
                     ent.request,
                     sizeof...(pinargs),
-                    std::array<TimerPin, 7>(
-                        {GetPinFromIdx(pinargs, 0),
-                         GetPinFromIdx(pinargs, 1),
-                         GetPinFromIdx(pinargs, 2),
-                         GetPinFromIdx(pinargs, 3),
-                         GetPinFromIdx(pinargs, 4),
-                         GetPinFromIdx(pinargs, 5),
-                         GetPinFromIdx(pinargs, 6),
-                        }
-                    ),
+                    std::array<TimerPin, 7>({
+                        GetPinFromIdx(pinargs, 0),
+                        GetPinFromIdx(pinargs, 1),
+                        GetPinFromIdx(pinargs, 2),
+                        GetPinFromIdx(pinargs, 3),
+                        GetPinFromIdx(pinargs, 4),
+                        GetPinFromIdx(pinargs, 5),
+                        GetPinFromIdx(pinargs, 6),
+                    }),
                     ent.trgo1,
-                    ent.trgo2
-                ),
+                    ent.trgo2),
                   gpio0(GetGPIOFromIdx(pinargs, ent.request, 0)),
                   gpio1(GetGPIOFromIdx(pinargs, ent.request, 1)),
                   gpio2(GetGPIOFromIdx(pinargs, ent.request, 2)),
@@ -731,7 +729,7 @@ TimerXList
 
                     TIM_HandleTypeDef* handle = hal_handles[e.timer_idx];
                     TIM_TypeDef* tim = cmsis_timers[e.timer_idx];
-                
+
                     handle->Instance = tim;
                     handle->Init.Period = 0;
                     handle->Init.Prescaler = 0;
@@ -762,11 +760,12 @@ TimerXList
                     inst->hal_tim = handle;
                     inst->timer_idx = e.timer_idx;
                     TIM_MasterConfigTypeDef sMasterConfig = {};
-                    sMasterConfig.MasterOutputTrigger =  static_cast<uint32_t>(e.trgo1);
+                    sMasterConfig.MasterOutputTrigger = static_cast<uint32_t>(e.trgo1);
                     sMasterConfig.MasterOutputTrigger2 = static_cast<uint32_t>(e.trgo2);
                     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
                     inst->master = sMasterConfig;
-                    if(HAL_TIMEx_MasterConfigSynchronization(inst->hal_tim, &sMasterConfig) != HAL_OK) {
+                    if (HAL_TIMEx_MasterConfigSynchronization(inst->hal_tim, &sMasterConfig) !=
+                        HAL_OK) {
                         ErrorHandler("Unable to configure master synch");
                     }
                 }

@@ -102,9 +102,7 @@ struct DMADomain {
         }
         return nullptr;
     }
-    static inline consteval bool shares_dma(Peripheral p){
-        return is_dfsdm(p);
-    }
+    static inline consteval bool shares_dma(Peripheral p) { return is_dfsdm(p); }
     struct Entry {
         Peripheral instance;
         Stream stream;
@@ -135,8 +133,7 @@ struct DMADomain {
             }
         }
 
-        template <class Ctx>
-        consteval array<size_t, sizeof...(Ss)> inscribe(Ctx& ctx) const {
+        template <class Ctx> consteval array<size_t, sizeof...(Ss)> inscribe(Ctx& ctx) const {
             array<size_t, sizeof...(Ss)> indices{};
             for (size_t i = 0; i < sizeof...(Ss); i++) {
                 indices[i] = ctx.template add<DMADomain>(e[i], this);
@@ -223,11 +220,17 @@ struct DMADomain {
     static consteval bool is_fmac(Peripheral instance) { return instance == Peripheral::fmac; }
 
     static consteval bool is_none(Peripheral instance) { return instance == Peripheral::none; }
-    
-    static consteval bool is_dfsdm(Peripheral instance) { 
-        return is_one_of(instance,Peripheral::dfsdm_filter0,Peripheral::dfsdm_filter1,Peripheral::dfsdm_filter2,Peripheral::dfsdm_filter3); 
+
+    static consteval bool is_dfsdm(Peripheral instance) {
+        return is_one_of(
+            instance,
+            Peripheral::dfsdm_filter0,
+            Peripheral::dfsdm_filter1,
+            Peripheral::dfsdm_filter2,
+            Peripheral::dfsdm_filter3
+        );
     }
-    
+
     static consteval uint32_t get_Request(Peripheral instance, uint8_t i) {
         if (instance == Peripheral::none)
             return DMA_REQUEST_MEM2MEM;
@@ -283,16 +286,16 @@ struct DMADomain {
             return DMA_REQUEST_FMAC_WRITE;
         if (instance == Peripheral::fmac && i == 2)
             return DMA_REQUEST_FMAC_READ;
-        if(instance == Peripheral::dfsdm_filter0){
+        if (instance == Peripheral::dfsdm_filter0) {
             return DMA_REQUEST_DFSDM1_FLT0;
         }
-        if(instance == Peripheral::dfsdm_filter1){
+        if (instance == Peripheral::dfsdm_filter1) {
             return DMA_REQUEST_DFSDM1_FLT1;
         }
-        if(instance == Peripheral::dfsdm_filter2){
+        if (instance == Peripheral::dfsdm_filter2) {
             return DMA_REQUEST_DFSDM1_FLT2;
         }
-        if(instance == Peripheral::dfsdm_filter3){
+        if (instance == Peripheral::dfsdm_filter3) {
             return DMA_REQUEST_DFSDM1_FLT3;
         }
         compile_error("Invalid DMA request configuration");
