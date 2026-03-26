@@ -123,7 +123,7 @@ namespace ST_LIB {
     uint32_t right_shift{0};
     SPICKSel spi_clock_sel{SPICKSel::CLK_DIVIDED_2_RISING};
     SPI_Type spi_type{SPI_Type::SPI_RISING};
-   
+
     /* -------- Runtime protections -------- */ 
     Clock_Absence clock_absence{Clock_Absence::Disable};
     Short_Circuit short_circuit{Short_Circuit::Disable};
@@ -142,7 +142,6 @@ namespace ST_LIB {
 
 };
 struct Config_Filter{
-    size_t length_buffer{1};
     uint8_t filter{0};
     Trigger_Timer_Source trigger_conv{Trigger_Timer_Source::Unused};
     Filter_Type filter_type{Filter_Type::FastSinc};
@@ -248,12 +247,12 @@ struct Config_Filter{
         const Config_Filter config_filter;
         uint8_t channel;
         size_t buffer_size;
-        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config_channel,const Config_Filter config_filter) 
+        consteval DFSDM_CHANNEL(const GPIODomain::Pin& pin,const Config_Channel config_channel,const Config_Filter config_filter,std::size_t buffer_size) 
         : pin(pin), 
         gpio{pin,GPIODomain::OperationMode::ALT_PP,GPIODomain::Pull::None,GPIODomain::Speed::High,dfsdm_channel_af(pin)},
         config_channel(config_channel),
         config_filter(config_filter),
-        buffer_size(config_filter.length_buffer)
+        buffer_size(buffer_size)
         {   
             channel = get_channel(pin);
             if(config_filter.filter > 3){
@@ -356,16 +355,32 @@ struct Config_Filter{
         for(const auto& cfg : cfgs){
             switch(cfg.filter){
                 case 0:
-                    sizes.filter0 += cfg.buffer_size;
+                    if(cfg.type_conv == Type_Conversion::Regular){
+                        sizes.filter0 = std::max(cfg.buffer_size,sizes.filter0);
+                    }else{
+                        sizes.filter0 += cfg.buffer_size;
+                    }
                     break;
                 case 1:
-                    sizes.filter1 += cfg.buffer_size;
+                    if(cfg.type_conv == Type_Conversion::Regular){
+                        sizes.filter1 = std::max(cfg.buffer_size,sizes.filter1);
+                    }else{
+                        sizes.filter1 += cfg.buffer_size;
+                    }
                     break;
                 case 2:
-                    sizes.filter2 += cfg.buffer_size;
+                    if(cfg.type_conv == Type_Conversion::Regular){
+                        sizes.filter2 = std::max(cfg.buffer_size,sizes.filter2);
+                    }else{
+                        sizes.filter2 += cfg.buffer_size;
+                    }
                     break;
                 case 3:
-                    sizes.filter3 += cfg.buffer_size;
+                    if(cfg.type_conv == Type_Conversion::Regular){
+                        sizes.filter3 = std::max(cfg.buffer_size,sizes.filter3);
+                    }else{
+                        sizes.filter3 += cfg.buffer_size;
+                    }
                     break;
             }
         }
@@ -519,6 +534,8 @@ struct Config_Filter{
         std::array<Config, N> cfgs{};
         std::array<bool,8> channels_used{false};
         std::array<int8_t,4> filters_used{-1,-1,-1,-1};
+        std::array<int8_t,8> channel_order{-1,-1,-1,-1,-1,-1,-1,-1};
+
         for (size_t i = 0; i < N; ++i) {
             const Entry &e = entries[i];
 
@@ -530,7 +547,10 @@ struct Config_Filter{
             
             cfg.gpio_idx = e.gpio_idx;
             cfg.dma_request = dma_request(e.config_filter.filter);
+
             cfg.channel = e.channel;
+            channel_order[cfg.channel] = i;
+            
             cfg.buffer_size = e.buffer_size;
             cfg.type_conv = e.config_filter.type_conv;
             cfg.dma_enable = e.config_filter.dma;
@@ -601,11 +621,17 @@ struct Config_Filter{
                     }
                 }
         }
-        //give the buffer_pos to every channel
+        //give the buffer_pos to every channel I'll give the pos by channel order starting from the low
         std::array<uint8_t,4> buffer_pos{0,0,0,0};
-        for(std::size_t i = 0; i < N; i++){
-            cfgs[i].buffer_pos_ini = buffer_pos[cfgs[i].filter];
-            buffer_pos[cfgs[i].filter] += cfgs[i].buffer_size;
+        for(std::size_t i = 0; i < 8; i++){
+            if(channel_order[i] == -1) continue;
+            auto& cfg = cfgs[channel_order[i]];
+            // If regular conversion give the whole buffer to the channels.
+            if(cfg.type_conv == Type_Conversion::Regular){
+                cfg.buffer_pos_ini = 0;
+            }
+            cfg.buffer_pos_ini = buffer_pos[cfg.filter];
+            buffer_pos[cfg.filter] += cfg.buffer_size;
         }
         return cfgs;
     }
@@ -887,6 +913,9 @@ struct Config_Filter{
                 }
                 return ((this->buffer[pos] & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos); // The constants values are the same for regular than injected
             }
+            int32_t read(){
+                return (static_cast<int32_t>(this->buffer[0] & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos); // The constants values are the same for regular than injected
+            }
             uint32_t check_latency_cycles() {
                 return filter_regs->FLTCNVTIMR >> DFSDM_FLTCNVTIMR_CNVCNT_Pos;
             }
@@ -964,7 +993,6 @@ struct Config_Filter{
         //calculamos tamaño tanto para filtros con DMA como para los que no tienen
         static constexpr std::size_t total_slots = sizes.filter0 + sizes.filter1 + sizes.filter2 + sizes.filter3;
         
-        static_assert(total_slots <= max_instances, "DFSDM DMA buffer size exceeds max_instances"); 
         //Filter Buffers
         alignas(32) STLIB_DFSDM_DMA_BUFFER_ATTR
         static inline int32_t Buffer_Filter0[sizes.filter0 > 0 ? sizes.filter0 : 1]{};
@@ -989,6 +1017,8 @@ struct Config_Filter{
                 case 3:
                     return sizes.filter3;
             }
+            ErrorHandler("Filter cannot be bigger than 3");
+            return 0;
         }
         static int32_t* get_buffer_filter(uint8_t filter){
             switch (filter){
@@ -1001,6 +1031,9 @@ struct Config_Filter{
                 case 3:
                     return Buffer_Filter3;
             }
+            ErrorHandler("Filter cannot be bigger than 3");
+            return 0;
+
         }
         
         static int32_t* get_buffer_pointer(const Config cfg){
@@ -1019,10 +1052,12 @@ struct Config_Filter{
             for (std::size_t i = 0; i < N; ++i) {
                 const Config &cfg = cfgs[i];
                 Instance &inst = instances[i];
-                
                 inst.gpio_instance = &gpio_instances[cfg.gpio_idx];
-                inst.dma_instance = find_dma_instance(cfg.dma_request,dma_instances);
-
+                if(cfg.dma_enable == Dma::Enable){
+                    inst.dma_instance = find_dma_instance(cfg.dma_request,dma_instances);
+                }else{
+                    inst.dma_instance = nullptr;
+                }
                 
                 inst.filter_regs = filter_hw[cfg.filter];
                 inst.channel_regs = channel_hw[cfg.channel];
@@ -1120,7 +1155,7 @@ struct Config_Filter{
                 int32_t data = filter->FLTRDATAR;
                 Instance* inst = channel_instances[(data & DFSDM_FLTRDATAR_RDATACH_Msk)>>DFSDM_FLTRDATAR_RDATACH_Pos];
                 if(inst != nullptr && inst->buffer != nullptr){
-                    if(inst->dma_enable == Dma::Disable){
+                    if(inst->dma_enable == Dma::Disable)[[likely]]{
                         inst->buffer[idx_filter[inst->filter]] = data;
                         idx_filter[inst->filter] = (idx_filter[inst->filter] + 1) % inst->length_buffer;
                     }
@@ -1132,9 +1167,10 @@ struct Config_Filter{
             if(isr & DFSDM_FLTISR_JEOCF_Msk){
                 //Save it in the address provide by the user
                 int32_t data = filter->FLTJDATAR;
-                Instance* inst = channel_instances[(data & DFSDM_FLTJDATAR_JDATACH_Msk) >> DFSDM_FLTJDATAR_JDATACH_Pos];
+                uint8_t channel = (data & DFSDM_FLTJDATAR_JDATACH_Msk);
+                Instance* inst = channel_instances[channel];
                 if(inst != nullptr && inst->buffer != nullptr){
-                    if(inst->dma_enable == Dma::Disable){
+                    if(inst->dma_enable == Dma::Disable)[[likely]]{
                         inst->buffer[idx_filter[inst->filter]] = data;
                         idx_filter[inst->filter] = (idx_filter[inst->filter] + 1) % inst->length_buffer;
                     }
@@ -1147,13 +1183,13 @@ struct Config_Filter{
                 Instance* inst = channel_instances[filter->FLTRDATAR & DFSDM_FLTRDATAR_RDATACH_Msk];
                 if(inst != nullptr && inst->overrun_cb != nullptr) inst->overrun_cb();
                 //clear
-                filter->FLTICR |= DFSDM_FLTISR_ROVRF;
+                filter->FLTICR |= DFSDM_FLTICR_CLRROVRF_Msk;
             }
             if(isr & DFSDM_FLTISR_JOVRF_Msk){
                 Instance* inst = channel_instances[filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATACH_Msk];
                 if(inst != nullptr && inst->overrun_cb != nullptr) inst->overrun_cb();
                 //clear
-                filter->FLTICR |= DFSDM_FLTISR_JOVRF;
+                filter->FLTICR |=  DFSDM_FLTICR_CLRJOVRF_Msk;
             }
             if(isr & (channels_enabled << DFSDM_FLTICR_CLRSCDF_Pos)){
                 uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_SCDF_Msk) >> DFSDM_FLTISR_SCDF_Pos;

@@ -328,7 +328,9 @@ template <auto&... devs> struct Board {
             return Domain::template Init<N, cfg.mpu_cfgs>::instances[idx];
         } else if constexpr (std::is_same_v<Domain, ADCDomain>) {
             return Domain::template Init<N, cfg.adc_cfgs>::instances[idx];
-        } else {
+        } else if constexpr (std::is_same_v<Domain, DFSDM_CHANNEL_DOMAIN>){
+            return Domain::template Init<N,cfg.dfsdm_cfgs>::instances[idx];
+        }   else{
             return Domain::template Init<N>::instances[idx];
         }
     }
