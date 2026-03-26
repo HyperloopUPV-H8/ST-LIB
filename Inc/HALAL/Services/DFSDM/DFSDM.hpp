@@ -610,11 +610,14 @@ struct DFSDM_CHANNEL_DOMAIN {
                 }
             }
             // validate buffers
+            if(active_channels > 1 && entries[i].config_filter.type_conv == Type_Conversion::Regular){
+                compile_error("Not allowed more than 1 channel per filter in Regular Mode");
+            }
             if (active_channels > 1 && cfgs[i].dma_enable == Dma::Enable) {
                 // Look the entry because the data that I want to check is easier to access
-                if (entries[i].config_filter.type_conv == Type_Conversion::Regular) {
+                if (entries[i].config_filter.jscan == Injected_Mode::Single) {
                     compile_error(
-                        "Not allowed Regular conversion + DMA + Multiple channel in the same filter"
+                        "Not allowed more than 1 channel per filter + Injected_Mode::Single_conversion"
                     );
                 }
                 for (size_t j = 0; j < 8; j++) {
