@@ -18,7 +18,6 @@
 
 #include "stm32h7xx_ll_tim_wrapper.h"
 #include "HALAL/Models/Packets/Packet.hpp"
-#include "HALAL/Services/Communication/Ethernet/LWIP/UDP/DatagramSocket.hpp"
 
 #include <array>
 #include <cstdint>
