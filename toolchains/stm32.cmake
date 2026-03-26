@@ -34,7 +34,8 @@ endfunction()
 
 function(_stm32_extract_version _path _out_var)
     _stm32_resolve_path("${_path}" _resolved)
-    string(REGEX MATCH "STM32CubeCLT[_-]([0-9]+\\.[0-9]+\\.[0-9]+)" _match "${_resolved}")
+    string(TOUPPER "${_resolved}" _resolved_upper)
+    string(REGEX MATCH "STM32CUBECLT[_-]([0-9]+\\.[0-9]+\\.[0-9]+)" _match "${_resolved_upper}")
     set(${_out_var} "${CMAKE_MATCH_1}" PARENT_SCOPE)
 endfunction()
 
