@@ -9,7 +9,7 @@ using std::array;
 using std::size_t;
 using std::span;
 using std::tuple;
-
+    
 #define MAX_STREAMS 16
 
 extern "C" {
