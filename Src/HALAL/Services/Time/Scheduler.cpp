@@ -305,7 +305,7 @@ inline void Scheduler::on_timer_update() {
         pop_front();
         // mark task as ready
         if ((ready_bitmap_ & task_bit) != 0) [[unlikely]] {
-            ErrorHandler("Too slow, could not execute task %u in time", candidate_id);
+            WARNING("Too slow, could not execute task %u in time", candidate_id);
         }
         SET_BIT(ready_bitmap_, task_bit);
         if (task.repeating) [[likely]] {

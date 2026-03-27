@@ -17,6 +17,7 @@
 #endif
 
 #include "stm32h7xx_ll_tim_wrapper.h"
+#include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 
 #include <array>
 #include <cstdint>
