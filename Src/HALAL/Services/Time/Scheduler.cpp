@@ -280,9 +280,9 @@ void Scheduler::schedule_next_interval() {
 
         Scheduler_global_timer->ARR = current_interval_us_ - 1u;
         if (Scheduler_global_timer->CNT > Scheduler_global_timer->ARR) [[unlikely]] {
-            uint32_t offset = Scheduler_global_timer->CNT - Scheduler_global_timer->ARR;
+            uint32_t cnt_temp = Scheduler_global_timer->CNT;
             Scheduler_global_timer->CNT = 0;
-            global_tick_us_ += offset;
+            global_tick_us_ += cnt_temp;
         }
     }
     Scheduler::global_timer_enable();

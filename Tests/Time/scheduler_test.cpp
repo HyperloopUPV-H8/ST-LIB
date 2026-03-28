@@ -74,8 +74,12 @@ TEST_F(SchedulerTests, TaskExecutionShort) {
 
     constexpr int NUM_TICKS = 1'000;
     for (int i = 0; i < NUM_TICKS; i++) {
+        uint64_t tick = Scheduler::get_global_tick();
+        EXPECT_EQ(tick, i);
+
         for (int j = 0; j <= TIM2_BASE->PSC; j++)
             TIM2_BASE->inc_cnt_and_check(1);
+        
         Scheduler::update();
     }
     // 1000 ticks / 10 ticks/task = 100 executions.
