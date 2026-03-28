@@ -60,11 +60,11 @@ TEST_F(SchedulerTests, FrontId_PopFront) {
 
 TEST_F(SchedulerTests, Max16Tasks) {
     uint16_t task_id;
-    for(int i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {
         task_id = Scheduler::register_task(1, &fake_workload);
         EXPECT_EQ(task_id == Scheduler::INVALID_ID, false);
     }
-    // 17th task should not give a valid id
+    // 17th task should not give a valid i
     task_id = Scheduler::register_task(1, &fake_workload);
     EXPECT_EQ(task_id == Scheduler::INVALID_ID, true);
 }
@@ -90,7 +90,7 @@ TEST_F(SchedulerTests, TaskExecutionShort) {
 
         for (int j = 0; j <= TIM2_BASE->PSC; j++)
             TIM2_BASE->inc_cnt_and_check(1);
-        
+
         Scheduler::update();
     }
     // 1000 ticks / 10 ticks/task = 100 executions.
