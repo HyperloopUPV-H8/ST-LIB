@@ -58,6 +58,17 @@ TEST_F(SchedulerTests, FrontId_PopFront) {
     }
 }
 
+TEST_F(SchedulerTests, Max16Tasks) {
+    uint16_t task_id;
+    for(int i = 0; i < 16; i++) {
+        task_id = Scheduler::register_task(1, &fake_workload);
+        EXPECT_EQ(task_id == Scheduler::INVALID_ID, false);
+    }
+    // 17th task should not give a valid id
+    task_id = Scheduler::register_task(1, &fake_workload);
+    EXPECT_EQ(task_id == Scheduler::INVALID_ID, true);
+}
+
 TEST_F(SchedulerTests, FreeBitmap) {
     Scheduler::register_task(10, &fake_workload);
     EXPECT_EQ(Scheduler::free_bitmap_, 0xFFFF'FFFE);

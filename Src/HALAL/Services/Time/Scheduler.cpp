@@ -164,7 +164,7 @@ uint64_t Scheduler::get_global_tick() {
 
 inline uint8_t Scheduler::allocate_slot() {
     uint32_t idx = __builtin_ffs(Scheduler::free_bitmap_) - 1;
-    if (idx > static_cast<int>(Scheduler::kMaxTasks)) [[unlikely]]
+    if (idx >= Scheduler::kMaxTasks) [[unlikely]]
         return static_cast<uint8_t>(Scheduler::INVALID_ID);
     Scheduler::free_bitmap_ &= ~(1UL << idx);
     return static_cast<uint8_t>(idx);
