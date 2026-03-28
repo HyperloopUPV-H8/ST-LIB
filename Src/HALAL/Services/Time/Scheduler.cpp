@@ -143,6 +143,7 @@ void Scheduler::update() {
         uint32_t bit_index = static_cast<uint32_t>(__builtin_ctz(ready_bitmap_));
 
         Task& task = tasks_[bit_index];
+
         task.callback();
 
         SchedLock();
@@ -298,11 +299,15 @@ inline void Scheduler::on_timer_update() {
         if (diff > 0) [[likely]] {
             break; // Task is in the future, stop processing
         }
+        uint32_t task_bit = 1u << candidate_id;
 
         SchedLock();
         pop_front();
         // mark task as ready
-        SET_BIT(ready_bitmap_, 1u << candidate_id);
+        if ((ready_bitmap_ & task_bit) != 0) [[unlikely]] {
+            ErrorHandler("Too slow, could not execute task %u in time", candidate_id);
+        }
+        SET_BIT(ready_bitmap_, task_bit);
         if (task.repeating) [[likely]] {
             task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);
             insert_sorted(candidate_id);

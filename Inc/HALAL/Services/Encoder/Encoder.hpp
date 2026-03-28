@@ -63,7 +63,7 @@ public:
         }
 
         tim->instance->tim->PSC = 5;
-        if constexpr (tim->is_32bit_instance) {
+        if constexpr (TimerWrapper<dev>::is_32bit_instance) {
             tim->instance->tim->ARR = UINT32_MAX;
         } else {
             tim->instance->tim->ARR = UINT16_MAX;
