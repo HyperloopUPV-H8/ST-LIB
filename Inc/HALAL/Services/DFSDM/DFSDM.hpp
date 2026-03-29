@@ -610,15 +610,15 @@ struct DFSDM_CHANNEL_DOMAIN {
                 }
             }
             // validate buffers
-            if(active_channels > 1 && entries[i].config_filter.type_conv == Type_Conversion::Regular){
+            if (active_channels > 1 &&
+                entries[i].config_filter.type_conv == Type_Conversion::Regular) {
                 compile_error("Not allowed more than 1 channel per filter in Regular Mode");
             }
             if (active_channels > 1 && cfgs[i].dma_enable == Dma::Enable) {
                 // Look the entry because the data that I want to check is easier to access
                 if (entries[i].config_filter.jscan == Injected_Mode::Single) {
-                    compile_error(
-                        "Not allowed more than 1 channel per filter + Injected_Mode::Single_conversion"
-                    );
+                    compile_error("Not allowed more than 1 channel per filter + "
+                                  "Injected_Mode::Single_conversion");
                 }
                 for (size_t j = 0; j < 8; j++) {
                     if (channels_filter[cfgs[i].filter][j] > 1) {
@@ -724,13 +724,15 @@ struct DFSDM_CHANNEL_DOMAIN {
         DFSDM1_Channel6,
         DFSDM1_Channel7
     };
-    static void inline start_reg_conv_filter(uint8_t filter){
-        if(filter > 3) ErrorHandler("Only filters from 0..3");
+    static void inline start_reg_conv_filter(uint8_t filter) {
+        if (filter > 3)
+            ErrorHandler("Only filters from 0..3");
         filter_hw[filter]->FLTCR1 |= DFSDM_FLTCR1_RSWSTART; // regular
     }
-    static void inline start_inj_conv_filter(uint8_t filter){
-         if(filter > 3) ErrorHandler("Only filters from 0..3");
-         filter_hw[filter]->FLTCR1 |= DFSDM_FLTCR1_JSWSTART; // injected
+    static void inline start_inj_conv_filter(uint8_t filter) {
+        if (filter > 3)
+            ErrorHandler("Only filters from 0..3");
+        filter_hw[filter]->FLTCR1 |= DFSDM_FLTCR1_JSWSTART; // injected
     }
     static DMADomain::Instance*
     find_dma_instance(uint32_t request, std::span<DMADomain::Instance> dma_peripherals) {
@@ -897,14 +899,15 @@ struct DFSDM_CHANNEL_DOMAIN {
                              "channel buffer");
             }
             return (
-                static_cast<int32_t>(this->buffer[pos] & DFSDM_FLTJDATAR_JDATA_Msk) >> DFSDM_FLTJDATAR_JDATA_Pos
+                static_cast<int32_t>(this->buffer[pos] & DFSDM_FLTJDATAR_JDATA_Msk) >>
+                DFSDM_FLTJDATAR_JDATA_Pos
             ); // The constants values are the same for regular than injected
         }
         int32_t read() {
             return (
                 static_cast<int32_t>(this->buffer[0] & DFSDM_FLTJDATAR_JDATA_Msk) >>
                 DFSDM_FLTJDATAR_JDATA_Pos
-            ); 
+            );
         }
         uint32_t check_latency_cycles() {
             return filter_regs->FLTCNVTIMR >> DFSDM_FLTCNVTIMR_CNVCNT_Pos;

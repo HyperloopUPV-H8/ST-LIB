@@ -140,8 +140,6 @@ consteval std::array<DMADomain::Config, TotalN> build_dma_configs(
 
 } // namespace BuildUtils
 
-
-
 template <auto&... devs> struct Board {
     static consteval auto build_ctx() {
         DomainsCtx ctx{};
