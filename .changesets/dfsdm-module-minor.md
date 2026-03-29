@@ -1,1 +1,2 @@
-Added DFSDM Module
+release: minor
+summary: Added module dfsdm tested
