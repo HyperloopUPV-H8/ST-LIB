@@ -140,6 +140,46 @@ consteval std::array<DMADomain::Config, TotalN> build_dma_configs(
 
 } // namespace BuildUtils
 
+namespace BuildUtils {
+
+template <std::size_t TotalN, std::size_t... ExtraNs>
+consteval std::array<DMADomain::Entry, TotalN> merge_dma_entries(
+    std::span<const DMADomain::Entry> base_entries,
+    const std::array<DMADomain::Entry, ExtraNs>&... extra_entries
+) {
+    if (base_entries.size() + (ExtraNs + ...) != TotalN) {
+        compile_error("DMA merged entry count mismatch");
+    }
+
+    std::array<DMADomain::Entry, TotalN> merged{};
+    std::size_t cursor = 0;
+
+    for (const auto& entry : base_entries) {
+        merged[cursor++] = entry;
+    }
+
+    auto append = [&]<std::size_t N>(const std::array<DMADomain::Entry, N>& entries) {
+        for (const auto& entry : entries) {
+            merged[cursor++] = entry;
+        }
+    };
+    (append(extra_entries), ...);
+
+    return merged;
+}
+
+template <std::size_t TotalN, std::size_t... ExtraNs>
+consteval std::array<DMADomain::Config, TotalN> build_dma_configs(
+    std::span<const DMADomain::Entry> base_entries,
+    const std::array<DMADomain::Entry, ExtraNs>&... extra_entries
+) {
+    return DMADomain::template build<TotalN>(std::span<const DMADomain::Entry, TotalN>{
+        merge_dma_entries<TotalN>(base_entries, extra_entries...)
+    });
+}
+
+} // namespace BuildUtils
+
 template <auto&... devs> struct Board {
     static consteval auto build_ctx() {
         DomainsCtx ctx{};

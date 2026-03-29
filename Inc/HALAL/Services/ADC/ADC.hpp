@@ -143,6 +143,26 @@ struct ADCDomain {
 
         consteval ADC(
             const GPIODomain::Pin& pin,
+            Resolution resolution = Resolution::BITS_12,
+            SampleTime sample_time = SampleTime::CYCLES_8_5,
+            ClockPrescaler prescaler = ClockPrescaler::DIV1,
+            uint32_t sample_rate_hz = 0,
+            Peripheral peripheral = Peripheral::AUTO,
+            Channel channel = Channel::AUTO
+        )
+            : gpio{pin, GPIODomain::OperationMode::ANALOG, GPIODomain::Pull::None, GPIODomain::Speed::Low},
+              e{.gpio_idx = 0,
+                .pin = pin,
+                .peripheral = peripheral,
+                .channel = channel,
+                .resolution = resolution,
+                .sample_time = sample_time,
+                .prescaler = prescaler,
+                .sample_rate_hz = sample_rate_hz,
+                .output = nullptr} {}
+
+        consteval ADC(
+            const GPIODomain::Pin& pin,
             Peripheral peripheral,
             Channel channel,
             float& output,
@@ -159,6 +179,25 @@ struct ADCDomain {
                   sample_rate_hz,
                   peripheral,
                   channel) {}
+
+        consteval ADC(
+            const GPIODomain::Pin& pin,
+            Peripheral peripheral,
+            Channel channel,
+            Resolution resolution = Resolution::BITS_12,
+            SampleTime sample_time = SampleTime::CYCLES_8_5,
+            ClockPrescaler prescaler = ClockPrescaler::DIV1,
+            uint32_t sample_rate_hz = 0
+        )
+            : ADC(
+                  pin,
+                  resolution,
+                  sample_time,
+                  prescaler,
+                  sample_rate_hz,
+                  peripheral,
+                  channel
+              ) {}
 
         template <class Ctx> consteval std::size_t inscribe(Ctx& ctx) const {
             const auto gpio_idx = gpio.inscribe(ctx);
@@ -262,7 +301,7 @@ struct ADCDomain {
         std::size_t adc3_size = 0;
     };
 
-    static consteval BufferSizes _buffer_sizes(span<const Config> cfgs) {
+    static consteval BufferSizes calculate_buffer_sizes(span<const Config> cfgs) {
         BufferSizes sizes;
         for (const auto& cfg : cfgs) {
             switch (cfg.peripheral) {
@@ -741,7 +780,7 @@ struct ADCDomain {
     template <std::size_t N, std::array<Config, N> cfgs> struct Init {
         static inline std::array<Instance, N> instances{};
 
-        static constexpr auto buffer_sizes = _buffer_sizes(cfgs);
+        static constexpr auto buffer_sizes = calculate_buffer_sizes(cfgs);
         static constexpr std::size_t total_dma_slots =
             buffer_sizes.adc1_size + buffer_sizes.adc2_size + buffer_sizes.adc3_size;
         static_assert(
