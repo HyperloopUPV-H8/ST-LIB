@@ -638,13 +638,11 @@ struct DFSDM_CHANNEL_DOMAIN {
             // If regular conversion give the whole buffer to the channels due to only one channel per filter
             cfg.buffer_pos_ini = buffer_pos[cfg.filter];
             buffer_pos[cfg.filter] += cfg.buffer_size;
-            }
-            
         }
         return cfgs;
     }
     static consteval std::size_t
-    dma_entries_for_filter(uint8_t filter, span<const DMADomain::Entry> dma_entries) {
+    dma_entries_for_filter(uint8_t filter, std::span<const DMADomain::Entry> dma_entries) {
         std::size_t count = 0;
         for (const auto& entry : dma_entries) {
             if (entry.instance != dma_filter(filter)) {
@@ -657,7 +655,7 @@ struct DFSDM_CHANNEL_DOMAIN {
         }
         return count;
     }
-    static consteval bool uses_filter_dma(uint8_t filter, span<const Config> cfgs) {
+    static consteval bool uses_filter_dma(uint8_t filter, std::span<const Config> cfgs) {
         for (const auto& cfg : cfgs) {
             if (cfg.filter == filter && cfg.dma_enable == Dma::Enable) {
                 return true;
@@ -666,7 +664,7 @@ struct DFSDM_CHANNEL_DOMAIN {
         return false;
     }
     static consteval std::size_t
-    dma_contribution_count(span<const Config> cfgs, span<const DMADomain::Entry> dma_entries) {
+    dma_contribution_count(std::span<const Config> cfgs, std::span<const DMADomain::Entry> dma_entries) {
         std::size_t count = 0;
         for (uint8_t fidx = 0; fidx < 4U; ++fidx) {
             if (!uses_filter_dma(fidx, cfgs)) {
@@ -685,7 +683,7 @@ struct DFSDM_CHANNEL_DOMAIN {
     }
     template <std::size_t ExtraN>
     static consteval std::array<DMADomain::Entry, ExtraN>
-    build_dma_contributions(span<const DMADomain::Entry> dma_entries, span<const Config> cfgs) {
+    build_dma_contributions(std::span<const DMADomain::Entry> dma_entries, std::span<const Config> cfgs) {
         std::array<DMADomain::Entry, ExtraN> extra{};
         std::size_t cursor = 0;
 
@@ -1192,7 +1190,6 @@ struct DFSDM_CHANNEL_DOMAIN {
             // clear
             filter->FLTICR |= DFSDM_FLTICR_CLRROVRF_Msk;
         }
-        DFSDM_FLTRDATAR_RDATACH_Msk;
         if (isr & DFSDM_FLTISR_JOVRF_Msk) {
             Instance* inst = channel_instances[filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATACH_Msk];
             if (inst != nullptr && inst->overrun_cb != nullptr)
@@ -1323,7 +1320,7 @@ struct DFSDM_CLK_DOMAIN {
             // CKOUTSRC = 0 -> kernel clock (rcc_pclk2)  It works 137,5 Mhz,
             DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CKOUTSRC;
             // CKOUT Divider. Divider = CKOUTDIV + 1
-            DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CKOUTDIV;
+            DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CKOUTDIV_Msk;
 
             DFSDM1_Channel0->CHCFGR1 |= uint32_t(clk_divider - 1) << DFSDM_CHCFGR1_CKOUTDIV_Pos;
 
