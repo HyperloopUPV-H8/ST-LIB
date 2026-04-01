@@ -635,12 +635,11 @@ struct DFSDM_CHANNEL_DOMAIN {
             if (channel_order[i] == -1)
                 continue;
             auto& cfg = cfgs[channel_order[i]];
-            // If regular conversion give the whole buffer to the channels.
-            if (cfg.type_conv == Type_Conversion::Regular) {
-                cfg.buffer_pos_ini = 0;
-            }
+            // If regular conversion give the whole buffer to the channels due to only one channel per filter
             cfg.buffer_pos_ini = buffer_pos[cfg.filter];
             buffer_pos[cfg.filter] += cfg.buffer_size;
+            }
+            
         }
         return cfgs;
     }
