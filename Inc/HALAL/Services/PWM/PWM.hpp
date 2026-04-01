@@ -17,56 +17,12 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper;
 template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
     friend TimerWrapper<dev>;
 
-    static consteval uint8_t get_channel_state_idx(const ST_LIB::TimerChannel ch) {
-        switch (ch) {
-        case TimerChannel::CHANNEL_1:
-        case TimerChannel::CHANNEL_1_NEGATED:
-        case TimerChannel::CHANNEL_2:
-        case TimerChannel::CHANNEL_2_NEGATED:
-        case TimerChannel::CHANNEL_3:
-        case TimerChannel::CHANNEL_3_NEGATED:
-        case TimerChannel::CHANNEL_4:
-        case TimerChannel::CHANNEL_5:
-        case TimerChannel::CHANNEL_6:
-            return (static_cast<uint8_t>(ch) &
-                    ~static_cast<uint8_t>(TimerChannel::CHANNEL_NEGATED_FLAG)) -
-                   1;
-
-        default:
-            ST_LIB::compile_error("unreachable");
-            return 0;
-        }
-    }
-
-    static consteval uint8_t get_channel_mul4(const ST_LIB::TimerChannel ch) {
-        switch (ch) {
-        case TimerChannel::CHANNEL_1:
-        case TimerChannel::CHANNEL_1_NEGATED:
-            return 0x00;
-        case TimerChannel::CHANNEL_2:
-        case TimerChannel::CHANNEL_2_NEGATED:
-            return 0x04;
-        case TimerChannel::CHANNEL_3:
-        case TimerChannel::CHANNEL_3_NEGATED:
-            return 0x08;
-        case TimerChannel::CHANNEL_4:
-            return 0x0C;
-        case TimerChannel::CHANNEL_5:
-            return 0x10;
-        case TimerChannel::CHANNEL_6:
-            return 0x14;
-
-        default:
-            ST_LIB::compile_error("unreachable");
-            return 0;
-        }
-    }
-
     TimerWrapper<dev>* timer;
     uint32_t* frequency;
     float* duty_cycle = nullptr;
     bool is_on = false;
 
+    /* This constructor is private for a reason. Use TimerWrapper<dev>::get_pwm */
     PWM(TimerWrapper<dev>* tim,
         uint32_t polarity,
         uint32_t negated_polarity,
@@ -96,18 +52,16 @@ public:
         if (this->is_on)
             return;
 
-        // if(HAL_TIM_PWM_Start(timer->instance->hal_tim, channel) != HAL_OK) { ErrorHandler("", 0);
-        // }
         volatile HAL_TIM_ChannelStateTypeDef* state =
-            &timer->instance->hal_tim->ChannelState[get_channel_state_idx(pin.channel)];
+            &timer->instance->hal_tim
+                 ->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
             ErrorHandler("Channel not ready");
         }
 
         *state = HAL_TIM_CHANNEL_STATE_BUSY;
-        // enable CCx
         uint32_t enableCCx = TIM_CCER_CC1E
-                             << (get_channel_mul4(pin.channel) & 0x1FU
+                             << (TimerDomain::get_channel_mul4(pin.channel) & 0x1FU
                                 ); /* 0x1FU = 31 bits max shift */
         SET_BIT(timer->instance->tim->CCER, enableCCx);
 
@@ -134,11 +88,12 @@ public:
 
         CLEAR_BIT(
             timer->instance->tim->CCER,
-            (uint32_t)(TIM_CCER_CC1E << (get_channel_mul4(pin.channel) & 0x1FU))
+            (uint32_t)(TIM_CCER_CC1E << (TimerDomain::get_channel_mul4(pin.channel) & 0x1FU))
         );
 
         volatile HAL_TIM_ChannelStateTypeDef* state =
-            &timer->instance->hal_tim->ChannelState[get_channel_state_idx(pin.channel)];
+            &timer->instance->hal_tim
+                 ->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
         *state = HAL_TIM_CHANNEL_STATE_READY;
 
         if (timer->are_all_channels_free()) {

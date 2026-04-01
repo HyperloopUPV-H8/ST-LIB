@@ -669,6 +669,13 @@ typedef struct {
 } TIM_OC_InitTypeDef;
 
 typedef struct {
+    uint32_t ICPolarity;
+    uint32_t ICSelection;
+    uint32_t ICPrescaler;
+    uint32_t ICFilter;
+} TIM_IC_InitTypeDef;
+
+typedef struct {
     uint32_t EncoderMode;
     uint32_t IC1Polarity;
     uint32_t IC1Selection;
@@ -717,7 +724,6 @@ typedef struct {
 
 #define TIM_ENCODERMODE_TI12 0U
 #define TIM_ICPOLARITY_RISING 0U
-#define TIM_ICSELECTION_DIRECTTI 0U
 #define TIM_ICPSC_DIV1 0U
 
 #define TIM_TRGO_RESET 0U
@@ -757,25 +763,41 @@ typedef struct {
 #define TIM_SMCR_ECE (1U << 14)
 
 #define TIM_DIER_UIE (1U << 0)
+#define TIM_DIER_CC1IE (1UL << 1)
+#define TIM_DIER_CC2IE (1UL << 2)
+#define TIM_DIER_CC3IE (1UL << 3)
+#define TIM_DIER_CC4IE (1UL << 4)
 #define TIM_DIER_BIE (1U << 7)
+
 #define TIM_SR_UIF (1U << 0)
 #define TIM_SR_COMIF (1U << 5)
 #define TIM_SR_TIF (1U << 6)
 #define TIM_SR_BIF (1U << 7)
 
 #define TIM_CCMR1_CC1S (3U << 0)
+#define TIM_CCMR1_IC1PSC (3U << 2)
 #define TIM_CCMR1_OC1PE (1U << 3)
+#define TIM_CCMR1_IC1F (0xFUL << 4)
 #define TIM_CCMR1_OC1M (7U << 4)
 #define TIM_CCMR1_CC2S (3U << 8)
+#define TIM_CCMR1_IC2PSC (3U << 10)
 #define TIM_CCMR1_OC2PE (1U << 11)
 #define TIM_CCMR1_OC2M (7U << 12)
+#define TIM_CCMR1_IC2F (0xFUL << 12)
+
+#define TIM_CCMR1_CC1S_0 (0x1UL << 0)
+#define TIM_CCMR1_CC1S_1 (0x2UL << 0)
 
 #define TIM_CCMR2_CC3S (3U << 0)
+#define TIM_CCMR2_IC3PSC (3U << 2)
 #define TIM_CCMR2_OC3PE (1U << 3)
 #define TIM_CCMR2_OC3M (7U << 4)
+#define TIM_CCMR2_IC3F (0xFUL << 4)
 #define TIM_CCMR2_CC4S (3U << 8)
+#define TIM_CCMR2_IC4PSC (3U << 10)
 #define TIM_CCMR2_OC4PE (1U << 11)
 #define TIM_CCMR2_OC4M (7U << 12)
+#define TIM_CCMR2_IC4F (0xFUL << 12)
 
 #define TIM_CCMR3_OC5PE (1U << 3)
 #define TIM_CCMR3_OC5M (7U << 4)
@@ -796,6 +818,7 @@ typedef struct {
 #define TIM_CCER_CC3NP (1U << 11)
 #define TIM_CCER_CC4E (1U << 12)
 #define TIM_CCER_CC4P (1U << 13)
+#define TIM_CCER_CC4NP (1U << 15)
 #define TIM_CCER_CC5E (1U << 16)
 #define TIM_CCER_CC5P (1U << 17)
 #define TIM_CCER_CC6E (1U << 20)
@@ -803,6 +826,19 @@ typedef struct {
 #define TIM_CCER_CCxE_MASK                                                                         \
     (TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E | TIM_CCER_CC5E | TIM_CCER_CC6E)
 #define TIM_CCER_CCxNE_MASK (TIM_CCER_CC1NE | TIM_CCER_CC2NE | TIM_CCER_CC3NE)
+
+#define TIM_INPUTCHANNELPOLARITY_RISING 0x00000000U
+#define TIM_INPUTCHANNELPOLARITY_FALLING TIM_CCER_CC1P
+#define TIM_INPUTCHANNELPOLARITY_BOTHEDGE (TIM_CCER_CC1P | TIM_CCER_CC1NP)
+
+#define TIM_ICSELECTION_DIRECTTI TIM_CCMR1_CC1S_0
+#define TIM_ICSELECTION_INDIRECTTI TIM_CCMR1_CC1S_1
+#define TIM_ICSELECTION_TRC TIM_CCMR1_CC1S
+
+#define TIM_IT_CC1 TIM_DIER_CC1IE
+#define TIM_IT_CC2 TIM_DIER_CC2IE
+#define TIM_IT_CC3 TIM_DIER_CC3IE
+#define TIM_IT_CC4 TIM_DIER_CC4IE
 
 #define TIM_BDTR_MOE (1U << 15)
 
