@@ -64,39 +64,47 @@ constexpr ST_LIB::DFSDM_CHANNEL_DOMAIN::Config_Filter dfsdm_filter_sinc5_cfg{
 };
 
 // Test DFSDM Channel constructor with PE4 pin
-constexpr ST_LIB::DFSDM_CHANNEL_DOMAIN::DFSDM_CHANNEL dfsdm_ch_pe4{
-    ST_LIB::PE4,
-    dfsdm_channel_cfg,
-    dfsdm_filter_cfg,
-    128
-};
+constexpr ST_LIB::DFSDM_CHANNEL_DOMAIN::DFSDM_CHANNEL
+    dfsdm_ch_pe4{ST_LIB::PE4, dfsdm_channel_cfg, dfsdm_filter_cfg, 128};
 
 // Test DFSDM Channel constructor with PC0 pin
-constexpr ST_LIB::DFSDM_CHANNEL_DOMAIN::DFSDM_CHANNEL dfsdm_ch_pc0{
-    ST_LIB::PC0,
-    dfsdm_channel_cfg,
-    dfsdm_filter_sinc5_cfg,
-    256
-};
+constexpr ST_LIB::DFSDM_CHANNEL_DOMAIN::DFSDM_CHANNEL
+    dfsdm_ch_pc0{ST_LIB::PC0, dfsdm_channel_cfg, dfsdm_filter_sinc5_cfg, 256};
 
 // Compile-time validation tests
-static_assert(ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
-                  ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::FastSinc, 32),
-              "FastSinc with oversampling 32 should be valid");
+static_assert(
+    ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::FastSinc,
+        32
+    ),
+    "FastSinc with oversampling 32 should be valid"
+);
 
-static_assert(ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
-                  ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc4, 215),
-              "Sinc4 with oversampling 215 should be valid");
+static_assert(
+    ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc4,
+        215
+    ),
+    "Sinc4 with oversampling 215 should be valid"
+);
 
-static_assert(!ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
-                  ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc4, 216),
-              "Sinc4 with oversampling 216 should be invalid (exceeds max)");
+static_assert(
+    !ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc4,
+        216
+    ),
+    "Sinc4 with oversampling 216 should be invalid (exceeds max)"
+);
 
-static_assert(ST_LIB::DFSDM_CHANNEL_DOMAIN::get_channel(ST_LIB::PE4) == 3,
-              "PE4 should map to channel 3");
+static_assert(
+    ST_LIB::DFSDM_CHANNEL_DOMAIN::get_channel(ST_LIB::PE4) == 3,
+    "PE4 should map to channel 3"
+);
 
-static_assert(ST_LIB::DFSDM_CHANNEL_DOMAIN::get_channel(ST_LIB::PC0) == 4,
-              "PC0 should map to channel 4");
+static_assert(
+    ST_LIB::DFSDM_CHANNEL_DOMAIN::get_channel(ST_LIB::PC0) == 4,
+    "PC0 should map to channel 4"
+);
 
 } // namespace
 
@@ -119,19 +127,27 @@ TEST_F(DFSDMTest, ChannelConfigurationIsValidAtCompileTime) {
 TEST_F(DFSDMTest, FilterTypeValidationEnforcesOversamplingLimits) {
     // FastSinc can use up to 1024 oversampling
     EXPECT_TRUE(ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
-        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::FastSinc, 1024));
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::FastSinc,
+        1024
+    ));
 
     // FastSinc cannot exceed 1024
     EXPECT_FALSE(ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
-        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::FastSinc, 1025));
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::FastSinc,
+        1025
+    ));
 
     // Sinc5 can use up to 73 oversampling
     EXPECT_TRUE(ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
-        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc5, 73));
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc5,
+        73
+    ));
 
     // Sinc5 cannot exceed 73
     EXPECT_FALSE(ST_LIB::DFSDM_CHANNEL_DOMAIN::is_correct_oversampling(
-        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc5, 74));
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc5,
+        74
+    ));
 }
 
 TEST_F(DFSDMTest, PinToChannelMappingIsCorrect) {
@@ -207,14 +223,26 @@ TEST_F(DFSDMTest, DFSDMChannelConstructorValidatesConfiguration) {
 TEST_F(DFSDMTest, DFSDMMultipleChannelsWithDifferentFilters) {
     // Validate that multiple channels with different filter types can coexist
     EXPECT_NE(dfsdm_ch_pe4.config_filter.filter_type, dfsdm_ch_pc0.config_filter.filter_type);
-    EXPECT_EQ(dfsdm_ch_pe4.config_filter.filter_type, ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::FastSinc);
-    EXPECT_EQ(dfsdm_ch_pc0.config_filter.filter_type, ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc5);
+    EXPECT_EQ(
+        dfsdm_ch_pe4.config_filter.filter_type,
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::FastSinc
+    );
+    EXPECT_EQ(
+        dfsdm_ch_pc0.config_filter.filter_type,
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Filter_Type::Sinc5
+    );
 }
 
 TEST_F(DFSDMTest, DFSDMChannelConfigurationDifferentModes) {
     // Validate different channel configurations
-    EXPECT_EQ(dfsdm_ch_pe4.config_filter.type_conv, ST_LIB::DFSDM_CHANNEL_DOMAIN::Type_Conversion::Regular);
-    EXPECT_EQ(dfsdm_ch_pc0.config_filter.type_conv, ST_LIB::DFSDM_CHANNEL_DOMAIN::Type_Conversion::Injected);
+    EXPECT_EQ(
+        dfsdm_ch_pe4.config_filter.type_conv,
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Type_Conversion::Regular
+    );
+    EXPECT_EQ(
+        dfsdm_ch_pc0.config_filter.type_conv,
+        ST_LIB::DFSDM_CHANNEL_DOMAIN::Type_Conversion::Injected
+    );
     EXPECT_NE(dfsdm_ch_pe4.config_filter.rcont, dfsdm_ch_pc0.config_filter.rcont);
 }
 
@@ -224,53 +252,53 @@ namespace {
 // Valid DFSDM clock pins
 constexpr ST_LIB::DFSDM_CLK_DOMAIN::DFSDM_CLK dfsdm_clk_pc2{
     ST_LIB::PC2,
-    100  // clk_divider: 100 divider -> ~1.375 MHz (137.5MHz / 100)
+    100 // clk_divider: 100 divider -> ~1.375 MHz (137.5MHz / 100)
 };
 
 constexpr ST_LIB::DFSDM_CLK_DOMAIN::DFSDM_CLK dfsdm_clk_pb0{
     ST_LIB::PB0,
-    50  // clk_divider: 50 divider -> ~2.75 MHz (137.5MHz / 50)
+    50 // clk_divider: 50 divider -> ~2.75 MHz (137.5MHz / 50)
 };
 
 constexpr ST_LIB::DFSDM_CLK_DOMAIN::DFSDM_CLK dfsdm_clk_pe9{
     ST_LIB::PE9,
-    200  // clk_divider: 200 divider (must fit in uint8_t when used)
+    200 // clk_divider: 200 divider (must fit in uint8_t when used)
 };
 
 } // namespace
 
 TEST_F(DFSDMTest, DFSDMClkIsValidPin_PC2) {
     // Test that PC2 is recognized as a valid DFSDM clock pin
-    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
-        ST_LIB::GPIODomain::Port::C, GPIO_PIN_2);
+    bool is_valid =
+        ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(ST_LIB::GPIODomain::Port::C, GPIO_PIN_2);
     EXPECT_TRUE(is_valid);
 }
 
 TEST_F(DFSDMTest, DFSDMClkIsValidPin_PB0) {
     // Test that PB0 is recognized as a valid DFSDM clock pin
-    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
-        ST_LIB::GPIODomain::Port::B, GPIO_PIN_0);
+    bool is_valid =
+        ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(ST_LIB::GPIODomain::Port::B, GPIO_PIN_0);
     EXPECT_TRUE(is_valid);
 }
 
 TEST_F(DFSDMTest, DFSDMClkIsValidPin_PE9) {
     // Test that PE9 is recognized as a valid DFSDM clock pin
-    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
-        ST_LIB::GPIODomain::Port::E, GPIO_PIN_9);
+    bool is_valid =
+        ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(ST_LIB::GPIODomain::Port::E, GPIO_PIN_9);
     EXPECT_TRUE(is_valid);
 }
 
 TEST_F(DFSDMTest, DFSDMClkIsValidPin_PD3) {
     // Test that PD3 is recognized as a valid DFSDM clock pin
-    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
-        ST_LIB::GPIODomain::Port::D, GPIO_PIN_3);
+    bool is_valid =
+        ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(ST_LIB::GPIODomain::Port::D, GPIO_PIN_3);
     EXPECT_TRUE(is_valid);
 }
 
 TEST_F(DFSDMTest, DFSDMClkIsValidPin_PD10) {
     // Test that PD10 is recognized as a valid DFSDM clock pin
-    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
-        ST_LIB::GPIODomain::Port::D, GPIO_PIN_10);
+    bool is_valid =
+        ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(ST_LIB::GPIODomain::Port::D, GPIO_PIN_10);
     EXPECT_TRUE(is_valid);
 }
 
@@ -321,6 +349,8 @@ TEST_F(DFSDMTest, DFSDMClkConstructorBasicProperties_PE9) {
 
 TEST_F(DFSDMTest, DFSDMClkMaxInstances) {
     // Test that maximum instances limit is 1 for clock domain
-    static_assert(ST_LIB::DFSDM_CLK_DOMAIN::max_instances == 1,
-                  "DFSDM clock domain should have max_instances = 1");
+    static_assert(
+        ST_LIB::DFSDM_CLK_DOMAIN::max_instances == 1,
+        "DFSDM clock domain should have max_instances = 1"
+    );
 }

@@ -635,7 +635,8 @@ struct DFSDM_CHANNEL_DOMAIN {
             if (channel_order[i] == -1)
                 continue;
             auto& cfg = cfgs[channel_order[i]];
-            // If regular conversion give the whole buffer to the channels due to only one channel per filter
+            // If regular conversion give the whole buffer to the channels due to only one channel
+            // per filter
             cfg.buffer_pos_ini = buffer_pos[cfg.filter];
             buffer_pos[cfg.filter] += cfg.buffer_size;
         }
@@ -663,8 +664,10 @@ struct DFSDM_CHANNEL_DOMAIN {
         }
         return false;
     }
-    static consteval std::size_t
-    dma_contribution_count(std::span<const Config> cfgs, std::span<const DMADomain::Entry> dma_entries) {
+    static consteval std::size_t dma_contribution_count(
+        std::span<const Config> cfgs,
+        std::span<const DMADomain::Entry> dma_entries
+    ) {
         std::size_t count = 0;
         for (uint8_t fidx = 0; fidx < 4U; ++fidx) {
             if (!uses_filter_dma(fidx, cfgs)) {
@@ -682,8 +685,10 @@ struct DFSDM_CHANNEL_DOMAIN {
         return count;
     }
     template <std::size_t ExtraN>
-    static consteval std::array<DMADomain::Entry, ExtraN>
-    build_dma_contributions(std::span<const DMADomain::Entry> dma_entries, std::span<const Config> cfgs) {
+    static consteval std::array<DMADomain::Entry, ExtraN> build_dma_contributions(
+        std::span<const DMADomain::Entry> dma_entries,
+        std::span<const Config> cfgs
+    ) {
         std::array<DMADomain::Entry, ExtraN> extra{};
         std::size_t cursor = 0;
 

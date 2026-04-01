@@ -1039,7 +1039,8 @@ static inline HAL_StatusTypeDef HAL_TIMEx_ConfigBreakDeadTime(
     return HAL_OK;
 }
 
-// ==================== DFSDM TypeDef (non-volatile for simulator, compatible with constexpr) ====================
+// ==================== DFSDM TypeDef (non-volatile for simulator, compatible with constexpr)
+// ====================
 typedef struct {
     uint32_t CHCFGR1;
     uint32_t CHCFGR2;
@@ -1069,9 +1070,9 @@ typedef struct {
 // Simulator DFSDM peripheral storage (mutable for simulator mode, no volatile)
 #ifdef __cplusplus
 namespace {
-    inline DFSDM_Channel_TypeDef dfsdm1_ch_storage[8]{};
-    inline DFSDM_Filter_TypeDef dfsdm1_f_storage[4]{};
-}
+inline DFSDM_Channel_TypeDef dfsdm1_ch_storage[8]{};
+inline DFSDM_Filter_TypeDef dfsdm1_f_storage[4]{};
+} // namespace
 #endif
 
 // Pointers that can be used in constexpr contexts
