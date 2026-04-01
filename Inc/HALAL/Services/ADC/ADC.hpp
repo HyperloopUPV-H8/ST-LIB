@@ -189,15 +189,7 @@ struct ADCDomain {
             ClockPrescaler prescaler = ClockPrescaler::DIV1,
             uint32_t sample_rate_hz = 0
         )
-            : ADC(
-                  pin,
-                  resolution,
-                  sample_time,
-                  prescaler,
-                  sample_rate_hz,
-                  peripheral,
-                  channel
-              ) {}
+            : ADC(pin, resolution, sample_time, prescaler, sample_rate_hz, peripheral, channel) {}
 
         template <class Ctx> consteval std::size_t inscribe(Ctx& ctx) const {
             const auto gpio_idx = gpio.inscribe(ctx);
