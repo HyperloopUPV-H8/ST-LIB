@@ -1202,7 +1202,7 @@ struct DFSDM_CHANNEL_DOMAIN {
             filter->FLTICR |= DFSDM_FLTICR_CLRJOVRF_Msk;
         }
         if (isr & (channels_enabled << DFSDM_FLTICR_CLRSCDF_Pos)) {
-            uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_SCDF_Msk) >> DFSDM_FLTISR_SCDF_Pos;
+            uint32_t ch = __builtin_ctz((isr & DFSDM_FLTISR_SCDF_Msk) >> DFSDM_FLTISR_SCDF_Pos);
             if (channel_instances[ch] != nullptr &&
                 channel_instances[ch]->short_circuit_cb != nullptr)
                 channel_instances[ch]->short_circuit_cb();
@@ -1210,7 +1210,7 @@ struct DFSDM_CHANNEL_DOMAIN {
             filter->FLTICR |= DFSDM_FLTICR_CLRSCDF;
         }
         if (isr & (channels_enabled << DFSDM_FLTISR_CKABF_Pos)) {
-            uint32_t ch = __builtin_ctz(isr & DFSDM_FLTISR_CKABF_Msk) >> DFSDM_FLTISR_CKABF_Pos;
+            uint32_t ch = __builtin_ctz((isr & DFSDM_FLTISR_CKABF_Msk) >> DFSDM_FLTISR_CKABF_Pos);
             if (channel_instances[ch] != nullptr &&
                 channel_instances[ch]->clock_absence_cb != nullptr)
                 channel_instances[ch]->clock_absence_cb();
