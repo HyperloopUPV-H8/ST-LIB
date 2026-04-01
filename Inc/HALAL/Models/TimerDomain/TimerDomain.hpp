@@ -546,7 +546,8 @@ TimerXList
                     ST_LIB::compile_error("This timer is used by the scheduler");
                 }
 
-                if (requests[i].request != TimerRequest::AnyGeneralPurpose &&
+                if ((requests[i].request != TimerRequest::AnyGeneralPurpose) &&
+                    (requests[i].request != TimerRequest::Any32bit) &&
                     (requests[i].request < 1 || requests[i].request > 24 ||
                      (requests[i].request > 17 && requests[i].request < 23))) {
                     ST_LIB::compile_error("Invalid TimerRequest value for timer");
