@@ -217,3 +217,110 @@ TEST_F(DFSDMTest, DFSDMChannelConfigurationDifferentModes) {
     EXPECT_EQ(dfsdm_ch_pc0.config_filter.type_conv, ST_LIB::DFSDM_CHANNEL_DOMAIN::Type_Conversion::Injected);
     EXPECT_NE(dfsdm_ch_pe4.config_filter.rcont, dfsdm_ch_pc0.config_filter.rcont);
 }
+
+// ==================== DFSDM_CLK_DOMAIN Tests ====================
+
+namespace {
+// Valid DFSDM clock pins
+constexpr ST_LIB::DFSDM_CLK_DOMAIN::DFSDM_CLK dfsdm_clk_pc2{
+    ST_LIB::PC2,
+    100  // clk_divider: 100 divider -> ~1.375 MHz (137.5MHz / 100)
+};
+
+constexpr ST_LIB::DFSDM_CLK_DOMAIN::DFSDM_CLK dfsdm_clk_pb0{
+    ST_LIB::PB0,
+    50  // clk_divider: 50 divider -> ~2.75 MHz (137.5MHz / 50)
+};
+
+constexpr ST_LIB::DFSDM_CLK_DOMAIN::DFSDM_CLK dfsdm_clk_pe9{
+    ST_LIB::PE9,
+    200  // clk_divider: 200 divider (must fit in uint8_t when used)
+};
+
+} // namespace
+
+TEST_F(DFSDMTest, DFSDMClkIsValidPin_PC2) {
+    // Test that PC2 is recognized as a valid DFSDM clock pin
+    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
+        ST_LIB::GPIODomain::Port::C, GPIO_PIN_2);
+    EXPECT_TRUE(is_valid);
+}
+
+TEST_F(DFSDMTest, DFSDMClkIsValidPin_PB0) {
+    // Test that PB0 is recognized as a valid DFSDM clock pin
+    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
+        ST_LIB::GPIODomain::Port::B, GPIO_PIN_0);
+    EXPECT_TRUE(is_valid);
+}
+
+TEST_F(DFSDMTest, DFSDMClkIsValidPin_PE9) {
+    // Test that PE9 is recognized as a valid DFSDM clock pin
+    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
+        ST_LIB::GPIODomain::Port::E, GPIO_PIN_9);
+    EXPECT_TRUE(is_valid);
+}
+
+TEST_F(DFSDMTest, DFSDMClkIsValidPin_PD3) {
+    // Test that PD3 is recognized as a valid DFSDM clock pin
+    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
+        ST_LIB::GPIODomain::Port::D, GPIO_PIN_3);
+    EXPECT_TRUE(is_valid);
+}
+
+TEST_F(DFSDMTest, DFSDMClkIsValidPin_PD10) {
+    // Test that PD10 is recognized as a valid DFSDM clock pin
+    bool is_valid = ST_LIB::DFSDM_CLK_DOMAIN::is_valid_dfsdm_clk_pin(
+        ST_LIB::GPIODomain::Port::D, GPIO_PIN_10);
+    EXPECT_TRUE(is_valid);
+}
+
+TEST_F(DFSDMTest, DFSDMClkAlternateFunction_PC2_AF6) {
+    // Test that PC2 has alternate function AF6
+    auto af = ST_LIB::DFSDM_CLK_DOMAIN::dfsdm_clk_af(ST_LIB::PC2);
+    EXPECT_EQ(af, ST_LIB::GPIODomain::AlternateFunction::AF6);
+}
+
+TEST_F(DFSDMTest, DFSDMClkAlternateFunction_PB0_AF6) {
+    // Test that PB0 has alternate function AF6
+    auto af = ST_LIB::DFSDM_CLK_DOMAIN::dfsdm_clk_af(ST_LIB::PB0);
+    EXPECT_EQ(af, ST_LIB::GPIODomain::AlternateFunction::AF6);
+}
+
+TEST_F(DFSDMTest, DFSDMClkAlternateFunction_PE9_AF3) {
+    // Test that PE9 has alternate function AF3
+    auto af = ST_LIB::DFSDM_CLK_DOMAIN::dfsdm_clk_af(ST_LIB::PE9);
+    EXPECT_EQ(af, ST_LIB::GPIODomain::AlternateFunction::AF3);
+}
+
+TEST_F(DFSDMTest, DFSDMClkAlternateFunction_PD3_AF3) {
+    // Test that PD3 has alternate function AF3
+    auto af = ST_LIB::DFSDM_CLK_DOMAIN::dfsdm_clk_af(ST_LIB::PD3);
+    EXPECT_EQ(af, ST_LIB::GPIODomain::AlternateFunction::AF3);
+}
+
+TEST_F(DFSDMTest, DFSDMClkConstructorBasicProperties_PC2) {
+    // Test DFSDM clock constructor with PC2 pin
+    EXPECT_EQ(dfsdm_clk_pc2.pin.port, ST_LIB::GPIODomain::Port::C);
+    EXPECT_EQ(dfsdm_clk_pc2.pin.pin, GPIO_PIN_2);
+    EXPECT_EQ(dfsdm_clk_pc2.clk_divider, 100);
+}
+
+TEST_F(DFSDMTest, DFSDMClkConstructorBasicProperties_PB0) {
+    // Test DFSDM clock constructor with PB0 pin
+    EXPECT_EQ(dfsdm_clk_pb0.pin.port, ST_LIB::GPIODomain::Port::B);
+    EXPECT_EQ(dfsdm_clk_pb0.pin.pin, GPIO_PIN_0);
+    EXPECT_EQ(dfsdm_clk_pb0.clk_divider, 50);
+}
+
+TEST_F(DFSDMTest, DFSDMClkConstructorBasicProperties_PE9) {
+    // Test DFSDM clock constructor with PE9 pin (high divider value)
+    EXPECT_EQ(dfsdm_clk_pe9.pin.port, ST_LIB::GPIODomain::Port::E);
+    EXPECT_EQ(dfsdm_clk_pe9.pin.pin, GPIO_PIN_9);
+    EXPECT_EQ(dfsdm_clk_pe9.clk_divider, 200);
+}
+
+TEST_F(DFSDMTest, DFSDMClkMaxInstances) {
+    // Test that maximum instances limit is 1 for clock domain
+    static_assert(ST_LIB::DFSDM_CLK_DOMAIN::max_instances == 1,
+                  "DFSDM clock domain should have max_instances = 1");
+}
