@@ -643,8 +643,8 @@ TimerXList
                     uint8_t reqint = remaining_32bit_timers[count_32bit_requests];
                     Config cfg = {
                         .timer_idx = timer_idxmap[reqint],
-                        .trgo1 = requests[i].trgo1,
-                        .trgo2 = requests[i].trgo2
+                        .trgo1 = e.trgo1,
+                        .trgo2 = e.trgo2
                     };
                     cfgs[cfg_idx++] = cfg;
 
