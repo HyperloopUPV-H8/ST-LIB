@@ -981,8 +981,6 @@ struct DFSDM_CHANNEL_DOMAIN {
             return channel;
         }
     };
-    __attribute__((section(".mpu_ram_d1_nc.buffer"))) alignas(32
-    ) static inline int32_t DFSDM_Buffer_Pool[MAX_BUFFER_SIZE_TOTAL];
     static inline Instance* channel_instances[DFSDM_CHANNEL_DOMAIN::max_instances] = {nullptr};
     template <std::size_t N, std::array<Config, N> cfgs> struct Init {
         static constexpr auto sizes = calculate_buffer_sizes(cfgs);
@@ -1194,6 +1192,7 @@ struct DFSDM_CHANNEL_DOMAIN {
             // clear
             filter->FLTICR |= DFSDM_FLTICR_CLRROVRF_Msk;
         }
+        DFSDM_FLTRDATAR_RDATACH_Msk;
         if (isr & DFSDM_FLTISR_JOVRF_Msk) {
             Instance* inst = channel_instances[filter->FLTJDATAR & DFSDM_FLTJDATAR_JDATACH_Msk];
             if (inst != nullptr && inst->overrun_cb != nullptr)
