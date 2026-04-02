@@ -6,7 +6,7 @@
  */
 #include "HALAL/Services/Time/Scheduler.hpp"
 #include "HALAL/Models/TimerDomain/TimerDomain.hpp"
-#include "ErrorHandler/ErrorHandler.hpp"
+#include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 
 #include <stdint.h>
 
@@ -58,75 +58,8 @@ void Scheduler_start(void) {
     ST_LIB::TimerDomain::callbacks[ST_LIB::timer_idxmap[static_cast<uint8_t>(SCHEDULER_TIMER_DOMAIN
     )]] = Scheduler_global_timer_callback;
 
-    // TODO: change this to use TimerDomain::get_timer_clock()?
-    uint32_t prescaler = (SystemCoreClock / Scheduler::FREQUENCY);
-    // setup prescaler
-    {
-        // ref manual: section 8.7.7 RCC domain 1 clock configuration register
-        uint32_t ahb_prescaler = RCC->D1CFGR & RCC_D1CFGR_HPRE_Msk;
-        if ((ahb_prescaler & 0b1000) != 0) {
-            switch (ahb_prescaler) {
-            case 0b1000:
-                prescaler /= 2;
-                break;
-            case 0b1001:
-                prescaler /= 4;
-                break;
-            case 0b1010:
-                prescaler /= 8;
-                break;
-            case 0b1011:
-                prescaler /= 16;
-                break;
-            case 0b1100:
-                prescaler /= 64;
-                break;
-            case 0b1101:
-                prescaler /= 128;
-                break;
-            case 0b1110:
-                prescaler /= 256;
-                break;
-            case 0b1111:
-                prescaler /= 512;
-                break;
-            }
-        }
-
-        // ref manual: section 8.7.8: RCC domain 2 clock configuration register
-        uint32_t apb1_prescaler = (RCC->D2CFGR & RCC_D2CFGR_D2PPRE1_Msk) >> RCC_D2CFGR_D2PPRE1_Pos;
-        if ((apb1_prescaler & 0b100) != 0) {
-            switch (apb1_prescaler) {
-            case 0b100:
-                prescaler /= 2;
-                break;
-            case 0b101:
-                prescaler /= 4;
-                break;
-            case 0b110:
-                prescaler /= 8;
-                break;
-            case 0b111:
-                prescaler /= 16;
-                break;
-            }
-        }
-        // tim2clk = 2 x pclk1 when apb1_prescaler != 1
-        if (apb1_prescaler != 1) {
-            prescaler *= 2;
-        }
-
-        if (prescaler > 1) {
-            prescaler--;
-        }
-    }
-
-    if (prescaler == 0 || prescaler > 0xFFFF) {
-        ErrorHandler("Invalid prescaler value: %u", prescaler);
-        return;
-    }
-
-    Scheduler_global_timer->PSC = (uint16_t)prescaler;
+    uint16_t prescaler = (uint16_t)(ST_LIB::TimerDomain::get_timer_frequency(Scheduler_global_timer) / Scheduler::FREQUENCY);
+    Scheduler_global_timer->PSC = prescaler;
     Scheduler_global_timer->ARR = 0;
     Scheduler_global_timer->DIER |= LL_TIM_DIER_UIE;
     Scheduler_global_timer->CR1 =
@@ -134,7 +67,6 @@ void Scheduler_start(void) {
 
     Scheduler_global_timer->CNT = 0; /* Clear counter value */
 
-    NVIC_EnableIRQ(SCHEDULER_GLOBAL_TIMER_IRQn);
     CLEAR_BIT(Scheduler_global_timer->SR, LL_TIM_SR_UIF); /* clear update interrupt flag */
 
     Scheduler::schedule_next_interval();
@@ -143,7 +75,7 @@ void Scheduler_start(void) {
 void Scheduler::update() {
     // NOTE: Only _one_ id will be shown per call to update()
     if(failing_id != Scheduler::INVALID_ID) [[unlikely]] {
-        ErrorHandler("Too slow, could not execute task %u in time", failing_id);
+        WARNING("Too slow, could not execute task %u in time", failing_id);
         failing_id = Scheduler::INVALID_ID;
     }
 

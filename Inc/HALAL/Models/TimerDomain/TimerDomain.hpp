@@ -818,6 +818,7 @@ struct TimerDomain {
         }
     }
 
+    // NOTE: This is a bit slower than timerwrapper.get_clock_frequency(), so preferrably use that
     static inline uint32_t get_timer_frequency(TIM_TypeDef* tim) {
         uint32_t result = 0;
         if ((tim == TIM2) || (tim == TIM3) || (tim == TIM4) || (tim == TIM5) || (tim == TIM6) ||
