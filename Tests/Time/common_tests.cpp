@@ -34,6 +34,21 @@ void ErrorHandlerModel::ErrorHandlerTrigger(string format, ...) {
 
 void ErrorHandlerModel::ErrorHandlerUpdate() {}
 
+std::string InfoWarning::line;
+std::string InfoWarning::func;
+std::string InfoWarning::file;
+
+namespace ST_LIB::TestInfoWarning {
+    bool fail_on_error = false;
+    int call_count = 0;
+
+    void reset() {
+        fail_on_error = false;
+        call_count = 0;
+    }
+
+    void set_fail_on_error(bool enabled) { fail_on_error = enabled; }
+};
 
 void InfoWarning::SetMetaData(int line, const char* func, const char* file) {
     InfoWarning::line = to_string(line);
@@ -43,8 +58,8 @@ void InfoWarning::SetMetaData(int line, const char* func, const char* file) {
 
 void InfoWarning::InfoWarningTrigger(string format, ...) {
     (void)format;
-    ST_LIB::TestErrorHandler::call_count++;
-    if (ST_LIB::TestErrorHandler::fail_on_error) {
+    ST_LIB::TestInfoWarning::call_count++;
+    if (ST_LIB::TestInfoWarning::fail_on_error) {
         EXPECT_EQ(1, 0);
     }
 }

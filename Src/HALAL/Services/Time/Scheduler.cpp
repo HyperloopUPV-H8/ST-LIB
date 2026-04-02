@@ -59,7 +59,7 @@ void Scheduler_start(void) {
     )]] = Scheduler_global_timer_callback;
 
     uint16_t prescaler =
-        (uint16_t)(ST_LIB::TimerDomain::get_timer_frequency(Scheduler_global_timer) / 
+        (uint16_t)(ST_LIB::TimerDomain::get_timer_frequency(Scheduler_global_timer) /
                    Scheduler::FREQUENCY);
     Scheduler_global_timer->PSC = prescaler;
     Scheduler_global_timer->ARR = 0;
