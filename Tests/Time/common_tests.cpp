@@ -48,7 +48,7 @@ void reset() {
 }
 
 void set_fail_on_error(bool enabled) { fail_on_error = enabled; }
-};
+}; // namespace ST_LIB::TestInfoWarning
 
 void InfoWarning::SetMetaData(int line, const char* func, const char* file) {
     InfoWarning::line = to_string(line);
