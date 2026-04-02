@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "ErrorHandler/ErrorHandler.hpp"
+#include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 
 std::string ErrorHandlerModel::line;
 std::string ErrorHandlerModel::func;
@@ -32,3 +33,18 @@ void ErrorHandlerModel::ErrorHandlerTrigger(string format, ...) {
 }
 
 void ErrorHandlerModel::ErrorHandlerUpdate() {}
+
+
+void InfoWarning::SetMetaData(int line, const char* func, const char* file) {
+    InfoWarning::line = to_string(line);
+    InfoWarning::func = string(func);
+    InfoWarning::file = string(file);
+}
+
+void InfoWarning::InfoWarningTrigger(string format, ...) {
+    (void)format;
+    ST_LIB::TestErrorHandler::call_count++;
+    if (ST_LIB::TestErrorHandler::fail_on_error) {
+        EXPECT_EQ(1, 0);
+    }
+}
