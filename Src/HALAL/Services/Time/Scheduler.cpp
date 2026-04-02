@@ -74,7 +74,7 @@ void Scheduler_start(void) {
 
 void Scheduler::update() {
     // NOTE: Only _one_ id will be shown per call to update()
-    if(failing_id != Scheduler::INVALID_ID) [[unlikely]] {
+    if (failing_id != Scheduler::INVALID_ID) [[unlikely]] {
         WARNING("Too slow, could not execute task %u in time", failing_id);
         failing_id = Scheduler::INVALID_ID;
     }
