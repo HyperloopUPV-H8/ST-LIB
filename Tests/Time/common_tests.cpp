@@ -39,15 +39,15 @@ std::string InfoWarning::func;
 std::string InfoWarning::file;
 
 namespace ST_LIB::TestInfoWarning {
-    bool fail_on_error = false;
-    int call_count = 0;
+bool fail_on_error = false;
+int call_count = 0;
 
-    void reset() {
-        fail_on_error = false;
-        call_count = 0;
-    }
+void reset() {
+    fail_on_error = false;
+    call_count = 0;
+}
 
-    void set_fail_on_error(bool enabled) { fail_on_error = enabled; }
+void set_fail_on_error(bool enabled) { fail_on_error = enabled; }
 };
 
 void InfoWarning::SetMetaData(int line, const char* func, const char* file) {
