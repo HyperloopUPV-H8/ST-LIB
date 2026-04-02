@@ -31,6 +31,8 @@ uint64_t Scheduler::global_tick_us_{0};
 uint32_t Scheduler::current_interval_us_{0};
 uint16_t Scheduler::timeout_idx_{1};
 
+uint16_t failing_id = Scheduler::INVALID_ID;
+
 // ----------------------------
 
 inline void Scheduler::global_timer_disable() {
@@ -139,6 +141,12 @@ void Scheduler_start(void) {
 }
 
 void Scheduler::update() {
+    // NOTE: Only _one_ id will be shown per call to update()
+    if(failing_id != Scheduler::INVALID_ID) [[unlikely]] {
+        ErrorHandler("Too slow, could not execute task %u in time", failing_id);
+        failing_id = Scheduler::INVALID_ID;
+    }
+
     while (ready_bitmap_ != 0u) {
         uint32_t bit_index = static_cast<uint32_t>(__builtin_ctz(ready_bitmap_));
 
@@ -305,7 +313,7 @@ inline void Scheduler::on_timer_update() {
         pop_front();
         // mark task as ready
         if ((ready_bitmap_ & task_bit) != 0) [[unlikely]] {
-            ErrorHandler("Too slow, could not execute task %u in time", candidate_id);
+            failing_id = candidate_id;
         }
         SET_BIT(ready_bitmap_, task_bit);
         if (task.repeating) [[likely]] {
