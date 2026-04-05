@@ -50,6 +50,8 @@
 #include "HALAL/Models/Packets/MdmaPacket.hpp"
 
 #include "HALAL/Benchmarking_toolkit/DataWatchpointTrace/DataWatchpointTrace.hpp"
+
+#include "HALAL/Services/DFSDM/DFSDM.hpp"
 #include "HALAL/HardFault/HardfaultTrace.h"
 #include "HALAL/Services/Communication/Ethernet/NewEthernet.hpp"
 #ifdef STLIB_ETH

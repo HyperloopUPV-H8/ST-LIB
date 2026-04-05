@@ -96,7 +96,9 @@ using DomainsCtx = BuildCtx<
     SdDomain,
     EthernetDomain,
     ADCDomain,
-    EXTIDomain /* PWMDomain, ...*/>;
+    EXTIDomain,
+    DFSDM_CHANNEL_DOMAIN,
+    DFSDM_CLK_DOMAIN /* PWMDomain, ...*/>;
 
 namespace BuildUtils {
 
@@ -166,14 +168,28 @@ template <auto&... devs> struct Board {
                 ctx.template span<DMADomain>(),
                 std::span<const ADCDomain::Config, adcN>{adc_cfgs}
             );
+        constexpr std::size_t dfsdmN = domain_size<DFSDM_CHANNEL_DOMAIN>();
+        constexpr auto dfsdm_cfgs =
+            DFSDM_CHANNEL_DOMAIN::template build<dfsdmN>(ctx.template span<DFSDM_CHANNEL_DOMAIN>());
+        constexpr std::size_t dfsdm_dma_extraN = DFSDM_CHANNEL_DOMAIN::dma_contribution_count(
+            std::span<const DFSDM_CHANNEL_DOMAIN::Config, dfsdmN>{dfsdm_cfgs},
+            ctx.template span<DMADomain>()
+        );
+        constexpr auto dfsdm_dma_entries =
+            DFSDM_CHANNEL_DOMAIN::template build_dma_contributions<dfsdm_dma_extraN>(
+                ctx.template span<DMADomain>(),
+                std::span<const DFSDM_CHANNEL_DOMAIN::Config, dfsdmN>{dfsdm_cfgs}
+            );
+        constexpr std::size_t dfsdm_clkN = domain_size<DFSDM_CLK_DOMAIN>();
         constexpr std::size_t spiN = domain_size<SPIDomain>();
         constexpr std::size_t doutN = domain_size<DigitalOutputDomain>();
         constexpr std::size_t dinN = domain_size<DigitalInputDomain>();
         constexpr std::size_t mdmaPacketN = domain_size<MdmaPacketDomain>();
         constexpr std::size_t sdN = domain_size<SdDomain>();
         constexpr std::size_t ethN = domain_size<EthernetDomain>();
-        constexpr std::size_t dmaN = domain_size<DMADomain>() + adc_dma_extraN;
+        constexpr std::size_t dmaN = domain_size<DMADomain>() + adc_dma_extraN + dfsdm_dma_extraN;
         constexpr std::size_t extiN = domain_size<EXTIDomain>();
+
         // ...
 
         struct ConfigBundle {
@@ -189,6 +205,8 @@ template <auto&... devs> struct Board {
             std::array<EthernetDomain::Config, ethN> eth_cfgs;
             std::array<ADCDomain::Config, adcN> adc_cfgs;
             std::array<EXTIDomain::Config, extiN> exti_cfgs;
+            std::array<DFSDM_CHANNEL_DOMAIN::Config, dfsdmN> dfsdm_cfgs;
+            std::array<DFSDM_CLK_DOMAIN::Config, dfsdm_clkN> dfsdm_clk_cfgs;
             // ...
         };
 
@@ -198,7 +216,8 @@ template <auto&... devs> struct Board {
             .tim_cfgs = TimerDomain::template build<timN>(ctx.template span<TimerDomain>()),
             .dma_cfgs = BuildUtils::build_dma_configs<dmaN>(
                 ctx.template span<DMADomain>(),
-                adc_dma_entries
+                adc_dma_entries,
+                dfsdm_dma_entries
             ),
             .spi_cfgs = SPIDomain::template build<spiN>(ctx.template span<SPIDomain>()),
             .dout_cfgs =
@@ -213,6 +232,9 @@ template <auto&... devs> struct Board {
             .eth_cfgs = EthernetDomain::template build<ethN>(ctx.template span<EthernetDomain>()),
             .adc_cfgs = adc_cfgs,
             .exti_cfgs = EXTIDomain::template build<extiN>(ctx.template span<EXTIDomain>()),
+            .dfsdm_cfgs = dfsdm_cfgs,
+            .dfsdm_clk_cfgs =
+                DFSDM_CLK_DOMAIN::template build<dfsdm_clkN>(ctx.template span<DFSDM_CLK_DOMAIN>())
             // ...
         };
     }
@@ -232,6 +254,8 @@ template <auto&... devs> struct Board {
         constexpr std::size_t ethN = domain_size<EthernetDomain>();
         constexpr std::size_t adcN = domain_size<ADCDomain>();
         constexpr std::size_t extiN = domain_size<EXTIDomain>();
+        constexpr std::size_t dfsdmN = domain_size<DFSDM_CHANNEL_DOMAIN>();
+        constexpr std::size_t dfsdm_clkN = domain_size<DFSDM_CLK_DOMAIN>();
         // ...
 
 #ifdef HAL_IWDG_MODULE_ENABLED
@@ -272,8 +296,17 @@ template <auto&... devs> struct Board {
             GPIODomain::Init<gpioN>::instances,
             DMADomain::Init<dmaN>::instances
         );
-        EXTIDomain::Init<extiN>::init(cfg.exti_cfgs,
-                                      GPIODomain::Init<gpioN>::instances); // ...
+        EXTIDomain::Init<extiN>::init(cfg.exti_cfgs, GPIODomain::Init<gpioN>::instances);
+
+        DFSDM_CHANNEL_DOMAIN::Init<dfsdmN, cfg.dfsdm_cfgs>::init(
+            GPIODomain::Init<gpioN>::instances,
+            DMADomain::Init<dmaN>::instances
+        );
+        DFSDM_CLK_DOMAIN::Init<dfsdm_clkN>::init(
+            cfg.dfsdm_clk_cfgs,
+            GPIODomain::Init<gpioN>::instances
+        );
+        // ...
     }
 
     template <typename Domain, auto& Target, std::size_t I = 0>
@@ -300,6 +333,8 @@ template <auto&... devs> struct Board {
             return Domain::template Init<N, cfg.mpu_cfgs>::instances[idx];
         } else if constexpr (std::is_same_v<Domain, ADCDomain>) {
             return Domain::template Init<N, cfg.adc_cfgs>::instances[idx];
+        } else if constexpr (std::is_same_v<Domain, DFSDM_CHANNEL_DOMAIN>) {
+            return Domain::template Init<N, cfg.dfsdm_cfgs>::instances[idx];
         } else {
             return Domain::template Init<N>::instances[idx];
         }

@@ -298,6 +298,7 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/RTC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Scheduler.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Watchdog/Watchdog.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DFSDM/DFSDM.cpp
 )
 
 

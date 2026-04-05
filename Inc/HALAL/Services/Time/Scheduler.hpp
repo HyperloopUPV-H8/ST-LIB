@@ -9,7 +9,15 @@
 /* Uso del scheduler, descrito en la wiki:
  * https://wiki.hyperloopupv.com/es/firmware/Timing/Scheduler */
 
+/* To allow debugging of inline functions only when testing */
+#ifdef SIM_ON
+#define HYPER_INLINE inline
+#else
+#define HYPER_INLINE
+#endif
+
 #include "stm32h7xx_ll_tim_wrapper.h"
+#include "HALAL/Models/Packets/Packet.hpp"
 
 #include <array>
 #include <cstdint>
@@ -33,9 +41,7 @@ struct Scheduler {
     // temporary, will be removed
     [[deprecated]] static inline void start() {}
     static void update();
-    static inline uint64_t get_global_tick() {
-        return global_tick_us_ + Scheduler_global_timer->CNT;
-    }
+    static uint64_t get_global_tick();
 
     static uint16_t register_task(uint32_t period_us, callback_t func);
     static bool unregister_task(uint16_t id);
@@ -44,7 +50,7 @@ struct Scheduler {
     static bool cancel_timeout(uint16_t id);
 
     // internal
-    static void on_timer_update();
+    static inline void on_timer_update();
     static void schedule_next_interval();
     static constexpr uint32_t FREQUENCY = 1'000'000u; // 1 MHz -> 1us precision
 #ifndef SIM_ON
@@ -92,10 +98,19 @@ private:
     static void remove_sorted(uint8_t id);
 
     // helpers
-    static inline uint8_t get_at(uint8_t idx);
-    static inline void set_at(uint8_t idx, uint8_t id);
-    static inline void pop_front();
-    static inline uint8_t front_id();
+    static HYPER_INLINE uint8_t get_at(uint8_t idx) {
+        return (uint8_t)((sorted_task_ids_ >> (idx * 4)) & 0xF);
+    }
+    static HYPER_INLINE void set_at(uint8_t idx, uint8_t id) {
+        uint64_t shift = idx * 4;
+        uint64_t clearmask = ~(0x0FULL << shift);
+        Scheduler::sorted_task_ids_ = (sorted_task_ids_ & clearmask) | ((uint64_t)id << shift);
+    }
+    static HYPER_INLINE uint8_t front_id() { return *((uint8_t*)&sorted_task_ids_) & 0xF; }
+    static HYPER_INLINE void pop_front() {
+        Scheduler::active_task_count_--;
+        Scheduler::sorted_task_ids_ >>= 4;
+    }
 
     static inline void global_timer_disable();
     static inline void global_timer_enable();

@@ -35,7 +35,11 @@ struct DMADomain {
         spi4,
         spi5,
         spi6,
-        fmac
+        fmac,
+        dfsdm_filter0,
+        dfsdm_filter1,
+        dfsdm_filter2,
+        dfsdm_filter3
     };
 
     enum class Stream : uint8_t {
@@ -98,7 +102,7 @@ struct DMADomain {
         }
         return nullptr;
     }
-
+    static inline consteval bool shares_dma(Peripheral p) { return is_dfsdm(p); }
     struct Entry {
         Peripheral instance;
         Stream stream;
@@ -217,6 +221,16 @@ struct DMADomain {
 
     static consteval bool is_none(Peripheral instance) { return instance == Peripheral::none; }
 
+    static consteval bool is_dfsdm(Peripheral instance) {
+        return is_one_of(
+            instance,
+            Peripheral::dfsdm_filter0,
+            Peripheral::dfsdm_filter1,
+            Peripheral::dfsdm_filter2,
+            Peripheral::dfsdm_filter3
+        );
+    }
+
     static consteval uint32_t get_Request(Peripheral instance, uint8_t i) {
         if (instance == Peripheral::none)
             return DMA_REQUEST_MEM2MEM;
@@ -272,8 +286,20 @@ struct DMADomain {
             return DMA_REQUEST_FMAC_WRITE;
         if (instance == Peripheral::fmac && i == 2)
             return DMA_REQUEST_FMAC_READ;
-
+        if (instance == Peripheral::dfsdm_filter0) {
+            return DMA_REQUEST_DFSDM1_FLT0;
+        }
+        if (instance == Peripheral::dfsdm_filter1) {
+            return DMA_REQUEST_DFSDM1_FLT1;
+        }
+        if (instance == Peripheral::dfsdm_filter2) {
+            return DMA_REQUEST_DFSDM1_FLT2;
+        }
+        if (instance == Peripheral::dfsdm_filter3) {
+            return DMA_REQUEST_DFSDM1_FLT3;
+        }
         compile_error("Invalid DMA request configuration");
+
         return 0;
     }
 
@@ -303,7 +329,7 @@ struct DMADomain {
     static consteval uint32_t get_PeriphDataAlignment(Peripheral instance, uint8_t i) {
         if (is_spi(instance) || is_i2c(instance)) {
             return DMA_PDATAALIGN_BYTE;
-        } else if (is_none(instance)) {
+        } else if (is_none(instance) || (is_dfsdm(instance))) {
             return DMA_PDATAALIGN_WORD;
         }
         return DMA_PDATAALIGN_HALFWORD;

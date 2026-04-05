@@ -143,8 +143,8 @@ if(NOT STM32_CLT_ROOT)
         )
     else()
         list(APPEND _stm32_clt_search_bases
-            "/opt/ST"
-            "$ENV{HOME}/ST"
+            "/opt/[Ss][Tt]"
+            "$ENV{HOME}/[Ss][Tt]"
         )
     endif()
 
@@ -162,8 +162,7 @@ if(NOT STM32_CLT_ROOT)
         )
 
         file(GLOB _stm32_clt_globbed LIST_DIRECTORIES true
-            "${_base_dir}/STM32CubeCLT_${STM32_CLT_REQUIRED_VERSION}*"
-            "${_base_dir}/STM32CubeCLT-${STM32_CLT_REQUIRED_VERSION}*"
+            "${_base_dir}/[Ss][Tt][Mm]32[Cc][Uu][Bb][Ee][Cc][Ll][Tt][_-]${STM32_CLT_REQUIRED_VERSION}*"
         )
         list(APPEND _stm32_clt_candidate_roots ${_stm32_clt_globbed})
     endforeach()
