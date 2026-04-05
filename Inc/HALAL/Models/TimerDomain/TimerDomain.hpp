@@ -149,6 +149,32 @@ enum TimerRequest : uint8_t {
     Basic_6 = 6,
     Basic_7 = 7,
 };
+enum class SelectionTrigger1 : uint32_t {
+    Reset = TIM_TRGO_RESET,
+    Enable = TIM_TRGO_ENABLE,
+    Update = TIM_TRGO_UPDATE,
+    General_Compare = TIM_TRGO_OC1,
+    Compare_channel1 = TIM_TRGO_OC1REF,
+    Compare_channel2 = TIM_TRGO_OC2REF,
+    Compare_channel3 = TIM_TRGO_OC3REF,
+    Compare_channel4 = TIM_TRGO_OC4REF
+};
+enum class SelectionTrigger2 : uint32_t {
+    Reset = TIM_TRGO2_RESET,
+    Enable = TIM_TRGO2_ENABLE,
+    Update = TIM_TRGO2_UPDATE,
+    General_Compare = TIM_TRGO2_OC1,
+    Compare_channel1 = TIM_TRGO2_OC1REF,
+    Compare_channel2 = TIM_TRGO2_OC2REF,
+    Compare_channel3 = TIM_TRGO2_OC3REF,
+    Compare_channel4 = TIM_TRGO2_OC4REF,
+    Compare_channel5 = TIM_TRGO2_OC5REF,
+    Compare_channel6 = TIM_TRGO2_OC6REF,
+    Compare_channel4_R_channel6_F = TIM_TRGO2_OC4REF_RISING_OC6REF_FALLING,
+    Compare_channel4_R_channel6_R = TIM_TRGO2_OC4REF_RISING_OC6REF_RISING,
+    Compare_channel5_R_channel6_F = TIM_TRGO2_OC5REF_RISING_OC6REF_FALLING,
+    Compare_channel5_R_channel6_R = TIM_TRGO2_OC5REF_RISING_OC6REF_RISING
+};
 
 // Alternate functions for timers
 enum class TimerAF {
@@ -261,10 +287,14 @@ struct TimerDomain {
         TimerRequest request;
         uint8_t pin_count;
         std::array<TimerPin, 7> pins; /* this won't be read in Timer constructor */
+        SelectionTrigger1 trgo1{SelectionTrigger1::Reset};
+        SelectionTrigger2 trgo2{SelectionTrigger2::Reset};
     };
 
     struct Config {
         uint8_t timer_idx;
+        SelectionTrigger1 trgo1;
+        SelectionTrigger2 trgo2;
     };
 
     static constexpr TIM_HandleTypeDef* hal_handles[16] = { // general purpose timers
@@ -498,15 +528,17 @@ struct TimerDomain {
             : e(ent.name,
                 ent.request,
                 sizeof...(pinargs),
-                std::array<TimerPin, 7>(
-                    {GetPinFromIdx(pinargs, 0),
-                     GetPinFromIdx(pinargs, 1),
-                     GetPinFromIdx(pinargs, 2),
-                     GetPinFromIdx(pinargs, 3),
-                     GetPinFromIdx(pinargs, 4),
-                     GetPinFromIdx(pinargs, 5),
-                     GetPinFromIdx(pinargs, 6)}
-                )),
+                std::array<TimerPin, 7>({
+                    GetPinFromIdx(pinargs, 0),
+                    GetPinFromIdx(pinargs, 1),
+                    GetPinFromIdx(pinargs, 2),
+                    GetPinFromIdx(pinargs, 3),
+                    GetPinFromIdx(pinargs, 4),
+                    GetPinFromIdx(pinargs, 5),
+                    GetPinFromIdx(pinargs, 6),
+                }),
+                ent.trgo1,
+                ent.trgo2),
               gpio0(GetGPIOFromIdx(pinargs, ent.request, 0)),
               gpio1(GetGPIOFromIdx(pinargs, ent.request, 1)),
               gpio2(GetGPIOFromIdx(pinargs, ent.request, 2)),
@@ -551,6 +583,8 @@ struct TimerDomain {
                 .request = e.request,
                 .pin_count = e.pin_count,
                 .pins = e.pins,
+                .trgo1 = e.trgo1,
+                .trgo2 = e.trgo2
             };
             ctx.template add<TimerDomain>(local_entry, this);
         }
@@ -605,6 +639,8 @@ struct TimerDomain {
 
                 Config cfg = {
                     .timer_idx = timer_idxmap[reqint],
+                    .trgo1 = requests[i].trgo1,
+                    .trgo2 = requests[i].trgo2
                 };
                 cfgs[cfg_idx++] = cfg;
 
@@ -635,9 +671,8 @@ struct TimerDomain {
                 }
 
                 uint8_t reqint = remaining_32bit_timers[count_32bit_requests];
-                Config cfg = {
-                    .timer_idx = timer_idxmap[reqint],
-                };
+                Config cfg =
+                    {.timer_idx = timer_idxmap[reqint], .trgo1 = e.trgo1, .trgo2 = e.trgo2};
                 cfgs[cfg_idx++] = cfg;
 
                 // unordered remove
@@ -684,9 +719,7 @@ struct TimerDomain {
                 ST_LIB::compile_error("This only processes TimerRequest::AnyGeneralPurpose");
             }
             uint8_t reqint = remaining_timers[i];
-            Config cfg = {
-                .timer_idx = timer_idxmap[reqint],
-            };
+            Config cfg = {.timer_idx = timer_idxmap[reqint], .trgo1 = e.trgo1, .trgo2 = e.trgo2};
             cfgs[cfg_idx++] = cfg;
         }
 
@@ -697,6 +730,7 @@ struct TimerDomain {
     struct Instance {
         TIM_TypeDef* tim;
         TIM_HandleTypeDef* hal_tim;
+        TIM_MasterConfigTypeDef master{};
         uint8_t timer_idx;
     };
 
@@ -738,6 +772,7 @@ struct TimerDomain {
 
                 TIM_HandleTypeDef* handle = hal_handles[e.timer_idx];
                 TIM_TypeDef* tim = cmsis_timers[e.timer_idx];
+
                 handle->Instance = tim;
                 handle->Init.Period = 0;
                 handle->Init.Prescaler = 0;
@@ -767,6 +802,15 @@ struct TimerDomain {
                 inst->tim = tim;
                 inst->hal_tim = handle;
                 inst->timer_idx = e.timer_idx;
+                TIM_MasterConfigTypeDef sMasterConfig = {};
+                sMasterConfig.MasterOutputTrigger = static_cast<uint32_t>(e.trgo1);
+                sMasterConfig.MasterOutputTrigger2 = static_cast<uint32_t>(e.trgo2);
+                sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+                inst->master = sMasterConfig;
+                if (HAL_TIMEx_MasterConfigSynchronization(inst->hal_tim, &sMasterConfig) !=
+                    HAL_OK) {
+                    ErrorHandler("Unable to configure master synch");
+                }
             }
         }
     };

@@ -421,6 +421,11 @@ struct __DMA_HandleTypeDef {
 #define DMA_REQUEST_FMAC_WRITE 0x016U
 #define DMA_REQUEST_FMAC_READ 0x017U
 
+#define DMA_REQUEST_DFSDM1_FLT0 0x018U
+#define DMA_REQUEST_DFSDM1_FLT1 0x019U
+#define DMA_REQUEST_DFSDM1_FLT2 0x01AU
+#define DMA_REQUEST_DFSDM1_FLT3 0x01BU
+
 #define DMA_PERIPH_TO_MEMORY 0x000U
 #define DMA_MEMORY_TO_PERIPH 0x001U
 #define DMA_MEMORY_TO_MEMORY 0x002U
@@ -726,11 +731,33 @@ typedef struct {
 #define TIM_ICPOLARITY_RISING 0U
 #define TIM_ICPSC_DIV1 0U
 
-#define TIM_TRGO_RESET 0U
-#define TIM_TRGO2_RESET 0U
 #define TIM_MASTERSLAVEMODE_DISABLE 0U
 #define TIM_BREAK_ENABLE 1U
 #define TIM_LOCKLEVEL_OFF 0U
+
+#define TIM_TRGO_RESET 0U
+#define TIM_TRGO_ENABLE 0x00000010U
+#define TIM_TRGO_UPDATE 0x00000020U
+#define TIM_TRGO_OC1 0x00000030U
+#define TIM_TRGO_OC1REF 0x00000040U
+#define TIM_TRGO_OC2REF 0x00000050U
+#define TIM_TRGO_OC3REF 0x00000060U
+#define TIM_TRGO_OC4REF 0x00000070U
+
+#define TIM_TRGO2_RESET 0U
+#define TIM_TRGO2_ENABLE 0x00000001U
+#define TIM_TRGO2_UPDATE 0x00000002U
+#define TIM_TRGO2_OC1 0x00000003U
+#define TIM_TRGO2_OC1REF 0x00000004U
+#define TIM_TRGO2_OC2REF 0x00000005U
+#define TIM_TRGO2_OC3REF 0x00000006U
+#define TIM_TRGO2_OC4REF 0x00000007U
+#define TIM_TRGO2_OC5REF 0x00000008U
+#define TIM_TRGO2_OC6REF 0x00000009U
+#define TIM_TRGO2_OC4REF_RISING_OC6REF_FALLING 0x0000000AU
+#define TIM_TRGO2_OC4REF_RISING_OC6REF_RISING 0x0000000BU
+#define TIM_TRGO2_OC5REF_RISING_OC6REF_FALLING 0x0000000CU
+#define TIM_TRGO2_OC5REF_RISING_OC6REF_RISING 0x0000000DU
 
 #define TIM_CHANNEL_1 0x00000000U
 #define TIM_CHANNEL_2 0x00000004U
@@ -1011,6 +1038,234 @@ static inline HAL_StatusTypeDef HAL_TIMEx_ConfigBreakDeadTime(
     (void)sBreakDeadTimeConfig;
     return HAL_OK;
 }
+
+// ==================== DFSDM TypeDef (non-volatile for simulator, compatible with constexpr)
+// ====================
+typedef struct {
+    uint32_t CHCFGR1;
+    uint32_t CHCFGR2;
+    uint32_t CHAWSCDR;
+    uint32_t CHWDATR;
+    uint32_t CHDATINR;
+} DFSDM_Channel_TypeDef;
+
+typedef struct {
+    uint32_t FLTCR1;
+    uint32_t FLTCR2;
+    uint32_t FLTISR;
+    uint32_t FLTICR;
+    uint32_t FLTFCR;
+    uint32_t FLTJCHGR;
+    uint32_t FLTJDATAR;
+    uint32_t FLTRDATAR;
+    uint32_t FLTAWHTR;
+    uint32_t FLTAWLTR;
+    uint32_t FLTAWSR;
+    uint32_t FLTAWCFR;
+    uint32_t FLTEXMAX;
+    uint32_t FLTEXMIN;
+    uint32_t FLTCNVTIMR;
+} DFSDM_Filter_TypeDef;
+
+// Simulator DFSDM peripheral storage (mutable for simulator mode, no volatile)
+#ifdef __cplusplus
+namespace {
+inline DFSDM_Channel_TypeDef dfsdm1_ch_storage[8]{};
+inline DFSDM_Filter_TypeDef dfsdm1_f_storage[4]{};
+} // namespace
+#endif
+
+// Pointers that can be used in constexpr contexts
+#define DFSDM1_Channel0 (&dfsdm1_ch_storage[0])
+#define DFSDM1_Channel1 (&dfsdm1_ch_storage[1])
+#define DFSDM1_Channel2 (&dfsdm1_ch_storage[2])
+#define DFSDM1_Channel3 (&dfsdm1_ch_storage[3])
+#define DFSDM1_Channel4 (&dfsdm1_ch_storage[4])
+#define DFSDM1_Channel5 (&dfsdm1_ch_storage[5])
+#define DFSDM1_Channel6 (&dfsdm1_ch_storage[6])
+#define DFSDM1_Channel7 (&dfsdm1_ch_storage[7])
+
+#define DFSDM1_Filter0 (&dfsdm1_f_storage[0])
+#define DFSDM1_Filter1 (&dfsdm1_f_storage[1])
+#define DFSDM1_Filter2 (&dfsdm1_f_storage[2])
+#define DFSDM1_Filter3 (&dfsdm1_f_storage[3])
+
+// ==================== DFSDM Filter Register Bit Positions ====================
+#define DFSDM_FLTFCR_FORD_Pos 29U
+#define DFSDM_FLTFCR_FORD_Msk (0x7U << DFSDM_FLTFCR_FORD_Pos)
+#define DFSDM_FLTFCR_FOSR_Pos 16U
+#define DFSDM_FLTFCR_FOSR_Msk (0x1FFU << DFSDM_FLTFCR_FOSR_Pos)
+#define DFSDM_FLTFCR_IOSR_Pos 0U
+#define DFSDM_FLTFCR_IOSR_Msk (0xFFU << DFSDM_FLTFCR_IOSR_Pos)
+
+// ==================== DFSDM Filter Control Register Bits ====================
+#define DFSDM_FLTCR1_RSWSTART (1U << 5)
+#define DFSDM_FLTCR1_JSWSTART (1U << 6)
+#define DFSDM_FLTCR1_RSYNC (1U << 17)
+#define DFSDM_FLTCR1_RSYNC_Pos 17U
+#define DFSDM_FLTCR1_RSYNC_Msk (0x1U << DFSDM_FLTCR1_RSYNC_Pos)
+#define DFSDM_FLTCR1_RCONT (1U << 18)
+#define DFSDM_FLTCR1_RCONT_Pos 18U
+#define DFSDM_FLTCR1_RCONT_Msk (0x1U << DFSDM_FLTCR1_RCONT_Pos)
+#define DFSDM_FLTCR1_JSCAN (1U << 19)
+#define DFSDM_FLTCR1_JSCAN_Pos 19U
+#define DFSDM_FLTCR1_JEXTEN_0 (1U << 20U)
+#define DFSDM_FLTCR1_JDMAEN (1U << 13)
+#define DFSDM_FLTCR1_JDMAEN_Pos 13U
+#define DFSDM_FLTCR1_JEXTSEL_Pos 24U
+#define DFSDM_FLTCR1_JSYNC (1U << 26U)
+#define DFSDM_FLTCR1_AWFSEL (1U << 30U)
+#define DFSDM_FLTCR1_AWFSEL_Pos 30U
+#define DFSDM_FLTCR1_DFEN (1U << 0)
+#define DFSDM_FLTCR1_DFEN_Msk (0x1U << 0U)
+#define DFSDM_FLTCR1_RDMAEN (1U << 12)
+#define DFSDM_FLTCR1_RDMAEN_Pos 12U
+#define DFSDM_FLTCR1_FAST_Pos 11U
+#define DFSDM_FLTCR1_RCH_Pos 24U
+#define DFSDM_FLTCR1_RCH_Msk (0x7U << DFSDM_FLTCR1_RCH_Pos)
+
+#define DFSDM_FLTCR2_CKABIE (1U << 30)
+#define DFSDM_FLTCR2_SCDIE (1U << 29)
+#define DFSDM_FLTCR2_AWDIE (1U << 15)
+#define DFSDM_FLTCR2_ROVRIE (1U << 14)
+#define DFSDM_FLTCR2_JOVRIE (1U << 13)
+#define DFSDM_FLTCR2_REOCIE (1U << 11)
+#define DFSDM_FLTCR2_JEOCIE (1U << 10)
+#define DFSDM_FLTCR2_AWDCH_Pos 0U
+#define DFSDM_FLTCR2_EXCH_Pos 8U
+#define DFSDM_FLTCR2_AWDCH (0xFFU << DFSDM_FLTCR2_AWDCH_Pos)
+
+// ==================== DFSDM Interrupt Status Register ====================
+#define DFSDM_FLTISR_CKABF (1U << 30)
+#define DFSDM_FLTISR_CKABF_Pos 16U
+#define DFSDM_FLTISR_CKABF_Msk (0xFFU << DFSDM_FLTISR_CKABF_Pos)
+#define DFSDM_FLTISR_SCDF (1U << 29)
+#define DFSDM_FLTISR_SCDF_Pos 24U
+#define DFSDM_FLTISR_SCDF_Msk (0xFFU << DFSDM_FLTISR_SCDF_Pos)
+#define DFSDM_FLTISR_AWDF (1U << 15)
+#define DFSDM_FLTISR_AWDF_Pos 30U
+#define DFSDM_FLTISR_AWDF_Msk (0x1U << DFSDM_FLTISR_AWDF_Pos)
+#define DFSDM_FLTISR_ROVRF (1U << 14)
+#define DFSDM_FLTISR_ROVRF_Msk (0x1U << 14U)
+#define DFSDM_FLTISR_JOVRF (1U << 13)
+#define DFSDM_FLTISR_JOVRF_Msk (0x1U << 13U)
+#define DFSDM_FLTISR_REOCF (1U << 11)
+#define DFSDM_FLTISR_REOCF_Msk (0x1U << 11U)
+#define DFSDM_FLTISR_JEOCF (1U << 10)
+#define DFSDM_FLTISR_JEOCF_Msk (0x1U << 10U)
+
+// ==================== DFSDM Interrupt Clear Register ====================
+#define DFSDM_FLTICR_CLRSCDF (1U << 24)
+#define DFSDM_FLTICR_CLRSCDF_Pos 24U
+#define DFSDM_FLTICR_CLRCKABF (1U << 16)
+#define DFSDM_FLTICR_CLRROVRF_Msk (0x1U << 14U)
+#define DFSDM_FLTICR_CLRJOVRF_Msk (0x1U << 13U)
+#define DFSDM_FLTAWSR_AWHTF_Msk 0xFFU
+#define DFSDM_FLTAWSR_AWLTF_Msk 0xFF00U
+#define DFSDM_FLTAWCFR_CLRAWHTF (0xFFU << 0U)
+#define DFSDM_FLTAWCFR_CLRAWLTF (0xFFU << 8U)
+
+// ==================== DFSDM Data Registers ====================
+#define DFSDM_FLTRDATAR_RDATACH_Pos 0U
+#define DFSDM_FLTRDATAR_RDATACH_Msk 0xFFU
+#define DFSDM_FLTJDATAR_JDATACH_Pos 0U
+#define DFSDM_FLTJDATAR_JDATACH_Msk 0xFFU
+#define DFSDM_FLTJDATAR_JDATA_Pos 8U
+#define DFSDM_FLTJDATAR_JDATA_Msk (0xFFFFFFU << DFSDM_FLTJDATAR_JDATA_Pos)
+#define DFSDM_FLTCNVTIMR_CNVCNT_Pos 0U
+#define DFSDM_FLTEXMIN_EXMIN_Pos 0U
+#define DFSDM_FLTEXMAX_EXMAX_Pos 0U
+
+// ==================== DFSDM Watchdog Registers ====================
+#define DFSDM_FLTAWHTR_AWHT_Pos 0U
+#define DFSDM_FLTAWHTR_AWHT_Msk (0xFFFFFFU << DFSDM_FLTAWHTR_AWHT_Pos)
+#define DFSDM_FLTAWLTR_AWLT_Pos 0U
+#define DFSDM_FLTAWLTR_AWLT_Msk (0xFFFFFFU << DFSDM_FLTAWLTR_AWLT_Pos)
+
+// ==================== DFSDM Channel Configuration ====================
+#define DFSDM_CHCFGR1_DFSDMEN (1U << 0)
+#define DFSDM_CHCFGR1_DFSDMEN_Msk (0x1U << 0U)
+#define DFSDM_CHCFGR1_CHEN (1U << 7)
+#define DFSDM_CHCFGR1_CHEN_Msk (0x1U << 7U)
+#define DFSDM_CHCFGR1_CKABEN (1U << 6)
+#define DFSDM_CHCFGR1_CKABEN_Pos 6U
+#define DFSDM_CHCFGR1_SCDEN (1U << 5)
+#define DFSDM_CHCFGR1_SCDEN_Pos 5U
+#define DFSDM_CHCFGR1_SPICKSEL_Pos 2U
+#define DFSDM_CHCFGR1_SITP_Pos 0U
+#define DFSDM_CHCFGR1_CKOUTSRC (1U << 30)
+#define DFSDM_CHCFGR1_CKOUTDIV_Pos 16U
+#define DFSDM_CHCFGR1_CKOUTDIV_Msk (0xFFU << DFSDM_CHCFGR1_CKOUTDIV_Pos)
+
+#define DFSDM_CHCFGR2_OFFSET_Pos 8U
+#define DFSDM_CHCFGR2_OFFSET_Msk (0xFFFFFFU << DFSDM_CHCFGR2_OFFSET_Pos)
+#define DFSDM_CHCFGR2_DTRBS_Pos 0U
+
+// ==================== DFSDM Channel Watchdog and Serial Interface ====================
+#define DFSDM_CHAWSCDR_SCDT_Pos 0U
+#define DFSDM_CHAWSCDR_AWFORD_Pos 22U
+#define DFSDM_CHAWSCDR_AWFOSR_Pos 16U
+
+// ==================== DFSDM IRQ Numbers ====================
+enum {
+    DFSDM1_FLT0_IRQn = 110,
+    DFSDM1_FLT1_IRQn = 111,
+    DFSDM1_FLT2_IRQn = 112,
+    DFSDM1_FLT3_IRQn = 113,
+};
+
+// ==================== RCC DFSDM Enable ====================
+#define RCC_APB2ENR_DFSDM1EN (1U << 24)
+#define __HAL_RCC_DFSDM1_CLK_ENABLE() (RCC->APB2ENR |= RCC_APB2ENR_DFSDM1EN)
+
+// ==================== MPU Definitions ====================
+#define HAL_MPU_Disable() ((void)0)
+#define HAL_MPU_Enable(x) ((void)0)
+#define SCB_EnableICache() ((void)0)
+#define SCB_EnableDCache() ((void)0)
+#define HAL_MPU_ConfigRegion(x) ((void)0)
+
+#define MPU_REGION_NUMBER0 (0x00U)
+#define MPU_REGION_NUMBER1 (0x01U)
+#define MPU_REGION_NUMBER2 (0x02U)
+#define MPU_REGION_NUMBER3 (0x03U)
+#define MPU_REGION_NUMBER4 (0x04U)
+#define MPU_REGION_NUMBER5 (0x05U)
+#define MPU_REGION_NUMBER6 (0x06U)
+#define MPU_REGION_NUMBER7 (0x07U)
+#define MPU_REGION_NUMBER8 (0x08U)
+#define MPU_REGION_NUMBER10 (0x0AU)
+#define MPU_REGION_NUMBER11 (0x0BU)
+
+#define MPU_REGION_ENABLE (0x01U)
+#define MPU_REGION_SIZE_4GB (0x1FU)
+#define MPU_TEX_LEVEL0 (0x00U)
+#define MPU_TEX_LEVEL1 (0x01U)
+#define MPU_REGION_NO_ACCESS (0x00U)
+#define MPU_REGION_FULL_ACCESS (0x03U)
+#define MPU_INSTRUCTION_ACCESS_ENABLE (0x00U)
+#define MPU_INSTRUCTION_ACCESS_DISABLE (0x01U)
+#define MPU_ACCESS_SHAREABLE (0x01U)
+#define MPU_ACCESS_NOT_SHAREABLE (0x00U)
+#define MPU_ACCESS_CACHEABLE (0x01U)
+#define MPU_ACCESS_NOT_CACHEABLE (0x00U)
+#define MPU_ACCESS_BUFFERABLE (0x01U)
+#define MPU_ACCESS_NOT_BUFFERABLE (0x00U)
+#define MPU_PRIVILEGED_DEFAULT (0x04U)
+
+typedef struct {
+    uint32_t Enable;
+    uint32_t Number;
+    uint32_t BaseAddress;
+    uint32_t Size;
+    uint32_t SubRegionDisable;
+    uint32_t TypeExtField;
+    uint32_t AccessPermission;
+    uint32_t DisableExec;
+    uint32_t IsShareable;
+    uint32_t IsCacheable;
+    uint32_t IsBufferable;
+} MPU_Region_InitTypeDef;
 
 #ifdef __cplusplus
 }
