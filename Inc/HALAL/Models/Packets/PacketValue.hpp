@@ -11,7 +11,7 @@ template <> class PacketValue<> {
 public:
     using value_type = empty_type;
     PacketValue() = default;
-    ~PacketValue() = default;
+    virtual ~PacketValue() = default;
     virtual void* get_pointer() = 0;
     virtual void set_pointer(void* pointer) = 0;
     virtual size_t get_size() = 0;

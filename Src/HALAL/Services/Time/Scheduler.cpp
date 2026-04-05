@@ -1,12 +1,12 @@
 /*
- * Scheduler.hpp
+ * Scheduler.cpp
  *
  * Created on: 17 nov. 2025
  *     Author: Victor (coauthor Stephan)
  */
 #include "HALAL/Services/Time/Scheduler.hpp"
 #include "HALAL/Models/TimerDomain/TimerDomain.hpp"
-#include "ErrorHandler/ErrorHandler.hpp"
+#include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 
 #include <stdint.h>
 
@@ -31,22 +31,7 @@ uint64_t Scheduler::global_tick_us_{0};
 uint32_t Scheduler::current_interval_us_{0};
 uint16_t Scheduler::timeout_idx_{1};
 
-inline uint8_t Scheduler::get_at(uint8_t idx) {
-    int word_idx = idx > 7;
-    uint32_t shift = (idx & 7) << 2;
-    return (((uint32_t*)&sorted_task_ids_)[word_idx] & (0x0F << shift)) >> shift;
-}
-inline void Scheduler::set_at(uint8_t idx, uint8_t id) {
-    uint32_t shift = idx * 4;
-    uint64_t clearmask = ~(0xFF << shift);
-    Scheduler::sorted_task_ids_ = (sorted_task_ids_ & clearmask) | (id << shift);
-}
-inline uint8_t Scheduler::front_id() { return *((uint8_t*)&sorted_task_ids_) & 0xF; }
-inline void Scheduler::pop_front() {
-    // O(1) remove of logical index 0
-    Scheduler::active_task_count_--;
-    Scheduler::sorted_task_ids_ >>= 4;
-}
+uint16_t failing_id = Scheduler::INVALID_ID;
 
 // ----------------------------
 
@@ -73,75 +58,10 @@ void Scheduler_start(void) {
     ST_LIB::TimerDomain::callbacks[ST_LIB::timer_idxmap[static_cast<uint8_t>(SCHEDULER_TIMER_DOMAIN
     )]] = Scheduler_global_timer_callback;
 
-    // TODO: change this to use TimerDomain::get_timer_clock()?
-    uint32_t prescaler = (SystemCoreClock / Scheduler::FREQUENCY);
-    // setup prescaler
-    {
-        // ref manual: section 8.7.7 RCC domain 1 clock configuration register
-        uint32_t ahb_prescaler = RCC->D1CFGR & RCC_D1CFGR_HPRE_Msk;
-        if ((ahb_prescaler & 0b1000) != 0) {
-            switch (ahb_prescaler) {
-            case 0b1000:
-                prescaler /= 2;
-                break;
-            case 0b1001:
-                prescaler /= 4;
-                break;
-            case 0b1010:
-                prescaler /= 8;
-                break;
-            case 0b1011:
-                prescaler /= 16;
-                break;
-            case 0b1100:
-                prescaler /= 64;
-                break;
-            case 0b1101:
-                prescaler /= 128;
-                break;
-            case 0b1110:
-                prescaler /= 256;
-                break;
-            case 0b1111:
-                prescaler /= 512;
-                break;
-            }
-        }
-
-        // ref manual: section 8.7.8: RCC domain 2 clock configuration register
-        uint32_t apb1_prescaler = (RCC->D2CFGR & RCC_D2CFGR_D2PPRE1_Msk) >> RCC_D2CFGR_D2PPRE1_Pos;
-        if ((apb1_prescaler & 0b100) != 0) {
-            switch (apb1_prescaler) {
-            case 0b100:
-                prescaler /= 2;
-                break;
-            case 0b101:
-                prescaler /= 4;
-                break;
-            case 0b110:
-                prescaler /= 8;
-                break;
-            case 0b111:
-                prescaler /= 16;
-                break;
-            }
-        }
-        // tim2clk = 2 x pclk1 when apb1_prescaler != 1
-        if (apb1_prescaler != 1) {
-            prescaler *= 2;
-        }
-
-        if (prescaler > 1) {
-            prescaler--;
-        }
-    }
-
-    if (prescaler == 0 || prescaler > 0xFFFF) {
-        ErrorHandler("Invalid prescaler value: %u", prescaler);
-        return;
-    }
-
-    Scheduler_global_timer->PSC = (uint16_t)prescaler;
+    uint16_t prescaler =
+        (uint16_t)(ST_LIB::TimerDomain::get_timer_frequency(Scheduler_global_timer) /
+                   Scheduler::FREQUENCY);
+    Scheduler_global_timer->PSC = prescaler;
     Scheduler_global_timer->ARR = 0;
     Scheduler_global_timer->DIER |= LL_TIM_DIER_UIE;
     Scheduler_global_timer->CR1 =
@@ -149,31 +69,44 @@ void Scheduler_start(void) {
 
     Scheduler_global_timer->CNT = 0; /* Clear counter value */
 
-    NVIC_EnableIRQ(SCHEDULER_GLOBAL_TIMER_IRQn);
     CLEAR_BIT(Scheduler_global_timer->SR, LL_TIM_SR_UIF); /* clear update interrupt flag */
 
     Scheduler::schedule_next_interval();
 }
 
 void Scheduler::update() {
+    // NOTE: Only _one_ id will be shown per call to update()
+    if (failing_id != Scheduler::INVALID_ID) [[unlikely]] {
+        WARNING("Too slow, could not execute task %u in time", failing_id);
+        failing_id = Scheduler::INVALID_ID;
+    }
+
     while (ready_bitmap_ != 0u) {
         uint32_t bit_index = static_cast<uint32_t>(__builtin_ctz(ready_bitmap_));
 
-        CLEAR_BIT(ready_bitmap_, 1u << bit_index);
-
         Task& task = tasks_[bit_index];
+
         task.callback();
+
+        SchedLock();
+        CLEAR_BIT(ready_bitmap_, 1u << bit_index);
         if (!task.repeating) [[unlikely]] {
-            SchedLock();
             release_slot(static_cast<uint8_t>(bit_index));
-            SchedUnlock();
         }
+        SchedUnlock();
     }
+}
+
+uint64_t Scheduler::get_global_tick() {
+    SchedLock();
+    uint64_t val = global_tick_us_ + Scheduler_global_timer->CNT;
+    SchedUnlock();
+    return val;
 }
 
 inline uint8_t Scheduler::allocate_slot() {
     uint32_t idx = __builtin_ffs(Scheduler::free_bitmap_) - 1;
-    if (idx > static_cast<int>(Scheduler::kMaxTasks)) [[unlikely]]
+    if (idx >= Scheduler::kMaxTasks) [[unlikely]]
         return static_cast<uint8_t>(Scheduler::INVALID_ID);
     Scheduler::free_bitmap_ &= ~(1UL << idx);
     return static_cast<uint8_t>(idx);
@@ -272,9 +205,12 @@ void Scheduler::schedule_next_interval() {
         return;
     }
 
+    SchedLock();
     uint8_t next_id = Scheduler::front_id(); // sorted_task_ids_[0]
     Task& next_task = tasks_[next_id];
     int32_t diff = (int32_t)(next_task.next_fire_us - static_cast<uint32_t>(global_tick_us_));
+    SchedUnlock();
+
     if (diff >= -1 && diff <= 1) [[unlikely]] {
         current_interval_us_ = 1;
         SET_BIT(Scheduler_global_timer->EGR, TIM_EGR_UG); // This should cause an interrupt
@@ -284,18 +220,18 @@ void Scheduler::schedule_next_interval() {
         } else {
             current_interval_us_ = static_cast<uint32_t>(diff);
         }
-        Scheduler_global_timer->ARR = static_cast<uint32_t>(current_interval_us_ - 1u);
-        while (Scheduler_global_timer->CNT > Scheduler_global_timer->ARR) [[unlikely]] {
-            uint32_t offset = Scheduler_global_timer->CNT - Scheduler_global_timer->ARR;
-            current_interval_us_ = offset;
-            SET_BIT(Scheduler_global_timer->EGR, TIM_EGR_UG); // This should cause an interrupt
-            Scheduler_global_timer->CNT = Scheduler_global_timer->CNT + offset;
+
+        Scheduler_global_timer->ARR = current_interval_us_ - 1u;
+        if (Scheduler_global_timer->CNT > Scheduler_global_timer->ARR) [[unlikely]] {
+            uint32_t cnt_temp = Scheduler_global_timer->CNT;
+            Scheduler_global_timer->CNT = 0;
+            global_tick_us_ += cnt_temp;
         }
     }
     Scheduler::global_timer_enable();
 }
 
-void Scheduler::on_timer_update() {
+inline void Scheduler::on_timer_update() {
     global_tick_us_ += current_interval_us_;
 
     while (active_task_count_ > 0) { // Pop all due tasks, several might be due in the same tick
@@ -305,15 +241,20 @@ void Scheduler::on_timer_update() {
         if (diff > 0) [[likely]] {
             break; // Task is in the future, stop processing
         }
+        uint32_t task_bit = 1u << candidate_id;
+
+        SchedLock();
         pop_front();
-
         // mark task as ready
-        SET_BIT(ready_bitmap_, 1u << candidate_id);
-
+        if ((ready_bitmap_ & task_bit) != 0) [[unlikely]] {
+            failing_id = candidate_id;
+        }
+        SET_BIT(ready_bitmap_, task_bit);
         if (task.repeating) [[likely]] {
             task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);
             insert_sorted(candidate_id);
         }
+        SchedUnlock();
     }
 
     schedule_next_interval();
