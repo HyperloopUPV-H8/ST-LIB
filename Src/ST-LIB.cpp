@@ -1,4 +1,6 @@
 #include "ST-LIB.hpp"
+#include "HALAL/Services/Diagnostics/Diagnostics.hpp"
+#include "ST-LIB_HIGH/Protections/FaultRuntime.hpp"
 
 #ifdef STLIB_ETH
 
@@ -11,6 +13,8 @@ void STLIB::start(
     UART::Peripheral& printf_peripheral
 ) {
     HALAL::start(mac, ip, subnet_mask, gateway, printf_peripheral);
+    Diagnostics::Runtime::install_default_sinks();
+    FaultRuntime::install_default_broadcasters();
     STLIB_LOW::start();
     STLIB_HIGH::start();
 }
@@ -29,6 +33,8 @@ void STLIB::start(
 
 void STLIB::start(UART::Peripheral& printf_peripheral) {
     HALAL::start(printf_peripheral);
+    Diagnostics::Runtime::install_default_sinks();
+    FaultRuntime::install_default_broadcasters();
     STLIB_LOW::start();
     STLIB_HIGH::start();
 }
@@ -47,6 +53,6 @@ void STLIB::update() {
     Ethernet::update();
     Server::update_servers();
 #endif
-    ErrorHandlerModel::ErrorHandlerUpdate();
+    Diagnostics::Hub::flush();
     MDMA::update();
 }

@@ -277,6 +277,7 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/LowPowerTimer/LowPowerTimer.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MDMA/MDMA.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MPUManager/MPUManager.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/Packets/Packet.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/Packets/SPIOrder.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/SPI/SPI2.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/DMA/DMA2.cpp
@@ -289,6 +290,10 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/UART/UART.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalInputService/DigitalInputService.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalOutputService/DigitalOutputService.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Diagnostics/DiagnosticFormatter.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Diagnostics/DiagnosticSinks.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Diagnostics/DiagnosticTimestampProvider.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Diagnostics/DiagnosticsHub.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/EXTI/EXTI.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/FMAC/FMAC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Flash/Flash.cpp
@@ -306,7 +311,6 @@ set(HALAL_C_ETH_CORE)
 set(HALAL_CPP_ETH_CORE
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/IPV4/IPV4.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MAC/MAC.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/Packets/Packet.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/SNTP/SNTP.cpp
 )
 
@@ -380,16 +384,16 @@ set(STLIB_LOW_CPP_NO_ETH
 
 set(STLIB_HIGH_C_ETH)
 
-set(STLIB_HIGH_CPP_ETH
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/Boundary.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/ProtectionManager.cpp
-)
+set(STLIB_HIGH_CPP_ETH)
 
 set(STLIB_HIGH_C_NO_ETH)
 
 set(STLIB_HIGH_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/FlashStorer/FlashStorer.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/FlashStorer/FlashVariable.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/FaultController.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/FaultRuntime.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/ProtectionEngine.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/ST-LIB_HIGH.cpp
 )
 

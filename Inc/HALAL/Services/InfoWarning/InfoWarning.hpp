@@ -11,15 +11,11 @@
 
 class InfoWarning {
 private:
-    static string description;
-    static string line;
-    static string func;
-    static string file;
+    static int line;
+    static const char* func;
+    static const char* file;
 
 public:
-    static bool warning_triggered;
-    static bool warning_to_communicate;
-
     /**
      * @brief Triggers WarningHandler and format the warning message. The format works
      * 	      exactly like printf format.
@@ -27,7 +23,7 @@ public:
      * @param format String which will be formated.
      * @param args   Arguments specifying data to print
      */
-    static void InfoWarningTrigger(string format, ...);
+    static void InfoWarningTrigger(const char* format, ...);
 
     /**
      * @brief Get all metadata needed for the warning message, including the line function and file.
@@ -48,8 +44,6 @@ public:
      * @brief Transmit the warning message.
      */
     static void InfoWarningUpdate();
-
-    friend class BoundaryInterface;
 };
 
 #define WARNING(x, ...)                                                                            \
