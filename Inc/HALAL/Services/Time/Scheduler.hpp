@@ -39,9 +39,15 @@ struct Scheduler {
     static constexpr uint32_t INVALID_ID = 2 * kMaxTasks;
 
     // temporary, will be removed
+<<<<<<< HEAD
     [[deprecated]] static inline void start() {}
     static void update();
-    static uint64_t get_global_tick();
+    static inline uint64_t get_global_tick() {
+        if (Scheduler_global_timer == nullptr) {
+            return global_tick_us_;
+        }
+        return global_tick_us_ + Scheduler_global_timer->CNT;
+    }
 
     static uint16_t register_task(uint32_t period_us, callback_t func);
     static bool unregister_task(uint16_t id);
