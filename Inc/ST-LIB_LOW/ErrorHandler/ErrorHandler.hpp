@@ -15,15 +15,11 @@
 
 class ErrorHandlerModel {
 private:
-    static string description;
-    static string line;
-    static string func;
-    static string file;
+    static int line;
+    static const char* func;
+    static const char* file;
 
 public:
-    static double error_triggered;
-    static bool error_to_communicate;
-
     /**
      * @brief Triggers ErrorHandler and format the error message. The format works
      * 	      exactly like printf format.
@@ -32,7 +28,7 @@ public:
      * @param args   Arguments specifying data to print
      * @return uint8_t Id of the service.
      */
-    static void ErrorHandlerTrigger(string format, ...);
+    static void ErrorHandlerTrigger(const char* format, ...);
 
     /**
      * @brief Get all metadata needed for the error message, including the line function and file.
@@ -54,8 +50,6 @@ public:
      * @brief Transmit the error message.
      */
     static void ErrorHandlerUpdate();
-
-    friend class BoundaryInterface;
 };
 
 #define ErrorHandler(x, ...)                                                                       \

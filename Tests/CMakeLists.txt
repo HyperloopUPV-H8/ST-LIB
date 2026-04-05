@@ -17,15 +17,26 @@ FetchContent_MakeAvailable(googletest)
 message(STATUS "Generating test executable for ST-LIB")
 
 add_executable(${STLIB_TEST_EXECUTABLE}
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Models/Packets/Packet.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/Diagnostics/DiagnosticFormatter.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/Diagnostics/DiagnosticSinks.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/Diagnostics/DiagnosticTimestampProvider.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/Diagnostics/DiagnosticsHub.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/InfoWarning/InfoWarning.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/Time/RTC.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Models/SPI/SPI2.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Models/DMA/DMA2.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/DFSDM/DFSDM.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/ST-LIB_HIGH/Protections/FaultController.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/ST-LIB_HIGH/Protections/FaultRuntime.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/ST-LIB_HIGH/Protections/ProtectionEngine.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Time/encoder_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Time/scheduler_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Time/timer_wrapper_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/StateMachine/state_machine_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/adc_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/adc_sensor_test.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/diagnostics_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/spi2_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/dma2_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/dfsdm_test.cpp
