@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
+#include "HALAL/Services/Diagnostics/Diagnostics.hpp"
+#include "ST-LIB_HIGH/Protections/FaultController.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 
-std::string ErrorHandlerModel::line;
-std::string ErrorHandlerModel::func;
-std::string ErrorHandlerModel::file;
+int ErrorHandlerModel::line = 0;
+const char* ErrorHandlerModel::func = "";
+const char* ErrorHandlerModel::file = "";
 
 namespace ST_LIB::TestErrorHandler {
 bool fail_on_error = true;
@@ -19,14 +21,27 @@ void set_fail_on_error(bool enabled) { fail_on_error = enabled; }
 } // namespace ST_LIB::TestErrorHandler
 
 void ErrorHandlerModel::SetMetaData(int line, const char* func, const char* file) {
-    ErrorHandlerModel::line = to_string(line);
-    ErrorHandlerModel::func = string(func);
-    ErrorHandlerModel::file = string(file);
+    ErrorHandlerModel::line = line;
+    ErrorHandlerModel::func = func;
+    ErrorHandlerModel::file = file;
 }
 
-void ErrorHandlerModel::ErrorHandlerTrigger(string format, ...) {
-    (void)format;
+void ErrorHandlerModel::ErrorHandlerTrigger(const char* format, ...) {
+    char buffer[Diagnostics::Config::runtime_message_capacity + 1]{};
+    va_list arguments;
+    va_start(arguments, format);
+    const int32_t written = vsnprintf(buffer, sizeof(buffer), format, arguments);
+    va_end(arguments);
+
     ST_LIB::TestErrorHandler::call_count++;
+    Diagnostics::Hub::publish_runtime_error(
+        buffer,
+        written < 0 || static_cast<size_t>(written) >= sizeof(buffer),
+        line,
+        func,
+        file
+    );
+    FaultController::enter_fault();
     if (ST_LIB::TestErrorHandler::fail_on_error) {
         EXPECT_EQ(1, 0);
     }
