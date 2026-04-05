@@ -2,8 +2,10 @@
 
 #include <string>
 
+#include "HALAL/Services/Diagnostics/Diagnostics.hpp"
 #include "HALAL/HALAL.hpp"
 #include "ST-LIB_HIGH.hpp"
+#include "ST-LIB_HIGH/Protections/FaultRuntime.hpp"
 #include "ST-LIB_LOW.hpp"
 
 class STLIB {
@@ -306,6 +308,10 @@ template <auto&... devs> struct Board {
             cfg.dfsdm_clk_cfgs,
             GPIODomain::Init<gpioN>::instances
         );
+
+        Diagnostics::Runtime::install_default_sinks();
+        FaultRuntime::install_default_broadcasters();
+        ProtectionEngine::initialize();
         // ...
     }
 
