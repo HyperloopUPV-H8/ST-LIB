@@ -46,7 +46,9 @@ MEMORY
 {
   ITCMRAM (xrw)    : ORIGIN = 0x00000000,   LENGTH = 64K
   DTCMRAM (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
-  FLASH    (rx)    : ORIGIN = 0x08000000,   LENGTH = 1024K-128K
+  FLASH    (rx)    : ORIGIN = 0x08000000,   LENGTH = 1024K-128K-128K
+  FLASH_ST (rx)    : ORIGIN = 0x080C0000,   LENGTH = 128K
+  FLASH_BT (rx)    : ORIGIN = 0x080E0000,   LENGTH = 128K
   RAM_D1  (xrw)    : ORIGIN = 0x24000000,   LENGTH = 320K
   RAM_D2  (xrw)    : ORIGIN = 0x30000000,   LENGTH = 32K
   RAM_D3  (xrw)    : ORIGIN = 0x38000000,   LENGTH = 16K
@@ -189,28 +191,28 @@ SECTIONS
     _edata = .;        /* define a global symbol at data end */
   } >DTCMRAM AT> FLASH
   /*
-    this needs to be the last thing in FLASH
-    because the preceeding sections are appended after the one preceeding them
-    this is, if this were the first thing in FLASH
-    the sections below it would try to be placed afterwards
-    thus overflowing the FLASH
+    .hard_fault_log has to be the first thing in the FLASH_ST
   */
 
-  .hardfault_log 0x080C0000 :
+  .hardfault_log :
   {
-    KEEP(*(.hardfault_log))
-    . = . + 0x200;
-  } >FLASH
+    . = ALIGN(4);
+    hf_log = .;
+    KEEP(*(.hardfault_log));
+    . += 0x200;
+  } >FLASH_ST
+
+  . = ALIGN(4);
 
   .metadata_pool :
   {
-  	. = ABSOLUTE(0x080DFD00);
     . = ALIGN(4);
     metadata = .;
     KEEP(*(.metadata_pool))
     . += 0x100;
-  } >FLASH
-
+  } >FLASH_ST
+  PROVIDE(_metadata = metadata);
+  PROVIDE(_hf_log = hf_log);
   /* Uninitialized data section */
   . = ALIGN(4);
   .bss (NOLOAD) :

@@ -41,7 +41,9 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
+
 /* Highest address of the user mode stack */
+_sstack = ORIGIN(DTCMRAM);
 _estack = ORIGIN(DTCMRAM) + LENGTH(DTCMRAM);    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x200 ;      /* required amount of heap  */
@@ -52,7 +54,9 @@ MEMORY
 {
   ITCMRAM (xrw)    : ORIGIN = 0x00000000,   LENGTH = 64K
   DTCMRAM (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
-  FLASH    (rx)    : ORIGIN = 0x08000000,   LENGTH = 1024K-128K
+  FLASH    (rx)    : ORIGIN = 0x08000000,   LENGTH = 1024K-128K - 128K
+  FLASH_ST (rx)    : ORIGIN = 0x080C0000,   LENGTH = 128K
+  FLASH_BT (rx)    : ORIGIN = 0x080E0000,   LENGTH = 128K
   RAM_D1  (xrw)    : ORIGIN = 0x24000000,   LENGTH = 320K
   RAM_D2  (xrw)    : ORIGIN = 0x30000000,   LENGTH = 32K
   RAM_D3  (xrw)    : ORIGIN = 0x38000000,   LENGTH = 16K
@@ -89,6 +93,8 @@ SECTIONS
   .text :
   {
     . = ALIGN(4);
+    _stext = .;
+
     *(.text)           /* .text sections (code) */
     *(.text*)          /* .text* sections (code) */
     *(.glue_7)         /* glue arm to thumb code */
@@ -110,6 +116,14 @@ SECTIONS
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
   } >RAM_D1
+
+  .hardfault_stack (NOLOAD) : /*Stack memory to avoid memfault inside hardfault handler*/
+  {
+    . = ALIGN(8);
+    _hf_stack_start = .;
+    . += 0x400;        /* 1 KB */
+    _hf_stack_end = .;
+  } >DTCMRAM
 
   .ARM.extab (READONLY): { *(.ARM.extab* .gnu.linkonce.armextab.*) } >RAM_D1
   .ARM (READONLY): {
@@ -183,6 +197,17 @@ SECTIONS
     _edata = .;        /* define a global symbol at data end */
   } >DTCMRAM
 
+   /*
+    .hard_fault_log has to be the first thing in the FLASH_ST
+  */
+
+  .hardfault_stack (NOLOAD) : /*Stack memory to avoid memfault inside hardfault handler*/
+  {
+    . = ALIGN(8);
+    _hf_stack_start = .;
+    . += 0x400;        /* 1 KB */
+    _hf_stack_end = .;
+  } >DTCMRAM
   /* Uninitialized data section */
   . = ALIGN(4);
   .bss :

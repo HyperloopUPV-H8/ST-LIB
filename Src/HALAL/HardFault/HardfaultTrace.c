@@ -18,6 +18,7 @@
 extern GPIO_TypeDef* ports_hard_fault[];
 extern uint16_t pins_hard_fault[];
 extern uint8_t hard_fault_leds_count;
+extern uint32_t _hf_log;
 
 static void LED_Blink();
 static void LED_init(void);
