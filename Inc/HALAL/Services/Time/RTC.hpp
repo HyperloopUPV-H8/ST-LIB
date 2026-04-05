@@ -5,8 +5,6 @@
 
 #define RTC_MAX_COUNTER 32767
 
-#ifdef HAL_RTC_MODULE_ENABLED
-
 struct RTCData {
     uint16_t counter;
     uint8_t second;
@@ -35,5 +33,3 @@ public:
         uint16_t year
     );
 };
-
-#endif
