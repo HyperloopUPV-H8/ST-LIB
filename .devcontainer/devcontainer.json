@@ -4,9 +4,6 @@
     "dockerfile": "Containerfile"
   },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "runArgs": [
-    "--userns=keep-id"
-  ],
   "containerEnv": {
     "CONTAINER_NAME": "stm32-project"
   },

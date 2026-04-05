@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 ARG CUBECLT_VERSION=1.21.0
 ARG CUBECLT_INSTALLER=cubeclt_${CUBECLT_VERSION}_installer.sh
 
