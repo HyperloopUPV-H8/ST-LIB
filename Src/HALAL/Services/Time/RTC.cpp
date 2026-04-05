@@ -1,7 +1,10 @@
 #include "HALAL/Services/Time/RTC.hpp"
 
+RTCData Global_RTC::global_RTC{};
+
+#ifdef HAL_RTC_MODULE_ENABLED
+
 RTC_HandleTypeDef hrtc;
-RTCData Global_RTC::global_RTC;
 
 namespace {
 bool rtc_started = false;
@@ -124,6 +127,7 @@ void Global_RTC::set_rtc_data(
         global_RTC = get_rtc_timestamp();
     }
 }
+
 void Global_RTC::update_rtc_data() {
     if (!ensure_started()) {
         return;
@@ -134,3 +138,37 @@ void Global_RTC::update_rtc_data() {
     }
     global_RTC = get_rtc_timestamp();
 }
+
+#else
+
+void Global_RTC::start_rtc() {}
+
+bool Global_RTC::ensure_started() { return false; }
+
+bool Global_RTC::has_valid_time() { return false; }
+
+void Global_RTC::update_rtc_data() {}
+
+RTCData Global_RTC::get_rtc_timestamp() { return global_RTC; }
+
+void Global_RTC::set_rtc_data(
+    uint16_t counter,
+    uint8_t second,
+    uint8_t minute,
+    uint8_t hour,
+    uint8_t day,
+    uint8_t month,
+    uint16_t year
+) {
+    global_RTC = RTCData{
+        .counter = counter,
+        .second = second,
+        .minute = minute,
+        .hour = hour,
+        .day = day,
+        .month = month,
+        .year = year,
+    };
+}
+
+#endif
