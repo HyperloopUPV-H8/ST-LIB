@@ -420,6 +420,8 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
     inline TIM_TypeDef* get_cmsis_handle() { return instance->tim; }
 
     inline void set_prescaler(uint16_t psc) { instance->tim->PSC = psc; }
+    // TODO: 16 bit and 32 bit version (?)
+    inline void set_limit_value(uint32_t arr) { instance->tim->ARR = arr; }
 
     inline void configure32bit(void (*callback)(void*), void* callback_data, uint32_t period) {
         static_assert(

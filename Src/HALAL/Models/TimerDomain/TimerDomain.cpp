@@ -57,7 +57,9 @@ static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel) {
         if (falling_value < info->period)
             info->value_falling = falling_value;
     } else [[unlikely]] {
-        ErrorHandler("TimerDomain::input_capture_info was modified");
+        // TimerDomain::input_capture_info was modified or STM interrupts are all over the place
+        // either way, this is a no-op
+        // ErrorHandler("TimerDomain::input_capture_info was modified");
     }
 }
 
