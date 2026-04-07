@@ -24,7 +24,10 @@ TIM_HandleTypeDef htim24;
 void (*TimerDomain::callbacks[TimerDomain::max_instances])(void*) = {nullptr};
 void* TimerDomain::callback_data[TimerDomain::max_instances] = {nullptr};
 
-TimerDomain::InputCaptureInfo input_capture_info_dummy = {0};
+TimerDomain::InputCaptureInfo input_capture_info_dummy = {
+    .channel_rising = 0xFF,  // any value that isn't possible here
+    .channel_falling = 0xFF, // any value that isn't possible here
+};
 
 TimerDomain::InputCaptureInfo* TimerDomain::input_capture_info[max_instances]
                                                               [input_capture_channels] = {
