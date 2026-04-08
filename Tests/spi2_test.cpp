@@ -9,11 +9,11 @@
 #include "MockedDrivers/mocked_hal_spi.hpp"
 
 extern uint32_t SystemCoreClock;
-namespace ST_LIB::TestErrorHandler {
+namespace ST_LIB::TestPanicReporter {
 void reset();
 void set_fail_on_error(bool enabled);
 extern int call_count;
-} // namespace ST_LIB::TestErrorHandler
+} // namespace ST_LIB::TestPanicReporter
 
 namespace {
 
@@ -96,7 +96,7 @@ protected:
         SystemCoreClock = 64'000'000U;
         ST_LIB::MockedHAL::spi_reset();
         ST_LIB::MockedHAL::dma_reset();
-        ST_LIB::TestErrorHandler::reset();
+        ST_LIB::TestPanicReporter::reset();
         clear_nvic_enables();
         clear_dma_irq_table();
         for (auto& inst : ST_LIB::SPIDomain::spi_instances) {
@@ -204,14 +204,14 @@ TEST_F(SPI2Test, InitWith32BitDataUsesWordAlignmentAndPrescaler) {
 }
 
 TEST_F(SPI2Test, InitFailureOnHALSPIInitDoesNotRegisterOrEnableNVIC) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
     ST_LIB::MockedHAL::spi_set_status(HAL_ERROR);
 
     init_spi<ST_LIB::SPIDomain::SPIMode::MASTER, ST_LIB::SPIConfigTypes::DataSize::SIZE_8BIT>(
         20'000'000U
     );
 
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 1);
     EXPECT_EQ(ST_LIB::SPIDomain::spi_instances[1], nullptr);
     EXPECT_EQ(NVIC_GetEnableIRQ(SPI2_IRQn), 0U);
 }
@@ -292,15 +292,15 @@ TEST_F(SPI2Test, DMACompletionCallbacksSetOperationFlag) {
 }
 
 TEST_F(SPI2Test, CallbacksWithUnknownHandleTriggerErrorPath) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
 
     SPI_HandleTypeDef unknown{};
     HAL_SPI_TxCpltCallback(&unknown);
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 1);
 }
 
 TEST_F(SPI2Test, ErrorCallbackOnKnownHandleRecoversWithoutErrorPath) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
     auto& instance =
         init_spi<ST_LIB::SPIDomain::SPIMode::MASTER, ST_LIB::SPIConfigTypes::DataSize::SIZE_8BIT>(
             20'000'000U
@@ -317,7 +317,7 @@ TEST_F(SPI2Test, ErrorCallbackOnKnownHandleRecoversWithoutErrorPath) {
     hspi->ErrorCode = 0x55U;
     HAL_SPI_ErrorCallback(hspi);
 
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 0);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 0);
     EXPECT_EQ(
         ST_LIB::MockedHAL::spi_get_call_count(ST_LIB::MockedHAL::SPIOperation::Abort),
         before_abort + 1U
@@ -331,7 +331,7 @@ TEST_F(SPI2Test, ErrorCallbackOnKnownHandleRecoversWithoutErrorPath) {
 }
 
 TEST_F(SPI2Test, ErrorCallbackOnKnownHandleTriggersErrorPathWhenRecoveryFails) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
     auto& instance =
         init_spi<ST_LIB::SPIDomain::SPIMode::MASTER, ST_LIB::SPIConfigTypes::DataSize::SIZE_8BIT>(
             20'000'000U
@@ -344,7 +344,7 @@ TEST_F(SPI2Test, ErrorCallbackOnKnownHandleTriggersErrorPathWhenRecoveryFails) {
     ST_LIB::MockedHAL::spi_set_status(HAL_ERROR);
     HAL_SPI_ErrorCallback(hspi);
 
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 1);
     EXPECT_EQ(spi.get_error_count(), 1U);
     EXPECT_TRUE(spi.was_aborted());
 }
