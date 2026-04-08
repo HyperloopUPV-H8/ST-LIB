@@ -5,7 +5,6 @@
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
 #include "HALAL/HALAL.hpp"
 #include "ST-LIB_HIGH.hpp"
-#include "ST-LIB_HIGH/Protections/FaultRuntime.hpp"
 #include "ST-LIB_LOW.hpp"
 
 class STLIB {
@@ -30,6 +29,54 @@ public:
 
 namespace ST_LIB {
 extern void compile_error(const char* msg);
+
+template <auto& OperationalMachine, Callback OnFaultEnter = nullptr> struct FaultPolicy {
+    static_assert(
+        IsStateMachineClass<std::remove_cvref_t<decltype(OperationalMachine)>>,
+        "FaultPolicy operational machine must be a StateMachine"
+    );
+
+    using fault_policy_tag = void;
+    static constexpr bool has_operational_machine = true;
+    static constexpr auto& operational_machine = OperationalMachine;
+    static constexpr Callback on_fault_enter = OnFaultEnter;
+
+    template <class Ctx> consteval std::size_t inscribe(Ctx&) const { return 0; }
+};
+
+template <Callback OnFaultEnter = nullptr> struct FaultPolicyNoMachine {
+    using fault_policy_tag = void;
+    static constexpr bool has_operational_machine = false;
+    static constexpr Callback on_fault_enter = OnFaultEnter;
+
+    template <class Ctx> consteval std::size_t inscribe(Ctx&) const { return 0; }
+};
+
+template <typename T> struct is_fault_policy_type : std::false_type {};
+
+template <auto& OperationalMachine, Callback OnFaultEnter>
+struct is_fault_policy_type<FaultPolicy<OperationalMachine, OnFaultEnter>> : std::true_type {};
+
+template <Callback OnFaultEnter>
+struct is_fault_policy_type<FaultPolicyNoMachine<OnFaultEnter>> : std::true_type {};
+
+template <typename T>
+inline constexpr bool is_fault_policy_type_v = is_fault_policy_type<std::remove_cvref_t<T>>::value;
+
+using DefaultFaultPolicy = FaultPolicyNoMachine<>;
+
+template <typename DefaultPolicy, typename... Ts> struct select_fault_policy_type {
+    using type = DefaultPolicy;
+};
+
+template <typename DefaultPolicy, typename T, typename... Ts>
+struct select_fault_policy_type<DefaultPolicy, T, Ts...> {
+    using CleanT = std::remove_cvref_t<T>;
+    using type = std::conditional_t<
+        is_fault_policy_type_v<CleanT>,
+        CleanT,
+        typename select_fault_policy_type<DefaultPolicy, Ts...>::type>;
+};
 
 // The contract of BuildCtx/Board is documented in docs/st-lib-board-contract.md.
 template <typename... Domains> struct BuildCtx {
@@ -143,6 +190,15 @@ consteval std::array<DMADomain::Config, TotalN> build_dma_configs(
 } // namespace BuildUtils
 
 template <auto&... devs> struct Board {
+private:
+    static constexpr std::size_t fault_policy_count =
+        ((is_fault_policy_type_v<std::remove_cvref_t<decltype(devs)>> ? 1u : 0u) + ... + 0u);
+    static_assert(fault_policy_count <= 1, "Board supports at most one FaultPolicy");
+
+    using SelectedFaultPolicy =
+        typename select_fault_policy_type<DefaultFaultPolicy, decltype(devs)...>::type;
+
+public:
     static consteval auto build_ctx() {
         DomainsCtx ctx{};
         (devs.inscribe(ctx), ...);
@@ -268,6 +324,9 @@ template <auto&... devs> struct Board {
         HALconfig::system_clock();
         HALconfig::peripheral_clock();
 
+        Diagnostics::Runtime::install_default_sinks();
+        FaultController::template install_runtime<SelectedFaultPolicy>();
+
 #ifdef HAL_RTC_MODULE_ENABLED
         (void)Global_RTC::ensure_started();
 #endif
@@ -309,10 +368,8 @@ template <auto&... devs> struct Board {
             GPIODomain::Init<gpioN>::instances
         );
 
-        Diagnostics::Runtime::install_default_sinks();
-        FaultRuntime::install_default_broadcasters();
         ProtectionEngine::initialize();
-        // ...
+        FaultController::start();
     }
 
     template <typename Domain, auto& Target, std::size_t I = 0>
