@@ -503,7 +503,7 @@ struct DMADomain {
 
                 instances[i].dma = {};
                 if (stream == Stream::none) {
-                    ErrorHandler("DMA stream must be selected before init");
+                    PANIC("DMA stream must be selected before init");
                     continue;
                 }
 
@@ -512,7 +512,7 @@ struct DMADomain {
 
                 if (HAL_DMA_Init(&instances[i].dma) != HAL_OK) {
                     instances[i].dma = {};
-                    ErrorHandler("DMA Init failed");
+                    PANIC("DMA Init failed");
                     continue;
                 }
 

@@ -17,7 +17,7 @@ void MultiplierAccelerator::IIR_software_in_software_out_inscribe(
     int16_t* feedback_coefficient_array
 ) {
     if (input_coefficient_array_size > 63 || feedback_coefficient_array_size > 63) {
-        ErrorHandler("Error while configurating IIR FMAC, no coefficient can be greater than 63");
+        PANIC("Error while configurating IIR FMAC, no coefficient can be greater than 63");
         return;
     }
 
@@ -46,7 +46,7 @@ void MultiplierAccelerator::start() {
     if (Instance.mode != MultiplierAccelerator::None) {
         Instance.hfmac->Instance = FMAC;
         if (HAL_FMAC_Init(Instance.hfmac) != HAL_OK) {
-            ErrorHandler("Error while initialising the FMAC");
+            PANIC("Error while initialising the FMAC");
         }
 
         FMAC_FilterConfigTypeDef sFmacConfig;
@@ -76,7 +76,7 @@ void MultiplierAccelerator::start() {
             sFmacConfig.R = 0;
 
             if (HAL_FMAC_FilterConfig(Instance.hfmac, &sFmacConfig) != HAL_OK) {
-                ErrorHandler("Error while configurating the FMAC");
+                PANIC("Error while configurating the FMAC");
             }
 
         } else {
@@ -93,7 +93,7 @@ void MultiplierAccelerator::software_preload(
 #if FMAC_ERROR_CHECK != 0
     if (amount_to_preload > MemoryLayout.FInSize ||
         amount_to_preload > MemoryLayout.FeedbackInSize) {
-        ErrorHandler(
+        PANIC(
             "Error while preloading data, cannot preload more data than the structure can hold"
         );
     }
@@ -109,7 +109,7 @@ void MultiplierAccelerator::software_preload(
             preload_feedback_data,
             amount_to_feedback_preload
         ) != HAL_OK) {
-        ErrorHandler("Unexpected error on preload of data");
+        PANIC("Unexpected error on preload of data");
     }
 }
 
@@ -118,7 +118,7 @@ void MultiplierAccelerator::software_run(int16_t* calculated_data, uint16_t* out
     Process.output_data_size = *output_size;
     Process.state = MultiplierAccelerator::WAITING_DATA;
     if (HAL_FMAC_FilterStart(Instance.hfmac, calculated_data, output_size) != HAL_OK) {
-        ErrorHandler("Error while starting FMAC");
+        PANIC("Error while starting FMAC");
     }
 }
 
@@ -126,7 +126,7 @@ void MultiplierAccelerator::software_load_input(int16_t* input_data, uint16_t* i
     Process.input_data = input_data;
     Process.input_data_size = *input_size;
     if (HAL_FMAC_AppendFilterData(Instance.hfmac, input_data, input_size) != HAL_OK) {
-        ErrorHandler("Error while loading data into the FMAC");
+        PANIC("Error while loading data into the FMAC");
     }
     Process.state = MultiplierAccelerator::RUNNING;
 }
@@ -140,13 +140,13 @@ void MultiplierAccelerator::software_load_repeat(int16_t* input_data, uint16_t* 
             Process.running_output_data,
             &Process.output_data_size
         ) != HAL_OK) {
-        ErrorHandler("Error while preparing buffer for the FMAC");
+        PANIC("Error while preparing buffer for the FMAC");
     }
 
     Process.input_data = input_data;
     Process.input_data_size = *input_size;
     if (HAL_FMAC_AppendFilterData(Instance.hfmac, input_data, input_size) != HAL_OK) {
-        ErrorHandler("Error while loading data into the FMAC");
+        PANIC("Error while loading data into the FMAC");
     }
 }
 
@@ -161,19 +161,19 @@ void MultiplierAccelerator::software_load_full(
     Process.running_output_data = output_data;
     Process.output_data_size = *output_size;
     if (HAL_FMAC_ConfigFilterOutputBuffer(Instance.hfmac, output_data, output_size) != HAL_OK) {
-        ErrorHandler("Error while preparing buffer for the FMAC");
+        PANIC("Error while preparing buffer for the FMAC");
     }
 
     Process.input_data = input_data;
     Process.input_data_size = *input_size;
     if (HAL_FMAC_AppendFilterData(Instance.hfmac, input_data, input_size) != HAL_OK) {
-        ErrorHandler("Error while loading data into the FMAC");
+        PANIC("Error while loading data into the FMAC");
     }
 }
 
 void MultiplierAccelerator::software_stop() {
     if (HAL_FMAC_FilterStop(Instance.hfmac) != HAL_OK) {
-        ErrorHandler("Error while stopping FMAC");
+        PANIC("Error while stopping FMAC");
     }
 }
 
@@ -193,4 +193,4 @@ void HAL_FMAC_OutputDataReadyCallback(FMAC_HandleTypeDef* hfmac) {
     MultiplierAccelerator::Process.state = MultiplierAccelerator::WAITING_DATA;
 }
 
-void HAL_FMAC_ErrorCallback(FMAC_HandleTypeDef* hfmac) { ErrorHandler("Error while running FMAC"); }
+void HAL_FMAC_ErrorCallback(FMAC_HandleTypeDef* hfmac) { PANIC("Error while running FMAC"); }

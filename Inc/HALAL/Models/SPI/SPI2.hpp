@@ -147,7 +147,7 @@ struct SPIDomain {
             if consteval {
                 compile_error("Invalid prescaler value");
             } else {
-                ErrorHandler("Invalid prescaler value");
+                PANIC("Invalid prescaler value");
                 return SPI_BAUDRATEPRESCALER_256;
             }
         }
@@ -591,7 +591,7 @@ struct SPIDomain {
          */
         template <typename E, size_t S> bool send(span<E, S> data) {
             if (data.size_bytes() % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     data.size_bytes(),
                     frame_size
@@ -615,9 +615,8 @@ struct SPIDomain {
         bool send(const T& data)
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
-            using element_type = std::remove_volatile_t<T>;
-            if (sizeof(element_type) % frame_size != 0) {
-                ErrorHandler(
+            if (sizeof(T) % frame_size != 0) {
+                PANIC(
                     "SPI data type size (%d) not aligned to frame size (%d)",
                     sizeof(element_type),
                     frame_size
@@ -638,7 +637,7 @@ struct SPIDomain {
          */
         template <typename E, size_t S> bool receive(span<E, S> data) {
             if (data.size_bytes() % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     data.size_bytes(),
                     frame_size
@@ -662,9 +661,8 @@ struct SPIDomain {
         bool receive(T& data)
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
-            using element_type = std::remove_volatile_t<T>;
-            if (sizeof(element_type) % frame_size != 0) {
-                ErrorHandler(
+            if (sizeof(T) % frame_size != 0) {
+                PANIC(
                     "SPI data type size (%d) not aligned to frame size (%d)",
                     sizeof(element_type),
                     frame_size
@@ -687,7 +685,7 @@ struct SPIDomain {
         bool transceive(span<E1, S1> tx_data, span<E2, S2> rx_data) {
             size_t size = std::min(tx_data.size_bytes(), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -738,7 +736,7 @@ struct SPIDomain {
         {
             size_t size = std::min(tx_data.size_bytes(), sizeof(T));
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -767,7 +765,7 @@ struct SPIDomain {
         {
             size_t size = std::min(sizeof(T), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -797,7 +795,7 @@ struct SPIDomain {
             using rx_element_type = std::remove_volatile_t<T2>;
             size_t size = std::min(sizeof(tx_element_type), sizeof(rx_element_type));
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -822,7 +820,7 @@ struct SPIDomain {
         bool send_DMA(span<E, S> data, volatile bool* operation_flag = nullptr) {
             spi_instance.operation_flag = operation_flag;
             if (data.size_bytes() % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     data.size_bytes(),
                     frame_size
@@ -847,9 +845,8 @@ struct SPIDomain {
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
             spi_instance.operation_flag = operation_flag;
-            using element_type = std::remove_volatile_t<T>;
-            if (sizeof(element_type) % frame_size != 0) {
-                ErrorHandler(
+            if (sizeof(T) % frame_size != 0) {
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     sizeof(element_type),
                     frame_size
@@ -872,7 +869,7 @@ struct SPIDomain {
         bool receive_DMA(span<E, S> data, volatile bool* operation_flag = nullptr) {
             spi_instance.operation_flag = operation_flag;
             if (data.size_bytes() % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     data.size_bytes(),
                     frame_size
@@ -897,9 +894,8 @@ struct SPIDomain {
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
             spi_instance.operation_flag = operation_flag;
-            using element_type = std::remove_volatile_t<T>;
-            if (sizeof(element_type) % frame_size != 0) {
-                ErrorHandler(
+            if (sizeof(T) % frame_size != 0) {
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     sizeof(element_type),
                     frame_size
@@ -927,7 +923,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(tx_data.size_bytes(), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -957,7 +953,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(tx_data.size_bytes(), sizeof(T));
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -991,7 +987,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(sizeof(T), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -1022,7 +1018,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(sizeof(tx_element_type), sizeof(rx_element_type));
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -1046,7 +1042,7 @@ struct SPIDomain {
             } else if (error_code == HAL_BUSY) {
                 return false;
             } else {
-                ErrorHandler("SPI transmit error: %u", static_cast<uint8_t>(error_code));
+                PANIC("SPI transmit error: %u", static_cast<uint8_t>(error_code));
                 return false;
             }
         }
@@ -1102,7 +1098,7 @@ struct SPIDomain {
         bool listen(span<E, S> data, volatile bool* operation_flag = nullptr) {
             spi_instance.operation_flag = operation_flag;
             if (data.size_bytes() % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     data.size_bytes(),
                     frame_size
@@ -1127,9 +1123,8 @@ struct SPIDomain {
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
             spi_instance.operation_flag = operation_flag;
-            using element_type = std::remove_volatile_t<T>;
-            if (sizeof(element_type) % frame_size != 0) {
-                ErrorHandler(
+            if (sizeof(T) % frame_size != 0) {
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     sizeof(element_type),
                     frame_size
@@ -1152,7 +1147,7 @@ struct SPIDomain {
         bool arm(span<E, S> tx_data, volatile bool* operation_flag = nullptr) {
             spi_instance.operation_flag = operation_flag;
             if (tx_data.size_bytes() % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     tx_data.size_bytes(),
                     frame_size
@@ -1177,9 +1172,8 @@ struct SPIDomain {
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
             spi_instance.operation_flag = operation_flag;
-            using element_type = std::remove_volatile_t<T>;
-            if (sizeof(element_type) % frame_size != 0) {
-                ErrorHandler(
+            if (sizeof(T) % frame_size != 0) {
+                PANIC(
                     "SPI data size (%d) not aligned to frame size (%d)",
                     sizeof(element_type),
                     frame_size
@@ -1207,7 +1201,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(tx_data.size_bytes(), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -1237,7 +1231,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(tx_data.size_bytes(), sizeof(T));
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -1268,7 +1262,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(sizeof(T), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -1299,7 +1293,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(sizeof(tx_element_type), sizeof(rx_element_type));
             if (size % frame_size != 0) {
-                ErrorHandler(
+                PANIC(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
                     size,
                     frame_size
@@ -1323,7 +1317,7 @@ struct SPIDomain {
             } else if (error_code == HAL_BUSY) {
                 return false;
             } else {
-                ErrorHandler("SPI transmit error: %u", static_cast<uint8_t>(error_code));
+                PANIC("SPI transmit error: %u", static_cast<uint8_t>(error_code));
                 return false;
             }
         }
@@ -1414,7 +1408,7 @@ struct SPIDomain {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI1;
                     PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-                        ErrorHandler("Unable to configure SPI1 clock");
+                        PANIC("Unable to configure SPI1 clock");
                     }
                     __HAL_RCC_SPI1_CLK_ENABLE();
                     spi_number = 1;
@@ -1422,7 +1416,7 @@ struct SPIDomain {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI2;
                     PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-                        ErrorHandler("Unable to configure SPI2 clock");
+                        PANIC("Unable to configure SPI2 clock");
                     }
                     __HAL_RCC_SPI2_CLK_ENABLE();
                     spi_number = 2;
@@ -1430,7 +1424,7 @@ struct SPIDomain {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI3;
                     PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-                        ErrorHandler("Unable to configure SPI3 clock");
+                        PANIC("Unable to configure SPI3 clock");
                     }
                     __HAL_RCC_SPI3_CLK_ENABLE();
                     spi_number = 3;
@@ -1438,7 +1432,7 @@ struct SPIDomain {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI4;
                     PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_PLL2;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-                        ErrorHandler("Unable to configure SPI4 clock");
+                        PANIC("Unable to configure SPI4 clock");
                     }
                     __HAL_RCC_SPI4_CLK_ENABLE();
                     spi_number = 4;
@@ -1446,7 +1440,7 @@ struct SPIDomain {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI5;
                     PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_PLL2;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-                        ErrorHandler("Unable to configure SPI5 clock");
+                        PANIC("Unable to configure SPI5 clock");
                     }
                     __HAL_RCC_SPI5_CLK_ENABLE();
                     spi_number = 5;
@@ -1454,7 +1448,7 @@ struct SPIDomain {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI6;
                     PeriphClkInitStruct.Spi6ClockSelection = RCC_SPI6CLKSOURCE_PLL2;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-                        ErrorHandler("Unable to configure SPI6 clock");
+                        PANIC("Unable to configure SPI6 clock");
                     }
                     __HAL_RCC_SPI6_CLK_ENABLE();
                     spi_number = 6;
@@ -1541,7 +1535,7 @@ struct SPIDomain {
                 init.IOSwap = SPIConfigTypes::translate_io_swap(e.config.io_swap);
 
                 if (HAL_SPI_Init(&hspi) != HAL_OK) {
-                    ErrorHandler("Unable to init SPI%u", spi_number);
+                    PANIC("Unable to init SPI%u", spi_number);
                     return;
                 }
 

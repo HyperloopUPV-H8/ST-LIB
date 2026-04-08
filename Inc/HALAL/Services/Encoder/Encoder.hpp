@@ -50,7 +50,7 @@ public:
         sConfig.IC2Filter = 0;
 
         if (HAL_TIM_Encoder_Init(tim->instance->hal_tim, &sConfig) != HAL_OK) {
-            ErrorHandler("Unable to init encoder");
+            PANIC("Unable to init encoder");
             return;
         }
 
@@ -58,7 +58,7 @@ public:
         sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
         if (HAL_TIMEx_MasterConfigSynchronization(tim->instance->hal_tim, &sMasterConfig) !=
             HAL_OK) {
-            ErrorHandler("Unable to config master synchronization in encoder");
+            PANIC("Unable to config master synchronization in encoder");
             return;
         }
 
@@ -78,11 +78,11 @@ public:
         if (is_on)
             return;
         if (HAL_TIM_Encoder_GetState(timer->instance->hal_tim) == HAL_TIM_STATE_RESET) {
-            ErrorHandler("Unable to get state from encoder");
+            PANIC("Unable to get state from encoder");
             return;
         }
         if (HAL_TIM_Encoder_Start(timer->instance->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
-            ErrorHandler("Unable to start encoder");
+            PANIC("Unable to start encoder");
             return;
         }
         is_on = true;
@@ -94,7 +94,7 @@ public:
             return;
 
         if (HAL_TIM_Encoder_Stop(timer->instance->hal_tim, TIM_CHANNEL_ALL) != HAL_OK) {
-            ErrorHandler("Unable to stop encoder");
+            PANIC("Unable to stop encoder");
             return;
         }
         is_on = false;

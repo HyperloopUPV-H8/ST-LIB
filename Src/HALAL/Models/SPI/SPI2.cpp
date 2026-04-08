@@ -6,7 +6,7 @@ uint32_t ST_LIB::SPIDomain::calculate_prescaler(uint32_t src_freq, uint32_t max_
         prescaler *= 2; // Prescaler doubles each step (it must be a power of 2)
 
         if (prescaler > 256) {
-            ErrorHandler("Cannot achieve desired baudrate, speed is too low");
+            PANIC("Cannot achieve desired baudrate, speed is too low");
         }
     }
 
@@ -24,7 +24,7 @@ extern "C" {
 void SPI1_IRQHandler(void) {
     auto inst = ST_LIB::SPIDomain::spi_instances[0];
     if (inst == nullptr) {
-        ErrorHandler("SPI1 IRQ Handler called but instance is null");
+        PANIC("SPI1 IRQ Handler called but instance is null");
         return;
     }
     HAL_SPI_IRQHandler(&inst->hspi);
@@ -32,7 +32,7 @@ void SPI1_IRQHandler(void) {
 void SPI2_IRQHandler(void) {
     auto inst = ST_LIB::SPIDomain::spi_instances[1];
     if (inst == nullptr) {
-        ErrorHandler("SPI2 IRQ Handler called but instance is null");
+        PANIC("SPI2 IRQ Handler called but instance is null");
         return;
     }
     HAL_SPI_IRQHandler(&inst->hspi);
@@ -40,7 +40,7 @@ void SPI2_IRQHandler(void) {
 void SPI3_IRQHandler(void) {
     auto inst = ST_LIB::SPIDomain::spi_instances[2];
     if (inst == nullptr) {
-        ErrorHandler("SPI3 IRQ Handler called but instance is null");
+        PANIC("SPI3 IRQ Handler called but instance is null");
         return;
     }
     HAL_SPI_IRQHandler(&inst->hspi);
@@ -48,7 +48,7 @@ void SPI3_IRQHandler(void) {
 void SPI4_IRQHandler(void) {
     auto inst = ST_LIB::SPIDomain::spi_instances[3];
     if (inst == nullptr) {
-        ErrorHandler("SPI4 IRQ Handler called but instance is null");
+        PANIC("SPI4 IRQ Handler called but instance is null");
         return;
     }
     HAL_SPI_IRQHandler(&inst->hspi);
@@ -56,7 +56,7 @@ void SPI4_IRQHandler(void) {
 void SPI5_IRQHandler(void) {
     auto inst = ST_LIB::SPIDomain::spi_instances[4];
     if (inst == nullptr) {
-        ErrorHandler("SPI5 IRQ Handler called but instance is null");
+        PANIC("SPI5 IRQ Handler called but instance is null");
         return;
     }
     HAL_SPI_IRQHandler(&inst->hspi);
@@ -64,7 +64,7 @@ void SPI5_IRQHandler(void) {
 void SPI6_IRQHandler(void) {
     auto inst = ST_LIB::SPIDomain::spi_instances[5];
     if (inst == nullptr) {
-        ErrorHandler("SPI6 IRQ Handler called but instance is null");
+        PANIC("SPI6 IRQ Handler called but instance is null");
         return;
     }
     HAL_SPI_IRQHandler(&inst->hspi);
@@ -93,7 +93,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef* hspi) {
     } else if (spi_instances[5] != nullptr && hspi == &spi_instances[5]->hspi) {
         inst = spi_instances[5];
     } else {
-        ErrorHandler("SPI IRQ Callback called but instance is null");
+        PANIC("SPI IRQ Callback called but instance is null");
         return;
     }
 
@@ -137,12 +137,12 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef* hspi) {
         inst = spi_instances[5];
         inst_idx = 5;
     } else {
-        ErrorHandler("SPI IRQ Callback called but instance is null");
+        PANIC("SPI IRQ Callback called but instance is null");
         return;
     }
 
     if (!inst->recover()) {
-        ErrorHandler(
+        PANIC(
             "SPI%i failed with error number %u (recovery failed, error count: %u)",
             inst_idx + 1,
             error_code,

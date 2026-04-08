@@ -19,7 +19,7 @@ ServerSocket::ServerSocket() = default;
 ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port)
     : local_ip(local_ip), local_port(local_port) {
     if (not Ethernet::is_running) {
-        ErrorHandler("Cannot declare TCP server socket before Ethernet::start()");
+        PANIC("Cannot declare TCP server socket before Ethernet::start()");
         return;
     }
     tx_packet_buffer = {};
@@ -29,7 +29,7 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port)
     state = INACTIVE;
     server_control_block = tcp_new();
     if (server_control_block == nullptr) {
-        ErrorHandler("Cannot allocate TCP server control block");
+        PANIC("Cannot allocate TCP server control block");
         return;
     }
     tcp_nagle_disable(server_control_block);
@@ -39,7 +39,7 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port)
     if (error == ERR_OK) {
         server_control_block = tcp_listen(server_control_block);
         if (server_control_block == nullptr) {
-            ErrorHandler("Cannot switch TCP server socket into LISTEN mode");
+            PANIC("Cannot switch TCP server socket into LISTEN mode");
             return;
         }
         state = LISTENING;
@@ -49,7 +49,7 @@ ServerSocket::ServerSocket(IPV4 local_ip, uint32_t local_port)
     } else {
         tcp_abort(server_control_block);
         server_control_block = nullptr;
-        ErrorHandler("Cannot bind server socket, error %d", (int16_t)error);
+        PANIC("Cannot bind server socket, error %d", (int16_t)error);
         return;
     }
     if (std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this) ==
