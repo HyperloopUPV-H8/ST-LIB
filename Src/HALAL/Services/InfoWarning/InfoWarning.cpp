@@ -1,38 +1,64 @@
-/*
- * InfoWarning.cpp
- *
- *  Created on: Jun 12, 2024
- *      Author: gonzalo
- */
-
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
 
-int InfoWarning::line = 0;
-const char* InfoWarning::func = "Warning-No-Func-Found";
-const char* InfoWarning::file = "Warning-No-File-Found";
+namespace {
 
-void InfoWarning::SetMetaData(int line, const char* func, const char* file) {
-    InfoWarning::line = line;
-    InfoWarning::func = func;
-    InfoWarning::file = file;
+void publish_runtime_diagnostic(
+    Diagnostics::Severity severity,
+    const std::source_location& location,
+    const char* format,
+    va_list arguments
+) {
+    char buffer[Diagnostics::Config::runtime_message_capacity + 1]{};
+    const int32_t written = vsnprintf(buffer, sizeof(buffer), format, arguments);
+
+    switch (severity) {
+    case Diagnostics::Severity::WARNING:
+        Diagnostics::Hub::publish_runtime_warning(
+            buffer,
+            written < 0 || static_cast<size_t>(written) >= sizeof(buffer),
+            static_cast<int>(location.line()),
+            location.function_name(),
+            location.file_name()
+        );
+        return;
+    case Diagnostics::Severity::INFO:
+        Diagnostics::Hub::publish_runtime_info(
+            buffer,
+            written < 0 || static_cast<size_t>(written) >= sizeof(buffer),
+            static_cast<int>(location.line()),
+            location.function_name(),
+            location.file_name()
+        );
+        return;
+    case Diagnostics::Severity::FAULT:
+        std::unreachable();
+    }
 }
 
-void InfoWarning::InfoWarningTrigger(const char* format, ...) {
-    char buffer[Diagnostics::Config::runtime_message_capacity + 1]{};
+} // namespace
+
+void RuntimeDiagnosticReporter::TriggerWarning(
+    const std::source_location& location,
+    const char* format,
+    ...
+) {
     va_list arguments;
     va_start(arguments, format);
-    const int32_t written = vsnprintf(buffer, sizeof(buffer), format, arguments);
+    publish_runtime_diagnostic(Diagnostics::Severity::WARNING, location, format, arguments);
     va_end(arguments);
-
-    Diagnostics::Hub::publish_runtime_warning(
-        buffer,
-        written < 0 || static_cast<size_t>(written) >= sizeof(buffer),
-        line,
-        func,
-        file
-    );
 }
 
-void InfoWarning::InfoWarningUpdate() { Diagnostics::Hub::flush(); }
+void RuntimeDiagnosticReporter::TriggerInfo(
+    const std::source_location& location,
+    const char* format,
+    ...
+) {
+    va_list arguments;
+    va_start(arguments, format);
+    publish_runtime_diagnostic(Diagnostics::Severity::INFO, location, format, arguments);
+    va_end(arguments);
+}
+
+void RuntimeDiagnosticReporter::Flush() { Diagnostics::Hub::flush(); }

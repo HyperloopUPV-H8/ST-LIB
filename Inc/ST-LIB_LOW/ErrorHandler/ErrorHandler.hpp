@@ -1,11 +1,6 @@
-/*
- * ErrorHandler.hpp
- *
- *  Created on: Dec 22, 2022
- *      Author: Pablo
- */
-
 #pragma once
+
+#include <source_location>
 
 #include "C++Utilities/CppUtils.hpp"
 
@@ -13,47 +8,37 @@
 #include "HALAL/Services/Communication/UART/UART.hpp"
 #endif // !defined(SIM_ON)
 
-class ErrorHandlerModel {
-private:
-    static int line;
-    static const char* func;
-    static const char* file;
-
+class PanicReporter {
 public:
-    /**
-     * @brief Triggers ErrorHandler and format the error message. The format works
-     * 	      exactly like printf format.
-     *
-     * @param format String which will be formated.
-     * @param args   Arguments specifying data to print
-     * @return uint8_t Id of the service.
-     */
-    static void ErrorHandlerTrigger(const char* format, ...);
-
-    /**
-     * @brief Get all metadata needed for the error message, including the line function and file.
-     *        The default parameters are not necessary but are there in case the compiler macros
-     * stop working because a change of the compiler.
-     *
-     * @param line Line where the error occurred
-     * @param func Function where the error occurred
-     * @param file File where the file occurred
-     * @return uint8_t Id of the service.
-     */
-    static void SetMetaData(
-        int line = __builtin_LINE(),
-        const char* func = __builtin_FUNCTION(),
-        const char* file = __builtin_FILE()
+    static void Trigger(
+        const std::source_location& location,
+        const char* format,
+        ...
     );
-
-    /**
-     * @brief Transmit the error message.
-     */
-    static void ErrorHandlerUpdate();
+    static void Flush();
 };
 
-#define ErrorHandler(x, ...)                                                                       \
+class FaultReporter {
+public:
+    static void Trigger(
+        const std::source_location& location,
+        const char* format,
+        ...
+    );
+    static void Flush();
+};
+
+#define PANIC(x, ...)                                                                              \
     do {                                                                                           \
-        ErrorHandlerModel::SetMetaData(__LINE__, __FUNCTION__, __FILE__);                          \
-        ErrorHandlerModel::ErrorHandlerTrigger(x, ##__VA_ARGS__);                                  \
+        PanicReporter::Trigger(std::source_location::current(), x __VA_OPT__(, ) __VA_ARGS__);    \
     } while (0)
+
+#define FAULT(x, ...)                                                                              \
+    do {                                                                                           \
+        FaultReporter::Trigger(std::source_location::current(), x __VA_OPT__(, ) __VA_ARGS__);    \
+    } while (0)
+
+using ErrorHandlerModel = PanicReporter;
+
+// Deprecated compatibility macro.
+#define ErrorHandler(x, ...) PANIC(x __VA_OPT__(, ) __VA_ARGS__)
