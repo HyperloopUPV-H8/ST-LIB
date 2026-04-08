@@ -21,15 +21,8 @@ void ProtectionEngine::initialize() {
     }
 }
 
-void ProtectionEngine::link_state_machine(
-    IStateMachine& general_state_machine,
-    ProtectionEngine::state_id fault_id
-) {
-    FaultController::link_state_machine(general_state_machine, fault_id);
-}
-
 template <typename Protection>
-void ProtectionEngine::publish_fault_if_due(
+void ProtectionEngine::request_fault_if_due(
     Protection& protection,
     const Protections::ProtectionEvaluation& evaluation
 ) {
@@ -44,12 +37,11 @@ void ProtectionEngine::publish_fault_if_due(
         return;
     }
 
-    Diagnostics::Hub::publish_protection_event(
+    FaultController::request_fault(FaultCause::protection(
         protection.get_name(),
-        Protections::RuleState::FAULT,
         evaluation.active_fault_edge,
         evaluation.active_fault_snapshot
-    );
+    ));
     protection.set_last_fault_publish_tick(tick);
 }
 
@@ -84,22 +76,10 @@ void ProtectionEngine::evaluate() {
                 publish_edge_events(protection, evaluation);
 
                 if (evaluation.has_active_fault) {
-                    publish_fault_if_due(protection, evaluation);
-                    FaultController::enter_fault();
+                    request_fault_if_due(protection, evaluation);
                 }
             },
             *protections[protection_index]
         );
     }
-}
-
-void ProtectionEngine::clear_for_testing() {
-    for (size_t protection_index = 0; protection_index < protection_count; protection_index++) {
-        if (protections[protection_index].has_value()) {
-            visit([](auto& protection) { protection.clear_runtime_state(); }, *protections[protection_index]);
-            protections[protection_index].reset();
-        }
-    }
-    protection_count = 0;
-    registration_locked = false;
 }

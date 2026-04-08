@@ -14,8 +14,10 @@ bool Runtime::defaults_installed = false;
 
 namespace {
 
-constexpr const char* runtime_error_origin = "error_handler";
-constexpr const char* runtime_warning_origin = "info_warning";
+constexpr const char* runtime_panic_origin = "runtime_panic";
+constexpr const char* runtime_fault_origin = "runtime_fault";
+constexpr const char* runtime_warning_origin = "runtime_warning";
+constexpr const char* runtime_info_origin = "runtime_info";
 
 size_t bounded_strnlen(const char* src, size_t max_length) {
     if (src == nullptr) {
@@ -63,7 +65,12 @@ void Hub::push_history(const DiagnosticRecord& record) {
 
 void Hub::push_pending(const DiagnosticRecord& record) {
     if (pending_count == Config::pending_capacity) {
-        remove_pending(0);
+        if (record.priority == DiagnosticPriority::URGENT) {
+            const size_t normal_index = find_oldest_normal_pending();
+            remove_pending(normal_index == pending_count ? 0 : normal_index);
+        } else {
+            remove_pending(0);
+        }
     }
 
     pending_records[pending_count].record = record;
@@ -82,6 +89,15 @@ void Hub::remove_pending(size_t index) {
     pending_count--;
 }
 
+size_t Hub::find_oldest_normal_pending() {
+    for (size_t index = 0; index < pending_count; ++index) {
+        if (pending_records[index].record.priority == DiagnosticPriority::NORMAL) {
+            return index;
+        }
+    }
+    return pending_count;
+}
+
 void Hub::publish(DiagnosticRecord record) {
     push_history(record);
 
@@ -92,53 +108,95 @@ void Hub::publish(DiagnosticRecord record) {
     push_pending(record);
 }
 
-void Hub::publish_runtime_error(
+DiagnosticRecord RecordFactory::runtime_fault(
     const char* message,
     bool truncated,
-    int line,
-    const char* func,
-    const char* file
+    const RuntimeSourceMetadata& metadata,
+    DiagnosticPriority priority
 ) {
     DiagnosticRecord record{};
+    record.priority = priority;
     record.severity = Severity::FAULT;
-    record.category = Category::RUNTIME_ERROR;
+    record.category = Category::RUNTIME_FAULT;
     record.timestamp = DiagnosticTimestampProvider::capture();
-    copy_c_string(record.origin, runtime_error_origin);
-    record.payload.runtime.line = static_cast<uint32_t>(line < 0 ? 0 : line);
+    copy_c_string(record.origin, runtime_fault_origin);
+    record.payload.runtime.line = static_cast<uint32_t>(metadata.line < 0 ? 0 : metadata.line);
     record.payload.runtime.truncated = truncated;
     copy_c_string(record.payload.runtime.message, message, &record.payload.runtime.truncated);
-    copy_c_string(record.payload.runtime.function_name, func);
-    copy_c_string(record.payload.runtime.file_name, file);
-    publish(record);
+    copy_c_string(record.payload.runtime.function_name, metadata.function_name);
+    copy_c_string(record.payload.runtime.file_name, metadata.file_name);
+    return record;
 }
 
-void Hub::publish_runtime_warning(
+DiagnosticRecord RecordFactory::runtime_panic(
     const char* message,
     bool truncated,
-    int line,
-    const char* func,
-    const char* file
+    const RuntimeSourceMetadata& metadata,
+    DiagnosticPriority priority
 ) {
     DiagnosticRecord record{};
+    record.priority = priority;
+    record.severity = Severity::FAULT;
+    record.category = Category::RUNTIME_PANIC;
+    record.timestamp = DiagnosticTimestampProvider::capture();
+    copy_c_string(record.origin, runtime_panic_origin);
+    record.payload.runtime.line = static_cast<uint32_t>(metadata.line < 0 ? 0 : metadata.line);
+    record.payload.runtime.truncated = truncated;
+    copy_c_string(record.payload.runtime.message, message, &record.payload.runtime.truncated);
+    copy_c_string(record.payload.runtime.function_name, metadata.function_name);
+    copy_c_string(record.payload.runtime.file_name, metadata.file_name);
+    return record;
+}
+
+DiagnosticRecord RecordFactory::runtime_warning(
+    const char* message,
+    bool truncated,
+    const RuntimeSourceMetadata& metadata,
+    DiagnosticPriority priority
+) {
+    DiagnosticRecord record{};
+    record.priority = priority;
     record.severity = Severity::WARNING;
     record.category = Category::RUNTIME_WARNING;
     record.timestamp = DiagnosticTimestampProvider::capture();
     copy_c_string(record.origin, runtime_warning_origin);
-    record.payload.runtime.line = static_cast<uint32_t>(line < 0 ? 0 : line);
+    record.payload.runtime.line = static_cast<uint32_t>(metadata.line < 0 ? 0 : metadata.line);
     record.payload.runtime.truncated = truncated;
     copy_c_string(record.payload.runtime.message, message, &record.payload.runtime.truncated);
-    copy_c_string(record.payload.runtime.function_name, func);
-    copy_c_string(record.payload.runtime.file_name, file);
-    publish(record);
+    copy_c_string(record.payload.runtime.function_name, metadata.function_name);
+    copy_c_string(record.payload.runtime.file_name, metadata.file_name);
+    return record;
 }
 
-void Hub::publish_protection_event(
+DiagnosticRecord RecordFactory::runtime_info(
+    const char* message,
+    bool truncated,
+    const RuntimeSourceMetadata& metadata,
+    DiagnosticPriority priority
+) {
+    DiagnosticRecord record{};
+    record.priority = priority;
+    record.severity = Severity::INFO;
+    record.category = Category::RUNTIME_INFO;
+    record.timestamp = DiagnosticTimestampProvider::capture();
+    copy_c_string(record.origin, runtime_info_origin);
+    record.payload.runtime.line = static_cast<uint32_t>(metadata.line < 0 ? 0 : metadata.line);
+    record.payload.runtime.truncated = truncated;
+    copy_c_string(record.payload.runtime.message, message, &record.payload.runtime.truncated);
+    copy_c_string(record.payload.runtime.function_name, metadata.function_name);
+    copy_c_string(record.payload.runtime.file_name, metadata.file_name);
+    return record;
+}
+
+DiagnosticRecord RecordFactory::protection_event(
     const char* protection_name,
     Protections::RuleState state,
     Protections::RuleEdge edge,
-    const Protections::RuleSnapshot& snapshot
+    const Protections::RuleSnapshot& snapshot,
+    DiagnosticPriority priority
 ) {
     DiagnosticRecord record{};
+    record.priority = priority;
     switch (state) {
     case Protections::RuleState::FAULT:
         record.severity = Severity::FAULT;
@@ -165,15 +223,84 @@ void Hub::publish_protection_event(
     record.payload.protection.uses_warning_threshold = snapshot.uses_warning_threshold;
     record.payload.protection.time_window_s = snapshot.time_window_s;
     record.payload.protection.sample_rate_hz = snapshot.sample_rate_hz;
-    publish(record);
+    return record;
 }
 
-void Hub::flush() {
+void Hub::publish_runtime_fault(
+    const char* message,
+    bool truncated,
+    int line,
+    const char* func,
+    const char* file
+) {
+    publish(RecordFactory::runtime_fault(
+        message,
+        truncated,
+        RuntimeSourceMetadata{line, func, file}
+    ));
+}
+
+void Hub::publish_runtime_panic(
+    const char* message,
+    bool truncated,
+    int line,
+    const char* func,
+    const char* file
+) {
+    publish(RecordFactory::runtime_panic(
+        message,
+        truncated,
+        RuntimeSourceMetadata{line, func, file}
+    ));
+}
+
+void Hub::publish_runtime_warning(
+    const char* message,
+    bool truncated,
+    int line,
+    const char* func,
+    const char* file
+) {
+    publish(RecordFactory::runtime_warning(
+        message,
+        truncated,
+        RuntimeSourceMetadata{line, func, file}
+    ));
+}
+
+void Hub::publish_runtime_info(
+    const char* message,
+    bool truncated,
+    int line,
+    const char* func,
+    const char* file
+) {
+    publish(RecordFactory::runtime_info(
+        message,
+        truncated,
+        RuntimeSourceMetadata{line, func, file}
+    ));
+}
+
+void Hub::publish_protection_event(
+    const char* protection_name,
+    Protections::RuleState state,
+    Protections::RuleEdge edge,
+    const Protections::RuleSnapshot& snapshot
+) {
+    publish(RecordFactory::protection_event(protection_name, state, edge, snapshot));
+}
+
+void Hub::flush_pending(bool urgent_only) {
     const uint8_t target_mask =
         sink_count == 0 ? 0 : static_cast<uint8_t>((1u << sink_count) - 1u);
 
     for (size_t record_index = 0; record_index < pending_count;) {
         PendingRecord& pending_record = pending_records[record_index];
+        if (urgent_only && pending_record.record.priority != DiagnosticPriority::URGENT) {
+            record_index++;
+            continue;
+        }
 
         for (size_t sink_index = 0; sink_index < sink_count; ++sink_index) {
             const uint8_t sink_mask = static_cast<uint8_t>(1u << sink_index);
@@ -193,22 +320,11 @@ void Hub::flush() {
     }
 }
 
-void Hub::clear_for_testing() {
-    for (size_t sink_index = 0; sink_index < sink_count; ++sink_index) {
-        sink_storage[sink_index].reset();
-        sinks[sink_index] = nullptr;
-    }
-    sink_count = 0;
-    history_count = 0;
-    history_next_index = 0;
-    pending_count = 0;
-    Runtime::reset_for_testing();
+void Hub::flush_urgent() { flush_pending(true); }
+
+void Hub::flush() {
+    flush_urgent();
+    flush_pending(false);
 }
-
-size_t Hub::history_size_for_testing() { return history_count; }
-
-size_t Hub::pending_size_for_testing() { return pending_count; }
-
-void Runtime::reset_for_testing() { defaults_installed = false; }
 
 } // namespace Diagnostics
