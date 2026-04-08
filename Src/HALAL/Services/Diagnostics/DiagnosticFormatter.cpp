@@ -258,8 +258,10 @@ void DiagnosticFormatter::describe(
 
     buffer[0] = '\0';
     switch (record.category) {
-    case Category::RUNTIME_ERROR:
+    case Category::RUNTIME_PANIC:
+    case Category::RUNTIME_FAULT:
     case Category::RUNTIME_WARNING:
+    case Category::RUNTIME_INFO:
         format_runtime_record(record, buffer, buffer_size);
         return;
     case Category::PROTECTION_EVENT:

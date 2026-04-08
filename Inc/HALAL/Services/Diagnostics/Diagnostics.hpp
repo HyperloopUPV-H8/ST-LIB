@@ -3,6 +3,10 @@
 #include "C++Utilities/CppUtils.hpp"
 #include "ST-LIB_HIGH/Protections/ProtectionTypes.hpp"
 
+namespace ST_LIB::TestAccess {
+struct DiagnosticsHub;
+}
+
 namespace Diagnostics {
 
 namespace Config {
@@ -18,7 +22,14 @@ inline constexpr size_t formatted_message_capacity = 320;
 } // namespace Config
 
 enum class Severity : uint8_t { INFO = 0, WARNING, FAULT };
-enum class Category : uint8_t { RUNTIME_ERROR = 0, RUNTIME_WARNING, PROTECTION_EVENT };
+enum class DiagnosticPriority : uint8_t { NORMAL = 0, URGENT };
+enum class Category : uint8_t {
+    RUNTIME_PANIC = 0,
+    RUNTIME_FAULT,
+    RUNTIME_WARNING,
+    RUNTIME_INFO,
+    PROTECTION_EVENT
+};
 enum class RegistrationError : uint8_t { CAPACITY_EXCEEDED = 0, STORAGE_TOO_SMALL };
 
 struct Timestamp {
@@ -63,11 +74,18 @@ union DiagnosticPayload {
 };
 
 struct DiagnosticRecord {
+    DiagnosticPriority priority{DiagnosticPriority::NORMAL};
     Severity severity{Severity::INFO};
-    Category category{Category::RUNTIME_WARNING};
+    Category category{Category::RUNTIME_INFO};
     Timestamp timestamp{};
     char origin[Config::origin_capacity + 1]{};
     DiagnosticPayload payload{};
+};
+
+struct RuntimeSourceMetadata {
+    int line{0};
+    const char* function_name{nullptr};
+    const char* file_name{nullptr};
 };
 
 class DiagnosticSink {
@@ -85,6 +103,46 @@ class DiagnosticTimestampProvider {
 public:
     static Timestamp capture();
 };
+
+namespace RecordFactory {
+
+DiagnosticRecord runtime_panic(
+    const char* message,
+    bool truncated,
+    const RuntimeSourceMetadata& metadata,
+    DiagnosticPriority priority = DiagnosticPriority::NORMAL
+);
+
+DiagnosticRecord runtime_fault(
+    const char* message,
+    bool truncated,
+    const RuntimeSourceMetadata& metadata,
+    DiagnosticPriority priority = DiagnosticPriority::NORMAL
+);
+
+DiagnosticRecord runtime_warning(
+    const char* message,
+    bool truncated,
+    const RuntimeSourceMetadata& metadata,
+    DiagnosticPriority priority = DiagnosticPriority::NORMAL
+);
+
+DiagnosticRecord runtime_info(
+    const char* message,
+    bool truncated,
+    const RuntimeSourceMetadata& metadata,
+    DiagnosticPriority priority = DiagnosticPriority::NORMAL
+);
+
+DiagnosticRecord protection_event(
+    const char* protection_name,
+    Protections::RuleState state,
+    Protections::RuleEdge edge,
+    const Protections::RuleSnapshot& snapshot,
+    DiagnosticPriority priority = DiagnosticPriority::NORMAL
+);
+
+} // namespace RecordFactory
 
 class Hub {
 public:
@@ -111,7 +169,14 @@ public:
     }
 
     static void publish(DiagnosticRecord record);
-    static void publish_runtime_error(
+    static void publish_runtime_panic(
+        const char* message,
+        bool truncated,
+        int line,
+        const char* func,
+        const char* file
+    );
+    static void publish_runtime_fault(
         const char* message,
         bool truncated,
         int line,
@@ -125,6 +190,13 @@ public:
         const char* func,
         const char* file
     );
+    static void publish_runtime_info(
+        const char* message,
+        bool truncated,
+        int line,
+        const char* func,
+        const char* file
+    );
     static void publish_protection_event(
         const char* protection_name,
         Protections::RuleState state,
@@ -132,12 +204,11 @@ public:
         const Protections::RuleSnapshot& snapshot
     );
     static void flush();
-
-    static void clear_for_testing();
-    static size_t history_size_for_testing();
-    static size_t pending_size_for_testing();
+    static void flush_urgent();
 
 private:
+    friend struct ST_LIB::TestAccess::DiagnosticsHub;
+
     struct PendingRecord {
         DiagnosticRecord record{};
         uint8_t delivered_mask{0};
@@ -160,6 +231,8 @@ private:
     static void push_history(const DiagnosticRecord& record);
     static void push_pending(const DiagnosticRecord& record);
     static void remove_pending(size_t index);
+    static size_t find_oldest_normal_pending();
+    static void flush_pending(bool urgent_only);
 
     static array<SinkStorage, Config::max_sinks> sink_storage;
     static array<DiagnosticSink*, Config::max_sinks> sinks;
@@ -174,9 +247,10 @@ private:
 class Runtime {
 public:
     static void install_default_sinks();
-    static void reset_for_testing();
 
 private:
+    friend struct ST_LIB::TestAccess::DiagnosticsHub;
+
     static bool defaults_installed;
 };
 

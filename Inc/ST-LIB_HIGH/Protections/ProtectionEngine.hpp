@@ -4,6 +4,10 @@
 #include "ST-LIB_HIGH/Protections/FaultController.hpp"
 #include "ST-LIB_HIGH/Protections/Protection.hpp"
 
+namespace ST_LIB::TestAccess {
+struct ProtectionEngine;
+}
+
 namespace Protections {
 
 template <ProtectionSample T> class ProtectionHandle {
@@ -46,8 +50,6 @@ using ProtectionVariant = variant<
 
 class ProtectionEngine {
 public:
-    using state_id = FaultController::state_id;
-
     template <Protections::ReadableSampleSource Source>
     static expected<
         Protections::ProtectionHandle<typename std::remove_cvref_t<Source>::value_type>,
@@ -74,12 +76,12 @@ public:
 
     static void initialize();
     static void evaluate();
-    static void link_state_machine(IStateMachine& general_state_machine, state_id fault_id);
-    static void clear_for_testing();
 
 private:
+    friend struct ST_LIB::TestAccess::ProtectionEngine;
+
     template <typename Protection>
-    static void publish_fault_if_due(
+    static void request_fault_if_due(
         Protection& protection,
         const Protections::ProtectionEvaluation& evaluation
     );

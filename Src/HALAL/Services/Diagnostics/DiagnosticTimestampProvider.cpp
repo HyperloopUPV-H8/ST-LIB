@@ -12,7 +12,7 @@ Timestamp DiagnosticTimestampProvider::capture() {
     Timestamp timestamp{};
 
 #if defined(HAL_RTC_MODULE_ENABLED) && !defined(SIM_ON)
-    if (Global_RTC::ensure_started() && Global_RTC::has_valid_time()) {
+    if (Global_RTC::is_started() && Global_RTC::has_valid_time()) {
         Global_RTC::update_rtc_data();
         const RTCData& rtc = Global_RTC::global_RTC;
         timestamp.has_rtc = true;
