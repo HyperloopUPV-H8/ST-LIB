@@ -392,7 +392,6 @@ set(STLIB_HIGH_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/FlashStorer/FlashStorer.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/FlashStorer/FlashVariable.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/FaultController.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/FaultRuntime.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/ProtectionEngine.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/ST-LIB_HIGH.cpp
 )

@@ -22,6 +22,8 @@ ctest --preset simulator-all
 - Setup: [`docs/setup.md`](docs/setup.md)
 - Build and presets: [`docs/build-and-presets.md`](docs/build-and-presets.md)
 - Testing: [`docs/testing.md`](docs/testing.md)
+- Protections and diagnostics: [`docs/protections-and-diagnostics.md`](docs/protections-and-diagnostics.md)
+- Board contract: [`docs/st-lib-board-contract.md`](docs/st-lib-board-contract.md)
 - Releases: [`docs/releases.md`](docs/releases.md)
 
 ## Recommended Presets
