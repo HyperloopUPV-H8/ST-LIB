@@ -20,6 +20,6 @@ void LowPowerTimer::init() {
     handle.Init.Input2Source = LPTIM_INPUT2SOURCE_GPIO;
 
     if (HAL_LPTIM_Init(&handle) != HAL_OK) {
-        ErrorHandler("The LPTIM %s could not be registered", name);
+        PANIC("The LPTIM %s could not be registered", name);
     }
 }

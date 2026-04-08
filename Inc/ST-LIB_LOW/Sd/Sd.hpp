@@ -341,7 +341,7 @@ struct SdDomain {
             check_cd_wp();
             bool success = instance.initialize_card();
             if (!success) {
-                ErrorHandler("SD Card initialization failed");
+                PANIC("SD Card initialization failed");
             }
         }
 
@@ -349,7 +349,7 @@ struct SdDomain {
             check_cd_wp();
             bool success = instance.deinitialize_card();
             if (!success) {
-                ErrorHandler("SD Card deinitialization failed");
+                PANIC("SD Card deinitialization failed");
             }
         }
 
@@ -358,10 +358,10 @@ struct SdDomain {
         bool read_blocks(uint32_t start_block, uint32_t num_blocks, bool* operation_complete_flag) {
             check_cd_wp();
             if (!instance.card_initialized) {
-                ErrorHandler("SD Card not initialized");
+                PANIC("SD Card not initialized");
             }
             if (num_blocks > instance.mpu_buffer0_instance->size / 512) {
-                ErrorHandler("Too many blocks requested to read from SD");
+                PANIC("Too many blocks requested to read from SD");
             }
 
             if (HAL_SD_GetCardState(&instance.hsd) != HAL_SD_CARD_TRANSFER) {
@@ -374,7 +374,7 @@ struct SdDomain {
                 instance.Not_HAL_SDEx_ReadBlocksDMAMultiBuffer(start_block, num_blocks);
 
             if (status != HAL_OK) {
-                ErrorHandler("SD Card read operation failed");
+                PANIC("SD Card read operation failed");
             }
 
             instance.operation_flag = operation_complete_flag;
@@ -387,10 +387,10 @@ struct SdDomain {
         write_blocks(uint32_t start_block, uint32_t num_blocks, bool* operation_complete_flag) {
             check_cd_wp();
             if (!instance.card_initialized) {
-                ErrorHandler("SD Card not initialized");
+                PANIC("SD Card not initialized");
             }
             if (num_blocks > instance.mpu_buffer0_instance->size / 512) {
-                ErrorHandler("Too many blocks requested to write in SD");
+                PANIC("Too many blocks requested to write in SD");
             }
 
             if (HAL_SD_GetCardState(&instance.hsd) != HAL_SD_CARD_TRANSFER) {
@@ -402,7 +402,7 @@ struct SdDomain {
                 instance.Not_HAL_SDEx_WriteBlocksDMAMultiBuffer(start_block, num_blocks);
 
             if (status != HAL_OK) {
-                ErrorHandler("SD Card write operation failed");
+                PANIC("SD Card write operation failed");
             }
 
             instance.operation_flag = operation_complete_flag;
@@ -433,12 +433,12 @@ struct SdDomain {
         void check_cd_wp() {
             if constexpr (has_cd) {
                 if (!instance.is_card_present()) {
-                    ErrorHandler("SD Card not present");
+                    PANIC("SD Card not present");
                 }
             }
             if constexpr (has_wp) {
                 if (instance.is_write_protected()) {
-                    ErrorHandler("SD Card is write-protected");
+                    PANIC("SD Card is write-protected");
                 }
             }
         }
@@ -508,7 +508,7 @@ struct SdDomain {
                         2; // Round up to ensure frequency is not higher than target
 
                 if (translated_clock_div > 1023) {
-                    ErrorHandler("SDMMC clock divider too high, cannot achieve target frequency "
+                    PANIC("SDMMC clock divider too high, cannot achieve target frequency "
                                  "with current PLL1 Q clock");
                 }
 
@@ -531,7 +531,7 @@ struct SdDomain {
             RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SDMMC;
             RCC_PeriphCLKInitStruct.SdmmcClockSelection = RCC_SDMMCCLKSOURCE_PLL;
             if (HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct) != HAL_OK) {
-                ErrorHandler("SDMMC clock configuration failed, maybe try with a slower clock or "
+                PANIC("SDMMC clock configuration failed, maybe try with a slower clock or "
                              "higher divider?");
             }
 
@@ -539,7 +539,7 @@ struct SdDomain {
             __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
 
             if (HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SDMMC) == 0) {
-                ErrorHandler("SDMMC clock frequency is 0");
+                PANIC("SDMMC clock frequency is 0");
             }
         }
     };

@@ -20,7 +20,7 @@ uint8_t MDMA::get_instance_id(MDMA_Channel_TypeDef* channel) {
 
 void MDMA::prepare_transfer(Instance& instance, MDMA_LinkNodeTypeDef* first_node) {
     if (instance.handle.State == HAL_MDMA_STATE_BUSY) {
-        ErrorHandler("MDMA transfer already in progress");
+        PANIC("MDMA transfer already in progress");
         return;
     }
     instance_free_map[instance.id] = false;
@@ -51,7 +51,7 @@ void MDMA::prepare_transfer(Instance& instance, MDMA_LinkNodeTypeDef* first_node
 
     if (HAL_MDMA_GenerateSWRequest(&instance.handle) != HAL_OK) {
         instance.handle.State = HAL_MDMA_STATE_BUSY;
-        ErrorHandler("Error generating MDMA SW request");
+        PANIC("Error generating MDMA SW request");
         return;
     }
 }
@@ -71,7 +71,7 @@ void MDMA::inscribe(Instance& instance, uint8_t id) {
     MDMA_HandleTypeDef mdma_handle{};
     MDMA_Channel_TypeDef* channel = get_channel(id);
     if (channel == nullptr) {
-        ErrorHandler("MDMA channel mapping not found");
+        PANIC("MDMA channel mapping not found");
         return;
     }
     mdma_handle.Instance = channel;
@@ -114,7 +114,7 @@ void MDMA::inscribe(Instance& instance, uint8_t id) {
 
     const HAL_StatusTypeDef status = HAL_MDMA_LinkedList_CreateNode(transfer_node, &nodeConfig);
     if (status != HAL_OK) {
-        ErrorHandler("Error creating linked list in MDMA");
+        PANIC("Error creating linked list in MDMA");
     }
     instance_free_map[id] = true;
 
@@ -130,11 +130,11 @@ void MDMA::start() {
         id++;
 
         if (instance.handle.Instance == nullptr) {
-            ErrorHandler("MDMA instance not initialised");
+            PANIC("MDMA instance not initialised");
         }
         const HAL_StatusTypeDef status = HAL_MDMA_Init(&instance.handle);
         if (status != HAL_OK) {
-            ErrorHandler("Error initialising MDMA instance");
+            PANIC("Error initialising MDMA instance");
         }
 
         HAL_MDMA_RegisterCallback(
@@ -184,7 +184,7 @@ void MDMA::irq_handler() {
 
 void MDMA::transfer_list(MDMA::LinkedListNode* first_node, volatile bool* done) {
     if (transfer_queue.size() >= TRANSFER_QUEUE_MAX_SIZE) {
-        ErrorHandler("MDMA transfer queue full");
+        PANIC("MDMA transfer queue full");
         return;
     }
     transfer_queue.push({first_node, done});
@@ -218,7 +218,7 @@ void MDMA::transfer_data(
 void MDMA::TransferCompleteCallback(MDMA_HandleTypeDef* hmdma) {
     uint8_t id = get_instance_id(hmdma->Instance);
     if (id >= instances.size()) {
-        ErrorHandler("MDMA channel not registered");
+        PANIC("MDMA channel not registered");
         return;
     }
 
@@ -234,7 +234,7 @@ void MDMA::TransferCompleteCallback(MDMA_HandleTypeDef* hmdma) {
 void MDMA::TransferErrorCallback(MDMA_HandleTypeDef* hmdma) {
     uint8_t id = get_instance_id(hmdma->Instance);
     if (id >= instances.size()) {
-        ErrorHandler("MDMA channel not registered");
+        PANIC("MDMA channel not registered");
         return;
     }
 
@@ -244,7 +244,7 @@ void MDMA::TransferErrorCallback(MDMA_HandleTypeDef* hmdma) {
     }
 
     const unsigned long error_code = static_cast<unsigned long>(hmdma->ErrorCode);
-    ErrorHandler("MDMA Transfer Error, code: " + std::to_string(error_code));
+    PANIC("MDMA Transfer Error, code: %lu", error_code);
 }
 
 extern "C" void MDMA_IRQHandler(void) { MDMA::irq_handler(); }

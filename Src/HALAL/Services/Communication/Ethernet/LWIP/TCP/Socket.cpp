@@ -122,7 +122,7 @@ Socket::Socket(
     : local_ip(local_ip), local_port(local_port), remote_ip(remote_ip), remote_port(remote_port),
       use_keep_alives{use_keep_alive} {
     if (not Ethernet::is_running) {
-        ErrorHandler("Cannot declare TCP socket before Ethernet::start()");
+        PANIC("Cannot declare TCP socket before Ethernet::start()");
         return;
     }
     state = INACTIVE;
@@ -134,7 +134,7 @@ Socket::Socket(
 
     connection_control_block = tcp_new();
     if (connection_control_block == nullptr) {
-        ErrorHandler("Cannot allocate TCP control block");
+        PANIC("Cannot allocate TCP control block");
         return;
     }
     ip_set_option(connection_control_block, SOF_REUSEADDR);
@@ -143,7 +143,7 @@ Socket::Socket(
     if (bind_error != ERR_OK) {
         tcp_abort(connection_control_block);
         connection_control_block = nullptr;
-        ErrorHandler("Cannot bind TCP socket. Error code: %d", bind_error);
+        PANIC("Cannot bind TCP socket. Error code: %d", bind_error);
         return;
     }
     tcp_nagle_disable(connection_control_block);
@@ -158,7 +158,7 @@ Socket::Socket(
         connecting_sockets.erase(remote_node);
         tcp_abort(connection_control_block);
         connection_control_block = nullptr;
-        ErrorHandler("Cannot connect TCP socket. Error code: %d", connect_error);
+        PANIC("Cannot connect TCP socket. Error code: %d", connect_error);
         return;
     }
 

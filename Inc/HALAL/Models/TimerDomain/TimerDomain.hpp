@@ -381,7 +381,7 @@ struct TimerDomain {
         if (false) {
         }
         TimerXList else {
-            ErrorHandler("Invalid timer given to rcc_enable_timer");
+            PANIC("Invalid timer given to rcc_enable_timer");
         }
 #undef X
     }
@@ -1223,6 +1223,6 @@ TimerDomain::Timer::get_gpio_af(ST_LIB::TimerRequest req, ST_LIB::TimerPin pin) 
     sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if(HAL_TIMEx_MasterConfigSynchronization(handle, &sMasterConfig) != HAL_OK) {
-        ErrorHandler("Unable to configure master synch on %s", e.name);
+        PANIC("Unable to configure master synch on %s", e.name);
     }
 */

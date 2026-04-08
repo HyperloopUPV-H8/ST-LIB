@@ -20,7 +20,7 @@ uint8_t DigitalOutputService::inscribe(Pin& pin) {
 
 void DigitalOutputService::turn_off(uint8_t id) {
     if (not DigitalOutputService::service_ids.contains(id)) {
-        ErrorHandler("ID %d is not registered as a DigitalOutput", id);
+        PANIC("ID %d is not registered as a DigitalOutput", id);
         return;
     }
 
@@ -30,7 +30,7 @@ void DigitalOutputService::turn_off(uint8_t id) {
 
 void DigitalOutputService::turn_on(uint8_t id) {
     if (not DigitalOutputService::service_ids.contains(id)) {
-        ErrorHandler("ID %d is not registered as a DigitalOutput", id);
+        PANIC("ID %d is not registered as a DigitalOutput", id);
         return;
     }
 
@@ -40,7 +40,7 @@ void DigitalOutputService::turn_on(uint8_t id) {
 
 void DigitalOutputService::set_pin_state(uint8_t id, PinState state) {
     if (not DigitalOutputService::service_ids.contains(id)) {
-        ErrorHandler("ID %d is not registered as a DigitalOutput", id);
+        PANIC("ID %d is not registered as a DigitalOutput", id);
         return;
     }
 
@@ -50,7 +50,7 @@ void DigitalOutputService::set_pin_state(uint8_t id, PinState state) {
 
 void DigitalOutputService::toggle(uint8_t id) {
     if (not DigitalOutputService::service_ids.contains(id)) {
-        ErrorHandler("ID %d is not registered as a DigitalOutput", id);
+        PANIC("ID %d is not registered as a DigitalOutput", id);
         return;
     }
 
@@ -60,7 +60,7 @@ void DigitalOutputService::toggle(uint8_t id) {
 
 bool DigitalOutputService::lock_pin_state(uint8_t id, PinState state) {
     if (not DigitalOutputService::service_ids.contains(id)) {
-        ErrorHandler("ID %d is not registered as a DigitalOutput", id);
+        PANIC("ID %d is not registered as a DigitalOutput", id);
         return false;
     }
 

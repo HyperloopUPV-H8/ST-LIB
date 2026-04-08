@@ -74,7 +74,7 @@ public:
             &timer->instance->hal_tim
                  ->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
-            ErrorHandler("Channel not ready");
+            PANIC("Channel not ready");
         }
 
         *state = HAL_TIM_CHANNEL_STATE_BUSY;
@@ -108,7 +108,7 @@ public:
             &timer->instance->hal_tim
                  ->ChannelNState[TimerDomain::get_channel_state_idx(negated_pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
-            ErrorHandler("Channel not ready");
+            PANIC("Channel not ready");
         }
 
         *state = HAL_TIM_CHANNEL_STATE_BUSY;
@@ -251,7 +251,7 @@ public:
             sBreakDeadTimeConfig.DeadTime =
                 0b1110'0000 | (uint32_t)((float)time / (16 * clock_period_ns) - 32);
         } else {
-            ErrorHandler("Invalid dead time configuration");
+            PANIC("Invalid dead time configuration");
         }
 
         // sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
