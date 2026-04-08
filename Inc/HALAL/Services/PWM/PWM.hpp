@@ -56,7 +56,7 @@ public:
             &timer->instance->hal_tim
                  ->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
-            ErrorHandler("Channel not ready");
+            PANIC("Channel not ready");
         }
 
         *state = HAL_TIM_CHANNEL_STATE_BUSY;

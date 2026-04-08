@@ -19,10 +19,10 @@ public:
 
     static void start() {
         if ((chrono::duration_cast<chrono::microseconds>(watchdog_time)).count() > 32000000) {
-            ErrorHandler("Watchdog refresh interval is too big");
+            PANIC("Watchdog refresh interval is too big");
         }
         if ((chrono::duration_cast<chrono::microseconds>(watchdog_time)).count() < 125) {
-            ErrorHandler("Watchdog refresh interval is too short");
+            PANIC("Watchdog refresh interval is too short");
         }
         uint64_t milliseconds = chrono::duration_cast<chrono::milliseconds>(watchdog_time).count();
         uint32_t RL = double(milliseconds) * 8.0 - 1; // this is the formula for the Reload

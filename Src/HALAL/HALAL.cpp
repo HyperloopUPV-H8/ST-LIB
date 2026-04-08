@@ -48,7 +48,7 @@ static void common_start(UART::Peripheral& printf_peripheral) {
     CORDIC_HandleTypeDef hcordic;
     hcordic.Instance = CORDIC;
     if (HAL_CORDIC_Init(&hcordic) != HAL_OK) {
-        ErrorHandler("Unable to init CORDIC");
+        PANIC("Unable to init CORDIC");
     }
 #endif
 

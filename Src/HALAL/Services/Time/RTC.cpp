@@ -32,7 +32,7 @@ void Global_RTC::start_rtc() {
 
     if (HAL_RTC_Init(&hrtc) != HAL_OK) {
         rtc_start_in_progress = false;
-        ErrorHandler("Error on RTC Init");
+        PANIC("Error on RTC Init");
         return;
     }
     sTime.Hours = 0x0;
@@ -43,7 +43,7 @@ void Global_RTC::start_rtc() {
 
     if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
         rtc_start_in_progress = false;
-        ErrorHandler("Error while setting time at RTC start");
+        PANIC("Error while setting time at RTC start");
         return;
     }
 
@@ -54,7 +54,7 @@ void Global_RTC::start_rtc() {
 
     if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
         rtc_start_in_progress = false;
-        ErrorHandler("Error while setting date at RTC start");
+        PANIC("Error while setting date at RTC start");
         return;
     }
 
@@ -69,6 +69,8 @@ bool Global_RTC::ensure_started() {
     }
     return rtc_started;
 }
+
+bool Global_RTC::is_started() { return rtc_started; }
 
 bool Global_RTC::has_valid_time() { return rtc_time_valid; }
 
@@ -116,11 +118,11 @@ void Global_RTC::set_rtc_data(
     bool write_ok = true;
     if (HAL_RTC_SetTime(&hrtc, &gTime, RTC_FORMAT_BIN) != HAL_OK) {
         write_ok = false;
-        ErrorHandler("Error on writing Time on the RTC");
+        PANIC("Error on writing Time on the RTC");
     }
     if (HAL_RTC_SetDate(&hrtc, &gDate, RTC_FORMAT_BIN) != HAL_OK) {
         write_ok = false;
-        ErrorHandler("Error on writing Date on the RTC");
+        PANIC("Error on writing Date on the RTC");
     }
     rtc_time_valid = write_ok;
     if (write_ok) {
@@ -142,6 +144,8 @@ void Global_RTC::update_rtc_data() {
 #else
 
 void Global_RTC::start_rtc() {}
+
+bool Global_RTC::is_started() { return false; }
 
 bool Global_RTC::ensure_started() { return false; }
 

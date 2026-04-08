@@ -23,9 +23,9 @@ void SdDomain::Instance::on_dma_write_complete() {
     SDMMC_CmdStopTransfer(hsd.Instance);
 }
 
-void SdDomain::Instance::on_abort() { ErrorHandler("SD Card operation aborted"); }
+void SdDomain::Instance::on_abort() { PANIC("SD Card operation aborted"); }
 
-void SdDomain::Instance::on_error() { ErrorHandler("SD Card error occurred"); }
+void SdDomain::Instance::on_error() { PANIC("SD Card error occurred"); }
 
 bool SdDomain::Instance::is_card_present() {
     return cd_instance->first->read() == cd_instance->second;
@@ -300,7 +300,7 @@ void HAL_SD_AbortCallback(SD_HandleTypeDef* hsd) {
     if (auto sd_instance = ST_LIB::get_sd_instance(hsd)) {
         sd_instance->on_abort();
     } else {
-        ErrorHandler("SD Card operation aborted");
+        PANIC("SD Card operation aborted");
     }
 }
 
@@ -308,7 +308,7 @@ void HAL_SD_ErrorCallback(SD_HandleTypeDef* hsd) {
     if (auto sd_instance = ST_LIB::get_sd_instance(hsd)) {
         sd_instance->on_error();
     } else {
-        ErrorHandler("SD Card error occurred");
+        PANIC("SD Card error occurred");
     }
 }
 
