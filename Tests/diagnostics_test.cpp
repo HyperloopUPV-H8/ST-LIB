@@ -1,20 +1,24 @@
 #include <gtest/gtest.h>
 
+#include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 #include "ST-LIB_HIGH/Protections/FaultController.hpp"
 #include "ST-LIB_HIGH/Protections/ProtectionEngine.hpp"
 #include "ST-LIB_HIGH/Protections/Rules.hpp"
 #include "ST-LIB_HIGH/Protections/SampleSource.hpp"
-#include "ErrorHandler/ErrorHandler.hpp"
+#include "StateMachine/StateMachine.hpp"
+#include "TestAccess.hpp"
 
-namespace ST_LIB::TestErrorHandler {
+namespace ST_LIB::TestPanicReporter {
 void set_fail_on_error(bool enabled);
+void reset();
 }
 
 namespace {
 
-namespace TestErrorHandler = ST_LIB::TestErrorHandler;
+namespace TestAccess = ST_LIB::TestAccess;
+namespace TestPanicReporter = ST_LIB::TestPanicReporter;
 
 static_assert(Protections::ReadableSampleSource<SampleSource<float>>);
 static_assert(!Protections::ReadableSampleSource<int>);
@@ -42,42 +46,62 @@ public:
     vector<Diagnostics::DiagnosticRecord> records{};
 };
 
-class DummyStateMachine final : public IStateMachine {
-public:
-    void check_transitions() override {}
+enum class OperationalState : uint8_t { RUN = 0, HOLD = 1 };
 
-    void force_change_state(size_t state) override {
-        force_change_calls++;
-        current_state_id = state;
-    }
+bool transition_to_hold = false;
+size_t fault_enter_calls = 0;
+size_t operational_hold_enter_count = 0;
 
-    size_t get_current_state_id() const override { return current_state_id; }
+static constexpr auto operational_run_state =
+    make_state(OperationalState::RUN, Transition<OperationalState>{OperationalState::HOLD, []() {
+                   return transition_to_hold;
+               }});
+static constexpr auto operational_hold_state = make_state(OperationalState::HOLD);
 
-    size_t force_change_calls{0};
-    size_t current_state_id{0};
+static inline auto test_operational_machine = []() consteval {
+    auto sm = make_state_machine(OperationalState::RUN, operational_run_state, operational_hold_state);
+    sm.add_enter_action([]() { operational_hold_enter_count++; }, operational_hold_state);
+    return sm;
+}();
 
-protected:
-    void enter() override {}
-    void exit() override {}
-    void start() override {}
+void reset_operational_machine() {
+    transition_to_hold = false;
+    operational_hold_enter_count = 0;
+    test_operational_machine.force_change_state(static_cast<size_t>(OperationalState::RUN));
+    test_operational_machine.get_states()[0].unregister_all_timed_actions();
+    test_operational_machine.get_states()[1].unregister_all_timed_actions();
+}
+
+void on_fault_enter() { fault_enter_calls++; }
+
+uint32_t emit_warning_and_return_line() {
+    constexpr uint32_t expected_line = __LINE__ + 1;
+    WARNING("source location warning");
+    return expected_line;
+}
+
+struct NoMachinePolicy {
+    static constexpr bool has_operational_machine = false;
+    static constexpr Callback on_fault_enter = &::on_fault_enter;
 };
 
-class CountingBroadcaster final : public FaultBroadcaster {
-public:
-    bool broadcast_fault() override {
-        calls++;
-        return true;
-    }
-
-    size_t calls{0};
+struct OperationalPolicy {
+    static constexpr bool has_operational_machine = true;
+    static constexpr auto& operational_machine = test_operational_machine;
+    static constexpr Callback on_fault_enter = &::on_fault_enter;
 };
 
 class DiagnosticsHubTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        Diagnostics::Hub::clear_for_testing();
-        ProtectionEngine::clear_for_testing();
-        FaultController::clear_broadcasters_for_testing();
+        TestAccess::DiagnosticsHub::clear();
+        TestAccess::ProtectionEngine::clear();
+        reset_operational_machine();
+        TestPanicReporter::reset();
+        fault_enter_calls = 0;
+
+        FaultController::install_runtime<NoMachinePolicy>();
+        FaultController::start();
     }
 };
 
@@ -89,8 +113,8 @@ TEST_F(DiagnosticsHubTest, KeepsLocalHistoryWhenNoSinksAreRegistered) {
     snprintf(record.payload.runtime.message, sizeof(record.payload.runtime.message), "local only");
     Diagnostics::Hub::publish(record);
 
-    EXPECT_EQ(Diagnostics::Hub::history_size_for_testing(), 1u);
-    EXPECT_EQ(Diagnostics::Hub::pending_size_for_testing(), 0u);
+    EXPECT_EQ(TestAccess::DiagnosticsHub::history_size(), 1u);
+    EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), 0u);
 }
 
 TEST_F(DiagnosticsHubTest, RetriesOnlyTheSinkThatFailed) {
@@ -111,12 +135,12 @@ TEST_F(DiagnosticsHubTest, RetriesOnlyTheSinkThatFailed) {
     Diagnostics::Hub::flush();
     EXPECT_EQ(stable_sink->publish_calls, 1u);
     EXPECT_EQ(flaky_sink->publish_calls, 1u);
-    EXPECT_EQ(Diagnostics::Hub::pending_size_for_testing(), 1u);
+    EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), 1u);
 
     Diagnostics::Hub::flush();
     EXPECT_EQ(stable_sink->publish_calls, 1u);
     EXPECT_EQ(flaky_sink->publish_calls, 2u);
-    EXPECT_EQ(Diagnostics::Hub::pending_size_for_testing(), 0u);
+    EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), 0u);
 }
 
 TEST_F(DiagnosticsHubTest, PendingQueueIsBoundedWhenASinkNeverDelivers) {
@@ -130,38 +154,92 @@ TEST_F(DiagnosticsHubTest, PendingQueueIsBoundedWhenASinkNeverDelivers) {
         record.severity = Diagnostics::Severity::WARNING;
         record.category = Diagnostics::Category::RUNTIME_WARNING;
         snprintf(record.origin, sizeof(record.origin), "test");
-        snprintf(record.payload.runtime.message, sizeof(record.payload.runtime.message), "event %zu", record_index);
+        snprintf(
+            record.payload.runtime.message,
+            sizeof(record.payload.runtime.message),
+            "event %zu",
+            record_index
+        );
         Diagnostics::Hub::publish(record);
     }
 
-    EXPECT_EQ(Diagnostics::Hub::pending_size_for_testing(), Diagnostics::Config::pending_capacity);
+    EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), Diagnostics::Config::pending_capacity);
+}
+
+TEST_F(DiagnosticsHubTest, ReinstallingRuntimeClearsLatchedFaultState) {
+    FaultController::request_fault(FaultCause::external("test", "first fault"));
+    ASSERT_TRUE(FaultController::is_faulted());
+    ASSERT_NE(FaultController::latched_fault_cause(), nullptr);
+
+    FaultController::install_runtime<NoMachinePolicy>();
+    FaultController::start();
+
+    EXPECT_FALSE(FaultController::is_faulted());
+    EXPECT_EQ(FaultController::latched_fault_cause(), nullptr);
+    EXPECT_EQ(fault_enter_calls, 1u);
 }
 
 TEST_F(DiagnosticsHubTest, FaultControllerTransitionsOnlyOnce) {
-    DummyStateMachine machine{};
+    FaultController::request_fault(FaultCause::external("test", "fault once"));
+    FaultController::request_fault(FaultCause::external("test", "fault twice"));
 
-    FaultController::link_state_machine(machine, 4);
-    auto broadcaster_result = FaultController::emplace_broadcaster<CountingBroadcaster>();
-    ASSERT_TRUE(broadcaster_result.has_value());
-    auto* broadcaster = *broadcaster_result;
+    ASSERT_TRUE(FaultController::is_faulted());
+    ASSERT_NE(FaultController::latched_fault_cause(), nullptr);
+    EXPECT_EQ(fault_enter_calls, 1u);
+    EXPECT_STREQ(FaultController::latched_fault_cause()->origin, "test");
+}
 
-    FaultController::enter_fault();
-    FaultController::enter_fault();
+TEST_F(DiagnosticsHubTest, FaultControllerDelegatesToOperationalMachineWhileOperational) {
+    FaultController::install_runtime<OperationalPolicy>();
+    reset_operational_machine();
+    FaultController::start();
 
-    EXPECT_EQ(machine.current_state_id, 4u);
-    EXPECT_EQ(machine.force_change_calls, 1u);
-    EXPECT_EQ(broadcaster->calls, 1u);
+    transition_to_hold = true;
+    FaultController::check_transitions();
+
+    EXPECT_EQ(test_operational_machine.get_current_state(), OperationalState::HOLD);
+    EXPECT_EQ(operational_hold_enter_count, 1u);
+}
+
+TEST_F(DiagnosticsHubTest, FaultBeforeStartStartsRuntimeDirectlyInFault) {
+    FaultController::install_runtime<OperationalPolicy>();
+    reset_operational_machine();
+
+    FaultController::request_fault(FaultCause::external("test", "fault before start"));
+
+    EXPECT_TRUE(FaultController::is_faulted());
+    EXPECT_EQ(fault_enter_calls, 0u);
+
+    FaultController::start();
+    transition_to_hold = true;
+    FaultController::check_transitions();
+
+    EXPECT_EQ(fault_enter_calls, 1u);
+    EXPECT_EQ(test_operational_machine.get_current_state(), OperationalState::RUN);
+    EXPECT_EQ(operational_hold_enter_count, 0u);
+}
+
+TEST_F(DiagnosticsHubTest, FaultControllerStopsDelegatingAfterFault) {
+    FaultController::install_runtime<OperationalPolicy>();
+    reset_operational_machine();
+    FaultController::start();
+
+    FaultController::request_fault(FaultCause::external("test", "stop delegating"));
+    transition_to_hold = true;
+    FaultController::check_transitions();
+
+    EXPECT_EQ(test_operational_machine.get_current_state(), OperationalState::RUN);
+    EXPECT_EQ(fault_enter_calls, 1u);
 }
 
 TEST_F(DiagnosticsHubTest, ProtectionEngineEvaluatesRulesAndPublishesSnapshots) {
-    DummyStateMachine machine{};
     float monitored_value = 2.0f;
     SampleSource<float> source(monitored_value);
 
     auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
     ASSERT_TRUE(sink_result.has_value());
     auto* sink = *sink_result;
-    FaultController::link_state_machine(machine, 7);
+
     auto protection = ProtectionEngine::create_protection("monitored_value", source);
     ASSERT_TRUE(protection.has_value());
     ASSERT_TRUE(protection->add_rule(Protections::Rules::below(1.0f, 1.5f)).has_value());
@@ -172,8 +250,10 @@ TEST_F(DiagnosticsHubTest, ProtectionEngineEvaluatesRulesAndPublishesSnapshots) 
     Diagnostics::Hub::flush();
 
     ASSERT_FALSE(sink->records.empty());
-    EXPECT_EQ(machine.current_state_id, 7u);
+    EXPECT_TRUE(FaultController::is_faulted());
     EXPECT_EQ(sink->records.front().category, Diagnostics::Category::PROTECTION_EVENT);
+    EXPECT_EQ(sink->records.front().severity, Diagnostics::Severity::FAULT);
+    EXPECT_EQ(sink->records.front().priority, Diagnostics::DiagnosticPriority::URGENT);
     EXPECT_EQ(
         sink->records.front().payload.protection.state,
         Protections::RuleState::FAULT
@@ -184,39 +264,86 @@ TEST_F(DiagnosticsHubTest, ProtectionEngineEvaluatesRulesAndPublishesSnapshots) 
     );
 }
 
-TEST_F(DiagnosticsHubTest, ErrorHandlerPublishesAndEntersFault) {
-    DummyStateMachine machine{};
-
+TEST_F(DiagnosticsHubTest, PanicPublishesAndEntersFault) {
     auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
     ASSERT_TRUE(sink_result.has_value());
     auto* sink = *sink_result;
-    FaultController::link_state_machine(machine, 5);
-    TestErrorHandler::set_fail_on_error(false);
+    TestPanicReporter::set_fail_on_error(false);
 
-    ErrorHandler("runtime failure %d", 12);
+    PANIC("runtime panic %d", 12);
     Diagnostics::Hub::flush();
 
     ASSERT_FALSE(sink->records.empty());
-    EXPECT_EQ(machine.current_state_id, 5u);
-    EXPECT_EQ(sink->records.front().category, Diagnostics::Category::RUNTIME_ERROR);
+    EXPECT_TRUE(FaultController::is_faulted());
+    EXPECT_EQ(fault_enter_calls, 1u);
+    EXPECT_EQ(sink->records.front().category, Diagnostics::Category::RUNTIME_PANIC);
     EXPECT_EQ(sink->records.front().severity, Diagnostics::Severity::FAULT);
+    EXPECT_EQ(sink->records.front().priority, Diagnostics::DiagnosticPriority::URGENT);
 }
 
-TEST_F(DiagnosticsHubTest, WarningDoesNotEnterFault) {
-    DummyStateMachine machine{};
-
+TEST_F(DiagnosticsHubTest, FaultPublishesAndEntersFault) {
     auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
     ASSERT_TRUE(sink_result.has_value());
     auto* sink = *sink_result;
-    FaultController::link_state_machine(machine, 9);
+
+    FAULT("runtime fault %d", 12);
+    Diagnostics::Hub::flush();
+
+    ASSERT_FALSE(sink->records.empty());
+    EXPECT_TRUE(FaultController::is_faulted());
+    EXPECT_EQ(fault_enter_calls, 1u);
+    EXPECT_EQ(sink->records.front().category, Diagnostics::Category::RUNTIME_FAULT);
+    EXPECT_EQ(sink->records.front().severity, Diagnostics::Severity::FAULT);
+    EXPECT_EQ(sink->records.front().priority, Diagnostics::DiagnosticPriority::URGENT);
+}
+
+TEST_F(DiagnosticsHubTest, WarningDoesNotEnterFault) {
+    auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
+    ASSERT_TRUE(sink_result.has_value());
+    auto* sink = *sink_result;
 
     WARNING("runtime warning %d", 3);
     Diagnostics::Hub::flush();
 
     ASSERT_FALSE(sink->records.empty());
-    EXPECT_EQ(machine.current_state_id, 0u);
+    EXPECT_FALSE(FaultController::is_faulted());
     EXPECT_EQ(sink->records.front().category, Diagnostics::Category::RUNTIME_WARNING);
     EXPECT_EQ(sink->records.front().severity, Diagnostics::Severity::WARNING);
+    EXPECT_EQ(sink->records.front().priority, Diagnostics::DiagnosticPriority::NORMAL);
+}
+
+TEST_F(DiagnosticsHubTest, InfoPublishesWithoutEnteringFault) {
+    auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
+    ASSERT_TRUE(sink_result.has_value());
+    auto* sink = *sink_result;
+
+    INFO("runtime info %d", 7);
+    Diagnostics::Hub::flush();
+
+    ASSERT_FALSE(sink->records.empty());
+    EXPECT_FALSE(FaultController::is_faulted());
+    EXPECT_EQ(sink->records.front().category, Diagnostics::Category::RUNTIME_INFO);
+    EXPECT_EQ(sink->records.front().severity, Diagnostics::Severity::INFO);
+    EXPECT_EQ(sink->records.front().priority, Diagnostics::DiagnosticPriority::NORMAL);
+}
+
+TEST_F(DiagnosticsHubTest, RuntimeDiagnosticsCaptureCallerSourceLocation) {
+    auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
+    ASSERT_TRUE(sink_result.has_value());
+    auto* sink = *sink_result;
+
+    const uint32_t expected_line = emit_warning_and_return_line();
+    Diagnostics::Hub::flush();
+
+    ASSERT_FALSE(sink->records.empty());
+    EXPECT_EQ(sink->records.front().payload.runtime.line, expected_line);
+    EXPECT_NE(
+        strstr(
+            sink->records.front().payload.runtime.function_name,
+            "emit_warning_and_return_line"
+        ),
+        nullptr
+    );
 }
 
 TEST_F(DiagnosticsHubTest, RejectsInvalidRuleConfigurationsWithoutGlobalSideEffects) {

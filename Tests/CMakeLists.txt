@@ -28,7 +28,6 @@ add_executable(${STLIB_TEST_EXECUTABLE}
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Models/DMA/DMA2.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/DFSDM/DFSDM.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/ST-LIB_HIGH/Protections/FaultController.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/../Src/ST-LIB_HIGH/Protections/FaultRuntime.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/ST-LIB_HIGH/Protections/ProtectionEngine.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Time/encoder_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Time/scheduler_test.cpp
@@ -66,6 +65,7 @@ target_compile_definitions(${STLIB_TEST_EXECUTABLE} PRIVATE
 )
 
 target_include_directories(${STLIB_TEST_EXECUTABLE} PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/../Inc
     ${CMAKE_CURRENT_LIST_DIR}/../Inc/ST-LIB_LOW
     ${CMAKE_CURRENT_LIST_DIR}/../Inc/ST-LIB_HIGH

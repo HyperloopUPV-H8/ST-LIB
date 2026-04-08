@@ -3,11 +3,11 @@
 #include "HALAL/Services/Time/TimerWrapper.hpp"
 #include "ST-LIB_LOW/Sensors/EncoderSensor/NewEncoderSensor.hpp"
 
-namespace ST_LIB::TestErrorHandler {
+namespace ST_LIB::TestPanicReporter {
 void reset();
 void set_fail_on_error(bool enabled);
 extern int call_count;
-} // namespace ST_LIB::TestErrorHandler
+} // namespace ST_LIB::TestPanicReporter
 
 namespace {
 
@@ -56,7 +56,7 @@ protected:
     ST_LIB::TimerWrapper<encoder_timer_decl> wrapper{};
 
     void SetUp() override {
-        ST_LIB::TestErrorHandler::reset();
+        ST_LIB::TestPanicReporter::reset();
 
         TIM2_BASE->CNT = 0U;
         TIM2_BASE->ARR = 0U;
@@ -87,7 +87,7 @@ TEST_F(EncoderTest, ResetUsesConfiguredInitialCounterValue) {
 }
 
 TEST_F(EncoderTest, TurnOffKeepsTryingIfHALStopFails) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
     ST_LIB::Encoder<encoder_timer_decl>::turn_on();
 
     instance.hal_tim = nullptr;
@@ -95,7 +95,7 @@ TEST_F(EncoderTest, TurnOffKeepsTryingIfHALStopFails) {
     ST_LIB::Encoder<encoder_timer_decl>::turn_off();
     ST_LIB::Encoder<encoder_timer_decl>::turn_off();
 
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 2);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 2);
 }
 
 TEST(EncoderSensorTest, ReadTreatsEncoderInitialCounterAsZeroPosition) {
