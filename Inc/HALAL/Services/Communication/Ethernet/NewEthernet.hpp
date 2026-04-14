@@ -97,9 +97,8 @@ struct EthernetDomain {
         DigitalOutputDomain::DigitalOutput phy_reset;
         std::optional<GPIODomain::GPIO> rxer_gpio;
 
-        static consteval std::optional<GPIODomain::GPIO> make_rxer_gpio(
-            EthernetPins::OptionalPin rxer_pin
-        ) {
+        static consteval std::optional<GPIODomain::GPIO>
+        make_rxer_gpio(EthernetPins::OptionalPin rxer_pin) {
             if (!rxer_pin.has_value()) {
                 return std::nullopt;
             }
@@ -187,8 +186,7 @@ struct EthernetDomain {
                       GPIODomain::AlternateFunction::AF11
                   )
               },
-              phy_reset{pins.PHY_RST},
-              rxer_gpio{make_rxer_gpio(pins.RXER)} {}
+              phy_reset{pins.PHY_RST}, rxer_gpio{make_rxer_gpio(pins.RXER)} {}
 
         template <class Ctx> consteval std::size_t inscribe(Ctx& ctx) const {
             for (const auto& gpio : rmii_gpios) {
