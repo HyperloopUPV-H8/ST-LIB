@@ -48,28 +48,32 @@ struct EthernetDomain {
         const GPIODomain::Pin& PHY_RST;
     };
 
-    constexpr static EthernetPins PINSET_H10{.MDC = PC1,
-                                             .REF_CLK = PA1,
-                                             .MDIO = PA2,
-                                             .CRS_DV = PA7,
-                                             .RXD0 = PC4,
-                                             .RXD1 = PC5,
-                                             .RXER = &PG2,
-                                             .TXD1 = PB13,
-                                             .TX_EN = PG11,
-                                             .TXD0 = PG13,
-                                             .PHY_RST = PG0};
-    constexpr static EthernetPins PINSET_H11{.MDC = PC1,
-                                             .REF_CLK = PA1,
-                                             .MDIO = PA2,
-                                             .CRS_DV = PA7,
-                                             .RXD0 = PC4,
-                                             .RXD1 = PC5,
-                                             .RXER = nullptr,
-                                             .TXD1 = PB13,
-                                             .TX_EN = PB11,
-                                             .TXD0 = PB12,
-                                             .PHY_RST = PF14};
+    constexpr static EthernetPins PINSET_H10{
+        .MDC = PC1,
+        .REF_CLK = PA1,
+        .MDIO = PA2,
+        .CRS_DV = PA7,
+        .RXD0 = PC4,
+        .RXD1 = PC5,
+        .RXER = &PG2,
+        .TXD1 = PB13,
+        .TX_EN = PG11,
+        .TXD0 = PG13,
+        .PHY_RST = PG0
+    };
+    constexpr static EthernetPins PINSET_H11{
+        .MDC = PC1,
+        .REF_CLK = PA1,
+        .MDIO = PA2,
+        .CRS_DV = PA7,
+        .RXD0 = PC4,
+        .RXD1 = PC5,
+        .RXER = nullptr,
+        .TXD1 = PB13,
+        .TX_EN = PB11,
+        .TXD0 = PB12,
+        .PHY_RST = PF14
+    };
 
     struct Entry {
         const char* local_mac;
@@ -91,48 +95,93 @@ struct EthernetDomain {
         DigitalOutputDomain::DigitalOutput phy_reset;
         std::optional<GPIODomain::GPIO> rxer_gpio;
 
-        consteval Ethernet(EthernetPins pins, const char* local_mac, const char* local_ip,
-                           const char* subnet_mask = "255.255.0.0",
-                           const char* gateway = "192.168.1.1",
-                           const char* sntp_server = SNTP::DEFAULT_SERVER_IP)
-            : pins{pins},
-              e{local_mac, local_ip, subnet_mask, gateway, sntp_server},
-              rmii_gpios{GPIODomain::GPIO(pins.MDC, GPIODomain::OperationMode::ALT_PP,
-                                          GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,
-                                          GPIODomain::AlternateFunction::AF11),
-                         GPIODomain::GPIO(pins.REF_CLK, GPIODomain::OperationMode::ALT_PP,
-                                          GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,
-                                          GPIODomain::AlternateFunction::AF11),
-                         GPIODomain::GPIO(pins.MDIO, GPIODomain::OperationMode::ALT_OD,
-                                          GPIODomain::Pull::Up, GPIODomain::Speed::VeryHigh,
-                                          GPIODomain::AlternateFunction::AF11),
-                         GPIODomain::GPIO(pins.CRS_DV, GPIODomain::OperationMode::ALT_PP,
-                                          GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,
-                                          GPIODomain::AlternateFunction::AF11),
-                         GPIODomain::GPIO(pins.RXD0, GPIODomain::OperationMode::ALT_PP,
-                                          GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,
-                                          GPIODomain::AlternateFunction::AF11),
-                         GPIODomain::GPIO(pins.RXD1, GPIODomain::OperationMode::ALT_PP,
-                                          GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,
-                                          GPIODomain::AlternateFunction::AF11),
-                         GPIODomain::GPIO(pins.TXD1, GPIODomain::OperationMode::ALT_PP,
-                                          GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,
-                                          GPIODomain::AlternateFunction::AF11),
-                         GPIODomain::GPIO(pins.TX_EN, GPIODomain::OperationMode::ALT_PP,
-                                          GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,
-                                          GPIODomain::AlternateFunction::AF11),
-                         GPIODomain::GPIO(pins.TXD0, GPIODomain::OperationMode::ALT_PP,
-                                          GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,
-                                          GPIODomain::AlternateFunction::AF11)},
+        consteval Ethernet(
+            EthernetPins pins,
+            const char* local_mac,
+            const char* local_ip,
+            const char* subnet_mask = "255.255.0.0",
+            const char* gateway = "192.168.1.1",
+            const char* sntp_server = SNTP::DEFAULT_SERVER_IP
+        )
+            : pins{pins}, e{local_mac, local_ip, subnet_mask, gateway, sntp_server},
+              rmii_gpios{
+                  GPIODomain::GPIO(
+                      pins.MDC,
+                      GPIODomain::OperationMode::ALT_PP,
+                      GPIODomain::Pull::None,
+                      GPIODomain::Speed::VeryHigh,
+                      GPIODomain::AlternateFunction::AF11
+                  ),
+                  GPIODomain::GPIO(
+                      pins.REF_CLK,
+                      GPIODomain::OperationMode::ALT_PP,
+                      GPIODomain::Pull::None,
+                      GPIODomain::Speed::VeryHigh,
+                      GPIODomain::AlternateFunction::AF11
+                  ),
+                  GPIODomain::GPIO(
+                      pins.MDIO,
+                      GPIODomain::OperationMode::ALT_OD,
+                      GPIODomain::Pull::Up,
+                      GPIODomain::Speed::VeryHigh,
+                      GPIODomain::AlternateFunction::AF11
+                  ),
+                  GPIODomain::GPIO(
+                      pins.CRS_DV,
+                      GPIODomain::OperationMode::ALT_PP,
+                      GPIODomain::Pull::None,
+                      GPIODomain::Speed::VeryHigh,
+                      GPIODomain::AlternateFunction::AF11
+                  ),
+                  GPIODomain::GPIO(
+                      pins.RXD0,
+                      GPIODomain::OperationMode::ALT_PP,
+                      GPIODomain::Pull::None,
+                      GPIODomain::Speed::VeryHigh,
+                      GPIODomain::AlternateFunction::AF11
+                  ),
+                  GPIODomain::GPIO(
+                      pins.RXD1,
+                      GPIODomain::OperationMode::ALT_PP,
+                      GPIODomain::Pull::None,
+                      GPIODomain::Speed::VeryHigh,
+                      GPIODomain::AlternateFunction::AF11
+                  ),
+                  GPIODomain::GPIO(
+                      pins.TXD1,
+                      GPIODomain::OperationMode::ALT_PP,
+                      GPIODomain::Pull::None,
+                      GPIODomain::Speed::VeryHigh,
+                      GPIODomain::AlternateFunction::AF11
+                  ),
+                  GPIODomain::GPIO(
+                      pins.TX_EN,
+                      GPIODomain::OperationMode::ALT_PP,
+                      GPIODomain::Pull::None,
+                      GPIODomain::Speed::VeryHigh,
+                      GPIODomain::AlternateFunction::AF11
+                  ),
+                  GPIODomain::GPIO(
+                      pins.TXD0,
+                      GPIODomain::OperationMode::ALT_PP,
+                      GPIODomain::Pull::None,
+                      GPIODomain::Speed::VeryHigh,
+                      GPIODomain::AlternateFunction::AF11
+                  )
+              },
               phy_reset{pins.PHY_RST},
-              rxer_gpio{pins.RXER ? std::optional<GPIODomain::GPIO>{GPIODomain::GPIO(
-                                        *pins.RXER, GPIODomain::OperationMode::ALT_PP,
-                                        GPIODomain::Pull::None, GPIODomain::Speed::VeryHigh,
-                                        GPIODomain::AlternateFunction::AF11)}
-                                  : std::nullopt} {}
+              rxer_gpio{
+                  pins.RXER ? std::optional<GPIODomain::GPIO>{GPIODomain::GPIO(
+                                  *pins.RXER,
+                                  GPIODomain::OperationMode::ALT_PP,
+                                  GPIODomain::Pull::None,
+                                  GPIODomain::Speed::VeryHigh,
+                                  GPIODomain::AlternateFunction::AF11
+                              )}
+                            : std::nullopt
+              } {}
 
-        template <class Ctx>
-        consteval std::size_t inscribe(Ctx& ctx) const {
+        template <class Ctx> consteval std::size_t inscribe(Ctx& ctx) const {
             for (const auto& gpio : rmii_gpios) {
                 gpio.inscribe(ctx);
             }
@@ -166,8 +215,7 @@ struct EthernetDomain {
         size_t phy_reset_id;
     };
 
-    template <size_t N>
-    static consteval array<Config, N> build(span<const Entry> config) {
+    template <size_t N> static consteval array<Config, N> build(span<const Entry> config) {
         array<Config, N> cfgs{};
         static_assert(N <= max_instances, "EthernetDomain supports at most one instance");
         if constexpr (N == 0) {
@@ -212,12 +260,13 @@ struct EthernetDomain {
         };
     };
 
-    template <std::size_t N>
-    struct Init {
+    template <std::size_t N> struct Init {
         static inline std::array<Instance, N> instances{};
 
-        static void init(std::span<const Config, N> cfgs,
-                         std::span<DigitalOutputDomain::Instance> do_instances) {
+        static void init(
+            std::span<const Config, N> cfgs,
+            std::span<DigitalOutputDomain::Instance> do_instances
+        ) {
             static_assert(N <= max_instances, "EthernetDomain supports at most one instance");
             if constexpr (N == 0) {
                 (void)cfgs;
@@ -229,9 +278,9 @@ struct EthernetDomain {
             /* --- RESET PHY --- */
 #ifndef NUCLEO
             // RESET_N pin low then high
-            do_instances[e.phy_reset_id].turn_off();  // RESET_N = 0
+            do_instances[e.phy_reset_id].turn_off(); // RESET_N = 0
             HAL_Delay(PHY_RESET_LOW_DELAY_MS);
-            do_instances[e.phy_reset_id].turn_on();  // RESET_N = 1
+            do_instances[e.phy_reset_id].turn_on(); // RESET_N = 1
             HAL_Delay(PHY_RESET_HIGH_DELAY_MS);
 #else
             // Nucleo boards typically rely on the PHY's own reset circuitry.
@@ -295,7 +344,7 @@ struct EthernetDomain {
         }
     };
 };
-}  // namespace ST_LIB
+} // namespace ST_LIB
 
 #else
 namespace ST_LIB {
@@ -304,16 +353,16 @@ struct EthernetDomain {
     static constexpr std::size_t max_instances{0};
     struct Entry {};
     struct Config {};
-    template <size_t N>
-    static consteval array<Config, N> build(span<const Entry> config) {
+    template <size_t N> static consteval array<Config, N> build(span<const Entry> config) {
         return {};
     }
     struct Instance {};
-    template <std::size_t N>
-    struct Init {
-        static void init(std::span<const Config, N> cfgs,
-                         std::span<DigitalOutputDomain::Instance> do_instances) {};
+    template <std::size_t N> struct Init {
+        static void init(
+            std::span<const Config, N> cfgs,
+            std::span<DigitalOutputDomain::Instance> do_instances
+        ){};
     };
 };
-}  // namespace ST_LIB
-#endif  // STLIB_ETH
+} // namespace ST_LIB
+#endif // STLIB_ETH
