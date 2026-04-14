@@ -1,17 +1,16 @@
 #pragma once
 
-#include "stm32h7xx_hal.h"
-
 #include "C++Utilities/CppUtils.hpp"
 #include "DigitalOutput2.hpp"
+#include "stm32h7xx_hal.h"
 
 #ifdef STLIB_ETH
+#include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Models/MAC/MAC.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/Ethernet.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/EthernetHelper.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/EthernetNode.hpp"
 #include "HALAL/Services/Communication/SNTP/SNTP.hpp"
-#include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 extern "C" {
 #include "ethernetif.h"
@@ -35,15 +34,16 @@ extern void compile_error(const char* msg);
 #endif
 
 struct EthernetDomain {
-
     struct EthernetPins {
+        using OptionalPin = std::optional<reference_wrapper<const GPIODomain::Pin>>;
+
         const GPIODomain::Pin& MDC;
         const GPIODomain::Pin& REF_CLK;
         const GPIODomain::Pin& MDIO;
         const GPIODomain::Pin& CRS_DV;
         const GPIODomain::Pin& RXD0;
         const GPIODomain::Pin& RXD1;
-        const GPIODomain::Pin& RXER;
+        OptionalPin RXER;
         const GPIODomain::Pin& TXD1;
         const GPIODomain::Pin& TX_EN;
         const GPIODomain::Pin& TXD0;
@@ -57,7 +57,7 @@ struct EthernetDomain {
         .CRS_DV = PA7,
         .RXD0 = PC4,
         .RXD1 = PC5,
-        .RXER = PG2,
+        .RXER = std::cref(PG2),
         .TXD1 = PB13,
         .TX_EN = PG11,
         .TXD0 = PG13,
@@ -70,7 +70,7 @@ struct EthernetDomain {
         .CRS_DV = PA7,
         .RXD0 = PC4,
         .RXD1 = PC5,
-        .RXER = PG2,
+        .RXER = std::nullopt,
         .TXD1 = PB13,
         .TX_EN = PB11,
         .TXD0 = PB12,
@@ -93,8 +93,24 @@ struct EthernetDomain {
         EthernetPins pins;
         Entry e;
 
-        std::array<GPIODomain::GPIO, 10> rmii_gpios;
+        std::array<GPIODomain::GPIO, 9> rmii_gpios;
         DigitalOutputDomain::DigitalOutput phy_reset;
+        std::optional<GPIODomain::GPIO> rxer_gpio;
+
+        static consteval std::optional<GPIODomain::GPIO>
+        make_rxer_gpio(EthernetPins::OptionalPin rxer_pin) {
+            if (!rxer_pin.has_value()) {
+                return std::nullopt;
+            }
+
+            return GPIODomain::GPIO(
+                rxer_pin->get(),
+                GPIODomain::OperationMode::ALT_PP,
+                GPIODomain::Pull::None,
+                GPIODomain::Speed::VeryHigh,
+                GPIODomain::AlternateFunction::AF11
+            );
+        }
 
         consteval Ethernet(
             EthernetPins pins,
@@ -149,13 +165,6 @@ struct EthernetDomain {
                       GPIODomain::AlternateFunction::AF11
                   ),
                   GPIODomain::GPIO(
-                      pins.RXER,
-                      GPIODomain::OperationMode::ALT_PP,
-                      GPIODomain::Pull::None,
-                      GPIODomain::Speed::VeryHigh,
-                      GPIODomain::AlternateFunction::AF11
-                  ),
-                  GPIODomain::GPIO(
                       pins.TXD1,
                       GPIODomain::OperationMode::ALT_PP,
                       GPIODomain::Pull::None,
@@ -177,11 +186,14 @@ struct EthernetDomain {
                       GPIODomain::AlternateFunction::AF11
                   )
               },
-              phy_reset{pins.PHY_RST} {}
+              phy_reset{pins.PHY_RST}, rxer_gpio{make_rxer_gpio(pins.RXER)} {}
 
         template <class Ctx> consteval std::size_t inscribe(Ctx& ctx) const {
             for (const auto& gpio : rmii_gpios) {
                 gpio.inscribe(ctx);
+            }
+            if (rxer_gpio.has_value()) {
+                rxer_gpio->inscribe(ctx);
             }
 
             const auto phy_reset_id = phy_reset.inscribe(ctx);
