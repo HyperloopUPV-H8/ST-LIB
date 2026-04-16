@@ -27,6 +27,16 @@
 #include "stm32h7xx_hal_tim.h"
 #endif
 
+//#define SLOW_CHECK_USE_READY_BITMAP
+#define SLOW_CHECK_USE_LAST_N_TASKS
+
+#define SLOW_CHECK_USE_LAST_N_TASKS_COUNT 512
+
+#if defined(SLOW_CHECK_USE_LAST_N_TASKS)
+// Must be a 32 bit timer and not be the same as the scheduler timer
+extern TIM_TypeDef* perf_timer;
+#endif
+
 extern TIM_TypeDef* Scheduler_global_timer;
 void Scheduler_global_timer_callback(void* raw);
 void Scheduler_start(void);
