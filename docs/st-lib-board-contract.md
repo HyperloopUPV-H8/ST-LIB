@@ -7,13 +7,27 @@ If you change a domain, add a new domain, or add a cross-domain composition rule
 
 ## 1. Mental Model
 
-`Board<...>` is a compile-time build pipeline plus a runtime init pipeline.
+`Board<Policy, ...>` is a compile-time build pipeline plus a runtime init pipeline.
 
 - Compile time decides what exists and how it must be configured.
 - Runtime only materializes already-built configurations and links HAL handles.
 
 `Board` is intentionally declarative. Request objects describe intent; domains convert that intent
-into concrete configs.
+into concrete configs. The first template argument is not a request object: it is the global fault
+runtime policy type used by `FaultController`.
+
+## 1.1 Board Policy Contract
+
+The first template argument of `Board` must be a fault policy type.
+
+That type must expose:
+
+- `static constexpr bool has_operational_machine`
+- `static constexpr Callback on_fault_enter`
+- `static constexpr auto& operational_machine` when `has_operational_machine == true`
+
+`FaultPolicy<...>`, `FaultPolicyNoMachine<...>`, and `DefaultFaultPolicy` are the intended public
+helpers for this contract.
 
 ## 2. Domain Contract
 
@@ -35,7 +49,8 @@ signature.
 
 ## 3. Request Object Contract
 
-A request object that can be used inside `Board<...>` must provide:
+A request object that can be used after the first `Policy` argument inside `Board<Policy, ...>` must
+provide:
 
 - `using domain = <DomainType>;`
 - `template <class Ctx> consteval std::size_t inscribe(Ctx&) const`
@@ -68,6 +83,7 @@ This is a deliberate design choice. `BuildCtx` is a storage and ownership map, n
 
 - creates a `DomainsCtx`
 - evaluates every request object's `inscribe(ctx)` in declaration order
+- does not inspect or route the `Policy` through `BuildCtx`
 
 `Board::build()`:
 
