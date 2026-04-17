@@ -35,7 +35,6 @@ template <typename T> struct TimeAccumulationRuleConfig {
     T fault_threshold{};
     optional<T> warning_threshold{};
     float time_window_s{0.0f};
-    float sample_rate_hz{0.0f};
 };
 
 template <ProtectionSample T>
@@ -159,8 +158,7 @@ template <FloatingSample T>
 constexpr expected<RuleDefinition<T>, RuleConfigError> validate_time_accumulation(
     T fault_threshold,
     optional<T> warning_threshold,
-    float window_seconds,
-    float sample_rate_hz
+    float window_seconds
 ) {
     const auto window_validation = validate_with_consteval<RuleConfigError>(
         [&] { return window_seconds > 0.0f; },
@@ -169,23 +167,6 @@ constexpr expected<RuleDefinition<T>, RuleConfigError> validate_time_accumulatio
     );
     if (!window_validation.has_value()) {
         return unexpected(window_validation.error());
-    }
-
-    const auto rate_validation = validate_with_consteval<RuleConfigError>(
-        [&] { return sample_rate_hz > 0.0f; },
-        RuleConfigError::INVALID_SAMPLE_RATE,
-        "time_accumulation requires a positive sample rate"
-    );
-    if (!rate_validation.has_value()) {
-        return unexpected(rate_validation.error());
-    }
-
-    const auto window_samples = static_cast<size_t>(std::lround(window_seconds * sample_rate_hz));
-    if (window_samples == 0) {
-        return unexpected(RuleConfigError::INVALID_WINDOW);
-    }
-    if (window_samples > Config::max_time_accumulation_samples) {
-        return unexpected(RuleConfigError::WINDOW_CAPACITY_EXCEEDED);
     }
 
     if (warning_threshold.has_value()) {
@@ -203,7 +184,6 @@ constexpr expected<RuleDefinition<T>, RuleConfigError> validate_time_accumulatio
         .fault_threshold = fault_threshold,
         .warning_threshold = warning_threshold,
         .time_window_s = window_seconds,
-        .sample_rate_hz = sample_rate_hz,
     }};
 }
 
@@ -255,29 +235,20 @@ constexpr expected<RuleDefinition<T>, RuleConfigError> not_equals(T value) {
 }
 
 template <FloatingSample T>
-constexpr expected<RuleDefinition<T>, RuleConfigError>
-time_accumulation(T fault_threshold, float window_seconds, float sample_rate_hz) {
-    return detail::validate_time_accumulation<T>(
-        fault_threshold,
-        nullopt,
-        window_seconds,
-        sample_rate_hz
-    );
+constexpr expected<RuleDefinition<T>, RuleConfigError> time_accumulation(
+    T fault_threshold,
+    float window_seconds
+) {
+    return detail::validate_time_accumulation<T>(fault_threshold, nullopt, window_seconds);
 }
 
 template <FloatingSample T>
 constexpr expected<RuleDefinition<T>, RuleConfigError> time_accumulation(
     T fault_threshold,
     T warning_threshold,
-    float window_seconds,
-    float sample_rate_hz
+    float window_seconds
 ) {
-    return detail::validate_time_accumulation<T>(
-        fault_threshold,
-        warning_threshold,
-        window_seconds,
-        sample_rate_hz
-    );
+    return detail::validate_time_accumulation<T>(fault_threshold, warning_threshold, window_seconds);
 }
 
 } // namespace Rules

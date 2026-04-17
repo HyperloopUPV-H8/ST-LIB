@@ -222,7 +222,7 @@ DiagnosticRecord RecordFactory::protection_event(
     record.payload.protection.has_threshold_b = snapshot.has_threshold_b;
     record.payload.protection.uses_warning_threshold = snapshot.uses_warning_threshold;
     record.payload.protection.time_window_s = snapshot.time_window_s;
-    record.payload.protection.sample_rate_hz = snapshot.sample_rate_hz;
+    record.payload.protection.active_time_s = snapshot.active_time_s;
     return record;
 }
 
