@@ -3,6 +3,7 @@
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
+#include "HALAL/Services/Time/Scheduler.hpp"
 #include "ST-LIB_HIGH/Protections/FaultController.hpp"
 #include "ST-LIB_HIGH/Protections/ProtectionEngine.hpp"
 #include "ST-LIB_HIGH/Protections/Rules.hpp"
@@ -103,6 +104,8 @@ protected:
         reset_operational_machine();
         TestPanicReporter::reset();
         fault_enter_calls = 0;
+        Scheduler::global_tick_us_ = 0;
+        Scheduler_global_timer = nullptr;
 
         FaultController::install_runtime<NoMachinePolicy>();
         FaultController::start();
@@ -269,6 +272,77 @@ TEST_F(DiagnosticsHubTest, ProtectionEngineEvaluatesRulesAndPublishesSnapshots) 
     );
 }
 
+TEST_F(DiagnosticsHubTest, TimeAccumulationUsesSchedulerTickForContinuousDuration) {
+    float monitored_value = 0.0f;
+    SampleSource<float> source(monitored_value);
+
+    auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
+    ASSERT_TRUE(sink_result.has_value());
+    auto* sink = *sink_result;
+
+    auto protection = ProtectionEngine::create_protection("time_value", source);
+    ASSERT_TRUE(protection.has_value());
+    ASSERT_TRUE(protection->add_rule(Protections::Rules::time_accumulation(10.0f, 0.001f)).has_value());
+
+    ProtectionEngine::initialize();
+
+    monitored_value = 12.0f;
+    Scheduler::global_tick_us_ = 0;
+    ProtectionEngine::evaluate();
+    EXPECT_FALSE(FaultController::is_faulted());
+
+    Scheduler::global_tick_us_ = 500;
+    ProtectionEngine::evaluate();
+    EXPECT_FALSE(FaultController::is_faulted());
+
+    Scheduler::global_tick_us_ = 1'000;
+    ProtectionEngine::evaluate();
+    Diagnostics::Hub::flush();
+
+    ASSERT_FALSE(sink->records.empty());
+    EXPECT_TRUE(FaultController::is_faulted());
+    EXPECT_EQ(sink->records.back().category, Diagnostics::Category::PROTECTION_EVENT);
+    EXPECT_EQ(sink->records.back().payload.protection.rule_kind, Protections::RuleKind::TIME_ACCUMULATION);
+    EXPECT_FLOAT_EQ(sink->records.back().payload.protection.time_window_s, 0.001f);
+    EXPECT_FLOAT_EQ(sink->records.back().payload.protection.active_time_s, 0.001f);
+}
+
+TEST_F(DiagnosticsHubTest, TimeAccumulationResetsWhenConditionClears) {
+    float monitored_value = 0.0f;
+    SampleSource<float> source(monitored_value);
+
+    auto protection = ProtectionEngine::create_protection("time_reset_value", source);
+    ASSERT_TRUE(protection.has_value());
+    ASSERT_TRUE(protection->add_rule(Protections::Rules::time_accumulation(10.0f, 0.001f)).has_value());
+
+    ProtectionEngine::initialize();
+
+    monitored_value = 12.0f;
+    Scheduler::global_tick_us_ = 0;
+    ProtectionEngine::evaluate();
+
+    Scheduler::global_tick_us_ = 700;
+    ProtectionEngine::evaluate();
+    EXPECT_FALSE(FaultController::is_faulted());
+
+    monitored_value = 0.0f;
+    Scheduler::global_tick_us_ = 800;
+    ProtectionEngine::evaluate();
+    EXPECT_FALSE(FaultController::is_faulted());
+
+    Scheduler::global_tick_us_ = 1'600;
+    ProtectionEngine::evaluate();
+    EXPECT_FALSE(FaultController::is_faulted());
+
+    monitored_value = 12.0f;
+    Scheduler::global_tick_us_ = 1'600;
+    ProtectionEngine::evaluate();
+
+    Scheduler::global_tick_us_ = 2'300;
+    ProtectionEngine::evaluate();
+    EXPECT_FALSE(FaultController::is_faulted());
+}
+
 TEST_F(DiagnosticsHubTest, PanicPublishesAndEntersFault) {
     auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
     ASSERT_TRUE(sink_result.has_value());
@@ -355,6 +429,10 @@ TEST_F(DiagnosticsHubTest, RejectsInvalidRuleConfigurationsWithoutGlobalSideEffe
     auto invalid_rule = Protections::Rules::below(1.0f, 0.5f);
     EXPECT_FALSE(invalid_rule.has_value());
     EXPECT_EQ(invalid_rule.error(), Protections::RuleConfigError::INVALID_WARNING_THRESHOLD);
+
+    auto invalid_time_rule = Protections::Rules::time_accumulation(10.0f, 0.0f);
+    EXPECT_FALSE(invalid_time_rule.has_value());
+    EXPECT_EQ(invalid_time_rule.error(), Protections::RuleConfigError::INVALID_WINDOW);
 }
 
 } // namespace

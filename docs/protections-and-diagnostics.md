@@ -34,7 +34,7 @@ The global fault model is always the same:
 
 ```mermaid
 flowchart TD
-    A["Register protections"] --> B["Declare Board and optional FaultPolicy"]
+    A["Register protections"] --> B["Declare Board policy and request objects"]
     B --> C["Board::init()"]
     C --> D["while (1)"]
     D --> E["FaultController::check_transitions()"]
@@ -86,7 +86,7 @@ After `Board::init()`, the protection registry is locked.
 using namespace ST_LIB;
 
 constexpr auto led = DigitalOutputDomain::DigitalOutput(PF13);
-using MainBoard = Board<led>;
+using MainBoard = Board<DefaultFaultPolicy, led>;
 
 float bus_voltage = 0.0f;
 
@@ -105,7 +105,7 @@ int main() {
     }
 
     if (!protection->add_rule(
-             Protections::Rules::time_accumulation(20.0f, 15.0f, 0.5f, 10000.0f)
+             Protections::Rules::time_accumulation(20.0f, 15.0f, 0.5f)
          )
              .has_value()) {
         PANIC("failed to add time_accumulation rule");
@@ -131,6 +131,11 @@ That runtime has two states:
 
 If the application does not use a functional state machine, nothing else is required.
 
+Typical choices are:
+
+- `Board<DefaultFaultPolicy, ...>` when no extra fault callback is needed
+- `Board<FaultPolicyNoMachine<on_fault_enter>, ...>` when only `FAULT` entry actions are needed
+
 If the application does use a functional state machine, it can be nested inside `OPERATIONAL`
 through a `FaultPolicy`.
 
@@ -148,8 +153,7 @@ static void on_fault_enter() {
     // disable power stage, set LEDs, open contactors, etc.
 }
 
-static inline constexpr FaultPolicy<app_machine, on_fault_enter> fault_policy{};
-using MainBoard = Board<fault_policy, led>;
+using MainBoard = Board<FaultPolicy<app_machine, on_fault_enter>, led>;
 
 int main() {
     MainBoard::init();
@@ -170,6 +174,7 @@ Important rules:
   `FAULT(...)`
 - if a nested operational state machine is used, poll `FaultController::check_transitions()`, not
   the child machine directly
+- `Board` takes the fault policy type as its first template argument
 
 ### 1.6 Runtime Diagnostics API
 
@@ -275,6 +280,9 @@ Supported rule kinds:
 - `EQUALS`
 - `NOT_EQUALS`
 - `TIME_ACCUMULATION`
+
+`TIME_ACCUMULATION` uses `Scheduler::get_global_tick()` to measure real elapsed time.
+It no longer assumes a fixed evaluation rate.
 
 `ProtectionEngine::evaluate()`:
 

@@ -63,7 +63,7 @@ struct ProtectionDiagnosticPayload {
     bool has_threshold_b{false};
     bool uses_warning_threshold{false};
     float time_window_s{0.0f};
-    float sample_rate_hz{0.0f};
+    float active_time_s{0.0f};
 };
 
 union DiagnosticPayload {

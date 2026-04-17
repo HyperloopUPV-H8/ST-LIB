@@ -8,7 +8,6 @@ namespace Protections {
 namespace Config {
 inline constexpr size_t max_protections = 32;
 inline constexpr size_t max_rules_per_protection = 16;
-inline constexpr size_t max_time_accumulation_samples = 128;
 inline constexpr uint64_t notify_delay_in_microseconds = 2'000'000ULL;
 inline constexpr size_t max_name_length = 48;
 } // namespace Config
@@ -49,7 +48,7 @@ struct RuleSnapshot {
     bool has_threshold_b{false};
     bool uses_warning_threshold{false};
     float time_window_s{0.0f};
-    float sample_rate_hz{0.0f};
+    float active_time_s{0.0f};
 };
 
 struct RuleEvaluation {
