@@ -237,9 +237,9 @@ void format_protection_record(
         append_formatted(
             buffer,
             buffer_size,
-            " | Window: %.3fs | Rate: %.3fHz",
+            " | Window: %.3fs | Active: %.3fs",
             static_cast<double>(protection.time_window_s),
-            static_cast<double>(protection.sample_rate_hz)
+            static_cast<double>(protection.active_time_s)
         );
     }
     append_timestamp_suffix(record.timestamp, buffer, buffer_size);

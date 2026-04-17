@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "C++Utilities/CppUtils.hpp"
+#include "HALAL/Services/Time/Scheduler.hpp"
 #include "ST-LIB_HIGH/Protections/ProtectionErrors.hpp"
 #include "ST-LIB_HIGH/Protections/ProtectionTypes.hpp"
 #include "ST-LIB_HIGH/Protections/Rules.hpp"
@@ -68,14 +69,14 @@ public:
         T fault_threshold,
         optional<T> warning_threshold,
         float time_window_s = 0.0f,
-        float sample_rate_hz = 0.0f
+        float active_time_s = 0.0f
     ) {
         RuleSnapshot snapshot{};
         snapshot.kind = kind;
         snapshot.sample_encoding = sample_encoding_for<T>();
         snapshot.observed_value = to_numeric_value(observed);
         snapshot.time_window_s = time_window_s;
-        snapshot.sample_rate_hz = sample_rate_hz;
+        snapshot.active_time_s = active_time_s;
         snapshot.uses_warning_threshold = should_use_warning_threshold(
             current_state,
             edge,
@@ -192,37 +193,48 @@ template <FloatingSample T> struct TimeAccumulationEvaluator {
     static RuleState compute(
         const T& sample,
         const TimeAccumulationRuleConfig<T>& config,
-        array<T, Config::max_time_accumulation_samples>& accumulation_window,
-        size_t configured_window_samples,
-        size_t& window_fill_count,
-        size_t& window_index,
-        T& rolling_sum,
-        T& average_value
+        uint64_t configured_window_us,
+        bool& has_last_tick,
+        uint64_t& last_tick_us,
+        uint64_t& warning_active_time_us,
+        uint64_t& fault_active_time_us,
+        T& active_magnitude,
+        float& active_time_s
     ) {
-        const T magnitude = detail::absolute_value(sample);
-        const size_t window_samples = configured_window_samples == 0 ? 1 : configured_window_samples;
+        const uint64_t now_us = Scheduler::get_global_tick();
+        const uint64_t elapsed_us = has_last_tick ? (now_us - last_tick_us) : 0ULL;
+        has_last_tick = true;
+        last_tick_us = now_us;
 
-        if (window_fill_count < window_samples) {
-            rolling_sum += magnitude;
-            accumulation_window[window_fill_count] = magnitude;
-            window_fill_count++;
-            average_value = static_cast<T>(rolling_sum / static_cast<T>(window_fill_count));
-            return RuleState::NORMAL;
+        active_magnitude = detail::absolute_value(sample);
+
+        if (detail::is_above(active_magnitude, config.fault_threshold)) {
+            fault_active_time_us += elapsed_us;
+        } else {
+            fault_active_time_us = 0;
         }
 
-        rolling_sum -= accumulation_window[window_index];
-        accumulation_window[window_index] = magnitude;
-        rolling_sum += magnitude;
-        window_index = (window_index + 1) % window_samples;
-        average_value = static_cast<T>(rolling_sum / static_cast<T>(window_samples));
+        if (config.warning_threshold.has_value() &&
+            detail::is_above(active_magnitude, config.warning_threshold.value())) {
+            warning_active_time_us += elapsed_us;
+        } else {
+            warning_active_time_us = 0;
+        }
 
-        if (detail::is_above(average_value, config.fault_threshold)) {
+        if (fault_active_time_us >= configured_window_us) {
+            active_time_s = static_cast<float>(fault_active_time_us) / 1'000'000.0f;
             return RuleState::FAULT;
         }
-        if (config.warning_threshold.has_value() &&
-            detail::is_above(average_value, config.warning_threshold.value())) {
+        if (config.warning_threshold.has_value() && warning_active_time_us >= configured_window_us) {
+            active_time_s = static_cast<float>(warning_active_time_us) / 1'000'000.0f;
             return RuleState::WARNING;
         }
+
+        active_time_s = static_cast<float>(
+                            config.warning_threshold.has_value() ? warning_active_time_us
+                                                                 : fault_active_time_us
+                        ) /
+                        1'000'000.0f;
         return RuleState::NORMAL;
     }
 };
@@ -342,10 +354,11 @@ template <EqualityComparableSample T> struct NotEqualsRule {
 
 template <FloatingSample T> struct TimeAccumulationRule {
     explicit TimeAccumulationRule(TimeAccumulationRuleConfig<T> config) : config(config) {
-        configured_window_samples =
-            static_cast<size_t>(std::lround(config.time_window_s * config.sample_rate_hz));
-        if (configured_window_samples == 0) {
-            configured_window_samples = 1;
+        configured_window_us = static_cast<uint64_t>(std::llround(
+            static_cast<double>(config.time_window_s) * 1'000'000.0
+        ));
+        if (configured_window_us == 0) {
+            configured_window_us = 1;
         }
     }
 
@@ -354,12 +367,13 @@ template <FloatingSample T> struct TimeAccumulationRule {
         const RuleState state = TimeAccumulationEvaluator<T>::compute(
             sample,
             config,
-            accumulation_window,
-            configured_window_samples,
-            window_fill_count,
-            window_index,
-            rolling_sum,
-            average_value
+            configured_window_us,
+            has_last_tick,
+            last_tick_us,
+            warning_active_time_us,
+            fault_active_time_us,
+            active_magnitude,
+            active_time_s
         );
         const RuleEdge edge = tracker.advance(state);
         return {
@@ -367,26 +381,27 @@ template <FloatingSample T> struct TimeAccumulationRule {
             .edge = edge,
             .snapshot = RuleSnapshotBuilder::single_threshold(
                 RuleKind::TIME_ACCUMULATION,
-                average_value,
+                active_magnitude,
                 state,
                 edge,
                 previous_state,
                 config.fault_threshold,
                 config.warning_threshold,
                 config.time_window_s,
-                config.sample_rate_hz
+                active_time_s
             ),
         };
     }
 
     TimeAccumulationRuleConfig<T> config{};
     RuleStateTracker tracker{};
-    size_t configured_window_samples{1};
-    array<T, Config::max_time_accumulation_samples> accumulation_window{};
-    size_t window_fill_count{0};
-    size_t window_index{0};
-    T rolling_sum{detail::zero_value<T>()};
-    T average_value{detail::zero_value<T>()};
+    uint64_t configured_window_us{1};
+    bool has_last_tick{false};
+    uint64_t last_tick_us{0};
+    uint64_t warning_active_time_us{0};
+    uint64_t fault_active_time_us{0};
+    T active_magnitude{detail::zero_value<T>()};
+    float active_time_s{0.0f};
 };
 
 template <ProtectionSample T, bool IsFloating = FloatingSample<T>>
