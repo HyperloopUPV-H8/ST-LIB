@@ -28,7 +28,7 @@ polls:
 The global fault model is always the same:
 
 - the framework owns a global runtime with two states: `OPERATIONAL` and `FAULT`
-- the only valid way to enter the global `FAULT` state is `FaultController::request_fault(...)`
+- internally, the only way to enter the global `FAULT` state is `FaultController::request_fault(...)`
 - protection faults, `PANIC(...)`, and `FAULT(...)` all end up there
 - fault diagnostics are transmitted with urgent priority through `Diagnostics`
 
@@ -166,8 +166,8 @@ Important rules:
 
 - the user state machine models operational behavior only
 - the user does not program transitions to the global `FAULT`
-- if a fatal condition must force the system into `FAULT`, use `PANIC(...)`, `FAULT(...)`, or
-  `FaultController::request_fault(...)`
+- if a fatal condition must force the system into `FAULT`, user code should use `PANIC(...)` or
+  `FAULT(...)`
 - if a nested operational state machine is used, poll `FaultController::check_transitions()`, not
   the child machine directly
 
@@ -190,15 +190,17 @@ Their semantics are:
 `PANIC(...)` and `FAULT(...)` both call the same global fault path underneath.
 The difference is semantic classification of the cause and diagnostic category.
 
-### 1.7 Structured Fault Requests
+### 1.7 Internal Fault Primitive
 
-When the fatal condition is already available as structured data, use:
+Internally, protections and fatal runtime reporters converge on:
 
 ```cpp
-FaultController::request_fault(FaultCause::external("origin", "message"));
+FaultController::request_fault(cause);
 ```
 
-This is the primitive used internally by protections and fatal runtime reporters.
+This primitive is not intended to be the normal user-facing API.
+User code should prefer `FAULT(...)` or `PANIC(...)` so the library captures consistent source
+metadata and preserves the public runtime contract.
 
 ### 1.8 Transmission Semantics
 

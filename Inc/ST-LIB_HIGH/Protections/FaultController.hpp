@@ -4,6 +4,14 @@
 #include "ST-LIB_HIGH/Protections/ProtectionTypes.hpp"
 #include "StateMachine/StateMachine.hpp"
 
+namespace ST_LIB::TestAccess {
+struct FaultController;
+}
+
+class PanicReporter;
+class FaultReporter;
+class ProtectionEngine;
+
 namespace FaultConfig {
 inline constexpr size_t origin_capacity = Protections::Config::max_name_length;
 inline constexpr size_t runtime_message_capacity = 160;
@@ -11,7 +19,7 @@ inline constexpr size_t function_capacity = 64;
 inline constexpr size_t file_capacity = 96;
 } // namespace FaultConfig
 
-enum class FaultCauseKind : uint8_t { PANIC = 0, RUNTIME_FAULT, PROTECTION, EXTERNAL };
+enum class FaultCauseKind : uint8_t { PANIC = 0, RUNTIME_FAULT, PROTECTION };
 
 struct FaultRuntimePayload {
     uint32_t line{0};
@@ -46,21 +54,11 @@ struct FaultCause {
         const char* func,
         const char* file
     );
-    static inline FaultCause runtime_error(
-        const char* message,
-        bool truncated,
-        int line,
-        const char* func,
-        const char* file
-    ) {
-        return panic(message, truncated, line, func, file);
-    }
     static FaultCause protection(
         const char* protection_name,
         Protections::RuleEdge edge,
         const Protections::RuleSnapshot& snapshot
     );
-    static FaultCause external(const char* origin, const char* message);
 };
 
 class FaultController {
@@ -87,11 +85,15 @@ public:
 
     static void start();
     static void check_transitions();
-    static void request_fault(const FaultCause& cause);
     static bool is_faulted();
     static const FaultCause* latched_fault_cause();
 
 private:
+    friend class PanicReporter;
+    friend class FaultReporter;
+    friend class ProtectionEngine;
+    friend struct ST_LIB::TestAccess::FaultController;
+
     enum class RuntimeState : uint8_t { OPERATIONAL = 0, FAULT = 1 };
 
     struct RuntimeStorage {
@@ -169,6 +171,7 @@ private:
 
     static void reset_runtime_storage();
     static void publish_fault_diagnostic(const FaultCause& cause);
+    static void request_fault(const FaultCause& cause);
     static void on_fault_state_enter();
 
     static RuntimeStorage runtime_storage;
