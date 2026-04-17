@@ -74,6 +74,10 @@ void reset_operational_machine() {
 
 void on_fault_enter() { fault_enter_calls++; }
 
+FaultCause make_test_runtime_fault(const char* message) {
+    return FaultCause::runtime_fault(message, false, 0, "diagnostics_test", "diagnostics_test.cpp");
+}
+
 uint32_t emit_warning_and_return_line() {
     constexpr uint32_t expected_line = __LINE__ + 1;
     WARNING("source location warning");
@@ -167,7 +171,7 @@ TEST_F(DiagnosticsHubTest, PendingQueueIsBoundedWhenASinkNeverDelivers) {
 }
 
 TEST_F(DiagnosticsHubTest, ReinstallingRuntimeClearsLatchedFaultState) {
-    FaultController::request_fault(FaultCause::external("test", "first fault"));
+    TestAccess::FaultController::request_fault(make_test_runtime_fault("first fault"));
     ASSERT_TRUE(FaultController::is_faulted());
     ASSERT_NE(FaultController::latched_fault_cause(), nullptr);
 
@@ -180,13 +184,14 @@ TEST_F(DiagnosticsHubTest, ReinstallingRuntimeClearsLatchedFaultState) {
 }
 
 TEST_F(DiagnosticsHubTest, FaultControllerTransitionsOnlyOnce) {
-    FaultController::request_fault(FaultCause::external("test", "fault once"));
-    FaultController::request_fault(FaultCause::external("test", "fault twice"));
+    TestAccess::FaultController::request_fault(make_test_runtime_fault("fault once"));
+    TestAccess::FaultController::request_fault(make_test_runtime_fault("fault twice"));
 
     ASSERT_TRUE(FaultController::is_faulted());
     ASSERT_NE(FaultController::latched_fault_cause(), nullptr);
     EXPECT_EQ(fault_enter_calls, 1u);
-    EXPECT_STREQ(FaultController::latched_fault_cause()->origin, "test");
+    EXPECT_EQ(FaultController::latched_fault_cause()->kind, FaultCauseKind::RUNTIME_FAULT);
+    EXPECT_STREQ(FaultController::latched_fault_cause()->runtime.message, "fault once");
 }
 
 TEST_F(DiagnosticsHubTest, FaultControllerDelegatesToOperationalMachineWhileOperational) {
@@ -205,7 +210,7 @@ TEST_F(DiagnosticsHubTest, FaultBeforeStartStartsRuntimeDirectlyInFault) {
     FaultController::install_runtime<OperationalPolicy>();
     reset_operational_machine();
 
-    FaultController::request_fault(FaultCause::external("test", "fault before start"));
+    TestAccess::FaultController::request_fault(make_test_runtime_fault("fault before start"));
 
     EXPECT_TRUE(FaultController::is_faulted());
     EXPECT_EQ(fault_enter_calls, 0u);
@@ -224,7 +229,7 @@ TEST_F(DiagnosticsHubTest, FaultControllerStopsDelegatingAfterFault) {
     reset_operational_machine();
     FaultController::start();
 
-    FaultController::request_fault(FaultCause::external("test", "stop delegating"));
+    TestAccess::FaultController::request_fault(make_test_runtime_fault("stop delegating"));
     transition_to_hold = true;
     FaultController::check_transitions();
 

@@ -59,7 +59,6 @@ Diagnostics::DiagnosticRecord to_record(const FaultCause& cause) {
             Diagnostics::DiagnosticPriority::URGENT
         );
     case FaultCauseKind::RUNTIME_FAULT:
-    case FaultCauseKind::EXTERNAL:
         return Diagnostics::RecordFactory::runtime_fault(
             cause.runtime.message,
             cause.runtime.truncated,
@@ -141,22 +140,6 @@ FaultCause FaultCause::protection(
     copy_c_string(cause.origin, protection_name);
     cause.protection_event.edge = edge;
     cause.protection_event.snapshot = snapshot;
-    return cause;
-}
-
-FaultCause FaultCause::external(const char* origin, const char* message) {
-    FaultCause cause{};
-    cause.kind = FaultCauseKind::EXTERNAL;
-    copy_c_string(cause.origin, origin);
-    cause.runtime.truncated = false;
-    cause.runtime.line = 0;
-    copy_c_string(
-        cause.runtime.message,
-        message == nullptr ? "external fault" : message,
-        &cause.runtime.truncated
-    );
-    copy_c_string(cause.runtime.function_name, "FaultCause::external");
-    copy_c_string(cause.runtime.file_name, __FILE__);
     return cause;
 }
 
