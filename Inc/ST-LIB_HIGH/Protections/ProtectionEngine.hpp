@@ -14,8 +14,8 @@ template <ProtectionSample T> class ProtectionHandle {
 public:
     explicit ProtectionHandle(Protection<T>* protection = nullptr) : protection(protection) {}
 
-    expected<void, ProtectionError>
-    add_rule(expected<RuleDefinition<T>, RuleConfigError> definition) {
+    expected<void, ProtectionError> add_rule(expected<RuleDefinition<T>, RuleConfigError> definition
+    ) {
         if (protection == nullptr) {
             return unexpected(ProtectionError::INVALID_HANDLE);
         }

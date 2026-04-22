@@ -41,7 +41,9 @@ struct ProtectionEngine {
 };
 
 struct FaultController {
-    static void request_fault(const ::FaultCause& cause) { ::FaultController::request_fault(cause); }
+    static void request_fault(const ::FaultCause& cause) {
+        ::FaultController::request_fault(cause);
+    }
 };
 
 } // namespace ST_LIB::TestAccess

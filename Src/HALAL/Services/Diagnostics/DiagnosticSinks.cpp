@@ -29,8 +29,7 @@ size_t bounded_strnlen(const char* src, size_t max_length) {
     return length;
 }
 
-template <size_t Capacity>
-void copy_c_string(char (&dst)[Capacity], const char* src) {
+template <size_t Capacity> void copy_c_string(char (&dst)[Capacity], const char* src) {
     if (Capacity == 0) {
         return;
     }

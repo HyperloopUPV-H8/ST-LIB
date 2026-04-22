@@ -509,7 +509,7 @@ struct SdDomain {
 
                 if (translated_clock_div > 1023) {
                     PANIC("SDMMC clock divider too high, cannot achieve target frequency "
-                                 "with current PLL1 Q clock");
+                          "with current PLL1 Q clock");
                 }
 
                 inst.hsd.Init.ClockDiv = translated_clock_div;
@@ -532,7 +532,7 @@ struct SdDomain {
             RCC_PeriphCLKInitStruct.SdmmcClockSelection = RCC_SDMMCCLKSOURCE_PLL;
             if (HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct) != HAL_OK) {
                 PANIC("SDMMC clock configuration failed, maybe try with a slower clock or "
-                             "higher divider?");
+                      "higher divider?");
             }
 
             // Ensure PLL1Q output is enabled

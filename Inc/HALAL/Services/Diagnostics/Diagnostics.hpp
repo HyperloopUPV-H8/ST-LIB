@@ -151,9 +151,7 @@ public:
         if (sink_count >= Config::max_sinks) {
             return unexpected(RegistrationError::CAPACITY_EXCEEDED);
         }
-        if constexpr (
-            sizeof(Sink) > Config::max_sink_storage ||
-            alignof(Sink) > alignof(std::max_align_t)) {
+        if constexpr (sizeof(Sink) > Config::max_sink_storage || alignof(Sink) > alignof(std::max_align_t)) {
             return unexpected(RegistrationError::STORAGE_TOO_SMALL);
         } else {
             SinkStorage& slot = sink_storage[sink_count];

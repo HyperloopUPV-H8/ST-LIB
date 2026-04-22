@@ -685,11 +685,7 @@ struct SPIDomain {
         bool transceive(span<E1, S1> tx_data, span<E2, S2> rx_data) {
             size_t size = std::min(tx_data.size_bytes(), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             using tx_element_type = std::remove_volatile_t<E1>;
@@ -736,11 +732,7 @@ struct SPIDomain {
         {
             size_t size = std::min(tx_data.size_bytes(), sizeof(T));
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             using tx_element_type = std::remove_volatile_t<E>;
@@ -765,11 +757,7 @@ struct SPIDomain {
         {
             size_t size = std::min(sizeof(T), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             using tx_element_type = std::remove_volatile_t<T>;
@@ -795,11 +783,7 @@ struct SPIDomain {
             using rx_element_type = std::remove_volatile_t<T2>;
             size_t size = std::min(sizeof(tx_element_type), sizeof(rx_element_type));
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             auto error_code = HAL_SPI_TransmitReceive(
@@ -846,11 +830,7 @@ struct SPIDomain {
         {
             spi_instance.operation_flag = operation_flag;
             if (sizeof(T) % frame_size != 0) {
-                PANIC(
-                    "SPI data size (%d) not aligned to frame size (%d)",
-                    sizeof(element_type),
-                    frame_size
-                );
+                PANIC("SPI data size (%d) not aligned to frame size (%d)", sizeof(T), frame_size);
                 return false;
             }
             auto error_code = HAL_SPI_Transmit_DMA(
@@ -895,11 +875,7 @@ struct SPIDomain {
         {
             spi_instance.operation_flag = operation_flag;
             if (sizeof(T) % frame_size != 0) {
-                PANIC(
-                    "SPI data size (%d) not aligned to frame size (%d)",
-                    sizeof(element_type),
-                    frame_size
-                );
+                PANIC("SPI data size (%d) not aligned to frame size (%d)", sizeof(T), frame_size);
                 return false;
             }
             auto error_code = HAL_SPI_Receive_DMA(
@@ -923,11 +899,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(tx_data.size_bytes(), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             using tx_element_type = std::remove_volatile_t<E1>;
@@ -953,11 +925,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(tx_data.size_bytes(), sizeof(T));
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             using tx_element_type = std::remove_volatile_t<E>;
@@ -987,11 +955,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(sizeof(T), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             using tx_element_type = std::remove_volatile_t<T>;
@@ -1018,11 +982,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(sizeof(tx_element_type), sizeof(rx_element_type));
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             auto error_code = HAL_SPI_TransmitReceive_DMA(
@@ -1124,11 +1084,7 @@ struct SPIDomain {
         {
             spi_instance.operation_flag = operation_flag;
             if (sizeof(T) % frame_size != 0) {
-                PANIC(
-                    "SPI data size (%d) not aligned to frame size (%d)",
-                    sizeof(element_type),
-                    frame_size
-                );
+                PANIC("SPI data size (%d) not aligned to frame size (%d)", sizeof(T), frame_size);
                 return false;
             }
             auto error_code = HAL_SPI_Receive_DMA(
@@ -1173,11 +1129,7 @@ struct SPIDomain {
         {
             spi_instance.operation_flag = operation_flag;
             if (sizeof(T) % frame_size != 0) {
-                PANIC(
-                    "SPI data size (%d) not aligned to frame size (%d)",
-                    sizeof(element_type),
-                    frame_size
-                );
+                PANIC("SPI data size (%d) not aligned to frame size (%d)", sizeof(T), frame_size);
                 return false;
             }
             auto error_code = HAL_SPI_Transmit_DMA(
@@ -1201,11 +1153,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(tx_data.size_bytes(), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             using tx_element_type = std::remove_volatile_t<E1>;
@@ -1231,11 +1179,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(tx_data.size_bytes(), sizeof(T));
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             using tx_element_type = std::remove_volatile_t<E>;
@@ -1262,11 +1206,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(sizeof(T), rx_data.size_bytes());
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             using rx_element_type = std::remove_volatile_t<E>;
@@ -1293,11 +1233,7 @@ struct SPIDomain {
             spi_instance.operation_flag = operation_flag;
             auto size = std::min(sizeof(tx_element_type), sizeof(rx_element_type));
             if (size % frame_size != 0) {
-                PANIC(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             auto error_code = HAL_SPI_TransmitReceive_DMA(

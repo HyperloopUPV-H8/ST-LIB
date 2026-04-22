@@ -25,9 +25,7 @@ void STLIB::start(
 
 #else // !STLIB_ETH
 
-void STLIB::start(UART::Peripheral& printf_peripheral) {
-    HALAL::start(printf_peripheral);
-}
+void STLIB::start(UART::Peripheral& printf_peripheral) { HALAL::start(printf_peripheral); }
 
 #endif // STLIB_ETH
 
