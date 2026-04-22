@@ -26,5 +26,3 @@ public:
             x __VA_OPT__(, ) __VA_ARGS__                                                           \
         );                                                                                         \
     } while (0)
-
-using InfoWarning = RuntimeDiagnosticReporter;

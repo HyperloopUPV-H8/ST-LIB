@@ -809,7 +809,7 @@ struct TimerDomain {
                 inst->master = sMasterConfig;
                 if (HAL_TIMEx_MasterConfigSynchronization(inst->hal_tim, &sMasterConfig) !=
                     HAL_OK) {
-                    ErrorHandler("Unable to configure master synch");
+                    PANIC("Unable to configure master synch");
                 }
             }
         }
@@ -877,7 +877,7 @@ struct TimerDomain {
                 result *= 2;
             }
         } else {
-            ErrorHandler("Invalid timer ptr");
+            PANIC("Invalid timer ptr");
         }
 
         return result;

@@ -76,7 +76,7 @@ public:
     );
 
     /**
-     * @brief used in the HALAL::start() to end the configuration of the FMAC.
+     * @brief Finalizes FMAC peripheral configuration during board bootstrap.
      */
     static void start();
 
