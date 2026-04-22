@@ -1093,17 +1093,21 @@ struct DFSDM_CHANNEL_DOMAIN {
 
                     // add dma
                     if (cfg.dma_enable == Dma::Enable) {
-                        uint32_t SrcAddress;
-                        if (inst.type_conv == Type_Conversion::Regular) {
-                            SrcAddress = (uint32_t)&filter_hw[inst.filter]->FLTRDATAR;
-                        } else {
-                            SrcAddress = (uint32_t)&filter_hw[inst.filter]->FLTJDATAR;
-                        }
-                        uint32_t DstAddress =
-                            reinterpret_cast<uint32_t>(get_buffer_filter(inst.filter)
-                            ); // Transform the pointer to a value
-                        inst.dma_instance
-                            ->start(SrcAddress, DstAddress, buffer_size_for(inst.filter));
+                        const std::uintptr_t src_address =
+                            inst.type_conv == Type_Conversion::Regular
+                                ? reinterpret_cast<std::uintptr_t>(
+                                      &filter_hw[inst.filter]->FLTRDATAR
+                                  )
+                                : reinterpret_cast<std::uintptr_t>(
+                                      &filter_hw[inst.filter]->FLTJDATAR
+                                  );
+                        inst.dma_instance->start(
+                            static_cast<uint32_t>(src_address),
+                            static_cast<uint32_t>(
+                                reinterpret_cast<std::uintptr_t>(get_buffer_filter(inst.filter))
+                            ),
+                            buffer_size_for(inst.filter)
+                        );
                     }
                 }
                 // add everything to the channel register
