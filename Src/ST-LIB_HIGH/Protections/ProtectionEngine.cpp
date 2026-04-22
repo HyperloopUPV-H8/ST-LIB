@@ -76,10 +76,10 @@ void ProtectionEngine::evaluate() {
         visit(
             [](auto& protection) {
                 const Protections::ProtectionEvaluation evaluation = protection.evaluate();
-                publish_edge_events(protection, evaluation);
+                ProtectionEngine::publish_edge_events(protection, evaluation);
 
                 if (evaluation.has_active_fault) {
-                    request_fault_if_due(protection, evaluation);
+                    ProtectionEngine::request_fault_if_due(protection, evaluation);
                 }
             },
             *protections[protection_index]
