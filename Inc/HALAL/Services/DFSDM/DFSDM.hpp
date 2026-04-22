@@ -728,12 +728,12 @@ struct DFSDM_CHANNEL_DOMAIN {
     };
     static void inline start_reg_conv_filter(uint8_t filter) {
         if (filter > 3)
-            ErrorHandler("Only filters from 0..3");
+            PANIC("Only filters from 0..3");
         filter_hw[filter]->FLTCR1 |= DFSDM_FLTCR1_RSWSTART; // regular
     }
     static void inline start_inj_conv_filter(uint8_t filter) {
         if (filter > 3)
-            ErrorHandler("Only filters from 0..3");
+            PANIC("Only filters from 0..3");
         filter_hw[filter]->FLTCR1 |= DFSDM_FLTCR1_JSWSTART; // injected
     }
     static DMADomain::Instance*
@@ -897,8 +897,8 @@ struct DFSDM_CHANNEL_DOMAIN {
         }
         int32_t read(size_t pos) {
             if (pos >= this->length_buffer) {
-                ErrorHandler("DFSDM: Trying to access to a memory section that is not from the "
-                             "channel buffer");
+                PANIC("DFSDM: Trying to access to a memory section that is not from the channel "
+                      "buffer");
             }
             return (
                 static_cast<int32_t>(this->buffer[pos] & DFSDM_FLTJDATAR_JDATA_Msk) >>
@@ -1014,7 +1014,7 @@ struct DFSDM_CHANNEL_DOMAIN {
             case 3:
                 return sizes.filter3;
             }
-            ErrorHandler("Filter cannot be bigger than 3");
+            PANIC("Filter cannot be bigger than 3");
             return 0;
         }
         static volatile int32_t* get_buffer_filter(uint8_t filter) {
@@ -1028,7 +1028,7 @@ struct DFSDM_CHANNEL_DOMAIN {
             case 3:
                 return Buffer_Filter3;
             }
-            ErrorHandler("Filter cannot be bigger than 3");
+            PANIC("Filter cannot be bigger than 3");
             return 0;
         }
 

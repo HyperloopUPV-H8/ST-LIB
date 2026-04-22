@@ -28,6 +28,3 @@
 #else
 #include "FlashStorer/FlashStorer.hpp"
 #endif
-namespace STLIB_HIGH {
-void start();
-}
