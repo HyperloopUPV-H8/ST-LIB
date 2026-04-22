@@ -8,11 +8,11 @@
 #include "MockedDrivers/NVIC.hpp"
 #include "MockedDrivers/mocked_hal_dma.hpp"
 
-namespace ST_LIB::TestErrorHandler {
+namespace ST_LIB::TestPanicReporter {
 void reset();
 void set_fail_on_error(bool enabled);
 extern int call_count;
-} // namespace ST_LIB::TestErrorHandler
+} // namespace ST_LIB::TestPanicReporter
 
 namespace {
 
@@ -111,11 +111,11 @@ static_assert(
 class DFSDMTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        ST_LIB::TestErrorHandler::reset();
-        ST_LIB::TestErrorHandler::set_fail_on_error(true);
+        ST_LIB::TestPanicReporter::reset();
+        ST_LIB::TestPanicReporter::set_fail_on_error(true);
     }
 
-    void TearDown() override { ST_LIB::TestErrorHandler::set_fail_on_error(false); }
+    void TearDown() override { ST_LIB::TestPanicReporter::set_fail_on_error(false); }
 };
 
 TEST_F(DFSDMTest, ChannelConfigurationIsValidAtCompileTime) {

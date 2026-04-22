@@ -83,8 +83,7 @@ void Hub::replay_history_to_pending() {
         return;
     }
 
-    const size_t oldest_index =
-        history_count == Config::history_capacity ? history_next_index : 0;
+    const size_t oldest_index = history_count == Config::history_capacity ? history_next_index : 0;
 
     for (size_t replay_index = 0; replay_index < history_count; ++replay_index) {
         const size_t history_index = (oldest_index + replay_index) % Config::history_capacity;
