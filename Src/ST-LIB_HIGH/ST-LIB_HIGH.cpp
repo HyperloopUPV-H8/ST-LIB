@@ -7,6 +7,4 @@
 
 #include "ST-LIB_HIGH.hpp"
 
-void STLIB_HIGH::start() {
-    ProtectionEngine::initialize();
-}
+void STLIB_HIGH::start() { ProtectionEngine::initialize(); }

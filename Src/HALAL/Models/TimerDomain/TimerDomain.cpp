@@ -31,7 +31,7 @@ TimerDomain::InputCaptureInfo input_capture_info_dummy = {
 
 TimerDomain::InputCaptureInfo* TimerDomain::input_capture_info[max_instances]
                                                               [input_capture_channels] = {
-                                                                  &input_capture_info_dummy
+                                                                  {&input_capture_info_dummy}
 };
 TimerDomain::InputCaptureInfo TimerDomain::input_capture_info_backing[max_instances]
                                                                      [input_capture_channels];

@@ -5,7 +5,9 @@
 namespace {
 
 static_assert(FaultConfig::origin_capacity == Diagnostics::Config::origin_capacity);
-static_assert(FaultConfig::runtime_message_capacity == Diagnostics::Config::runtime_message_capacity);
+static_assert(
+    FaultConfig::runtime_message_capacity == Diagnostics::Config::runtime_message_capacity
+);
 static_assert(FaultConfig::function_capacity == Diagnostics::Config::function_capacity);
 static_assert(FaultConfig::file_capacity == Diagnostics::Config::file_capacity);
 

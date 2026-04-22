@@ -16,7 +16,10 @@ void ProtectionEngine::initialize() {
     registration_locked = true;
     for (size_t protection_index = 0; protection_index < protection_count; protection_index++) {
         if (protections[protection_index].has_value()) {
-            visit([](auto& protection) { protection.initialize(); }, *protections[protection_index]);
+            visit(
+                [](auto& protection) { protection.initialize(); },
+                *protections[protection_index]
+            );
         }
     }
 }

@@ -233,11 +233,9 @@ void Hub::publish_runtime_fault(
     const char* func,
     const char* file
 ) {
-    publish(RecordFactory::runtime_fault(
-        message,
-        truncated,
-        RuntimeSourceMetadata{line, func, file}
-    ));
+    publish(
+        RecordFactory::runtime_fault(message, truncated, RuntimeSourceMetadata{line, func, file})
+    );
 }
 
 void Hub::publish_runtime_panic(
@@ -247,11 +245,9 @@ void Hub::publish_runtime_panic(
     const char* func,
     const char* file
 ) {
-    publish(RecordFactory::runtime_panic(
-        message,
-        truncated,
-        RuntimeSourceMetadata{line, func, file}
-    ));
+    publish(
+        RecordFactory::runtime_panic(message, truncated, RuntimeSourceMetadata{line, func, file})
+    );
 }
 
 void Hub::publish_runtime_warning(
@@ -261,11 +257,9 @@ void Hub::publish_runtime_warning(
     const char* func,
     const char* file
 ) {
-    publish(RecordFactory::runtime_warning(
-        message,
-        truncated,
-        RuntimeSourceMetadata{line, func, file}
-    ));
+    publish(
+        RecordFactory::runtime_warning(message, truncated, RuntimeSourceMetadata{line, func, file})
+    );
 }
 
 void Hub::publish_runtime_info(
@@ -275,11 +269,8 @@ void Hub::publish_runtime_info(
     const char* func,
     const char* file
 ) {
-    publish(RecordFactory::runtime_info(
-        message,
-        truncated,
-        RuntimeSourceMetadata{line, func, file}
-    ));
+    publish(RecordFactory::runtime_info(message, truncated, RuntimeSourceMetadata{line, func, file})
+    );
 }
 
 void Hub::publish_protection_event(
@@ -292,8 +283,7 @@ void Hub::publish_protection_event(
 }
 
 void Hub::flush_pending(bool urgent_only) {
-    const uint8_t target_mask =
-        sink_count == 0 ? 0 : static_cast<uint8_t>((1u << sink_count) - 1u);
+    const uint8_t target_mask = sink_count == 0 ? 0 : static_cast<uint8_t>((1u << sink_count) - 1u);
 
     for (size_t record_index = 0; record_index < pending_count;) {
         PendingRecord& pending_record = pending_records[record_index];

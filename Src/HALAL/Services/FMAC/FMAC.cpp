@@ -93,9 +93,7 @@ void MultiplierAccelerator::software_preload(
 #if FMAC_ERROR_CHECK != 0
     if (amount_to_preload > MemoryLayout.FInSize ||
         amount_to_preload > MemoryLayout.FeedbackInSize) {
-        PANIC(
-            "Error while preloading data, cannot preload more data than the structure can hold"
-        );
+        PANIC("Error while preloading data, cannot preload more data than the structure can hold");
     }
 
     while (HAL_FMAC_GetState(Instance.hfmac) != HAL_FMAC_STATE_READY) {

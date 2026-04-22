@@ -167,11 +167,7 @@ void append_timestamp_suffix(const Timestamp& timestamp, char* buffer, size_t bu
 #endif
 }
 
-void format_runtime_record(
-    const DiagnosticRecord& record,
-    char* buffer,
-    size_t buffer_size
-) {
+void format_runtime_record(const DiagnosticRecord& record, char* buffer, size_t buffer_size) {
     const RuntimeDiagnosticPayload& runtime = record.payload.runtime;
     append_formatted(
         buffer,
@@ -188,11 +184,7 @@ void format_runtime_record(
     }
 }
 
-void format_protection_record(
-    const DiagnosticRecord& record,
-    char* buffer,
-    size_t buffer_size
-) {
+void format_protection_record(const DiagnosticRecord& record, char* buffer, size_t buffer_size) {
     const ProtectionDiagnosticPayload& protection = record.payload.protection;
     char value_buffer[32]{};
     char threshold_a_buffer[32]{};

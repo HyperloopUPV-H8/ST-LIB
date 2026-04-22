@@ -40,13 +40,8 @@ struct FaultCause {
     FaultRuntimePayload runtime{};
     FaultProtectionPayload protection_event{};
 
-    static FaultCause panic(
-        const char* message,
-        bool truncated,
-        int line,
-        const char* func,
-        const char* file
-    );
+    static FaultCause
+    panic(const char* message, bool truncated, int line, const char* func, const char* file);
     static FaultCause runtime_fault(
         const char* message,
         bool truncated,
@@ -66,8 +61,7 @@ public:
     using state_id = uint8_t;
     static constexpr size_t max_runtime_storage = 2048;
 
-    template <typename Policy>
-    static void install_runtime() {
+    template <typename Policy> static void install_runtime() {
         static_assert(
             requires {
                 { Policy::has_operational_machine } -> std::convertible_to<const bool>;
@@ -127,8 +121,7 @@ private:
         }
     }
 
-    template <typename Policy, RuntimeState InitialState>
-    static void emplace_runtime_machine() {
+    template <typename Policy, RuntimeState InitialState> static void emplace_runtime_machine() {
         using RuntimeMachine = decltype(build_runtime_machine<Policy, RuntimeState::OPERATIONAL>());
         static_assert(
             sizeof(RuntimeMachine) <= max_runtime_storage,
