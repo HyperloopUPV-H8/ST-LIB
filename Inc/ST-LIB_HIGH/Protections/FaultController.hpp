@@ -62,6 +62,10 @@ public:
     static constexpr size_t max_runtime_storage = 2048;
 
     template <typename Policy> static void install_runtime() {
+        const bool preserve_preinstalled_fault =
+            runtime_storage.machine == nullptr && !runtime_started && faulted && has_latched_cause;
+        const FaultCause preserved_cause = latched_cause;
+
         static_assert(
             requires {
                 { Policy::has_operational_machine } -> std::convertible_to<const bool>;
@@ -71,10 +75,12 @@ public:
         );
 
         runtime_started = false;
-        faulted = false;
-        has_latched_cause = false;
-        latched_cause = {};
-        reconstruct_runtime_machine<Policy>(RuntimeState::OPERATIONAL);
+        faulted = preserve_preinstalled_fault;
+        has_latched_cause = preserve_preinstalled_fault;
+        latched_cause = preserve_preinstalled_fault ? preserved_cause : FaultCause{};
+        reconstruct_runtime_machine<Policy>(
+            preserve_preinstalled_fault ? RuntimeState::FAULT : RuntimeState::OPERATIONAL
+        );
     }
 
     static void start();
