@@ -144,10 +144,7 @@ private:
 template <CANBitRatesSpeed Speed, CANFormat format, CANIdentifier message_id, CANMode mode>
 uint8_t FDCAN::inscribe(FDCAN::Peripheral& fdcan) {
     if (!FDCAN::available_fdcans.contains(fdcan)) {
-        PANIC(
-            " The FDCAN peripheral %d is already used or does not exists.",
-            (uint16_t)fdcan
-        );
+        PANIC(" The FDCAN peripheral %d is already used or does not exists.", (uint16_t)fdcan);
         return 0;
     }
 

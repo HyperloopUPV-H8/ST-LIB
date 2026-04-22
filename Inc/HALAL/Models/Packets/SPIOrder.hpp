@@ -78,9 +78,7 @@ protected:
     SPIBaseOrder(uint16_t id, uint16_t master_data_size, uint16_t slave_data_size)
         : id(id), master_data_size(master_data_size), slave_data_size(slave_data_size) {
         if (id == 0) {
-            PANIC(
-                "Cannot use 0 as the SPIOrderID, as it is reserved to the no Order ready signal"
-            );
+            PANIC("Cannot use 0 as the SPIOrderID, as it is reserved to the no Order ready signal");
         }
         if (master_data_size > slave_data_size) {
             payload_size = master_data_size + PAYLOAD_OVERHEAD + PAYLOAD_TAIL;
@@ -88,10 +86,7 @@ protected:
             payload_size = slave_data_size + PAYLOAD_OVERHEAD + PAYLOAD_TAIL;
         }
         if (payload_size > SPI_MAXIMUM_PAYLOAD_SIZE_BYTES) {
-            PANIC(
-                "Cannot declare SPIOrder %d as its size surpasses the maximum data size",
-                id
-            );
+            PANIC("Cannot declare SPIOrder %d as its size surpasses the maximum data size", id);
         }
         MISO_payload = new uint8_t[payload_size]{0};
         MOSI_payload = new uint8_t[payload_size]{0};

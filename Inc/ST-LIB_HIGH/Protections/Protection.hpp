@@ -31,7 +31,9 @@ template <typename T> constexpr bool is_above(T sample, T threshold) { return sa
 
 template <typename T> constexpr bool is_equal_to(T lhs, T rhs) { return lhs == rhs; }
 
-template <typename T> constexpr bool is_not_equal_to(T lhs, T rhs) { return !is_equal_to(lhs, rhs); }
+template <typename T> constexpr bool is_not_equal_to(T lhs, T rhs) {
+    return !is_equal_to(lhs, rhs);
+}
 
 } // namespace detail
 
@@ -177,8 +179,7 @@ template <ComparableSample T> struct RangeEvaluator {
 
 template <EqualityComparableSample T> struct EqualsEvaluator {
     static constexpr RuleState compute(const T& sample, const EqualsRuleConfig<T>& config) {
-        return detail::is_equal_to(sample, config.expected) ? RuleState::FAULT
-                                                            : RuleState::NORMAL;
+        return detail::is_equal_to(sample, config.expected) ? RuleState::FAULT : RuleState::NORMAL;
     }
 };
 
@@ -225,16 +226,17 @@ template <FloatingSample T> struct TimeAccumulationEvaluator {
             active_time_s = static_cast<float>(fault_active_time_us) / 1'000'000.0f;
             return RuleState::FAULT;
         }
-        if (config.warning_threshold.has_value() && warning_active_time_us >= configured_window_us) {
+        if (config.warning_threshold.has_value() &&
+            warning_active_time_us >= configured_window_us) {
             active_time_s = static_cast<float>(warning_active_time_us) / 1'000'000.0f;
             return RuleState::WARNING;
         }
 
-        active_time_s = static_cast<float>(
-                            config.warning_threshold.has_value() ? warning_active_time_us
-                                                                 : fault_active_time_us
-                        ) /
-                        1'000'000.0f;
+        active_time_s =
+            static_cast<float>(
+                config.warning_threshold.has_value() ? warning_active_time_us : fault_active_time_us
+            ) /
+            1'000'000.0f;
         return RuleState::NORMAL;
     }
 };
@@ -298,8 +300,7 @@ template <ComparableSample T> struct RangeRule {
         return {
             .state = state,
             .edge = edge,
-            .snapshot =
-                RuleSnapshotBuilder::range(sample, state, edge, previous_state, config),
+            .snapshot = RuleSnapshotBuilder::range(sample, state, edge, previous_state, config),
         };
     }
 };
@@ -354,9 +355,9 @@ template <EqualityComparableSample T> struct NotEqualsRule {
 
 template <FloatingSample T> struct TimeAccumulationRule {
     explicit TimeAccumulationRule(TimeAccumulationRuleConfig<T> config) : config(config) {
-        configured_window_us = static_cast<uint64_t>(std::llround(
-            static_cast<double>(config.time_window_s) * 1'000'000.0
-        ));
+        configured_window_us = static_cast<uint64_t>(
+            std::llround(static_cast<double>(config.time_window_s) * 1'000'000.0)
+        );
         if (configured_window_us == 0) {
             configured_window_us = 1;
         }
@@ -425,7 +426,8 @@ using RuleModel = variant<
     NotEqualsRule<T>,
     TimeAccumulationRuleModel<T>>;
 
-template <ProtectionSample T> inline RuleModel<T> make_rule_model(const RuleDefinition<T>& definition) {
+template <ProtectionSample T>
+inline RuleModel<T> make_rule_model(const RuleDefinition<T>& definition) {
     return visit(
         []<typename RuleConfig>(const RuleConfig& config) -> RuleModel<T> {
             using ConfigType = std::remove_cvref_t<RuleConfig>;
@@ -453,7 +455,8 @@ template <ProtectionSample T> inline RuleModel<T> make_rule_model(const RuleDefi
     );
 }
 
-template <ProtectionSample T> inline RuleEvaluation evaluate_rule(RuleModel<T>& rule, const T& sample) {
+template <ProtectionSample T>
+inline RuleEvaluation evaluate_rule(RuleModel<T>& rule, const T& sample) {
     return visit(
         [&sample](auto& concrete_rule) -> RuleEvaluation {
             using RuleType = std::remove_cvref_t<decltype(concrete_rule)>;
@@ -474,8 +477,8 @@ public:
     const char* get_name() const { return name; }
     void initialize() {}
 
-    expected<void, ProtectionError>
-    add_rule(expected<RuleDefinition<T>, RuleConfigError> definition) {
+    expected<void, ProtectionError> add_rule(expected<RuleDefinition<T>, RuleConfigError> definition
+    ) {
         if (!definition.has_value()) {
             return unexpected(ProtectionError::INVALID_RULE_CONFIGURATION);
         }

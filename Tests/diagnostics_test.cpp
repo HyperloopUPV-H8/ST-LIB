@@ -14,7 +14,7 @@
 namespace ST_LIB::TestPanicReporter {
 void set_fail_on_error(bool enabled);
 void reset();
-}
+} // namespace ST_LIB::TestPanicReporter
 
 namespace {
 
@@ -55,12 +55,13 @@ size_t operational_hold_enter_count = 0;
 
 static constexpr auto operational_run_state =
     make_state(OperationalState::RUN, Transition<OperationalState>{OperationalState::HOLD, []() {
-                   return transition_to_hold;
-               }});
+                                                                       return transition_to_hold;
+                                                                   }});
 static constexpr auto operational_hold_state = make_state(OperationalState::HOLD);
 
 static inline auto test_operational_machine = []() consteval {
-    auto sm = make_state_machine(OperationalState::RUN, operational_run_state, operational_hold_state);
+    auto sm =
+        make_state_machine(OperationalState::RUN, operational_run_state, operational_hold_state);
     sm.add_enter_action([]() { operational_hold_enter_count++; }, operational_hold_state);
     return sm;
 }();
@@ -262,14 +263,8 @@ TEST_F(DiagnosticsHubTest, ProtectionEngineEvaluatesRulesAndPublishesSnapshots) 
     EXPECT_EQ(sink->records.front().category, Diagnostics::Category::PROTECTION_EVENT);
     EXPECT_EQ(sink->records.front().severity, Diagnostics::Severity::FAULT);
     EXPECT_EQ(sink->records.front().priority, Diagnostics::DiagnosticPriority::URGENT);
-    EXPECT_EQ(
-        sink->records.front().payload.protection.state,
-        Protections::RuleState::FAULT
-    );
-    EXPECT_EQ(
-        sink->records.front().payload.protection.rule_kind,
-        Protections::RuleKind::BELOW
-    );
+    EXPECT_EQ(sink->records.front().payload.protection.state, Protections::RuleState::FAULT);
+    EXPECT_EQ(sink->records.front().payload.protection.rule_kind, Protections::RuleKind::BELOW);
 }
 
 TEST_F(DiagnosticsHubTest, TimeAccumulationUsesSchedulerTickForContinuousDuration) {
@@ -282,7 +277,9 @@ TEST_F(DiagnosticsHubTest, TimeAccumulationUsesSchedulerTickForContinuousDuratio
 
     auto protection = ProtectionEngine::create_protection("time_value", source);
     ASSERT_TRUE(protection.has_value());
-    ASSERT_TRUE(protection->add_rule(Protections::Rules::time_accumulation(10.0f, 0.001f)).has_value());
+    ASSERT_TRUE(
+        protection->add_rule(Protections::Rules::time_accumulation(10.0f, 0.001f)).has_value()
+    );
 
     ProtectionEngine::initialize();
 
@@ -302,7 +299,10 @@ TEST_F(DiagnosticsHubTest, TimeAccumulationUsesSchedulerTickForContinuousDuratio
     ASSERT_FALSE(sink->records.empty());
     EXPECT_TRUE(FaultController::is_faulted());
     EXPECT_EQ(sink->records.back().category, Diagnostics::Category::PROTECTION_EVENT);
-    EXPECT_EQ(sink->records.back().payload.protection.rule_kind, Protections::RuleKind::TIME_ACCUMULATION);
+    EXPECT_EQ(
+        sink->records.back().payload.protection.rule_kind,
+        Protections::RuleKind::TIME_ACCUMULATION
+    );
     EXPECT_FLOAT_EQ(sink->records.back().payload.protection.time_window_s, 0.001f);
     EXPECT_FLOAT_EQ(sink->records.back().payload.protection.active_time_s, 0.001f);
 }
@@ -313,7 +313,9 @@ TEST_F(DiagnosticsHubTest, TimeAccumulationResetsWhenConditionClears) {
 
     auto protection = ProtectionEngine::create_protection("time_reset_value", source);
     ASSERT_TRUE(protection.has_value());
-    ASSERT_TRUE(protection->add_rule(Protections::Rules::time_accumulation(10.0f, 0.001f)).has_value());
+    ASSERT_TRUE(
+        protection->add_rule(Protections::Rules::time_accumulation(10.0f, 0.001f)).has_value()
+    );
 
     ProtectionEngine::initialize();
 
@@ -417,10 +419,7 @@ TEST_F(DiagnosticsHubTest, RuntimeDiagnosticsCaptureCallerSourceLocation) {
     ASSERT_FALSE(sink->records.empty());
     EXPECT_EQ(sink->records.front().payload.runtime.line, expected_line);
     EXPECT_NE(
-        strstr(
-            sink->records.front().payload.runtime.function_name,
-            "emit_warning_and_return_line"
-        ),
+        strstr(sink->records.front().payload.runtime.function_name, "emit_warning_and_return_line"),
         nullptr
     );
 }

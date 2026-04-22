@@ -4,14 +4,14 @@
 
 namespace Protections {
 
-template <typename T>
-using remove_cvref_t = std::remove_cvref_t<T>;
+template <typename T> using remove_cvref_t = std::remove_cvref_t<T>;
 
 template <typename T>
 concept ArithmeticSample =
     std::is_arithmetic_v<remove_cvref_t<T>> && !std::same_as<remove_cvref_t<T>, long double>;
 
-template <typename T> concept FloatingSample = std::floating_point<remove_cvref_t<T>>;
+template <typename T>
+concept FloatingSample = std::floating_point<remove_cvref_t<T>>;
 
 template <typename T>
 concept ComparableSample =
@@ -33,14 +33,14 @@ concept SupportedProtectionSample =
     std::same_as<remove_cvref_t<T>, uint64_t> || std::same_as<remove_cvref_t<T>, float> ||
     std::same_as<remove_cvref_t<T>, double>;
 
-template <typename T> concept ProtectionSample = ArithmeticSample<T> && SupportedProtectionSample<T>;
+template <typename T>
+concept ProtectionSample = ArithmeticSample<T> && SupportedProtectionSample<T>;
 
 template <typename Source>
-concept ReadableSampleSource =
-    requires(const remove_cvref_t<Source>& source) {
-        typename remove_cvref_t<Source>::value_type;
-        requires ProtectionSample<typename remove_cvref_t<Source>::value_type>;
-        { source.read() } -> std::convertible_to<typename remove_cvref_t<Source>::value_type>;
-    };
+concept ReadableSampleSource = requires(const remove_cvref_t<Source>& source) {
+    typename remove_cvref_t<Source>::value_type;
+    requires ProtectionSample<typename remove_cvref_t<Source>::value_type>;
+    { source.read() } -> std::convertible_to<typename remove_cvref_t<Source>::value_type>;
+};
 
 } // namespace Protections
