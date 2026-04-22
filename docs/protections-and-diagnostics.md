@@ -42,6 +42,19 @@ flowchart TD
     D --> G["Diagnostics::Hub::flush()"]
 ```
 
+The application integration contract is:
+
+```cpp
+Board<FaultPolicyT, dev0, dev1, ...>
+```
+
+Where:
+
+- `FaultPolicyT` is mandatory and is always the first template argument
+- `dev0, dev1, ...` are the board declarations to inscribe into the domains
+- the framework always owns the top-level runtime machine
+- the application may optionally provide a nested operational machine and/or a `FAULT` entry callback
+
 ### 1.2 Registering Protections
 
 Protections are created through `ProtectionEngine::create_protection(...)`.
@@ -66,6 +79,33 @@ Available rule factories:
 Both `create_protection(...)` and `add_rule(...)` return `std::expected`, so configuration errors
 must be handled explicitly.
 
+Current rule signatures are:
+
+```cpp
+Rules::below(fault_threshold)
+Rules::below(fault_threshold, warning_threshold)
+
+Rules::above(fault_threshold)
+Rules::above(fault_threshold, warning_threshold)
+
+Rules::range(low_fault, high_fault)
+Rules::range(low_fault, high_fault, low_warning, high_warning)
+
+Rules::equals(value)
+Rules::not_equals(value)
+
+Rules::time_accumulation(fault_threshold, window_seconds)
+Rules::time_accumulation(fault_threshold, warning_threshold, window_seconds)
+```
+
+`Rules::time_accumulation(...)` has these semantics:
+
+- it is intended for floating-point samples
+- it evaluates `abs(sample)`
+- it measures continuous active time, not an integral over samples
+- it resets the accumulated active time when the triggering condition clears
+- it uses `Scheduler::get_global_tick()`, so it does not depend on the `while (1)` iteration rate
+
 ### 1.3 When to Register Protections
 
 Register protections before `Board::init()`.
@@ -77,6 +117,10 @@ The intended lifecycle is:
 3. evaluation and flushing in the runtime loop
 
 After `Board::init()`, the protection registry is locked.
+
+If registration code reports a fatal condition before `Board::init()`, that fatal request is still
+preserved across the first fault-runtime installation and its diagnostic record remains eligible for
+later delivery once sinks are installed.
 
 ### 1.4 Typical Protection Example
 
@@ -135,6 +179,7 @@ Typical choices are:
 
 - `Board<DefaultFaultPolicy, ...>` when no extra fault callback is needed
 - `Board<FaultPolicyNoMachine<on_fault_enter>, ...>` when only `FAULT` entry actions are needed
+- `Board<FaultPolicy<app_machine, on_fault_enter>, ...>` when both a nested operational machine and `FAULT` entry actions are needed
 
 If the application does use a functional state machine, it can be nested inside `OPERATIONAL`
 through a `FaultPolicy`.
@@ -176,6 +221,21 @@ Important rules:
   the child machine directly
 - `Board` takes the fault policy type as its first template argument
 
+`on_fault_enter` semantics:
+
+- it is an optional callback owned by the global fault runtime
+- it runs when the global runtime enters `FAULT`
+- it is the right place to perform application fault-entry actions such as disabling power stages,
+  opening contactors, or setting status LEDs
+- it does not replace the fault transition itself; it is an enter action attached to the global
+  `FAULT` state
+
+If the application needs neither a nested machine nor a `FAULT` entry action, use:
+
+```cpp
+using MainBoard = Board<DefaultFaultPolicy, led>;
+```
+
 ### 1.6 Runtime Diagnostics API
 
 The runtime diagnostic façade is:
@@ -203,9 +263,18 @@ Internally, protections and fatal runtime reporters converge on:
 FaultController::request_fault(cause);
 ```
 
-This primitive is not intended to be the normal user-facing API.
+This primitive is not part of the normal user-facing API.
+In the current implementation it is an internal `FaultController` entry point, not a public
+application hook.
+
 User code should prefer `FAULT(...)` or `PANIC(...)` so the library captures consistent source
 metadata and preserves the public runtime contract.
+
+In practice:
+
+- protections use `FaultController::request_fault(...)` internally
+- `PANIC(...)` and `FAULT(...)` use that same path internally
+- user application code should not call `request_fault(...)` directly
 
 ### 1.8 Transmission Semantics
 
@@ -225,6 +294,22 @@ Default sinks are installed during `Board::init()`:
 - TCP sink when `STLIB_ETH` is enabled
 
 If a transport is not compiled in, it is simply not installed.
+
+### 1.9 Migration From the Legacy Model
+
+If you are migrating from the previous architecture:
+
+- stop using `ProtectionManager`
+- stop using the low/high protection split
+- stop using `Boundary` / `BoundaryInterface` as the protection integration model
+- stop depending on `FaultRuntime`
+- stop treating `STLIB::start()`, `STLIB::update()`, `STLIB_LOW::start()`, or `STLIB_HIGH::start()`
+  as the real bootstrap path
+- move bootstrap to `Board::init()`
+- declare `Board<fault_policy, ...>` explicitly
+- move operational user behavior into `FaultPolicy<app_machine, on_fault_enter>` when needed
+- stop programming transitions to the global `FAULT`
+- replace legacy reporting paths with `PANIC(...)`, `FAULT(...)`, `WARNING(...)`, and `INFO(...)`
 
 ## 2. Internal Development
 
@@ -317,12 +402,12 @@ Important invariant:
 
 The fault path is valid during `Board::init()`.
 
-That is why `Board::init()` installs:
+That is why `Board::init()` installs, as early as possible in the bootstrap path:
 
 - default diagnostic sinks
 - the global fault runtime
 
-before subsystem initialization that may trigger `PANIC(...)`.
+before clock/peripheral setup and before subsystem initialization that may trigger `PANIC(...)`.
 
 If a fatal request arrives before the global runtime has been started:
 
@@ -330,7 +415,11 @@ If a fatal request arrives before the global runtime has been started:
 - the runtime is rebuilt so that it starts directly in `FAULT`
 - the urgent fault diagnostic is still published through `Diagnostics`
 
-This avoids losing early boot faults.
+If the diagnostic record is produced before any sink exists, it is still retained in local history.
+When the first sink is installed, the retained history is replayed into the pending queue so the
+record can still be delivered later.
+
+This avoids losing early boot faults and other pre-transport diagnostics.
 
 ### 2.5 FaultCause and Diagnostic Mapping
 
