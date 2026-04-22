@@ -102,6 +102,7 @@ protected:
     void SetUp() override {
         TestAccess::DiagnosticsHub::clear();
         TestAccess::ProtectionEngine::clear();
+        TestAccess::FaultController::clear();
         reset_operational_machine();
         TestPanicReporter::reset();
         fault_enter_calls = 0;
@@ -122,6 +123,25 @@ TEST_F(DiagnosticsHubTest, KeepsLocalHistoryWhenNoSinksAreRegistered) {
     Diagnostics::Hub::publish(record);
 
     EXPECT_EQ(TestAccess::DiagnosticsHub::history_size(), 1u);
+    EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), 0u);
+}
+
+TEST_F(DiagnosticsHubTest, HistoryIsReplayedWhenFirstSinkIsInstalled) {
+    Diagnostics::DiagnosticRecord record{};
+    record.severity = Diagnostics::Severity::WARNING;
+    record.category = Diagnostics::Category::RUNTIME_WARNING;
+    snprintf(record.origin, sizeof(record.origin), "test");
+    snprintf(record.payload.runtime.message, sizeof(record.payload.runtime.message), "replay me");
+    Diagnostics::Hub::publish(record);
+
+    auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
+    ASSERT_TRUE(sink_result.has_value());
+    auto* sink = *sink_result;
+
+    EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), 1u);
+
+    Diagnostics::Hub::flush();
+    EXPECT_EQ(sink->publish_calls, 1u);
     EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), 0u);
 }
 
@@ -239,6 +259,40 @@ TEST_F(DiagnosticsHubTest, FaultControllerStopsDelegatingAfterFault) {
 
     EXPECT_EQ(test_operational_machine.get_current_state(), OperationalState::RUN);
     EXPECT_EQ(fault_enter_calls, 1u);
+}
+
+TEST(DiagnosticsBootstrapTest, PanicBeforeRuntimeInstallationSurvivesBootstrapAndIsDelivered) {
+    TestAccess::DiagnosticsHub::clear();
+    TestAccess::ProtectionEngine::clear();
+    TestAccess::FaultController::clear();
+    reset_operational_machine();
+    TestPanicReporter::reset();
+    TestPanicReporter::set_fail_on_error(false);
+    fault_enter_calls = 0;
+    Scheduler::global_tick_us_ = 0;
+    Scheduler_global_timer = nullptr;
+
+    PANIC("panic before install");
+
+    ASSERT_TRUE(FaultController::is_faulted());
+    ASSERT_NE(FaultController::latched_fault_cause(), nullptr);
+    EXPECT_EQ(TestAccess::DiagnosticsHub::history_size(), 1u);
+    EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), 0u);
+
+    auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
+    ASSERT_TRUE(sink_result.has_value());
+    auto* sink = *sink_result;
+
+    EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), 1u);
+
+    FaultController::install_runtime<NoMachinePolicy>();
+    ASSERT_TRUE(FaultController::is_faulted());
+    ASSERT_NE(FaultController::latched_fault_cause(), nullptr);
+
+    FaultController::start();
+    EXPECT_EQ(fault_enter_calls, 1u);
+    EXPECT_EQ(sink->publish_calls, 1u);
+    EXPECT_EQ(TestAccess::DiagnosticsHub::pending_size(), 0u);
 }
 
 TEST_F(DiagnosticsHubTest, ProtectionEngineEvaluatesRulesAndPublishesSnapshots) {

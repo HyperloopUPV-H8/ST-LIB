@@ -148,6 +148,7 @@ class Hub {
 public:
     template <typename Sink, typename... Args>
     static expected<Sink*, RegistrationError> emplace_sink(Args&&... args) {
+        const bool had_no_sinks = sink_count == 0;
         if (sink_count >= Config::max_sinks) {
             return unexpected(RegistrationError::CAPACITY_EXCEEDED);
         }
@@ -162,6 +163,9 @@ public:
             slot.sink = sink;
             slot.destroy = [](DiagnosticSink* base) { destroy_at(static_cast<Sink*>(base)); };
             sinks[sink_count++] = sink;
+            if (had_no_sinks) {
+                replay_history_to_pending();
+            }
             return sink;
         }
     }
@@ -228,6 +232,7 @@ private:
 
     static void push_history(const DiagnosticRecord& record);
     static void push_pending(const DiagnosticRecord& record);
+    static void replay_history_to_pending();
     static void remove_pending(size_t index);
     static size_t find_oldest_normal_pending();
     static void flush_pending(bool urgent_only);

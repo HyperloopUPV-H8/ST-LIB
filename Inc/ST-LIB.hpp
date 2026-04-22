@@ -266,12 +266,12 @@ public:
         Watchdog::check_reset_flag();
         Hard_fault_check();
 #endif
+        Diagnostics::Runtime::install_default_sinks();
+        FaultController::template install_runtime<FaultPolicyT>();
+
         HAL_Init();
         HALconfig::system_clock();
         HALconfig::peripheral_clock();
-
-        Diagnostics::Runtime::install_default_sinks();
-        FaultController::template install_runtime<FaultPolicyT>();
 
 #ifdef HAL_RTC_MODULE_ENABLED
         (void)Global_RTC::ensure_started();
