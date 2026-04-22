@@ -103,7 +103,7 @@ TEST(EncoderSensorTest, ReadTreatsEncoderInitialCounterAsZeroPosition) {
     double position = -1.0;
     double speed = -1.0;
     double acceleration = -1.0;
-     ST_LIB::Direction direction =  ST_LIB::Direction::BACKWARDS;
+    ST_LIB::Direction direction = ST_LIB::Direction::BACKWARDS;
 
     MockSensor sensor(encoder, 0.5, 0.1, &direction, &position, &speed, &acceleration);
 
@@ -122,7 +122,7 @@ TEST(EncoderSensorTest, ResetForwardsToEncoderAndClearsHistory) {
     double position = 0.0;
     double speed = 0.0;
     double acceleration = 0.0;
-     ST_LIB::Direction direction =  ST_LIB::Direction::BACKWARDS;
+    ST_LIB::Direction direction = ST_LIB::Direction::BACKWARDS;
 
     MockSensor sensor(encoder, 1.0, 1.0, &direction, &position, &speed, &acceleration);
 
