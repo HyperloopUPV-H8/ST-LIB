@@ -372,7 +372,6 @@ set(STLIB_LOW_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/DigitalOutput/DigitalOutput.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ErrorHandler/ErrorHandler.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Math/Math.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ST-LIB_LOW.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sd/Sd.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/SensorInterrupt/SensorInterrupt.cpp
@@ -393,7 +392,6 @@ set(STLIB_HIGH_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/FlashStorer/FlashVariable.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/FaultController.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/ProtectionEngine.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/ST-LIB_HIGH.cpp
 )
 
 # ============================
@@ -429,9 +427,6 @@ add_library(${STLIB_LIBRARY} OBJECT
   $<$<BOOL:${CMAKE_CROSSCOMPILING}>:${STLIB_HIGH_CPP_NO_ETH}>
   $<$<AND:$<BOOL:${CMAKE_CROSSCOMPILING}>,$<BOOL:${USE_ETHERNET}>>:${STLIB_HIGH_C_ETH}>
   $<$<AND:$<BOOL:${CMAKE_CROSSCOMPILING}>,$<BOOL:${USE_ETHERNET}>>:${STLIB_HIGH_CPP_ETH}>
-
-  $<$<BOOL:${CMAKE_CROSSCOMPILING}>:${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB.cpp>
-
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Scheduler.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MPUManager/MPUManager.cpp>

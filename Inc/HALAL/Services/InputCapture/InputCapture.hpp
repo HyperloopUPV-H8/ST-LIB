@@ -86,7 +86,7 @@ public:
                      ->ChannelNState[TimerDomain::get_channel_state_idx(pin_rising.channel)];
             if ((*chx_1_state != HAL_TIM_CHANNEL_STATE_READY) ||
                 (*chx_1_n_state != HAL_TIM_CHANNEL_STATE_READY)) {
-                ErrorHandler("Channels not ready");
+                PANIC("Channels not ready");
                 return;
             }
 
@@ -110,7 +110,7 @@ public:
                      ->ChannelNState[TimerDomain::get_channel_state_idx(channel_falling)];
             if ((*ch_state != HAL_TIM_CHANNEL_STATE_READY) ||
                 (*n_ch_state != HAL_TIM_CHANNEL_STATE_READY)) [[unlikely]] {
-                ErrorHandler("Channels not ready");
+                PANIC("Channels not ready");
 
                 timer->template disable_capture_compare_interrupt<pin_rising.channel>();
                 CLEAR_BIT(timer->instance->tim->CCER, enableCCx_1);

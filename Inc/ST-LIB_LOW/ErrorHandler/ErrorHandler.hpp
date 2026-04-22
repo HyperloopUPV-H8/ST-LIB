@@ -29,8 +29,3 @@ public:
     do {                                                                                           \
         FaultReporter::Trigger(std::source_location::current(), x __VA_OPT__(, ) __VA_ARGS__);     \
     } while (0)
-
-using ErrorHandlerModel = PanicReporter;
-
-// Deprecated compatibility macro.
-#define ErrorHandler(x, ...) PANIC(x __VA_OPT__(, ) __VA_ARGS__)
