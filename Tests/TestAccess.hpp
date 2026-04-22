@@ -41,6 +41,16 @@ struct ProtectionEngine {
 };
 
 struct FaultController {
+    static void clear() {
+        ::FaultController::reset_runtime_storage();
+        ::FaultController::global_machine = nullptr;
+        ::FaultController::on_fault_enter = nullptr;
+        ::FaultController::latched_cause = {};
+        ::FaultController::has_latched_cause = false;
+        ::FaultController::faulted = false;
+        ::FaultController::runtime_started = false;
+    }
+
     static void request_fault(const ::FaultCause& cause) {
         ::FaultController::request_fault(cause);
     }
