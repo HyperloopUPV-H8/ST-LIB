@@ -100,6 +100,16 @@ void Scheduler::update() {
     }
 }
 
+uint64_t Scheduler::get_global_tick() {
+    SchedLock();
+    uint64_t tick = global_tick_us_;
+    if (Scheduler_global_timer != nullptr) {
+        tick += Scheduler_global_timer->CNT;
+    }
+    SchedUnlock();
+    return tick;
+}
+
 inline uint8_t Scheduler::allocate_slot() {
     uint32_t idx = __builtin_ffs(Scheduler::free_bitmap_) - 1;
     if (idx >= Scheduler::kMaxTasks) [[unlikely]]
