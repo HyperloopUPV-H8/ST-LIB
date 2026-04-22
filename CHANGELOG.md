@@ -6,6 +6,20 @@ The revived semantic-versioning baseline starts at `v5.0.0`.
 Historical releases that predate this file remain available in Git tags such as
 `v1.0.0`, `v3.0.0`, `v4.0.0-beta`, and `h10`.
 
+## v5.2.0 - 2026-04-22
+
+### Features
+
+- move a struct outside template class
+- Create a parameter to choose the type of the variables
+
+### Fixes
+
+- RXER pin for Ethernet is now optional
+  H11 ethernet doesn't use RXER pin. The RXER pin is now a pointer so it can hold a nullptr. Ethernet constructor now has a std::optional for this pin
+- input capture hotfix for errorhandler
+  fix: make dummy have invalid channel nº for rising, falling
+
 ## v5.1.0 - 2026-04-05
 
 ### Features
