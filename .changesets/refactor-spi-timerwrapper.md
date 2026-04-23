@@ -1,4 +1,4 @@
-release: patch
+release: minor
 summary: Small refactor of some spi and timerwrapper functionality
 
 timerwrapper:
