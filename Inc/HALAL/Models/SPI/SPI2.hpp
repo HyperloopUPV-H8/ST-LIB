@@ -699,6 +699,30 @@ struct SPIDomain {
         }
 
         /**
+         * @brief Sends and receives data over SPI in blocking mode.
+         */
+        template <typename T>
+        bool transceive(T *tx_data, T *rx_data, size_t count) {
+            size_t size = count * sizeof(T);
+            if (size % frame_size != 0) {
+                ErrorHandler(
+                    "SPI transaction size (%d) not aligned to frame size (%d)",
+                    size,
+                    frame_size
+                );
+                return false;
+            }
+            auto error_code = HAL_SPI_TransmitReceive(
+                &spi_instance.hspi,
+                (uint8_t*)tx_data,
+                (uint8_t*)rx_data,
+                size / frame_size,
+                10
+            );
+            return check_error_code(error_code);
+        }
+
+        /**
          * @brief Sends and receives a trivially copyable data type over SPI in blocking mode.
          */
         template <typename E, size_t S, typename T>
