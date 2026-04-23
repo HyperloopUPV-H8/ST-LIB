@@ -701,7 +701,7 @@ struct SPIDomain {
         /**
          * @brief Sends and receives data over SPI in blocking mode.
          */
-        template <typename T> bool transceive(T *tx_data, T *rx_data, size_t count) {
+        template <typename T> bool transceive(T* tx_data, T* rx_data, size_t count) {
             size_t size = count * sizeof(T);
             if (size % frame_size != 0) {
                 ErrorHandler(
