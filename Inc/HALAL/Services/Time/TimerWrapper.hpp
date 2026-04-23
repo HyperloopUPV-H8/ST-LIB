@@ -423,7 +423,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
     // TODO: 16 bit and 32 bit version (?)
     inline void set_limit_value(uint32_t arr) { instance->tim->ARR = arr; }
 
-    inline void set_callback(void (*callback)(void*), void *callback_data) {
+    inline void set_callback(void (*callback)(void*), void* callback_data) {
         TimerDomain::callbacks[instance->timer_idx] = callback;
         TimerDomain::callback_data[instance->timer_idx] = callback_data;
     }
