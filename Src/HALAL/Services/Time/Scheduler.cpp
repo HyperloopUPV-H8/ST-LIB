@@ -60,7 +60,8 @@ void Scheduler_start(void) {
 
     uint16_t prescaler =
         (uint16_t)(ST_LIB::TimerDomain::get_timer_frequency(Scheduler_global_timer) /
-                   Scheduler::FREQUENCY) - 1;
+                   Scheduler::FREQUENCY) -
+        1;
     Scheduler_global_timer->PSC = prescaler;
     Scheduler_global_timer->ARR = 0;
     Scheduler_global_timer->DIER |= LL_TIM_DIER_UIE;
