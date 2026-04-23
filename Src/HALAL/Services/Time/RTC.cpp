@@ -10,6 +10,11 @@ namespace {
 bool rtc_started = false;
 bool rtc_start_in_progress = false;
 bool rtc_time_valid = false;
+
+// Match the LSI-backed RTC setup used by STM32H7 Nucleo reference projects.
+// 32 kHz / ((127 + 1) * (249 + 1)) = 1 Hz nominal calendar tick.
+constexpr uint32_t rtc_async_prediv = 0x7F;
+constexpr uint32_t rtc_sync_prediv = 0xF9;
 } // namespace
 
 void Global_RTC::start_rtc() {
@@ -23,8 +28,8 @@ void Global_RTC::start_rtc() {
 
     hrtc.Instance = RTC;
     hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
-    hrtc.Init.AsynchPrediv = 0;
-    hrtc.Init.SynchPrediv = 32767;
+    hrtc.Init.AsynchPrediv = rtc_async_prediv;
+    hrtc.Init.SynchPrediv = rtc_sync_prediv;
     hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
     hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
     hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
