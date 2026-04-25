@@ -12,12 +12,4 @@ enum class RuleConfigError : uint8_t {
     WINDOW_CAPACITY_EXCEEDED,
 };
 
-enum class ProtectionError : uint8_t {
-    INVALID_HANDLE = 0,
-    INVALID_RULE_CONFIGURATION,
-    RULE_CAPACITY_EXCEEDED,
-    PROTECTION_CAPACITY_EXCEEDED,
-    REGISTRATION_LOCKED,
-};
-
 } // namespace Protections
