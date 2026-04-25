@@ -8,9 +8,12 @@ namespace ST_LIB::TestAccess {
 struct FaultController;
 }
 
+namespace Protections {
+template <typename...> class ProtectionEngine;
+}
+
 class PanicReporter;
 class FaultReporter;
-class ProtectionEngine;
 
 namespace FaultConfig {
 inline constexpr size_t origin_capacity = Protections::Config::max_name_length;
@@ -91,7 +94,7 @@ public:
 private:
     friend class PanicReporter;
     friend class FaultReporter;
-    friend class ProtectionEngine;
+    template <typename...> friend class Protections::ProtectionEngine;
     friend struct ST_LIB::TestAccess::FaultController;
 
     enum class RuntimeState : uint8_t { OPERATIONAL = 0, FAULT = 1 };

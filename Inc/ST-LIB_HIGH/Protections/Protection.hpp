@@ -4,7 +4,6 @@
 
 #include "C++Utilities/CppUtils.hpp"
 #include "HALAL/Services/Time/Scheduler.hpp"
-#include "ST-LIB_HIGH/Protections/ProtectionErrors.hpp"
 #include "ST-LIB_HIGH/Protections/ProtectionTypes.hpp"
 #include "ST-LIB_HIGH/Protections/Rules.hpp"
 #include "ST-LIB_HIGH/Protections/SampleSource.hpp"
@@ -470,40 +469,26 @@ inline RuleEvaluation evaluate_rule(RuleModel<T>& rule, const T& sample) {
     );
 }
 
-template <ProtectionSample T> class Protection {
+template <ProtectionSample T, std::size_t RuleCount> class Protection {
 public:
-    Protection(const char* name, SampleSource<T> source) : name(name), source(source) {}
+    Protection(
+        const char* name,
+        SampleSource<T> source,
+        const std::array<RuleDefinition<T>, RuleCount>& definitions
+    )
+        : name(name),
+          source(source),
+          rules(make_rule_models(definitions, std::make_index_sequence<RuleCount>{})) {}
 
     const char* get_name() const { return name; }
     void initialize() {}
-
-    expected<void, ProtectionError> add_rule(expected<RuleDefinition<T>, RuleConfigError> definition
-    ) {
-        if (!definition.has_value()) {
-            return unexpected(ProtectionError::INVALID_RULE_CONFIGURATION);
-        }
-        return add_rule(*definition);
-    }
-
-    expected<void, ProtectionError> add_rule(const RuleDefinition<T>& definition) {
-        if (rule_count >= Config::max_rules_per_protection) {
-            return unexpected(ProtectionError::RULE_CAPACITY_EXCEEDED);
-        }
-
-        rules[rule_count++].emplace(make_rule_model(definition));
-        return {};
-    }
 
     ProtectionEvaluation evaluate() {
         ProtectionEvaluation evaluation{};
         const T sample = source.read();
 
-        for (size_t index = 0; index < rule_count; ++index) {
-            if (!rules[index].has_value()) {
-                continue;
-            }
-
-            const RuleEvaluation rule_evaluation = evaluate_rule(*rules[index], sample);
+        for (std::size_t index = 0; index < RuleCount; ++index) {
+            const RuleEvaluation rule_evaluation = evaluate_rule(rules[index], sample);
             if (rule_evaluation.edge != RuleEdge::NONE &&
                 evaluation.event_count < evaluation.events.size()) {
                 evaluation.events[evaluation.event_count++] = {
@@ -537,10 +522,17 @@ public:
     void set_last_fault_publish_tick(uint64_t tick) { last_fault_publish_tick = tick; }
 
 private:
+    template <std::size_t... Indices>
+    static std::array<RuleModel<T>, RuleCount> make_rule_models(
+        const std::array<RuleDefinition<T>, RuleCount>& definitions,
+        std::index_sequence<Indices...>
+    ) {
+        return {make_rule_model(definitions[Indices])...};
+    }
+
     const char* name{nullptr};
     SampleSource<T> source;
-    array<optional<RuleModel<T>>, Config::max_rules_per_protection> rules{};
-    size_t rule_count{0};
+    std::array<RuleModel<T>, RuleCount> rules{};
     uint64_t last_fault_publish_tick{0};
 };
 
