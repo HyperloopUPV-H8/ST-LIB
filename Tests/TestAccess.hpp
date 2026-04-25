@@ -23,23 +23,6 @@ struct DiagnosticsHub {
     static size_t pending_size() { return Diagnostics::Hub::pending_count; }
 };
 
-struct ProtectionEngine {
-    static void clear() {
-        for (size_t protection_index = 0; protection_index < ::ProtectionEngine::protection_count;
-             ++protection_index) {
-            if (::ProtectionEngine::protections[protection_index].has_value()) {
-                visit(
-                    [](auto& protection) { protection.clear_runtime_state(); },
-                    *::ProtectionEngine::protections[protection_index]
-                );
-                ::ProtectionEngine::protections[protection_index].reset();
-            }
-        }
-        ::ProtectionEngine::protection_count = 0;
-        ::ProtectionEngine::registration_locked = false;
-    }
-};
-
 struct FaultController {
     static void clear() {
         ::FaultController::reset_runtime_storage();

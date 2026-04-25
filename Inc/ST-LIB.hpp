@@ -313,9 +313,6 @@ public:
             cfg.dfsdm_clk_cfgs,
             GPIODomain::Init<gpioN>::instances
         );
-
-        ProtectionEngine::initialize();
-        FaultController::start();
     }
 
     template <typename Domain, auto& Target, std::size_t I = 0>
