@@ -77,28 +77,24 @@ void reset_operational_machine() {
 void on_fault_enter() { fault_enter_calls++; }
 
 inline float monitored_value = 2.0f;
-inline constexpr auto monitored_rules = Protections::bake_rules<float>(
-    Protections::Rules::below(1.0f, 1.5f).value()
+inline constexpr auto monitored_protection = Protections::protection<"monitored_value", monitored_value>(
+    Protections::Rules::below(1.0f, 1.5f)
 );
-using MonitoredProtection =
-    Protections::ProtectionDeclarationWithRules<"monitored_value", monitored_value, monitored_rules>;
-using MonitoredProtectionEngine = Protections::ProtectionEngine<MonitoredProtection>;
+using MonitoredProtectionEngine = Protections::ProtectionEngine<monitored_protection>;
 
 inline float time_value = 0.0f;
-inline constexpr auto time_rules = Protections::bake_rules<float>(
-    Protections::Rules::time_accumulation(10.0f, 0.001f).value()
+inline constexpr auto time_protection = Protections::protection<"time_value", time_value>(
+    Protections::Rules::time_accumulation(10.0f, 0.001f)
 );
-using TimeProtection =
-    Protections::ProtectionDeclarationWithRules<"time_value", time_value, time_rules>;
-using TimeProtectionEngine = Protections::ProtectionEngine<TimeProtection>;
+using TimeProtectionEngine = Protections::ProtectionEngine<time_protection>;
 
 inline float time_reset_value = 0.0f;
-inline constexpr auto time_reset_rules = Protections::bake_rules<float>(
-    Protections::Rules::time_accumulation(10.0f, 0.001f).value()
+inline constexpr auto time_reset_protection = Protections::protection<"time_reset_value", time_reset_value>(
+    Protections::Rules::time_accumulation(10.0f, 0.001f)
 );
-using TimeResetProtection =
-    Protections::ProtectionDeclarationWithRules<"time_reset_value", time_reset_value, time_reset_rules>;
-using TimeResetProtectionEngine = Protections::ProtectionEngine<TimeResetProtection>;
+using TimeResetProtectionEngine = Protections::ProtectionEngine<time_reset_protection>;
+
+static_assert(Protections::ProtectionSpecLike<decltype(monitored_protection)>);
 
 FaultCause make_test_runtime_fault(const char* message) {
     return FaultCause::runtime_fault(message, false, 0, "diagnostics_test", "diagnostics_test.cpp");
@@ -376,7 +372,7 @@ TEST_F(DiagnosticsHubTest, TimeAccumulationUsesSchedulerTickForContinuousDuratio
 TEST_F(DiagnosticsHubTest, TimeAccumulationResetsWhenConditionClears) {
     TimeResetProtectionEngine::initialize();
 
-    time_value = 12.0f;
+    time_reset_value = 12.0f;
     Scheduler::global_tick_us_ = 0;
     TimeResetProtectionEngine::evaluate();
 

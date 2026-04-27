@@ -478,6 +478,7 @@ public:
     )
         : name(name),
           source(source),
+          definitions(definitions),
           rules(make_rule_models(definitions, std::make_index_sequence<RuleCount>{})) {}
 
     const char* get_name() const { return name; }
@@ -515,7 +516,10 @@ public:
         return evaluation;
     }
 
-    void clear_runtime_state() { last_fault_publish_tick = 0; }
+    void clear_runtime_state() {
+        rules = make_rule_models(definitions, std::make_index_sequence<RuleCount>{});
+        last_fault_publish_tick = 0;
+    }
 
     uint64_t get_last_fault_publish_tick() const { return last_fault_publish_tick; }
 
@@ -532,6 +536,7 @@ private:
 
     const char* name{nullptr};
     SampleSource<T> source;
+    std::array<RuleDefinition<T>, RuleCount> definitions{};
     std::array<RuleModel<T>, RuleCount> rules{};
     uint64_t last_fault_publish_tick{0};
 };

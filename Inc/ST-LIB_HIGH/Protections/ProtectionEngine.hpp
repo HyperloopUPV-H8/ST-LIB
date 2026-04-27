@@ -35,8 +35,6 @@ template <typename Source> constexpr auto to_sample_source(Source& source) {
     }
 }
 
-} // namespace detail
-
 template <ProtectionSample T, std::size_t N> struct BakedRules {
     using sample_type = T;
     static constexpr std::size_t rule_count = N;
@@ -44,13 +42,40 @@ template <ProtectionSample T, std::size_t N> struct BakedRules {
     std::array<RuleDefinition<T>, N> definitions{};
 };
 
+template <typename T, typename Rule>
+concept RuleDefinitionLike =
+    ProtectionSample<T> && (
+        std::same_as<std::remove_cvref_t<Rule>, RuleDefinition<T>> ||
+        std::same_as<std::remove_cvref_t<Rule>, expected<RuleDefinition<T>, RuleConfigError>>
+    );
+
+template <ProtectionSample T> constexpr RuleDefinition<T> unwrap_rule(RuleDefinition<T> rule) {
+    return rule;
+}
+
+template <ProtectionSample T>
+constexpr RuleDefinition<T> unwrap_rule(expected<RuleDefinition<T>, RuleConfigError> rule) {
+    return rule.value();
+}
+
 template <ProtectionSample T, typename... RuleDefs>
-requires ((std::same_as<std::remove_cvref_t<RuleDefs>, RuleDefinition<T>> && ...))
+requires ((RuleDefinitionLike<T, RuleDefs> && ...))
 constexpr auto bake_rules(RuleDefs... definitions) {
+    static_assert(sizeof...(RuleDefs) > 0, "A protection must declare at least one rule");
     return BakedRules<T, sizeof...(RuleDefs)>{
-        std::array<RuleDefinition<T>, sizeof...(RuleDefs)>{definitions...}
+        std::array<RuleDefinition<T>, sizeof...(RuleDefs)>{
+            unwrap_rule<T>(definitions)...
+        }
     };
 }
+
+template <typename... Types> struct AreUnique : std::true_type {};
+
+template <typename Type, typename... Rest>
+struct AreUnique<Type, Rest...>
+    : std::bool_constant<(!std::same_as<Type, Rest> && ...) && AreUnique<Rest...>::value> {};
+
+} // namespace detail
 
 template <std::size_t N> struct FixedString {
     char value[N]{};
@@ -67,52 +92,50 @@ template <std::size_t N> struct FixedString {
 
 template <std::size_t N> FixedString(const char (&)[N]) -> FixedString<N>;
 
-template <FixedString Name, auto& Source> struct ProtectionSpec {
+template <FixedString Name, auto& Source, std::size_t RuleCount> struct ProtectionSpec {
     using source_type = std::remove_cvref_t<decltype(Source)>;
     using sample_type = detail::sample_type_from_source_t<source_type>;
 
     static constexpr auto name = Name;
     static constexpr auto& source = Source;
+    static constexpr std::size_t rule_count = RuleCount;
+
+    detail::BakedRules<sample_type, RuleCount> rules{};
+
+    template <class Ctx> consteval void inscribe(Ctx&) const {}
 };
 
-template <FixedString Name, auto& Source, auto& Rules> struct ProtectionSpecWithRules {
-    using source_type = std::remove_cvref_t<decltype(Source)>;
-    using sample_type = detail::sample_type_from_source_t<source_type>;
-    using baked_rules_type = std::remove_cvref_t<decltype(Rules)>;
+template <FixedString Name, auto& Source, typename... RuleDefs>
+consteval auto protection(RuleDefs... definitions) {
+    using SampleType = detail::sample_type_from_source_t<decltype(Source)>;
+    return ProtectionSpec<Name, Source, sizeof...(RuleDefs)>{
+        detail::bake_rules<SampleType>(definitions...)
+    };
+}
 
-    static constexpr auto name = Name;
-    static constexpr auto& source = Source;
-    static constexpr auto& baked_rules = Rules;
-};
+template <typename T> struct IsProtectionSpec : std::false_type {};
 
-template <FixedString Name, auto& Source>
-using ProtectionDeclaration = ProtectionSpec<Name, Source>;
+template <FixedString Name, auto& Source, std::size_t RuleCount>
+struct IsProtectionSpec<ProtectionSpec<Name, Source, RuleCount>> : std::true_type {};
 
-template <FixedString Name, auto& Source, auto& Rules>
-using ProtectionDeclarationWithRules = ProtectionSpecWithRules<Name, Source, Rules>;
+template <typename T>
+concept ProtectionSpecLike = IsProtectionSpec<std::remove_cvref_t<T>>::value;
 
-template <typename... ProtectionSpecs> class ProtectionEngine {
+template <auto&... ProtectionSpecs> class ProtectionEngine {
 public:
+    static_assert(
+        detail::AreUnique<std::remove_cvref_t<decltype(ProtectionSpecs)>...>::value,
+        "Duplicate protection declarations must use distinct names or sources"
+    );
+
     static constexpr std::size_t protection_count = sizeof...(ProtectionSpecs);
 
-    template <typename Spec>
-    static constexpr bool has_baked_rules = requires { typename Spec::baked_rules_type; };
-
-    template <typename Spec> struct StorageForSpec;
-
-    template <typename Spec>
-    requires has_baked_rules<Spec>
-    struct StorageForSpec<Spec> {
-        using type = Protection<typename Spec::sample_type, Spec::baked_rules_type::rule_count>;
+    template <auto& Spec> struct StorageForSpec {
+        using spec_type = std::remove_cvref_t<decltype(Spec)>;
+        using type = Protection<typename spec_type::sample_type, spec_type::rule_count>;
     };
 
-    template <typename Spec>
-    requires (!has_baked_rules<Spec>)
-    struct StorageForSpec<Spec> {
-        using type = Protection<typename Spec::sample_type, 0>;
-    };
-
-    template <typename Spec> using storage_for_spec_t = typename StorageForSpec<Spec>::type;
+    template <auto& Spec> using storage_for_spec_t = typename StorageForSpec<Spec>::type;
 
     using Storage = std::tuple<storage_for_spec_t<ProtectionSpecs>...>;
 
@@ -120,6 +143,7 @@ public:
 #if defined(HAL_RTC_MODULE_ENABLED) && !defined(SIM_ON)
     Global_RTC::ensure_started();
 #endif
+        reset();
         initialize_impl(std::make_index_sequence<protection_count>{});
     }
 
@@ -131,7 +155,7 @@ public:
         return std::get<Index>(protections);
     }
 
-    template <typename ProtectionSpec> static auto& protection() {
+    template <auto& ProtectionSpec> static auto& protection() {
         return protection_at<spec_index<ProtectionSpec>()>();
     }
 
@@ -140,29 +164,15 @@ public:
     }
 
 private:
-    template <typename ProtectionSpec> static constexpr auto make_protection() {
-        using SampleType = typename ProtectionSpec::sample_type;
+    template <auto& ProtectionSpec> static constexpr auto make_protection() {
+        using SpecType = std::remove_cvref_t<decltype(ProtectionSpec)>;
+        using SampleType = typename SpecType::sample_type;
 
-        if constexpr (has_baked_rules<ProtectionSpec>) {
-            using RulesType = typename ProtectionSpec::baked_rules_type;
-            static_assert(
-                std::same_as<typename RulesType::sample_type, SampleType>,
-                "Baked rules sample type must match protection sample type"
-            );
-
-            return Protection<SampleType, RulesType::rule_count>{
-                ProtectionSpec::name.c_str(),
-                detail::to_sample_source(ProtectionSpec::source),
-                ProtectionSpec::baked_rules.definitions
-            };
-        } else {
-            constexpr std::array<RuleDefinition<SampleType>, 0> empty_rules{};
-            return Protection<SampleType, 0>{
-                ProtectionSpec::name.c_str(),
-                detail::to_sample_source(ProtectionSpec::source),
-                empty_rules
-            };
-        }
+        return Protection<SampleType, SpecType::rule_count>{
+            SpecType::name.c_str(),
+            detail::to_sample_source(SpecType::source),
+            ProtectionSpec.rules.definitions
+        };
     }
 
     template <std::size_t... Indices> static void initialize_impl(std::index_sequence<Indices...>) {
@@ -228,12 +238,14 @@ private:
         protection_ref.set_last_fault_publish_tick(tick);
     }
 
-    template <typename ProtectionSpec, std::size_t Index = 0>
+    template <auto& ProtectionSpec, std::size_t Index = 0>
     static consteval std::size_t spec_index() {
         if constexpr (Index >= protection_count) {
             static_assert([] { return false; }(), "Protection spec not found");
             return 0;
-        } else if constexpr (std::is_same_v<ProtectionSpec, std::tuple_element_t<Index, std::tuple<ProtectionSpecs...>>>) {
+        } else if constexpr (std::same_as<
+                                 std::remove_cvref_t<decltype(ProtectionSpec)>,
+                                 std::remove_cvref_t<decltype(std::get<Index>(std::tie(ProtectionSpecs...)))>>) {
             return Index;
         } else {
             return spec_index<ProtectionSpec, Index + 1>();
@@ -244,5 +256,3 @@ private:
 };
 
 } // namespace Protections
-
-using ProtectionEngine = Protections::ProtectionEngine<>;
