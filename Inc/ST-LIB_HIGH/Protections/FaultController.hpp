@@ -9,7 +9,7 @@ struct FaultController;
 }
 
 namespace Protections {
-template <typename...> class ProtectionEngine;
+template <auto&...> class ProtectionEngine;
 }
 
 class PanicReporter;
@@ -94,7 +94,7 @@ public:
 private:
     friend class PanicReporter;
     friend class FaultReporter;
-    template <typename...> friend class Protections::ProtectionEngine;
+    template <auto&...> friend class Protections::ProtectionEngine;
     friend struct ST_LIB::TestAccess::FaultController;
 
     enum class RuntimeState : uint8_t { OPERATIONAL = 0, FAULT = 1 };

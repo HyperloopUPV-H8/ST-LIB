@@ -17,7 +17,7 @@ If you only want to integrate protections into an application, read the first pa
 The subsystem has three explicit runtime operations:
 
 - `Board::init()`
-- `ProtectionEngine::evaluate()`
+- `Board::ProtectionEngine::evaluate()` or `Board::evaluate_protections()`
 - `Diagnostics::Hub::flush()`
 
 If the application uses an operational state machine nested under the global runtime, it also
@@ -34,11 +34,11 @@ The global fault model is always the same:
 
 ```mermaid
 flowchart TD
-    A["Register protections"] --> B["Declare Board policy and request objects"]
+    A["Declare protection rules"] --> B["Declare Board policy and request objects"]
     B --> C["Board::init()"]
     C --> D["while (1)"]
     D --> E["FaultController::check_transitions()"]
-    D --> F["ProtectionEngine::evaluate()"]
+    D --> F["Board::evaluate_protections()"]
     D --> G["Diagnostics::Hub::flush()"]
 ```
 
@@ -51,21 +51,21 @@ Board<FaultPolicyT, dev0, dev1, ...>
 Where:
 
 - `FaultPolicyT` is mandatory and is always the first template argument
-- `dev0, dev1, ...` are the board declarations to inscribe into the domains
+- `dev0, dev1, ...` are board declarations, including hardware requests and protection requests
 - the framework always owns the top-level runtime machine
 - the application may optionally provide a nested operational machine and/or a `FAULT` entry callback
 
-### 1.2 Registering Protections
+### 1.2 Declaring Protections
 
-Protections are created through `ProtectionEngine::create_protection(...)`.
+Protections are compile-time board requests. A protection request:
 
-Each protection:
+- has a stable name encoded in the type
+- reads from one sample source object or sample variable
+- owns a fixed set of rules declared before runtime
+- is passed to `Board<...>` with the rest of the board request objects
 
-- has a stable name
-- reads from one `SampleSource<T>`
-- owns one or more rules
-
-Rules are added through the factories in `Protections::Rules`.
+Rules are created through the factories in `Protections::Rules` and passed to
+`Protections::protection<"name", source>(...)`.
 
 Available rule factories:
 
@@ -76,8 +76,9 @@ Available rule factories:
 - `Rules::not_equals(...)`
 - `Rules::time_accumulation(...)`
 
-Both `create_protection(...)` and `add_rule(...)` return `std::expected`, so configuration errors
-must be handled explicitly.
+Rule factories return `std::expected`; `Protections::protection(...)` unwraps them while building
+the compile-time declaration. Invalid declarations fail during build or constant evaluation instead
+of creating a partial runtime registry.
 
 Current rule signatures are:
 
@@ -106,21 +107,19 @@ Rules::time_accumulation(fault_threshold, warning_threshold, window_seconds)
 - it resets the accumulated active time when the triggering condition clears
 - it uses `Scheduler::get_global_tick()`, so it does not depend on the `while (1)` iteration rate
 
-### 1.3 When to Register Protections
+### 1.3 Protection Lifecycle
 
-Register protections before `Board::init()`.
+Declare protections at namespace scope and pass them to `Board`.
 
 The intended lifecycle is:
 
-1. registration
+1. compile-time declaration
 2. `Board::init()`
 3. evaluation and flushing in the runtime loop
 
-After `Board::init()`, the protection registry is locked.
-
-If registration code reports a fatal condition before `Board::init()`, that fatal request is still
-preserved across the first fault-runtime installation and its diagnostic record remains eligible for
-later delivery once sinks are installed.
+There is no runtime registration phase and no mutable protection registry. `Board` derives a
+board-specific `ProtectionEngine` type from the protection requests it receives, initializes it from
+`Board::init()`, and then starts the global fault runtime.
 
 ### 1.4 Typical Protection Example
 
@@ -130,35 +129,21 @@ later delivery once sinks are installed.
 using namespace ST_LIB;
 
 constexpr auto led = DigitalOutputDomain::DigitalOutput(PF13);
-using MainBoard = Board<DefaultFaultPolicy, led>;
 
 float bus_voltage = 0.0f;
 
+inline constexpr auto bus_voltage_protection = Protections::protection<"bus_voltage", bus_voltage>(
+    Protections::Rules::below(350.0f, 370.0f),
+    Protections::Rules::time_accumulation(20.0f, 15.0f, 0.5f)
+);
+
+using MainBoard = Board<DefaultFaultPolicy, bus_voltage_protection, led>;
+
 int main() {
-    auto protection = ProtectionEngine::create_protection(
-        "bus_voltage",
-        SampleSource<float>{bus_voltage}
-    );
-
-    if (!protection.has_value()) {
-        PANIC("failed to register bus_voltage protection");
-    }
-
-    if (!protection->add_rule(Protections::Rules::below(350.0f, 370.0f)).has_value()) {
-        PANIC("failed to add below rule");
-    }
-
-    if (!protection->add_rule(
-             Protections::Rules::time_accumulation(20.0f, 15.0f, 0.5f)
-         )
-             .has_value()) {
-        PANIC("failed to add time_accumulation rule");
-    }
-
     MainBoard::init();
 
     while (1) {
-        ProtectionEngine::evaluate();
+        MainBoard::evaluate_protections();
         Diagnostics::Hub::flush();
     }
 }
@@ -205,7 +190,7 @@ int main() {
 
     while (1) {
         FaultController::check_transitions();
-        ProtectionEngine::evaluate();
+        MainBoard::evaluate_protections();
         Diagnostics::Hub::flush();
     }
 }
@@ -346,13 +331,14 @@ The key boundaries are:
 
 Public API:
 
-- `ProtectionEngine::create_protection(...)`
-- `ProtectionHandle<T>::add_rule(...)`
+- `Protections::protection<"name", source>(...)`
+- `Board::ProtectionEngine`
+- `Board::evaluate_protections()`
 - `Protections::Rules::*`
 
 Internal model:
 
-- one flat collection of protections
+- one board-specific compile-time collection of protections
 - no low/high frequency split in the domain model
 - rule configuration returned through `std::expected`
 - rule evaluation produces `RuleState`, `RuleEdge`, and `RuleSnapshot`
@@ -369,7 +355,7 @@ Supported rule kinds:
 `TIME_ACCUMULATION` uses `Scheduler::get_global_tick()` to measure real elapsed time.
 It no longer assumes a fixed evaluation rate.
 
-`ProtectionEngine::evaluate()`:
+`Board::ProtectionEngine::evaluate()`:
 
 - walks every protection
 - publishes non-fatal rule edges through `Diagnostics`
@@ -502,7 +488,7 @@ This avoids recursive or bootstrap-dependent fatal paths while timestamping diag
 This subsystem uses a narrow set of C++23 features where they provide direct value:
 
 - `std::expected`
-  for explicit registration/configuration failure
+  for explicit rule configuration failure
 - `std::variant` and `std::visit`
   for static rule composition
 - `concepts`

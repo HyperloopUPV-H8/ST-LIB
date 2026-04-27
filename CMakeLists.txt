@@ -564,6 +564,17 @@ else()
   endif()
 endif()
 
+if(CMAKE_CROSSCOMPILING)
+  add_library(stlib_compile_check_board_protections OBJECT
+    ${CMAKE_CURRENT_LIST_DIR}/Tests/compile_checks/board_protection_contract.cpp
+  )
+  target_link_libraries(stlib_compile_check_board_protections PRIVATE ${STLIB_LIBRARY})
+  set_target_properties(stlib_compile_check_board_protections PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED YES
+  )
+endif()
+
 if(PROJECT_IS_TOP_LEVEL)
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E create_symlink

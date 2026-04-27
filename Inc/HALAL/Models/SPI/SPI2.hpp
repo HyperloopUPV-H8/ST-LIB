@@ -1295,13 +1295,12 @@ struct SPIDomain {
             for (std::size_t i = 0; i < N; ++i) {
                 const auto& e = cfgs[i];
 
-                
                 SPIPeripheral peripheral = e.peripheral;
                 instances[i].instance = reinterpret_cast<SPI_TypeDef*>(e.peripheral);
                 instances[i].operation_flag = nullptr;
                 instances[i].error_count = 0;
                 instances[i].was_aborted = false;
-                
+
                 // Configure clock and store handle
                 RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
                 uint8_t spi_number = 0;

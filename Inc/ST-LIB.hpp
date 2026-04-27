@@ -141,10 +141,37 @@ consteval std::array<DMADomain::Config, TotalN> build_dma_configs(
     });
 }
 
+template <auto& Request> struct ProtectionRequestRef {
+    static constexpr auto& value = Request;
+};
+
+template <auto& Request> consteval auto protection_spec_tuple() {
+    using RequestT = std::remove_cvref_t<decltype(Request)>;
+
+    if constexpr (Protections::ProtectionSpecLike<RequestT>) {
+        return std::tuple<ProtectionRequestRef<Request>>{};
+    } else {
+        return std::tuple<>{};
+    }
+}
+
+template <typename Tuple> struct ProtectionEngineFromTuple;
+
+template <typename... ProtectionRefs>
+struct ProtectionEngineFromTuple<std::tuple<ProtectionRefs...>> {
+    using type = Protections::ProtectionEngine<ProtectionRefs::value...>;
+};
+
+template <auto&... Requests>
+using ProtectionEngineForRequests = typename ProtectionEngineFromTuple<
+    decltype(std::tuple_cat(protection_spec_tuple<Requests>()...))>::type;
+
 } // namespace BuildUtils
 
 template <BoardFaultPolicy FaultPolicyT, auto&... devs> struct Board {
 public:
+    using ProtectionEngine = BuildUtils::ProtectionEngineForRequests<devs...>;
+
     static consteval auto build_ctx() {
         DomainsCtx ctx{};
         (devs.inscribe(ctx), ...);
@@ -313,6 +340,15 @@ public:
             cfg.dfsdm_clk_cfgs,
             GPIODomain::Init<gpioN>::instances
         );
+
+        ProtectionEngine::initialize();
+        FaultController::start();
+    }
+
+    static void evaluate_protections() { ProtectionEngine::evaluate(); }
+
+    template <auto& ProtectionSpec> static auto& protection() {
+        return ProtectionEngine::template protection<ProtectionSpec>();
     }
 
     template <typename Domain, auto& Target, std::size_t I = 0>
