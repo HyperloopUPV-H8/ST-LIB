@@ -18,19 +18,21 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
     friend TimerWrapper<dev>;
 
     TimerWrapper<dev>* timer;
+    uint32_t polarity;
+    uint32_t negated_polarity;
     uint32_t* frequency;
     float* duty_cycle = nullptr;
     bool is_on = false;
+    bool is_initialized = false;
 
-    /* This constructor is private for a reason. Use TimerWrapper<dev>::get_pwm */
-    PWM(TimerWrapper<dev>* tim,
-        uint32_t polarity,
-        uint32_t negated_polarity,
-        float* duty_ptr,
-        uint32_t* frequency_ptr)
-        : timer(tim) {
-        duty_cycle = duty_ptr;
-        frequency = frequency_ptr;
+    inline void initialize() {
+        if (is_initialized)
+            return;
+
+        if (timer == nullptr || timer->instance == nullptr || timer->instance->tim == nullptr ||
+            timer->instance->hal_tim == nullptr) {
+            PANIC("PWM requested before timer init");
+        }
 
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
@@ -45,12 +47,26 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         };
         timer->template config_output_compare_channel<pin.channel>(&sConfigOC);
         timer->template set_output_compare_preload_enable<pin.channel>();
+        is_initialized = true;
+    }
+
+    /* This constructor is private for a reason. Use TimerWrapper<dev>::get_pwm */
+    PWM(TimerWrapper<dev>* tim,
+        uint32_t polarity,
+        uint32_t negated_polarity,
+        float* duty_ptr,
+        uint32_t* frequency_ptr)
+        : timer(tim), polarity(polarity), negated_polarity(negated_polarity) {
+        duty_cycle = duty_ptr;
+        frequency = frequency_ptr;
     }
 
 public:
     void turn_on() {
         if (this->is_on)
             return;
+
+        initialize();
 
         volatile HAL_TIM_ChannelStateTypeDef* state =
             &timer->instance->hal_tim
