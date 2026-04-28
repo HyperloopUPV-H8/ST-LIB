@@ -265,9 +265,7 @@ struct EthernetDomain {
                 sntp_started = true;
             }
         }
-        bool is_connected(){
-            return netif_is_link_up(&gnetif);
-        }
+        bool is_connected() { return netif_is_link_up(&gnetif); }
     };
 
     template <std::size_t N> struct Init {
