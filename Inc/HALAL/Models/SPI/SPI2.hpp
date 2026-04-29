@@ -1240,8 +1240,8 @@ struct SPIDomain {
             }
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&tx_data),
-                reinterpret_cast<uint8_t*>(&rx_data),
+                const_cast<uint8_t*>(reinterpret_cast<const volatile uint8_t*>(&tx_data)),
+                const_cast<uint8_t*>(reinterpret_cast<volatile uint8_t*>(&rx_data)),
                 size / frame_size
             );
             return check_error_code(error_code);
