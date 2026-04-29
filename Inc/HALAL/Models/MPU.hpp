@@ -348,18 +348,18 @@ struct MPUDomain {
 
             // Dynamic Configuration based on Linker Symbols
             configure_dynamic_region(
-                (uintptr_t)__mpu_d1_nc_start,
-                (uintptr_t)__mpu_d1_nc_end,
+                reinterpret_cast<uintptr_t>(&__mpu_d1_nc_start),
+                reinterpret_cast<uintptr_t>(&__mpu_d1_nc_end),
                 MPU_REGION_NUMBER3
             );
             configure_dynamic_region(
-                (uintptr_t)__mpu_d2_nc_start,
-                (uintptr_t)__mpu_d2_nc_end,
+                reinterpret_cast<uintptr_t>(&__mpu_d2_nc_start),
+                reinterpret_cast<uintptr_t>(&__mpu_d2_nc_end),
                 MPU_REGION_NUMBER5
             );
             configure_dynamic_region(
-                (uintptr_t)__mpu_d3_nc_start,
-                (uintptr_t)__mpu_d3_nc_end,
+                reinterpret_cast<uintptr_t>(&__mpu_d3_nc_start),
+                reinterpret_cast<uintptr_t>(&__mpu_d3_nc_end),
                 MPU_REGION_NUMBER7
             );
 
