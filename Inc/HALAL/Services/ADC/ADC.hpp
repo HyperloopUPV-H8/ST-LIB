@@ -828,7 +828,7 @@ struct ADCDomain {
             }
             return 0;
         }
-        static uint16_t* get_dma_buffer(Peripheral peripheral) {
+        static volatile uint16_t* get_dma_buffer(Peripheral peripheral) {
             const auto buffer_size = buffer_size_for(peripheral);
             const auto buffer_offset = buffer_offset_for(peripheral);
             if (buffer_size == 0U) {
@@ -840,12 +840,12 @@ struct ADCDomain {
                 return nullptr;
             }
 
-            uint16_t* buffer = &dma_buffer_pool[buffer_offset];
+            volatile uint16_t* buffer = &dma_buffer_pool[buffer_offset];
             std::fill_n(buffer, buffer_size, uint16_t{0});
             return buffer;
         }
 
-        static uint16_t* get_dma_slot(Peripheral peripheral, uint8_t index) {
+        static volatile uint16_t* get_dma_slot(Peripheral peripheral, uint8_t index) {
             if (index >= buffer_size_for(peripheral)) {
                 return nullptr;
             }
@@ -945,7 +945,7 @@ struct ADCDomain {
                     PANIC("ADC DMA instance unavailable");
                     continue;
                 }
-                uint16_t* buffer = get_dma_buffer(peripheral);
+                volatile uint16_t* buffer = get_dma_buffer(peripheral);
                 if (buffer == nullptr) {
                     continue;
                 }
@@ -989,8 +989,13 @@ struct ADCDomain {
                     continue;
                 }
 
-                if (HAL_ADC_Start_DMA(hadc, reinterpret_cast<uint32_t*>(buffer), channel_count) !=
-                    HAL_OK) {
+                if (HAL_ADC_Start_DMA(
+                        hadc,
+                        reinterpret_cast<uint32_t*>(
+                            const_cast<std::remove_volatile_t<std::remove_pointer_t<decltype(buffer)>>*>(buffer)
+                        ),
+                        channel_count
+                    ) != HAL_OK) {
                     PANIC("ADC DMA start failed");
                     continue;
                 }

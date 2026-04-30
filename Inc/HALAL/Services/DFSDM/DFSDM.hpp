@@ -1017,7 +1017,7 @@ struct DFSDM_CHANNEL_DOMAIN {
             PANIC("Filter cannot be bigger than 3");
             return 0;
         }
-        static int32_t* get_buffer_filter(uint8_t filter) {
+        static volatile int32_t* get_buffer_filter(uint8_t filter) {
             switch (filter) {
             case 0:
                 return Buffer_Filter0;
@@ -1032,7 +1032,7 @@ struct DFSDM_CHANNEL_DOMAIN {
             return 0;
         }
 
-        static int32_t* get_buffer_pointer(const Config cfg) {
+        static volatile int32_t* get_buffer_pointer(const Config cfg) {
             return get_buffer_filter(cfg.filter) + cfg.buffer_pos_ini;
         }
 
