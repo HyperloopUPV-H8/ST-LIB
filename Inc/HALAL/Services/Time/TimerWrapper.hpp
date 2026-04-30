@@ -621,7 +621,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
             CLEAR_BIT(tmpccmrx, TIM_CCMR2_OC4M);
             CLEAR_BIT(tmpccmrx, TIM_CCMR2_CC4S);
 
-            SET_BIT(tmpccmrx, OC_Config->OCMode);
+            SET_BIT(tmpccmrx, OC_Config->OCMode << 8U);
             CLEAR_BIT(tmpccer, TIM_CCER_CC4P);
             SET_BIT(tmpccer, OC_Config->OCPolarity << 12U);
         } else if constexpr (ch == TimerChannel::CHANNEL_5) {
