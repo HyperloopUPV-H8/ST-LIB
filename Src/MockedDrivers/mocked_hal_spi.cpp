@@ -123,12 +123,12 @@ extern "C" HAL_StatusTypeDef HAL_SPI_Abort(SPI_HandleTypeDef* hspi) {
 }
 
 extern "C" HAL_StatusTypeDef
-HAL_SPI_Transmit(SPI_HandleTypeDef* hspi, uint8_t* pData, uint16_t Size, uint32_t Timeout) {
+HAL_SPI_Transmit(SPI_HandleTypeDef* hspi, const uint8_t* pData, uint16_t Size, uint32_t Timeout) {
     (void)Timeout;
     g_state.calls[static_cast<std::size_t>(ST_LIB::MockedHAL::SPIOperation::Transmit)]++;
     g_state.last_handle = hspi;
     g_state.last_size_words = Size;
-    store_tx(pData, static_cast<std::size_t>(Size) * frame_bytes(hspi));
+    store_tx(const_cast<uint8_t*>(pData), static_cast<std::size_t>(Size) * frame_bytes(hspi));
     return take_status();
 }
 
@@ -144,7 +144,7 @@ HAL_SPI_Receive(SPI_HandleTypeDef* hspi, uint8_t* pData, uint16_t Size, uint32_t
 
 extern "C" HAL_StatusTypeDef HAL_SPI_TransmitReceive(
     SPI_HandleTypeDef* hspi,
-    uint8_t* pTxData,
+    const uint8_t* pTxData,
     uint8_t* pRxData,
     uint16_t Size,
     uint32_t Timeout
@@ -154,17 +154,17 @@ extern "C" HAL_StatusTypeDef HAL_SPI_TransmitReceive(
     g_state.last_handle = hspi;
     g_state.last_size_words = Size;
     const auto size_bytes = static_cast<std::size_t>(Size) * frame_bytes(hspi);
-    store_tx(pTxData, size_bytes);
+    store_tx(const_cast<uint8_t*>(pTxData), size_bytes);
     fill_rx(pRxData, size_bytes);
     return take_status();
 }
 
 extern "C" HAL_StatusTypeDef
-HAL_SPI_Transmit_DMA(SPI_HandleTypeDef* hspi, uint8_t* pData, uint16_t Size) {
+HAL_SPI_Transmit_DMA(SPI_HandleTypeDef* hspi, const uint8_t* pData, uint16_t Size) {
     g_state.calls[static_cast<std::size_t>(ST_LIB::MockedHAL::SPIOperation::TransmitDMA)]++;
     g_state.last_handle = hspi;
     g_state.last_size_words = Size;
-    store_tx(pData, static_cast<std::size_t>(Size) * frame_bytes(hspi));
+    store_tx(const_cast<uint8_t*>(pData), static_cast<std::size_t>(Size) * frame_bytes(hspi));
     return take_status();
 }
 
@@ -179,7 +179,7 @@ HAL_SPI_Receive_DMA(SPI_HandleTypeDef* hspi, uint8_t* pData, uint16_t Size) {
 
 extern "C" HAL_StatusTypeDef HAL_SPI_TransmitReceive_DMA(
     SPI_HandleTypeDef* hspi,
-    uint8_t* pTxData,
+    const uint8_t* pTxData,
     uint8_t* pRxData,
     uint16_t Size
 ) {
@@ -187,7 +187,7 @@ extern "C" HAL_StatusTypeDef HAL_SPI_TransmitReceive_DMA(
     g_state.last_handle = hspi;
     g_state.last_size_words = Size;
     const auto size_bytes = static_cast<std::size_t>(Size) * frame_bytes(hspi);
-    store_tx(pTxData, size_bytes);
+    store_tx(const_cast<uint8_t*>(pTxData), size_bytes);
     fill_rx(pRxData, size_bytes);
     return take_status();
 }

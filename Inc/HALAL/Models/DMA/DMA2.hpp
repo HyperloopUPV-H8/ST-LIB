@@ -475,6 +475,10 @@ struct DMADomain {
     struct Instance {
         DMA_HandleTypeDef dma;
 
+        /**
+         * @warning Ensure SrcAddress and DstAddress are in DMA-accessible memory
+         * @note Compiler may optimize away the reads and writes from Src and Dst, either use voalatile buffers or ensure some kind of memory barrier to preven this
+         */
         void start(uint32_t SrcAddress, uint32_t DstAddress, uint32_t DataLength) {
             HAL_DMA_Start_IT(&dma, SrcAddress, DstAddress, DataLength);
         }

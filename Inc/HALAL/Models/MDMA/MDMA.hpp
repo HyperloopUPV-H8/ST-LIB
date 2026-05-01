@@ -23,6 +23,7 @@ class MDMA {
 public:
     /**
      * @brief A helper struct to create and manage MDMA linked list nodes.
+     * @note If you don't use volatile values, the compiler may optimize away reads/writes of source and dest addresses. It is planned to make the class add a targetted memory barrier for this
      */
     struct LinkedListNode {
         template <typename T> LinkedListNode(T* source_ptr, void* dest_ptr) {
