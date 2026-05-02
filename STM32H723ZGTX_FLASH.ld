@@ -206,6 +206,18 @@ SECTIONS
     __bss_end__ = __ebss;
   } >DTCMRAM
 
+  .dtcm_rodata :
+  {
+    . = ALIGN(4);
+    __sdtcm_rodata = .;
+    *(.dtcm_rodata)   /* .dtcm_rodata sections, for constants marked to be placed in DTCM RAM */
+    *(.dtcm_rodata*)  /* .dtcm_rodata* sections, for constants marked to be placed in DTCM RAM */
+
+    . = ALIGN(4);
+    __edtcm_rodata = .;
+  } >DTCMRAM AT> FLASH
+  __si_dtcm_rodata = LOADADDR(.dtcm_rodata);
+
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack (NOLOAD) :
   {
