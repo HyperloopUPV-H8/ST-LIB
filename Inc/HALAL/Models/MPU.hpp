@@ -42,33 +42,34 @@
 #include "HALAL/Models/MPUManager/MPUManager.hpp"
 
 // Defines for attributes
-// Note1: Variables declared with these attributes will likely not be initialized by the startup
-// Note2: These attributes can only be used for static/global variables
-#define D1_NC __attribute__((section(".mpu_ram_d1_nc.user")))
-#define D2_NC __attribute__((section(".mpu_ram_d2_nc.user")))
-#define D3_NC __attribute__((section(".mpu_ram_d3_nc.user")))
+#define D1_NC __attribute__((section(".ram_d1_nc.user")))
+#define D2_NC __attribute__((section(".ram_d2_nc.user")))
+#define D3_NC __attribute__((section(".ram_d3_nc.user")))
 #define D1_C __attribute__((section(".ram_d1.user")))
 #define D2_C __attribute__((section(".ram_d2.user")))
 #define D3_C __attribute__((section(".ram_d3.user")))
 
-// Define for RAM code
+// Functions living in ITCM for maximum performance (default is FLASH)
 #define RAM_CODE __attribute__((section(".ram_code")))
 
+// Constants in DTCM (default is FLASH because DTCM is small) @note Not protected by hardware (MPU)
+#define DTCM_RODATA __attribute__((section(".dtcm.rodata"))) const
+
 // Memory Bank Symbols from Linker
-extern "C" const char __itcm_base;
-extern "C" const char __itcm_size;
-extern "C" const char __dtcm_base;
-extern "C" const char __dtcm_size;
-extern "C" const char __flash_base;
-extern "C" const char __flash_size;
-extern "C" const char __ram_d1_base;
-extern "C" const char __ram_d1_size;
-extern "C" const char __ram_d2_base;
-extern "C" const char __ram_d2_size;
-extern "C" const char __ram_d3_base;
-extern "C" const char __ram_d3_size;
-extern "C" const char __peripheral_base;
-extern "C" const char __peripheral_size;
+extern "C" const char _itcm_base;
+extern "C" const char _itcm_size;
+extern "C" const char _dtcm_base;
+extern "C" const char _dtcm_size;
+extern "C" const char _flash_base;
+extern "C" const char _flash_size;
+extern "C" const char _ram_d1_base;
+extern "C" const char _ram_d1_size;
+extern "C" const char _ram_d2_base;
+extern "C" const char _ram_d2_size;
+extern "C" const char _ram_d3_base;
+extern "C" const char _ram_d3_size;
+extern "C" const char _peripheral_base;
+extern "C" const char _peripheral_size;
 
 // MPU Non-Cached Section Symbols from Linker
 extern "C" const char __mpu_d1_nc_start;
@@ -289,20 +290,20 @@ struct MPUDomain {
         static constexpr auto Sizes = calculate_total_sizes(cfgs);
 
         // Sections defined in Linker Script (aligned to 32 bytes just in case)
-        __attribute__((section(".mpu_ram_d1_nc.buffer"))) alignas(32
-        ) static inline uint8_t d1_nc_buffer[Sizes.d1_nc_total > 0 ? Sizes.d1_nc_total : 1];
-        __attribute__((section(".ram_d1.buffer"))) alignas(32
-        ) static inline uint8_t d1_c_buffer[Sizes.d1_c_total > 0 ? Sizes.d1_c_total : 1];
+        __attribute__((section(".ram_d1_nc.buffer"))) alignas(32)
+        static inline uint8_t d1_nc_buffer[Sizes.d1_nc_total > 0 ? Sizes.d1_nc_total : 1];
+        __attribute__((section(".ram_d1.buffer"))) alignas(32)
+        static inline uint8_t d1_c_buffer[Sizes.d1_c_total > 0 ? Sizes.d1_c_total : 1];
 
-        __attribute__((section(".mpu_ram_d2_nc.buffer"))) alignas(32
-        ) static inline uint8_t d2_nc_buffer[Sizes.d2_nc_total > 0 ? Sizes.d2_nc_total : 1];
-        __attribute__((section(".ram_d2.buffer"))) alignas(32
-        ) static inline uint8_t d2_c_buffer[Sizes.d2_c_total > 0 ? Sizes.d2_c_total : 1];
+        __attribute__((section(".ram_d2_nc.buffer"))) alignas(32)
+        static inline uint8_t d2_nc_buffer[Sizes.d2_nc_total > 0 ? Sizes.d2_nc_total : 1];
+        __attribute__((section(".ram_d2.buffer"))) alignas(32)
+        static inline uint8_t d2_c_buffer[Sizes.d2_c_total > 0 ? Sizes.d2_c_total : 1];
 
-        __attribute__((section(".mpu_ram_d3_nc.buffer"))) alignas(32
-        ) static inline uint8_t d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
-        __attribute__((section(".ram_d3.buffer"))) alignas(32
-        ) static inline uint8_t d3_c_buffer[Sizes.d3_c_total > 0 ? Sizes.d3_c_total : 1];
+        __attribute__((section(".ram_d3_nc.buffer"))) alignas(32)
+        static inline uint8_t d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
+        __attribute__((section(".ram_d3.buffer"))) alignas(32)
+        static inline uint8_t d3_c_buffer[Sizes.d3_c_total > 0 ? Sizes.d3_c_total : 1];
 
         static void init() {
             HAL_MPU_Disable();
@@ -310,18 +311,18 @@ struct MPUDomain {
 
             // Dynamic Configuration based on Linker Symbols
             configure_dynamic_region(
-                reinterpret_cast<uintptr_t>(&__mpu_d1_nc_start),
-                reinterpret_cast<uintptr_t>(&__mpu_d1_nc_end),
+                reinterpret_cast<uintptr_t>(&_ram_d1_nc_start),
+                reinterpret_cast<uintptr_t>(&_ram_d1_nc_end),
                 MPU_REGION_NUMBER3
             );
             configure_dynamic_region(
-                reinterpret_cast<uintptr_t>(&__mpu_d2_nc_start),
-                reinterpret_cast<uintptr_t>(&__mpu_d2_nc_end),
+                reinterpret_cast<uintptr_t>(&_ram_d2_nc_start),
+                reinterpret_cast<uintptr_t>(&_ram_d2_nc_end),
                 MPU_REGION_NUMBER5
             );
             configure_dynamic_region(
-                reinterpret_cast<uintptr_t>(&__mpu_d3_nc_start),
-                reinterpret_cast<uintptr_t>(&__mpu_d3_nc_end),
+                reinterpret_cast<uintptr_t>(&_ram_d3_nc_start),
+                reinterpret_cast<uintptr_t>(&_ram_d3_nc_end),
                 MPU_REGION_NUMBER7
             );
 
@@ -395,8 +396,8 @@ private:
         // Peripherals (Device, Buffered)
         // Guarded against speculative execution and cache
         configure_region(
-            reinterpret_cast<uintptr_t>(&__peripheral_base),
-            reinterpret_cast<size_t>(&__peripheral_size),
+            reinterpret_cast<uintptr_t>(&_peripheral_base),
+            reinterpret_cast<size_t>(&_peripheral_size),
             MPU_REGION_NUMBER8,
             MPU_TEX_LEVEL0,
             MPU_REGION_FULL_ACCESS,
@@ -410,8 +411,8 @@ private:
         // TEX=0, C=1, B=0: Normal, Write-Through, No Read-Allocate (Read optimized)
         // Not Shareable to allow full caching
         configure_region(
-            reinterpret_cast<uintptr_t>(&__flash_base),
-            reinterpret_cast<size_t>(&__flash_size),
+            reinterpret_cast<uintptr_t>(&_flash_base),
+            reinterpret_cast<size_t>(&_flash_size),
             MPU_REGION_NUMBER1,
             MPU_TEX_LEVEL0,
             MPU_REGION_FULL_ACCESS,
@@ -425,8 +426,8 @@ private:
         // TEX=1, C=1, B=1: Normal, Write-Back, Write and Read Allocate
         // TCMs are like Cache, so they are not really cacheable, and the MPU settings are ignored
         configure_region(
-            reinterpret_cast<uintptr_t>(&__dtcm_base),
-            reinterpret_cast<size_t>(&__dtcm_size),
+            reinterpret_cast<uintptr_t>(&_dtcm_base),
+            reinterpret_cast<size_t>(&_dtcm_size),
             MPU_REGION_NUMBER10,
             MPU_TEX_LEVEL1,
             MPU_REGION_FULL_ACCESS,
@@ -440,8 +441,8 @@ private:
         // TEX=0, C=1, B=0: Normal, Write-Through, No Read-Allocate (Read optimized)
         // TCMs are like Cache, so they are not really cacheable, and the MPU settings are ignored
         configure_region(
-            reinterpret_cast<uintptr_t>(&__itcm_base),
-            reinterpret_cast<size_t>(&__itcm_size),
+            reinterpret_cast<uintptr_t>(&_itcm_base),
+            reinterpret_cast<size_t>(&_itcm_size),
             MPU_REGION_NUMBER11,
             MPU_TEX_LEVEL0,
             MPU_REGION_FULL_ACCESS,
@@ -455,8 +456,8 @@ private:
         // TEX=1, C=1, B=1: Normal, Write-Back, Write-Allocate
         // Shareable since it can be accessed by multiple masters (CPU, DMA, etc)
         configure_region(
-            reinterpret_cast<uintptr_t>(&__ram_d1_base),
-            reinterpret_cast<size_t>(&__ram_d1_size),
+            reinterpret_cast<uintptr_t>(&_ram_d1_base),
+            reinterpret_cast<size_t>(&_ram_d1_size),
             MPU_REGION_NUMBER2,
             MPU_TEX_LEVEL1,
             MPU_REGION_FULL_ACCESS,
@@ -470,8 +471,8 @@ private:
         // TEX=1, C=1, B=1: Normal, Write-Back, Write-Allocate
         // Shareable since it can be accessed by multiple masters (CPU, DMA, etc)
         configure_region(
-            reinterpret_cast<uintptr_t>(&__ram_d2_base),
-            reinterpret_cast<size_t>(&__ram_d2_size),
+            reinterpret_cast<uintptr_t>(&_ram_d2_base),
+            reinterpret_cast<size_t>(&_ram_d2_size),
             MPU_REGION_NUMBER4,
             MPU_TEX_LEVEL1,
             MPU_REGION_FULL_ACCESS,
@@ -485,8 +486,8 @@ private:
         // TEX=1, C=1, B=1: Normal, Write-Back, Write-Allocate
         // Shareable since it can be accessed by multiple masters (CPU, DMA, etc)
         configure_region(
-            reinterpret_cast<uintptr_t>(&__ram_d3_base),
-            reinterpret_cast<size_t>(&__ram_d3_size),
+            reinterpret_cast<uintptr_t>(&_ram_d3_base),
+            reinterpret_cast<size_t>(&_ram_d3_size),
             MPU_REGION_NUMBER6,
             MPU_TEX_LEVEL1,
             MPU_REGION_FULL_ACCESS,
