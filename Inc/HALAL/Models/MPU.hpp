@@ -42,17 +42,48 @@
 #include "HALAL/Models/MPUManager/MPUManager.hpp"
 
 // Defines for attributes
-#define D1_NC __attribute__((section(".ram_d1_nc.user")))
-#define D2_NC __attribute__((section(".ram_d2_nc.user")))
-#define D3_NC __attribute__((section(".ram_d3_nc.user")))
-#define D1_C __attribute__((section(".ram_d1.user")))
-#define D2_C __attribute__((section(".ram_d2.user")))
-#define D3_C __attribute__((section(".ram_d3.user")))
+
+// Initialized data in non-cached D1 RAM
+#define D1_NC_DATA __attribute__((section(".ram_d1_nc.user.data")))
+// Uninitialized data in non-cached D1 RAM
+#define D1_NC_BSS __attribute__((section(".ram_d1_nc.user.bss")))
+// Read-only data in non-cached D1 RAM (mainly for rx buffers) @note Not protected by MPU
+#define D1_NC_RODATA __attribute__((section(".ram_d1_nc.user.rodata"))) const
+// Initialized data in non-cached D2 RAM
+#define D2_NC_DATA __attribute__((section(".ram_d2_nc.user.data")))
+// Uninitialized data in non-cached D2 RAM
+#define D2_NC_BSS __attribute__((section(".ram_d2_nc.user.bss")))
+// Read-only data in non-cached D2 RAM (mainly for rx buffers) @note Not protected by MPU
+#define D2_NC_RODATA __attribute__((section(".ram_d2_nc.user.rodata"))) const
+// Initialized data in non-cached D3 RAM
+#define D3_NC_DATA __attribute__((section(".ram_d3_nc.user.data")))
+// Uninitialized data in non-cached D3 RAM
+#define D3_NC_BSS __attribute__((section(".ram_d3_nc.user.bss")))
+// Read-only data in non-cached D3 RAM (mainly for rx buffers) @note Not protected by MPU
+#define D3_NC_RODATA __attribute__((section(".ram_d3_nc.user.rodata"))) const
+// Initialized data in cached D1 RAM
+#define D1_C_DATA __attribute__((section(".ram_d1.user.data")))
+// Uninitialized data in cached D1 RAM
+#define D1_C_BSS __attribute__((section(".ram_d1.user.bss")))
+// Read-only data in cached D1 RAM (mainly for rx buffers) @note Not protected by MPU
+#define D1_C_RODATA __attribute__((section(".ram_d1.user.rodata"))) const
+// Initialized data in cached D2 RAM
+#define D2_C_DATA __attribute__((section(".ram_d2.user.data")))
+// Uninitialized data in cached D2 RAM
+#define D2_C_BSS __attribute__((section(".ram_d2.user.bss")))
+// Read-only data in cached D2 RAM (mainly for rx buffers) @note Not protected by MPU
+#define D2_C_RODATA __attribute__((section(".ram_d2.user.rodata"))) const
+// Initialized data in cached D3 RAM
+#define D3_C_DATA __attribute__((section(".ram_d3.user.data")))
+// Uninitialized data in cached D3 RAM
+#define D3_C_BSS __attribute__((section(".ram_d3.user.bss")))
+// Read-only data in cached D3 RAM (mainly for rx buffers) @note Not protected by MPU
+#define D3_C_RODATA __attribute__((section(".ram_d3.user.rodata"))) const
 
 // Functions living in ITCM for maximum performance (default is FLASH)
 #define RAM_CODE __attribute__((section(".ram_code")))
 
-// Constants in DTCM (default is FLASH because DTCM is small) @note Not protected by hardware (MPU)
+// Constants in DTCM (default is FLASH because DTCM is small) @note Not protected by MPU
 #define DTCM_RODATA __attribute__((section(".dtcm.rodata"))) const
 
 // Memory Bank Symbols from Linker
