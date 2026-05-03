@@ -62,6 +62,9 @@ Reset_Handler:
   b     .L_loop_zero_table
 .L_done_zero_table:
 
+/* Call board init (user defined function) */
+  bl  BoardInit
+
 /* Call static constructors */
   bl __libc_init_array
 
