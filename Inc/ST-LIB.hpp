@@ -163,8 +163,9 @@ struct ProtectionEngineFromTuple<std::tuple<ProtectionRefs...>> {
 };
 
 template <auto&... Requests>
-using ProtectionEngineForRequests = typename ProtectionEngineFromTuple<
-    decltype(std::tuple_cat(protection_spec_tuple<Requests>()...))>::type;
+using ProtectionEngineForRequests =
+    typename ProtectionEngineFromTuple<decltype(std::tuple_cat(protection_spec_tuple<Requests>()...)
+    )>::type;
 
 } // namespace BuildUtils
 

@@ -44,10 +44,9 @@ template <ProtectionSample T, std::size_t N> struct BakedRules {
 
 template <typename T, typename Rule>
 concept RuleDefinitionLike =
-    ProtectionSample<T> && (
-        std::same_as<std::remove_cvref_t<Rule>, RuleDefinition<T>> ||
-        std::same_as<std::remove_cvref_t<Rule>, expected<RuleDefinition<T>, RuleConfigError>>
-    );
+    ProtectionSample<T> &&
+    (std::same_as<std::remove_cvref_t<Rule>, RuleDefinition<T>> ||
+     std::same_as<std::remove_cvref_t<Rule>, expected<RuleDefinition<T>, RuleConfigError>>);
 
 template <ProtectionSample T> constexpr RuleDefinition<T> unwrap_rule(RuleDefinition<T> rule) {
     return rule;
@@ -59,13 +58,11 @@ constexpr RuleDefinition<T> unwrap_rule(expected<RuleDefinition<T>, RuleConfigEr
 }
 
 template <ProtectionSample T, typename... RuleDefs>
-requires ((RuleDefinitionLike<T, RuleDefs> && ...))
+    requires((RuleDefinitionLike<T, RuleDefs> && ...))
 constexpr auto bake_rules(RuleDefs... definitions) {
     static_assert(sizeof...(RuleDefs) > 0, "A protection must declare at least one rule");
     return BakedRules<T, sizeof...(RuleDefs)>{
-        std::array<RuleDefinition<T>, sizeof...(RuleDefs)>{
-            unwrap_rule<T>(definitions)...
-        }
+        std::array<RuleDefinition<T>, sizeof...(RuleDefs)>{unwrap_rule<T>(definitions)...}
     };
 }
 
@@ -141,15 +138,13 @@ public:
 
     static void initialize() {
 #if defined(HAL_RTC_MODULE_ENABLED) && !defined(SIM_ON)
-    Global_RTC::ensure_started();
+        Global_RTC::ensure_started();
 #endif
         reset();
         initialize_impl(std::make_index_sequence<protection_count>{});
     }
 
-    static void evaluate() {
-        evaluate_impl(std::make_index_sequence<protection_count>{});
-    }
+    static void evaluate() { evaluate_impl(std::make_index_sequence<protection_count>{}); }
 
     template <std::size_t Index> static auto& protection_at() {
         return std::get<Index>(protections);
@@ -159,9 +154,7 @@ public:
         return protection_at<spec_index<ProtectionSpec>()>();
     }
 
-    static void reset() {
-        reset_impl(std::make_index_sequence<protection_count>{});
-    }
+    static void reset() { reset_impl(std::make_index_sequence<protection_count>{}); }
 
 private:
     template <auto& ProtectionSpec> static constexpr auto make_protection() {
@@ -245,7 +238,8 @@ private:
             return 0;
         } else if constexpr (std::same_as<
                                  std::remove_cvref_t<decltype(ProtectionSpec)>,
-                                 std::remove_cvref_t<decltype(std::get<Index>(std::tie(ProtectionSpecs...)))>>) {
+                                 std::remove_cvref_t<
+                                     decltype(std::get<Index>(std::tie(ProtectionSpecs...)))>>) {
             return Index;
         } else {
             return spec_index<ProtectionSpec, Index + 1>();
