@@ -1,6 +1,9 @@
 #pragma once
 
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
+#if defined(HAL_RTC_MODULE_ENABLED) && !defined(SIM_ON)
+#include "HALAL/Services/Time/RTC.hpp"
+#endif
 #include "ST-LIB_HIGH/Protections/FaultController.hpp"
 #include "ST-LIB_HIGH/Protections/Protection.hpp"
 
@@ -219,7 +222,7 @@ private:
         const uint64_t last_publish_tick = protection_ref.get_last_fault_publish_tick();
 
         if (last_publish_tick != 0 &&
-            tick < last_publish_tick + Protections::Config::notify_delay_in_microseconds) {
+            tick - last_publish_tick < Protections::Config::notify_delay_in_microseconds) {
             return;
         }
 

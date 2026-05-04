@@ -4,34 +4,42 @@ namespace Diagnostics {
 
 namespace {
 
-size_t bounded_strnlen(const char* src, size_t max_length) {
-    if (src == nullptr) {
-        return 0;
+struct DiagnosticStringBuilder {
+    char* buffer;
+    size_t buffer_size;
+    size_t offset{0};
+
+    DiagnosticStringBuilder(char* target, size_t target_size)
+        : buffer(target), buffer_size(target_size) {
+        if (buffer_size > 0) {
+            buffer[0] = '\0';
+        }
     }
 
-    size_t length = 0;
-    while (length < max_length && src[length] != '\0') {
-        length++;
-    }
-    return length;
-}
+    void append(const char* format, ...) {
+        if (buffer_size == 0 || offset >= buffer_size - 1) {
+            return;
+        }
 
-void append_formatted(char* buffer, size_t buffer_size, const char* format, ...) {
-    if (buffer_size == 0) {
-        return;
-    }
+        va_list arguments;
+        va_start(arguments, format);
+        const int32_t written = vsnprintf(buffer + offset, buffer_size - offset, format, arguments);
+        va_end(arguments);
 
-    const size_t offset = bounded_strnlen(buffer, buffer_size - 1);
-    if (offset >= buffer_size - 1) {
-        buffer[buffer_size - 1] = '\0';
-        return;
-    }
+        if (written < 0) {
+            return;
+        }
 
-    va_list arguments;
-    va_start(arguments, format);
-    vsnprintf(buffer + offset, buffer_size - offset, format, arguments);
-    va_end(arguments);
-}
+        const size_t remaining = buffer_size - offset;
+        if (static_cast<size_t>(written) >= remaining) {
+            offset = buffer_size - 1;
+            buffer[offset] = '\0';
+            return;
+        }
+
+        offset += static_cast<size_t>(written);
+    }
+};
 
 const char* rule_kind_label(Protections::RuleKind kind) {
     switch (kind) {
@@ -113,11 +121,9 @@ void format_numeric_value(
     std::unreachable();
 }
 
-void append_timestamp_suffix(const Timestamp& timestamp, char* buffer, size_t buffer_size) {
+void append_timestamp_suffix(const Timestamp& timestamp, DiagnosticStringBuilder& builder) {
     if (timestamp.has_rtc) {
-        append_formatted(
-            buffer,
-            buffer_size,
+        builder.append(
             " | Timestamp: %04u-%02u-%02u %02u:%02u:%02u.%05u",
             static_cast<unsigned>(timestamp.year),
             static_cast<unsigned>(timestamp.month),
@@ -139,9 +145,7 @@ void append_timestamp_suffix(const Timestamp& timestamp, char* buffer, size_t bu
     const unsigned micros = static_cast<unsigned>(timestamp.uptime_us % 1'000'000ULL);
 
     if (days > 0) {
-        append_formatted(
-            buffer,
-            buffer_size,
+        builder.append(
             " | Uptime: %llud %02u:%02u:%02u.%06u",
             static_cast<unsigned long long>(days),
             hours,
@@ -150,41 +154,30 @@ void append_timestamp_suffix(const Timestamp& timestamp, char* buffer, size_t bu
             micros
         );
     } else {
-        append_formatted(
-            buffer,
-            buffer_size,
-            " | Uptime: %02u:%02u:%02u.%06u",
-            hours,
-            minutes,
-            seconds,
-            micros
-        );
+        builder.append(" | Uptime: %02u:%02u:%02u.%06u", hours, minutes, seconds, micros);
     }
 #else
     (void)timestamp;
-    (void)buffer;
-    (void)buffer_size;
+    (void)builder;
 #endif
 }
 
-void format_runtime_record(const DiagnosticRecord& record, char* buffer, size_t buffer_size) {
+void format_runtime_record(const DiagnosticRecord& record, DiagnosticStringBuilder& builder) {
     const RuntimeDiagnosticPayload& runtime = record.payload.runtime;
-    append_formatted(
-        buffer,
-        buffer_size,
+    builder.append(
         "%s | Line: %lu Function: '%s' File: %s",
         runtime.message,
         static_cast<unsigned long>(runtime.line),
         runtime.function_name,
         runtime.file_name
     );
-    append_timestamp_suffix(record.timestamp, buffer, buffer_size);
+    append_timestamp_suffix(record.timestamp, builder);
     if (runtime.truncated) {
-        append_formatted(buffer, buffer_size, " | Message truncated");
+        builder.append(" | Message truncated");
     }
 }
 
-void format_protection_record(const DiagnosticRecord& record, char* buffer, size_t buffer_size) {
+void format_protection_record(const DiagnosticRecord& record, DiagnosticStringBuilder& builder) {
     const ProtectionDiagnosticPayload& protection = record.payload.protection;
     char value_buffer[32]{};
     char threshold_a_buffer[32]{};
@@ -211,9 +204,7 @@ void format_protection_record(const DiagnosticRecord& record, char* buffer, size
         );
     }
 
-    append_formatted(
-        buffer,
-        buffer_size,
+    builder.append(
         "Protection %s [%s] %s | Rule: %s | Value: %s | ThresholdA: %s",
         rule_state_label(protection.state),
         rule_edge_label(protection.edge),
@@ -223,18 +214,16 @@ void format_protection_record(const DiagnosticRecord& record, char* buffer, size
         threshold_a_buffer
     );
     if (protection.has_threshold_b) {
-        append_formatted(buffer, buffer_size, " | ThresholdB: %s", threshold_b_buffer);
+        builder.append(" | ThresholdB: %s", threshold_b_buffer);
     }
     if (protection.rule_kind == Protections::RuleKind::TIME_ACCUMULATION) {
-        append_formatted(
-            buffer,
-            buffer_size,
+        builder.append(
             " | Window: %.3fs | Active: %.3fs",
             static_cast<double>(protection.time_window_s),
             static_cast<double>(protection.active_time_s)
         );
     }
-    append_timestamp_suffix(record.timestamp, buffer, buffer_size);
+    append_timestamp_suffix(record.timestamp, builder);
 }
 
 } // namespace
@@ -248,16 +237,16 @@ void DiagnosticFormatter::describe(
         return;
     }
 
-    buffer[0] = '\0';
+    DiagnosticStringBuilder builder{buffer, buffer_size};
     switch (record.category) {
     case Category::RUNTIME_PANIC:
     case Category::RUNTIME_FAULT:
     case Category::RUNTIME_WARNING:
     case Category::RUNTIME_INFO:
-        format_runtime_record(record, buffer, buffer_size);
+        format_runtime_record(record, builder);
         return;
     case Category::PROTECTION_EVENT:
-        format_protection_record(record, buffer, buffer_size);
+        format_protection_record(record, builder);
         return;
     }
 
