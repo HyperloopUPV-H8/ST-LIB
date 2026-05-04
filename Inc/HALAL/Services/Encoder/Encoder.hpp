@@ -32,7 +32,7 @@ template <const TimerDomain::Timer& dev> class Encoder {
     Encoder(TimerWrapper<dev>* tim) { timer = tim; }
     static void init() {
         if (timer == nullptr || timer->instance == nullptr) {
-            PANIC("Timer instance is not set for encoder");
+            ErrorHandler("Timer instance is not set for encoder");
         }
         TIM_Encoder_InitTypeDef sConfig = {0};
         TIM_MasterConfigTypeDef sMasterConfig = {0};
