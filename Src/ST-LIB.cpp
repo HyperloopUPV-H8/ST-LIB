@@ -50,3 +50,7 @@ void STLIB::update() {
     ErrorHandlerModel::ErrorHandlerUpdate();
     MDMA::update();
 }
+
+__attribute__((weak)) void BoardInit() {
+    // Nothing for now
+}

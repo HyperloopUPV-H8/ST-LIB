@@ -348,4 +348,17 @@ template <auto&... devs> struct Board {
  *          before the global constructors and main() are called.
  *          It is responsible for initializing the hardware and peripherals
  */
-extern void BoardInit(void);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief   This is a function that gets called early in the startup process,
+ *          before the global constructors and main() are called.
+ *          It is responsible for initializing the hardware and peripherals
+ */
+void BoardInit(void);
+
+#ifdef __cplusplus
+}
+#endif
