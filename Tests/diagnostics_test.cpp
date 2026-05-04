@@ -77,9 +77,10 @@ void reset_operational_machine() {
 void on_fault_enter() { fault_enter_calls++; }
 
 inline float monitored_value = 2.0f;
-inline constexpr auto monitored_protection = Protections::protection<"monitored_value", monitored_value>(
-    Protections::Rules::below(1.0f, 1.5f)
-);
+inline constexpr auto monitored_protection =
+    Protections::protection<"monitored_value", monitored_value>(
+        Protections::Rules::below(1.0f, 1.5f)
+    );
 using MonitoredProtectionEngine = Protections::ProtectionEngine<monitored_protection>;
 
 inline float time_value = 0.0f;
@@ -89,9 +90,10 @@ inline constexpr auto time_protection = Protections::protection<"time_value", ti
 using TimeProtectionEngine = Protections::ProtectionEngine<time_protection>;
 
 inline float time_reset_value = 0.0f;
-inline constexpr auto time_reset_protection = Protections::protection<"time_reset_value", time_reset_value>(
-    Protections::Rules::time_accumulation(10.0f, 0.001f)
-);
+inline constexpr auto time_reset_protection =
+    Protections::protection<"time_reset_value", time_reset_value>(
+        Protections::Rules::time_accumulation(10.0f, 0.001f)
+    );
 using TimeResetProtectionEngine = Protections::ProtectionEngine<time_reset_protection>;
 
 static_assert(Protections::ProtectionSpecLike<decltype(monitored_protection)>);
