@@ -991,9 +991,7 @@ struct ADCDomain {
 
                 if (HAL_ADC_Start_DMA(
                         hadc,
-                        reinterpret_cast<uint32_t*>(
-                            const_cast<uint16_t*>(buffer)
-                        ),
+                        reinterpret_cast<uint32_t*>(const_cast<uint16_t*>(buffer)),
                         channel_count
                     ) != HAL_OK) {
                     ErrorHandler("ADC DMA start failed");

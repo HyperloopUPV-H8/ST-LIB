@@ -8,7 +8,8 @@
 class MPUManager {
 public:
     static volatile void* allocate_non_cached_memory(uint32_t size) {
-        volatile void* buffer = (void*)((uint8_t*)no_cached_ram_start + no_cached_ram_occupied_bytes);
+        volatile void* buffer =
+            (void*)((uint8_t*)no_cached_ram_start + no_cached_ram_occupied_bytes);
         no_cached_ram_occupied_bytes = no_cached_ram_occupied_bytes + size;
         if (no_cached_ram_occupied_bytes > NO_CACHED_RAM_MAXIMUM_SPACE) {
             uint32_t excess_bytes = no_cached_ram_occupied_bytes - NO_CACHED_RAM_MAXIMUM_SPACE;

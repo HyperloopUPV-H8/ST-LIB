@@ -559,7 +559,8 @@ struct SPIDomain {
 
     /**
      * @brief SPI Wrapper for Master mode operations.
-     * @warning DMA operations may be optimized away by the compiler, you should either use volatile buffers or add some kind of memory barrier after DMA operations to ensure data integrity.
+     * @warning DMA operations may be optimized away by the compiler, you should either use volatile
+     * buffers or add some kind of memory barrier after DMA operations to ensure data integrity.
      */
     template <auto& device_request> struct SPIWrapper<device_request, true> {
         static constexpr uint32_t data_bits =
@@ -725,7 +726,8 @@ struct SPIDomain {
             using rx_element_type = std::remove_volatile_t<T>;
             auto error_code = HAL_SPI_TransmitReceive(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
                 reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(&rx_data)),
                 size / frame_size,
                 10
@@ -766,8 +768,7 @@ struct SPIDomain {
          */
         template <typename T1, typename T2>
         bool transceive(const T1& tx_data, T2& rx_data)
-            requires(std::is_trivially_copyable_v<std::remove_volatile_t<T1>> && 
-                     std::is_trivially_copyable_v<std::remove_volatile_t<T2>>)
+            requires(std::is_trivially_copyable_v<std::remove_volatile_t<T1>> && std::is_trivially_copyable_v<std::remove_volatile_t<T2>>)
         {
             using tx_element_type = std::remove_volatile_t<T1>;
             using rx_element_type = std::remove_volatile_t<T2>;
@@ -914,7 +915,8 @@ struct SPIDomain {
             using rx_element_type = std::remove_volatile_t<E2>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
                 reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(rx_data.data())),
                 size / frame_size
             );
@@ -943,7 +945,8 @@ struct SPIDomain {
             using rx_element_type = std::remove_volatile_t<T>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
                 reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(&rx_data)),
                 size / frame_size
             );
@@ -989,8 +992,7 @@ struct SPIDomain {
          */
         template <typename T1, typename T2>
         bool transceive_DMA(const T1& tx_data, T2& rx_data, volatile bool* operation_flag = nullptr)
-            requires(std::is_trivially_copyable_v<std::remove_volatile_t<T1>> && 
-                     std::is_trivially_copyable_v<std::remove_volatile_t<T2>>)
+            requires(std::is_trivially_copyable_v<std::remove_volatile_t<T1>> && std::is_trivially_copyable_v<std::remove_volatile_t<T2>>)
         {
             using tx_element_type = std::remove_volatile_t<T1>;
             using rx_element_type = std::remove_volatile_t<T2>;
@@ -1029,7 +1031,8 @@ struct SPIDomain {
 
     /**
      * @brief SPI Wrapper for Slave mode operations. Doesn't allow for blocking operations.
-     * @warning DMA operations may be optimized away by the compiler, you should either use volatile buffers or add some kind of memory barrier after DMA operations to ensure data integrity.
+     * @warning DMA operations may be optimized away by the compiler, you should either use volatile
+     * buffers or add some kind of memory barrier after DMA operations to ensure data integrity.
      */
     template <auto& device_request> struct SPIWrapper<device_request, false> {
         static constexpr uint32_t data_bits =
@@ -1192,7 +1195,8 @@ struct SPIDomain {
             using rx_element_type = std::remove_volatile_t<E2>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
                 reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(rx_data.data())),
                 size / frame_size
             );
@@ -1221,7 +1225,8 @@ struct SPIDomain {
             using rx_element_type = std::remove_volatile_t<T>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
                 reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(&rx_data)),
                 size / frame_size
             );
@@ -1264,8 +1269,7 @@ struct SPIDomain {
          */
         template <typename T1, typename T2>
         bool transceive(const T1& tx_data, T2& rx_data, volatile bool* operation_flag = nullptr)
-            requires(std::is_trivially_copyable_v<std::remove_volatile_t<T1>> && 
-                     std::is_trivially_copyable_v<std::remove_volatile_t<T2>>)
+            requires(std::is_trivially_copyable_v<std::remove_volatile_t<T1>> && std::is_trivially_copyable_v<std::remove_volatile_t<T2>>)
         {
             using tx_element_type = std::remove_volatile_t<T1>;
             using rx_element_type = std::remove_volatile_t<T2>;

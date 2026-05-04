@@ -906,7 +906,8 @@ HAL_StatusTypeDef HAL_SPI_TransmitReceive(
     uint16_t Size,
     uint32_t Timeout
 );
-HAL_StatusTypeDef HAL_SPI_Transmit_DMA(SPI_HandleTypeDef* hspi, const uint8_t* pData, uint16_t Size);
+HAL_StatusTypeDef
+HAL_SPI_Transmit_DMA(SPI_HandleTypeDef* hspi, const uint8_t* pData, uint16_t Size);
 HAL_StatusTypeDef HAL_SPI_Receive_DMA(SPI_HandleTypeDef* hspi, uint8_t* pData, uint16_t Size);
 HAL_StatusTypeDef HAL_SPI_TransmitReceive_DMA(
     SPI_HandleTypeDef* hspi,
