@@ -30,8 +30,10 @@ template <const TimerDomain::Timer& dev> class Encoder {
     inline static bool is_initialized = false;
 
     Encoder(TimerWrapper<dev>* tim) { timer = tim; }
-    static void init() {
-        if (timer == nullptr || timer->instance == nullptr) {
+    
+public:
+static void init(TimerWrapper<dev>* tim){
+        if (tim == nullptr || tim->instance == nullptr) {
             ErrorHandler("Timer instance is not set for encoder");
         }
         TIM_Encoder_InitTypeDef sConfig = {0};
@@ -47,31 +49,29 @@ template <const TimerDomain::Timer& dev> class Encoder {
         sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
         sConfig.IC2Filter = 0;
 
-        if (HAL_TIM_Encoder_Init(timer->instance->hal_tim, &sConfig) != HAL_OK) {
+        if (HAL_TIM_Encoder_Init(tim->instance->hal_tim, &sConfig) != HAL_OK) {
             ErrorHandler("Unable to init encoder");
             return;
         }
 
         sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
         sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-        if (HAL_TIMEx_MasterConfigSynchronization(timer->instance->hal_tim, &sMasterConfig) !=
+        if (HAL_TIMEx_MasterConfigSynchronization(tim->instance->hal_tim, &sMasterConfig) !=
             HAL_OK) {
             ErrorHandler("Unable to config master synchronization in encoder");
             return;
         }
 
-        timer->instance->tim->PSC = 5;
+        tim->instance->tim->PSC = 5;
         if constexpr (TimerWrapper<dev>::is_32bit_instance) {
-            timer->instance->tim->ARR = UINT32_MAX;
+            tim->instance->tim->ARR = UINT32_MAX;
         } else {
-            timer->instance->tim->ARR = UINT16_MAX;
+            tim->instance->tim->ARR = UINT16_MAX;
         }
     }
-
-public:
     static void turn_on() {
         if (!is_initialized) {
-            init();
+            init(timer);
             is_initialized = true;
         }
         if (is_on)
