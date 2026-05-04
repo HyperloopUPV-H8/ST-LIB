@@ -9,9 +9,8 @@
 #include "C++Utilities/CppUtils.hpp"
 
 namespace ST_LIB {
-
+enum Direction : uint8_t { FORWARD = 0, BACKWARDS = 1 };
 template <typename EncoderType, size_t SAMPLES> struct EncoderSensor {
-    enum Direction : uint8_t { FORWARD = 0, BACKWARDS = 1 };
 
 private:
     constexpr static size_t WINDOW_SIZE{(SAMPLES / 2) * 2};

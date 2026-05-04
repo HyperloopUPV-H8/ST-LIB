@@ -423,6 +423,11 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
     // TODO: 16 bit and 32 bit version (?)
     inline void set_limit_value(uint32_t arr) { instance->tim->ARR = arr; }
 
+    inline void set_callback(void (*callback)(void*), void* callback_data) {
+        TimerDomain::callback_data[instance->timer_idx] = callback_data;
+        TimerDomain::callbacks[instance->timer_idx] = callback;
+    }
+
     inline void configure32bit(void (*callback)(void*), void* callback_data, uint32_t period) {
         static_assert(
             this->is_32bit_instance,
@@ -430,8 +435,8 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
         );
 
         instance->tim->ARR = period;
-        TimerDomain::callbacks[instance->timer_idx] = callback;
         TimerDomain::callback_data[instance->timer_idx] = callback_data;
+        TimerDomain::callbacks[instance->timer_idx] = callback;
         this->counter_enable();
     }
 
@@ -616,7 +621,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
             CLEAR_BIT(tmpccmrx, TIM_CCMR2_OC4M);
             CLEAR_BIT(tmpccmrx, TIM_CCMR2_CC4S);
 
-            SET_BIT(tmpccmrx, OC_Config->OCMode);
+            SET_BIT(tmpccmrx, OC_Config->OCMode << 8U);
             CLEAR_BIT(tmpccer, TIM_CCER_CC4P);
             SET_BIT(tmpccer, OC_Config->OCPolarity << 12U);
         } else if constexpr (ch == TimerChannel::CHANNEL_5) {
