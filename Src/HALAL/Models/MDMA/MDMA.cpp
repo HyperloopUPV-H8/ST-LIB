@@ -112,7 +112,10 @@ void MDMA::inscribe(Instance& instance, uint8_t id) {
     nodeConfig.SrcAddress = reinterpret_cast<uint32_t>(nullptr);
     nodeConfig.DstAddress = reinterpret_cast<uint32_t>(nullptr);
 
-    const HAL_StatusTypeDef status = HAL_MDMA_LinkedList_CreateNode(const_cast<MDMA_LinkNodeTypeDef*>(transfer_node), &nodeConfig);
+    const HAL_StatusTypeDef status = HAL_MDMA_LinkedList_CreateNode(
+        const_cast<MDMA_LinkNodeTypeDef*>(transfer_node),
+        &nodeConfig
+    );
     if (status != HAL_OK) {
         PANIC("Error creating linked list in MDMA");
     }

@@ -242,7 +242,7 @@ private:
         volatile MDMA_LinkNodeTypeDef* transfer_node;
 
         Instance() : handle{}, id(0U), done(nullptr), transfer_node(nullptr) {}
-        
+
         Instance(
             MDMA_HandleTypeDef handle_,
             uint8_t id_,
@@ -259,7 +259,8 @@ private:
 
     inline static std::array<Instance, 8> instances{};
     static std::bitset<8> instance_free_map;
-    inline static Stack<std::pair<volatile MDMA::LinkedListNode*, volatile bool*>, 50> transfer_queue{};
+    inline static Stack<std::pair<volatile MDMA::LinkedListNode*, volatile bool*>, 50>
+        transfer_queue{};
 
     static void TransferCompleteCallback(MDMA_HandleTypeDef* hmdma);
     static void TransferErrorCallback(MDMA_HandleTypeDef* hmdma);
@@ -302,5 +303,6 @@ public:
      * @param check A reference boolean that will be set to true if the transfer was successfully
      * done, false otherwise.
      */
-    static void transfer_list(volatile MDMA::LinkedListNode* first_node, volatile bool* check = nullptr);
+    static void
+    transfer_list(volatile MDMA::LinkedListNode* first_node, volatile bool* check = nullptr);
 };

@@ -63,9 +63,9 @@
 #define D1_NC __attribute__((section(".mpu_ram_d1_nc.user"), used)) volatile
 #define D2_NC __attribute__((section(".mpu_ram_d2_nc.user"), used)) volatile
 #define D3_NC __attribute__((section(".mpu_ram_d3_nc.user"), used)) volatile
-#define D1_C  __attribute__((section(".ram_d1.user"), used))
-#define D2_C  __attribute__((section(".ram_d2.user"), used))
-#define D3_C  __attribute__((section(".ram_d3.user"), used))
+#define D1_C __attribute__((section(".ram_d1.user"), used))
+#define D2_C __attribute__((section(".ram_d2.user"), used))
+#define D3_C __attribute__((section(".ram_d3.user"), used))
 #endif
 
 // Memory Bank Symbols from Linker
@@ -287,7 +287,10 @@ struct MPUDomain {
             using Request = std::remove_cvref_t<decltype(Target)>;
             static_assert(mpu_buffer_request<Request>, "Target must be a valid MPUDomain buffer");
             constexpr bool is_nc = Request::e.memory_type == MemoryType::NonCached;
-            static_assert(is_nc && std::is_volatile_v<typename Request::buffer_type>, "Non cached buffers must be volatile to work as intended");
+            static_assert(
+                is_nc && std::is_volatile_v<typename Request::buffer_type>,
+                "Non cached buffers must be volatile to work as intended"
+            );
             using T = typename Request::buffer_type;
             return *new (ptr) T(std::forward<Args>(args)...);
         }
@@ -296,7 +299,10 @@ struct MPUDomain {
             using Request = std::remove_cvref_t<decltype(Target)>;
             static_assert(mpu_buffer_request<Request>, "Target must be a valid MPUDomain buffer");
             constexpr bool is_nc = Request::e.memory_type == MemoryType::NonCached;
-            static_assert(is_nc && std::is_volatile_v<typename Request::buffer_type>, "Non cached buffers must be volatile to work as intended"); 
+            static_assert(
+                is_nc && std::is_volatile_v<typename Request::buffer_type>,
+                "Non cached buffers must be volatile to work as intended"
+            );
             using T = typename Request::buffer_type;
             return static_cast<T*>(ptr);
         }
@@ -334,18 +340,18 @@ struct MPUDomain {
         ) static inline uint8_t d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
         alignas(32) static inline uint8_t d3_c_buffer[Sizes.d3_c_total > 0 ? Sizes.d3_c_total : 1];
 #else
-        __attribute__((section(".mpu_ram_d1_nc.buffer"))) alignas(32
-        ) static inline volatile uint8_t d1_nc_buffer[Sizes.d1_nc_total > 0 ? Sizes.d1_nc_total : 1];
+        __attribute__((section(".mpu_ram_d1_nc.buffer"))) alignas(32) static inline volatile uint8_t
+            d1_nc_buffer[Sizes.d1_nc_total > 0 ? Sizes.d1_nc_total : 1];
         __attribute__((section(".ram_d1.buffer"))) alignas(32
         ) static inline uint8_t d1_c_buffer[Sizes.d1_c_total > 0 ? Sizes.d1_c_total : 1];
 
-        __attribute__((section(".mpu_ram_d2_nc.buffer"))) alignas(32
-        ) static inline volatile uint8_t d2_nc_buffer[Sizes.d2_nc_total > 0 ? Sizes.d2_nc_total : 1];
+        __attribute__((section(".mpu_ram_d2_nc.buffer"))) alignas(32) static inline volatile uint8_t
+            d2_nc_buffer[Sizes.d2_nc_total > 0 ? Sizes.d2_nc_total : 1];
         __attribute__((section(".ram_d2.buffer"))) alignas(32
         ) static inline uint8_t d2_c_buffer[Sizes.d2_c_total > 0 ? Sizes.d2_c_total : 1];
 
-        __attribute__((section(".mpu_ram_d3_nc.buffer"))) alignas(32
-        ) static inline volatile uint8_t d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
+        __attribute__((section(".mpu_ram_d3_nc.buffer"))) alignas(32) static inline volatile uint8_t
+            d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
         __attribute__((section(".ram_d3.buffer"))) alignas(32
         ) static inline uint8_t d3_c_buffer[Sizes.d3_c_total > 0 ? Sizes.d3_c_total : 1];
 #endif

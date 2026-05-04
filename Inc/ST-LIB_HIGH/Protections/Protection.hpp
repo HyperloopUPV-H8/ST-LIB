@@ -476,8 +476,7 @@ public:
         SampleSource<T> source,
         const std::array<RuleDefinition<T>, RuleCount>& definitions
     )
-        : name(name),
-          source(source),
+        : name(name), source(source),
           rules(make_rule_models(definitions, std::make_index_sequence<RuleCount>{})) {}
 
     const char* get_name() const { return name; }
@@ -523,10 +522,8 @@ public:
 
 private:
     template <std::size_t... Indices>
-    static std::array<RuleModel<T>, RuleCount> make_rule_models(
-        const std::array<RuleDefinition<T>, RuleCount>& definitions,
-        std::index_sequence<Indices...>
-    ) {
+    static std::array<RuleModel<T>, RuleCount>
+    make_rule_models(const std::array<RuleDefinition<T>, RuleCount>& definitions, std::index_sequence<Indices...>) {
         return {make_rule_model(definitions[Indices])...};
     }
 

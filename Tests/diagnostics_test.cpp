@@ -77,27 +77,24 @@ void reset_operational_machine() {
 void on_fault_enter() { fault_enter_calls++; }
 
 inline float monitored_value = 2.0f;
-inline constexpr auto monitored_rules = Protections::bake_rules<float>(
-    Protections::Rules::below(1.0f, 1.5f).value()
-);
-using MonitoredProtection =
-    Protections::ProtectionDeclarationWithRules<"monitored_value", monitored_value, monitored_rules>;
+inline constexpr auto monitored_rules =
+    Protections::bake_rules<float>(Protections::Rules::below(1.0f, 1.5f).value());
+using MonitoredProtection = Protections::
+    ProtectionDeclarationWithRules<"monitored_value", monitored_value, monitored_rules>;
 using MonitoredProtectionEngine = Protections::ProtectionEngine<MonitoredProtection>;
 
 inline float time_value = 0.0f;
-inline constexpr auto time_rules = Protections::bake_rules<float>(
-    Protections::Rules::time_accumulation(10.0f, 0.001f).value()
-);
+inline constexpr auto time_rules =
+    Protections::bake_rules<float>(Protections::Rules::time_accumulation(10.0f, 0.001f).value());
 using TimeProtection =
     Protections::ProtectionDeclarationWithRules<"time_value", time_value, time_rules>;
 using TimeProtectionEngine = Protections::ProtectionEngine<TimeProtection>;
 
 inline float time_reset_value = 0.0f;
-inline constexpr auto time_reset_rules = Protections::bake_rules<float>(
-    Protections::Rules::time_accumulation(10.0f, 0.001f).value()
-);
-using TimeResetProtection =
-    Protections::ProtectionDeclarationWithRules<"time_reset_value", time_reset_value, time_reset_rules>;
+inline constexpr auto time_reset_rules =
+    Protections::bake_rules<float>(Protections::Rules::time_accumulation(10.0f, 0.001f).value());
+using TimeResetProtection = Protections::
+    ProtectionDeclarationWithRules<"time_reset_value", time_reset_value, time_reset_rules>;
 using TimeResetProtectionEngine = Protections::ProtectionEngine<TimeResetProtection>;
 
 FaultCause make_test_runtime_fault(const char* message) {

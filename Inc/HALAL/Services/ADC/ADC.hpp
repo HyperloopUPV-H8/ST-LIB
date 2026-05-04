@@ -992,7 +992,10 @@ struct ADCDomain {
                 if (HAL_ADC_Start_DMA(
                         hadc,
                         reinterpret_cast<uint32_t*>(
-                            const_cast<std::remove_volatile_t<std::remove_pointer_t<decltype(buffer)>>*>(buffer)
+                            const_cast<
+                                std::remove_volatile_t<std::remove_pointer_t<decltype(buffer)>>*>(
+                                buffer
+                            )
                         ),
                         channel_count
                     ) != HAL_OK) {

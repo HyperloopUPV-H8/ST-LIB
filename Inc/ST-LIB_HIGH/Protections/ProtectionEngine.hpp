@@ -45,7 +45,7 @@ template <ProtectionSample T, std::size_t N> struct BakedRules {
 };
 
 template <ProtectionSample T, typename... RuleDefs>
-requires ((std::same_as<std::remove_cvref_t<RuleDefs>, RuleDefinition<T>> && ...))
+    requires((std::same_as<std::remove_cvref_t<RuleDefs>, RuleDefinition<T>> && ...))
 constexpr auto bake_rules(RuleDefs... definitions) {
     return BakedRules<T, sizeof...(RuleDefs)>{
         std::array<RuleDefinition<T>, sizeof...(RuleDefs)>{definitions...}
@@ -101,13 +101,13 @@ public:
     template <typename Spec> struct StorageForSpec;
 
     template <typename Spec>
-    requires has_baked_rules<Spec>
+        requires has_baked_rules<Spec>
     struct StorageForSpec<Spec> {
         using type = Protection<typename Spec::sample_type, Spec::baked_rules_type::rule_count>;
     };
 
     template <typename Spec>
-    requires (!has_baked_rules<Spec>)
+        requires(!has_baked_rules<Spec>)
     struct StorageForSpec<Spec> {
         using type = Protection<typename Spec::sample_type, 0>;
     };
@@ -118,14 +118,12 @@ public:
 
     static void initialize() {
 #if defined(HAL_RTC_MODULE_ENABLED) && !defined(SIM_ON)
-    Global_RTC::ensure_started();
+        Global_RTC::ensure_started();
 #endif
         initialize_impl(std::make_index_sequence<protection_count>{});
     }
 
-    static void evaluate() {
-        evaluate_impl(std::make_index_sequence<protection_count>{});
-    }
+    static void evaluate() { evaluate_impl(std::make_index_sequence<protection_count>{}); }
 
     template <std::size_t Index> static auto& protection_at() {
         return std::get<Index>(protections);
@@ -135,9 +133,7 @@ public:
         return protection_at<spec_index<ProtectionSpec>()>();
     }
 
-    static void reset() {
-        reset_impl(std::make_index_sequence<protection_count>{});
-    }
+    static void reset() { reset_impl(std::make_index_sequence<protection_count>{}); }
 
 private:
     template <typename ProtectionSpec> static constexpr auto make_protection() {
@@ -233,7 +229,9 @@ private:
         if constexpr (Index >= protection_count) {
             static_assert([] { return false; }(), "Protection spec not found");
             return 0;
-        } else if constexpr (std::is_same_v<ProtectionSpec, std::tuple_element_t<Index, std::tuple<ProtectionSpecs...>>>) {
+        } else if constexpr (std::is_same_v<
+                                 ProtectionSpec,
+                                 std::tuple_element_t<Index, std::tuple<ProtectionSpecs...>>>) {
             return Index;
         } else {
             return spec_index<ProtectionSpec, Index + 1>();
