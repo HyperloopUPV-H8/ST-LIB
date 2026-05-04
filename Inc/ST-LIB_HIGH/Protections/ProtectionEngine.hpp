@@ -147,7 +147,15 @@ public:
         initialize_impl(std::make_index_sequence<protection_count>{});
     }
 
+#ifdef STLIB_OPTIMIZED_PROTECTIONS
+    // ── Optimized: one get_global_tick() total ──
+    static void evaluate() {
+        const uint64_t now_us = Scheduler::get_global_tick();
+        evaluate_impl(std::make_index_sequence<protection_count>{}, now_us);
+    }
+#else
     static void evaluate() { evaluate_impl(std::make_index_sequence<protection_count>{}); }
+#endif
 
     template <std::size_t Index> static auto& protection_at() {
         return std::get<Index>(protections);
@@ -179,10 +187,28 @@ private:
         (evaluate_one<Indices>(), ...);
     }
 
+#ifdef STLIB_OPTIMIZED_PROTECTIONS
+    template <std::size_t... Indices>
+    static void evaluate_impl(std::index_sequence<Indices...>, uint64_t now_us) {
+        (evaluate_one<Indices>(now_us), ...);
+    }
+#endif
+
     template <std::size_t... Indices> static void reset_impl(std::index_sequence<Indices...>) {
         (std::get<Indices>(protections).clear_runtime_state(), ...);
     }
 
+#ifdef STLIB_OPTIMIZED_PROTECTIONS
+    template <std::size_t Index> static void evaluate_one(uint64_t now_us) {
+        auto& protection_ref = std::get<Index>(protections);
+        const Protections::ProtectionEvaluation evaluation = protection_ref.evaluate(now_us);
+
+        publish_edge_events(protection_ref, evaluation);
+        if (evaluation.has_active_fault) {
+            request_fault_if_due(protection_ref, evaluation, now_us);
+        }
+    }
+#else
     template <std::size_t Index> static void evaluate_one() {
         auto& protection_ref = std::get<Index>(protections);
         const Protections::ProtectionEvaluation evaluation = protection_ref.evaluate();
@@ -192,6 +218,7 @@ private:
             request_fault_if_due(protection_ref, evaluation);
         }
     }
+#endif
 
     template <typename ProtectionType>
     static void publish_edge_events(
@@ -213,6 +240,28 @@ private:
         }
     }
 
+#ifdef STLIB_OPTIMIZED_PROTECTIONS
+    template <typename ProtectionType>
+    static void request_fault_if_due(
+        ProtectionType& protection_ref,
+        const Protections::ProtectionEvaluation& evaluation,
+        uint64_t now_us
+    ) {
+        const uint64_t last_publish_tick = protection_ref.get_last_fault_publish_tick();
+
+        if (last_publish_tick != 0 &&
+            now_us - last_publish_tick < Protections::Config::notify_delay_in_microseconds) {
+            return;
+        }
+
+        FaultController::request_fault(FaultCause::protection(
+            protection_ref.get_name(),
+            evaluation.active_fault_edge,
+            evaluation.active_fault_snapshot
+        ));
+        protection_ref.set_last_fault_publish_tick(now_us);
+    }
+#else
     template <typename ProtectionType>
     static void request_fault_if_due(
         ProtectionType& protection_ref,
@@ -233,6 +282,7 @@ private:
         ));
         protection_ref.set_last_fault_publish_tick(tick);
     }
+#endif
 
     template <auto& ProtectionSpec, std::size_t Index = 0>
     static consteval std::size_t spec_index() {

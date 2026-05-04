@@ -491,6 +491,7 @@ target_compile_options(${STLIB_LIBRARY} PRIVATE
   $<$<COMPILE_LANGUAGE:CXX>:-fno-use-cxa-atexit>
   $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
   $<$<COMPILE_LANGUAGE:CXX>:-Wno-address-of-packed-member>
+  $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile>
 )
 
 target_include_directories(${STLIB_LIBRARY} PUBLIC
@@ -567,9 +568,23 @@ endif()
 if(CMAKE_CROSSCOMPILING)
   add_library(stlib_compile_check_board_protections OBJECT
     ${CMAKE_CURRENT_LIST_DIR}/Tests/compile_checks/board_protection_contract.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Tests/compile_checks/protection_evaluate_test.cpp
   )
   target_link_libraries(stlib_compile_check_board_protections PRIVATE ${STLIB_LIBRARY})
   set_target_properties(stlib_compile_check_board_protections PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED YES
+  )
+
+  add_library(stlib_compile_check_board_protections_optimized OBJECT
+    ${CMAKE_CURRENT_LIST_DIR}/Tests/compile_checks/board_protection_contract.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Tests/compile_checks/protection_evaluate_test.cpp
+  )
+  target_link_libraries(stlib_compile_check_board_protections_optimized PRIVATE ${STLIB_LIBRARY})
+  target_compile_definitions(stlib_compile_check_board_protections_optimized PRIVATE
+    STLIB_OPTIMIZED_PROTECTIONS
+  )
+  set_target_properties(stlib_compile_check_board_protections_optimized PROPERTIES
     CXX_STANDARD 23
     CXX_STANDARD_REQUIRED YES
   )

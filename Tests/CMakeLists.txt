@@ -39,6 +39,16 @@ add_executable(${STLIB_TEST_EXECUTABLE}
     ${CMAKE_CURRENT_LIST_DIR}/dma2_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/dfsdm_test.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Time/common_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/protection_baseline_runner.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/protection_optimized_runner.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/protection_compare_test.cpp
+)
+
+# The optimized runner must be compiled with STLIB_OPTIMIZED_PROTECTIONS
+set_source_files_properties(
+    ${CMAKE_CURRENT_LIST_DIR}/protection_optimized_runner.cpp
+    PROPERTIES
+    COMPILE_DEFINITIONS "STLIB_OPTIMIZED_PROTECTIONS;STLIB_OPTIMIZED_COMPARISON_TEST"
 )
 
 set_target_properties(${STLIB_TEST_EXECUTABLE} PROPERTIES

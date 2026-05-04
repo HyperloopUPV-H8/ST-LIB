@@ -35,6 +35,7 @@ template <typename T> struct TimeAccumulationRuleConfig {
     T fault_threshold{};
     optional<T> warning_threshold{};
     float time_window_s{0.0f};
+    uint64_t window_us{1};
 };
 
 template <ProtectionSample T>
@@ -174,10 +175,15 @@ validate_time_accumulation(T fault_threshold, optional<T> warning_threshold, flo
         }
     }
 
+    const uint64_t window_us = static_cast<uint64_t>(
+        std::llround(static_cast<double>(window_seconds) * 1'000'000.0)
+    );
+
     return RuleDefinition<T>{TimeAccumulationRuleConfig<T>{
         .fault_threshold = fault_threshold,
         .warning_threshold = warning_threshold,
         .time_window_s = window_seconds,
+        .window_us = window_us == 0 ? 1 : window_us,
     }};
 }
 
