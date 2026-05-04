@@ -30,9 +30,9 @@ template <const TimerDomain::Timer& dev> class Encoder {
     inline static bool is_initialized = false;
 
     Encoder(TimerWrapper<dev>* tim) { timer = tim; }
-    
+
 public:
-static void init(TimerWrapper<dev>* tim){
+    static void init(TimerWrapper<dev>* tim) {
         if (tim == nullptr || tim->instance == nullptr) {
             ErrorHandler("Timer instance is not set for encoder");
         }
