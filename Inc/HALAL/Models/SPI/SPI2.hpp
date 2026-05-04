@@ -706,11 +706,7 @@ struct SPIDomain {
         template <typename T> bool transceive(T* tx_data, T* rx_data, size_t count) {
             size_t size = count * sizeof(T);
             if (size % frame_size != 0) {
-                ErrorHandler(
-                    "SPI transaction size (%d) not aligned to frame size (%d)",
-                    size,
-                    frame_size
-                );
+                PANIC("SPI transaction size (%d) not aligned to frame size (%d)", size, frame_size);
                 return false;
             }
             auto error_code = HAL_SPI_TransmitReceive(

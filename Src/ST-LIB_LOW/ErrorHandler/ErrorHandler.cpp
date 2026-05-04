@@ -12,7 +12,11 @@ struct RuntimeFatalMessage {
 
 RuntimeFatalMessage format_runtime_fatal_message(const char* format, va_list arguments) {
     RuntimeFatalMessage message{};
-    const int32_t written = vsnprintf(message.buffer, sizeof(message.buffer), format, arguments);
+    va_list arguments_copy;
+    va_copy(arguments_copy, arguments);
+    const int32_t written =
+        vsnprintf(message.buffer, sizeof(message.buffer), format, arguments_copy);
+    va_end(arguments_copy);
     message.truncated = written < 0 || static_cast<size_t>(written) >= sizeof(message.buffer);
     return message;
 }

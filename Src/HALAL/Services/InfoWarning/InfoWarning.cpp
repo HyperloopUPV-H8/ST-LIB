@@ -11,7 +11,10 @@ void publish_runtime_diagnostic(
     va_list arguments
 ) {
     char buffer[Diagnostics::Config::runtime_message_capacity + 1]{};
-    const int32_t written = vsnprintf(buffer, sizeof(buffer), format, arguments);
+    va_list arguments_copy;
+    va_copy(arguments_copy, arguments);
+    const int32_t written = vsnprintf(buffer, sizeof(buffer), format, arguments_copy);
+    va_end(arguments_copy);
 
     switch (severity) {
     case Diagnostics::Severity::WARNING:
