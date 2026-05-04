@@ -4,9 +4,13 @@ ENTRY(Reset_Handler)
 /* Highest address of the user mode stack */
 __sstack = ORIGIN(DTCMRAM);
 __estack = ORIGIN(DTCMRAM) + LENGTH(DTCMRAM);
+PROVIDE(_sstack = __sstack);
+PROVIDE(_estack = __estack);
 /* Generate a link error if heap and stack don't fit into DTCM */
 __Min_Heap_Size = 0x200;  /* required amount of heap  */
 __Min_Stack_Size = 0x400; /* required amount of stack */
+PROVIDE(_Min_Heap_Size = __Min_Heap_Size);
+PROVIDE(_Min_Stack_Size = __Min_Stack_Size);
 
 #if !defined(__ITCM_SIZE)
   #define __ITCM_SIZE (64K) /* Default ITCM size if not defined by the build system */
@@ -76,6 +80,7 @@ SECTIONS
   {
     . = ALIGN(4);
     __stext = ABSOLUTE(.);
+    PROVIDE(_stext = __stext);
 
 #if !__ITCM_BUILD
     *(.text)          /* .text sections (code) */
@@ -90,6 +95,7 @@ SECTIONS
 
     . = ALIGN(4);
     __etext = ABSOLUTE(.);
+    PROVIDE(_etext = __etext);
   } >FLASH
 
   /* Code running in ITCM RAM (0 Wait States, Instruction Bus) */
@@ -182,10 +188,12 @@ SECTIONS
   {
     . = ALIGN(8);
     __hf_stack_start = .;
+    PROVIDE(_hf_stack_start = __hf_stack_start);
     . += 0x400;       /* 1 KB */
 
     . = ALIGN(8);
     __hf_stack_end = .;
+    PROVIDE(_hf_stack_end = __hf_stack_end);
   } >DTCMRAM
 
   /* Initialized data sections goes into RAM, copied from FLASH */

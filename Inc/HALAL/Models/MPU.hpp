@@ -86,6 +86,14 @@
 // Constants in DTCM (default is FLASH because DTCM is small) @note Not protected by MPU
 #define DTCM_RODATA __attribute__((section(".dtcm.rodata"))) const
 
+// Retrocompatibility macros
+#define D1_NC D1_NC_BSS
+#define D2_NC D2_NC_BSS
+#define D3_NC D3_NC_BSS
+#define D1_C D1_C_BSS
+#define D2_C D2_C_BSS
+#define D3_C D3_C_BSS
+
 // Memory Bank Symbols from Linker
 extern "C" const char _itcm_base;
 extern "C" const char _itcm_size;
@@ -103,12 +111,12 @@ extern "C" const char _peripheral_base;
 extern "C" const char _peripheral_size;
 
 // MPU Non-Cached Section Symbols from Linker
-extern "C" const char __mpu_d1_nc_start;
-extern "C" const char __mpu_d1_nc_end;
-extern "C" const char __mpu_d2_nc_start;
-extern "C" const char __mpu_d2_nc_end;
-extern "C" const char __mpu_d3_nc_start;
-extern "C" const char __mpu_d3_nc_end;
+extern "C" const char _ram_d1_nc_start;
+extern "C" const char _ram_d1_nc_end;
+extern "C" const char _ram_d2_nc_start;
+extern "C" const char _ram_d2_nc_end;
+extern "C" const char _ram_d3_nc_start;
+extern "C" const char _ram_d3_nc_end;
 
 template <typename T>
 concept mpu_buffer_request = requires(typename T::domain d) {
