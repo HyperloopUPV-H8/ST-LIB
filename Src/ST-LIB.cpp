@@ -52,5 +52,5 @@ void STLIB::update() {
 }
 
 __attribute__((weak)) void BoardInit() {
-    // Nothing for now
+    // Nothing here, implement it yourself
 }

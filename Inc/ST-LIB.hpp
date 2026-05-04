@@ -343,11 +343,6 @@ template <auto&... devs> struct Board {
 
 } // namespace ST_LIB
 
-/**
- * @brief   This is a function that gets called early in the startup process,
- *          before the global constructors and main() are called.
- *          It is responsible for initializing the hardware and peripherals
- */
 #ifdef __cplusplus
 extern "C" {
 #endif
