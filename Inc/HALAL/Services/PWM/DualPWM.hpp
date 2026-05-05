@@ -46,7 +46,7 @@ class DualPWM {
             return;
 
         if (timer == nullptr || timer->instance == nullptr || timer->instance->hal_tim == nullptr) {
-            ErrorHandler(" DUALPWM requested before timer init");
+            ErrorHandler("Timer instance is not set for DualPWM");
         }
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
