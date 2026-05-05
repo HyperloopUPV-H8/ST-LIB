@@ -29,12 +29,10 @@ class InputCapture {
     TimerDomain::InputCaptureInfo* info = nullptr;
     bool is_on = false;
     bool is_initialized = false;
-    InputCapture(TimerWrapper<dev>* tim): timer(tim){
-        
-       
-    }
-    void init(){
-        if (is_initialized) return;
+    InputCapture(TimerWrapper<dev>* tim) : timer(tim) {}
+    void init() {
+        if (is_initialized)
+            return;
         if (timer == nullptr || timer->instance == nullptr || timer->instance->hal_tim == nullptr) {
             ErrorHandler("Timer instance is not set for input capture");
             return;
@@ -70,9 +68,10 @@ class InputCapture {
         timer->template config_input_compare_channel<channel_falling>(&sConfigIC);
         is_initialized = true;
     }
+
 public:
     void turn_on(void) {
-        if(is_initialized == false){
+        if (is_initialized == false) {
             init();
             return;
         }

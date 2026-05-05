@@ -31,11 +31,10 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         uint32_t negated_polarity,
         float* duty_ptr,
         uint32_t* frequency_ptr)
-        : timer(tim), polarity(polarity), negated_polarity(negated_polarity), duty_cycle(duty_ptr), frequency(frequency_ptr) {
-        
-    }
-    void init(){
-        if(is_initialized)
+        : timer(tim), polarity(polarity), negated_polarity(negated_polarity), duty_cycle(duty_ptr),
+          frequency(frequency_ptr) {}
+    void init() {
+        if (is_initialized)
             return;
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
@@ -52,9 +51,10 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         timer->template set_output_compare_preload_enable<pin.channel>();
         is_initialized = true;
     }
+
 public:
     void turn_on() {
-        if(this->is_initialized == false){
+        if (this->is_initialized == false) {
             init();
         }
         if (this->is_on)
