@@ -36,6 +36,9 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
     void init() {
         if (is_initialized)
             return;
+        if (timer == nullptr || timer->instance == nullptr || timer->instance->hal_tim == nullptr) {
+            ErrorHandler("Timer instance is not set for PWM");
+        }
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
             .Pulse = 0,
