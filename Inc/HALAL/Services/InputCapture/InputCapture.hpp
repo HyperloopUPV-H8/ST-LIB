@@ -40,9 +40,9 @@ class InputCapture {
         // Setup TimerDomain
         uint8_t ch_rising = static_cast<uint8_t>(pin_rising.channel) - 1;
         uint8_t ch_falling = static_cast<uint8_t>(channel_falling) - 1;
-        info = &TimerDomain::input_capture_info_backing[tim->instance->timer_idx][ch_rising];
-        TimerDomain::input_capture_info[tim->instance->timer_idx][ch_rising] = info;
-        TimerDomain::input_capture_info[tim->instance->timer_idx][ch_falling] = info;
+        info = &TimerDomain::input_capture_info_backing[timer->instance->timer_idx][ch_rising];
+        TimerDomain::input_capture_info[timer->instance->timer_idx][ch_rising] = info;
+        TimerDomain::input_capture_info[timer->instance->timer_idx][ch_falling] = info;
 
         info->channel_rising = ch_rising;
         info->channel_falling = ch_falling;
