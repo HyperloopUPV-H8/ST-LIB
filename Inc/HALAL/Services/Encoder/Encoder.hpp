@@ -68,6 +68,7 @@ public:
         } else {
             tim->instance->tim->ARR = UINT16_MAX;
         }
+        timer = tim;
     }
     static void turn_on() {
         if (!is_initialized) {
