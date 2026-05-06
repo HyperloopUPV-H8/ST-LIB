@@ -23,8 +23,7 @@ struct DiagnosticStringBuilder {
 
         va_list arguments;
         va_start(arguments, format);
-        const int32_t written =
-            vsnprintf(buffer + offset, buffer_size - offset, format, arguments);
+        const int32_t written = vsnprintf(buffer + offset, buffer_size - offset, format, arguments);
         va_end(arguments);
 
         if (written < 0) {
@@ -96,18 +95,16 @@ void format_numeric_value(
     }
 
     switch (encoding) {
-    case Protections::SampleEncoding::BOOL:
-        {
-            const char* text = value.bool_value ? "true" : "false";
-            const size_t text_length = value.bool_value ? 4U : 5U;
-            const size_t length = std::min(text_length, buffer_size - 1);
-            memcpy(buffer, text, length);
-            buffer[length] = '\0';
-        }
+    case Protections::SampleEncoding::BOOL: {
+        const char* text = value.bool_value ? "true" : "false";
+        const size_t text_length = value.bool_value ? 4U : 5U;
+        const size_t length = std::min(text_length, buffer_size - 1);
+        memcpy(buffer, text, length);
+        buffer[length] = '\0';
+    }
         return;
     case Protections::SampleEncoding::SIGNED:
-        if (snprintf(buffer, buffer_size, "%lld", static_cast<long long>(value.signed_value)) <
-            0) {
+        if (snprintf(buffer, buffer_size, "%lld", static_cast<long long>(value.signed_value)) < 0) {
             buffer[0] = '\0';
         }
         return;
@@ -122,8 +119,7 @@ void format_numeric_value(
         }
         return;
     case Protections::SampleEncoding::FLOAT32:
-        if (snprintf(buffer, buffer_size, "%.6f", static_cast<double>(value.float32_value)) <
-            0) {
+        if (snprintf(buffer, buffer_size, "%.6f", static_cast<double>(value.float32_value)) < 0) {
             buffer[0] = '\0';
         }
         return;

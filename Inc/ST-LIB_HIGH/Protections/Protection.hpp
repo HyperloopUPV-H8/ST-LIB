@@ -477,9 +477,8 @@ inline RuleModel<T> make_rule_model(const RuleDefinition<T>& definition) {
     case 5:
         if constexpr (FloatingSample<T>) {
             model.kind = RuleKind::TIME_ACCUMULATION;
-            model.time_accumulation = TimeAccumulationRule<T>{
-                std::get<TimeAccumulationRuleConfig<T>>(definition)
-            };
+            model.time_accumulation =
+                TimeAccumulationRule<T>{std::get<TimeAccumulationRuleConfig<T>>(definition)};
             return model;
         } else {
             std::unreachable();
