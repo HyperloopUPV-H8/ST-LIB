@@ -12,8 +12,13 @@ namespace Diagnostics {
 
 namespace {
 
-constexpr uint16_t DIAGNOSTIC_TCP_ORDER_ID = 3555;
-constexpr size_t transport_buffer_capacity = 2 + 1 + 1 + 2 + 1 + 1 + 1 + 1 + 1 + 2 + 8 +
+constexpr uint16_t DIAGNOSTIC_FAULT_ORDER_ID = 1555;
+constexpr uint16_t DIAGNOSTIC_WARNING_ORDER_ID = 2555;
+constexpr uint16_t DIAGNOSTIC_OK_ORDER_ID = 3000;
+constexpr uint8_t DIAGNOSTIC_CHAR_TYPE = 3;
+constexpr uint8_t DIAGNOSTIC_ERROR_HANDLER_KIND = 5;
+constexpr uint8_t DIAGNOSTIC_WARNING_KIND = 7;
+constexpr size_t transport_buffer_capacity = 2 + 1 + 1 + 2 + 1 + 1 + 1 + 1 + 1 + 2 +
                                              Config::origin_capacity + 1 +
                                              Config::formatted_message_capacity + 1;
 
@@ -44,20 +49,6 @@ template <size_t Capacity> void copy_c_string(char (&dst)[Capacity], const char*
     dst[length] = '\0';
 }
 
-constexpr uint16_t to_network_u16(uint16_t value) {
-    if constexpr (std::endian::native == std::endian::little) {
-        return std::byteswap(value);
-    }
-    return value;
-}
-
-constexpr uint64_t to_network_u64(uint64_t value) {
-    if constexpr (std::endian::native == std::endian::little) {
-        return std::byteswap(value);
-    }
-    return value;
-}
-
 #if defined(HAL_UART_MODULE_ENABLED) && !defined(SIM_ON)
 class UartDiagnosticSink final : public DiagnosticSink {
 public:
@@ -77,14 +68,18 @@ public:
 #ifdef STLIB_ETH
 class DiagnosticTransportOrder final : public Order {
 public:
-    DiagnosticTransportOrder() : id(DIAGNOSTIC_TCP_ORDER_ID) {
-        Packet::packets[id] = this;
-        orders[id] = this;
+    DiagnosticTransportOrder() {
+        Packet::packets[DIAGNOSTIC_FAULT_ORDER_ID] = this;
+        Packet::packets[DIAGNOSTIC_WARNING_ORDER_ID] = this;
+        Packet::packets[DIAGNOSTIC_OK_ORDER_ID] = this;
+        orders[DIAGNOSTIC_FAULT_ORDER_ID] = this;
+        orders[DIAGNOSTIC_WARNING_ORDER_ID] = this;
+        orders[DIAGNOSTIC_OK_ORDER_ID] = this;
     }
 
     void set_record(const DiagnosticRecord& record, const char* description) {
-        severity = std::to_underlying(record.severity);
-        category = std::to_underlying(record.category);
+        id = id_for(record.severity);
+        kind = kind_for(record.severity);
         copy_c_string(origin, record.origin);
         copy_c_string(message, description);
         counter = record.timestamp.counter;
@@ -94,7 +89,6 @@ public:
         day = record.timestamp.day;
         month = record.timestamp.month;
         year = record.timestamp.year;
-        uptime_us = record.timestamp.uptime_us;
     }
 
     void set_callback(void (*callback)(void)) override { this->callback = callback; }
@@ -114,19 +108,18 @@ public:
         auto bytes = span<byte>(buffer.data(), buffer.size());
         size_t offset = 0;
 
-        write(bytes, offset, to_network_u16(id));
-        write(bytes, offset, severity);
-        write(bytes, offset, category);
+        write(bytes, offset, id);
+        write(bytes, offset, DIAGNOSTIC_CHAR_TYPE);
+        write(bytes, offset, kind);
         write_string(bytes, offset, origin);
         write_string(bytes, offset, message);
-        write(bytes, offset, to_network_u16(counter));
+        write(bytes, offset, counter);
         write(bytes, offset, second);
         write(bytes, offset, minute);
         write(bytes, offset, hour);
         write(bytes, offset, day);
         write(bytes, offset, month);
-        write(bytes, offset, to_network_u16(year));
-        write(bytes, offset, to_network_u64(uptime_us));
+        write(bytes, offset, year);
 
         size = offset;
         return reinterpret_cast<uint8_t*>(buffer.data());
@@ -142,6 +135,24 @@ public:
     }
 
 private:
+    static uint16_t id_for(Severity severity) {
+        switch (severity) {
+        case Severity::FAULT:
+            return DIAGNOSTIC_FAULT_ORDER_ID;
+        case Severity::WARNING:
+            return DIAGNOSTIC_WARNING_ORDER_ID;
+        case Severity::INFO:
+            return DIAGNOSTIC_OK_ORDER_ID;
+        }
+
+        return DIAGNOSTIC_OK_ORDER_ID;
+    }
+
+    static uint8_t kind_for(Severity severity) {
+        return severity == Severity::FAULT ? DIAGNOSTIC_ERROR_HANDLER_KIND
+                                           : DIAGNOSTIC_WARNING_KIND;
+    }
+
     template <typename Value> static void write(span<byte> bytes, size_t& offset, Value value) {
         memcpy(bytes.data() + offset, &value, sizeof(Value));
         offset += sizeof(Value);
@@ -156,8 +167,7 @@ private:
 
     uint16_t id;
     void (*callback)(void) = nullptr;
-    uint8_t severity{0};
-    uint8_t category{0};
+    uint8_t kind{DIAGNOSTIC_WARNING_KIND};
     char origin[Config::origin_capacity + 1]{};
     char message[Config::formatted_message_capacity + 1]{};
     uint16_t counter{0};
@@ -167,7 +177,6 @@ private:
     uint8_t day{0};
     uint8_t month{0};
     uint16_t year{0};
-    uint64_t uptime_us{0};
     size_t size{0};
     array<byte, transport_buffer_capacity> buffer{};
 };
