@@ -69,14 +69,6 @@
 #define RAM_CODE __attribute__((section(".ram_code")))
 #endif
 
-#define D1_NC __attribute__((section(".mpu_ram_d1_nc.user"), used)) volatile
-#define D2_NC __attribute__((section(".mpu_ram_d2_nc.user"), used)) volatile
-#define D3_NC __attribute__((section(".mpu_ram_d3_nc.user"), used)) volatile
-#define D1_C __attribute__((section(".ram_d1.user"), used))
-#define D2_C __attribute__((section(".ram_d2.user"), used))
-#define D3_C __attribute__((section(".ram_d3.user"), used))
-#endif
-
 // Memory Bank Symbols from Linker
 extern "C" const char __itcm_base;
 extern "C" const char __itcm_size;

@@ -34,7 +34,7 @@ class InputCapture {
         if (is_initialized)
             return;
         if (timer == nullptr || timer->instance == nullptr || timer->instance->hal_tim == nullptr) {
-            ErrorHandler("Timer instance is not set for input capture");
+            PANIC("Timer instance is not set for input capture");
             return;
         }
         // Setup TimerDomain

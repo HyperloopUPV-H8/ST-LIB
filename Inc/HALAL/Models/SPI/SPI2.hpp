@@ -615,6 +615,7 @@ struct SPIDomain {
         bool send(const T& data)
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
+            using element_type = std::remove_volatile_t<T>;
             if (sizeof(T) % frame_size != 0) {
                 PANIC(
                     "SPI data type size (%d) not aligned to frame size (%d)",
@@ -661,6 +662,7 @@ struct SPIDomain {
         bool receive(T& data)
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
+            using element_type = std::remove_volatile_t<T>;
             if (sizeof(T) % frame_size != 0) {
                 PANIC(
                     "SPI data type size (%d) not aligned to frame size (%d)",
@@ -671,7 +673,7 @@ struct SPIDomain {
             }
             auto error_code = HAL_SPI_Receive(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(const_cast<const element_type*>(&data)),
+                reinterpret_cast<uint8_t*>(const_cast<element_type*>(&data)),
                 sizeof(element_type) / frame_size,
                 10
             );
@@ -824,6 +826,7 @@ struct SPIDomain {
         bool send_DMA(const T& data, volatile bool* operation_flag = nullptr)
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
+            using element_type = std::remove_volatile_t<T>;
             spi_instance.operation_flag = operation_flag;
             if (sizeof(T) % frame_size != 0) {
                 PANIC("SPI data size (%d) not aligned to frame size (%d)", sizeof(T), frame_size);
@@ -869,6 +872,7 @@ struct SPIDomain {
         bool receive_DMA(T& data, volatile bool* operation_flag = nullptr)
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
+            using element_type = std::remove_volatile_t<T>;
             spi_instance.operation_flag = operation_flag;
             if (sizeof(T) % frame_size != 0) {
                 PANIC("SPI data size (%d) not aligned to frame size (%d)", sizeof(T), frame_size);
@@ -1078,6 +1082,7 @@ struct SPIDomain {
         bool listen(T& data, volatile bool* operation_flag = nullptr)
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
+            using element_type = std::remove_volatile_t<T>;
             spi_instance.operation_flag = operation_flag;
             if (sizeof(T) % frame_size != 0) {
                 PANIC("SPI data size (%d) not aligned to frame size (%d)", sizeof(T), frame_size);
@@ -1123,6 +1128,7 @@ struct SPIDomain {
         bool arm(const T& data, volatile bool* operation_flag = nullptr)
             requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
+            using element_type = std::remove_volatile_t<T>;
             spi_instance.operation_flag = operation_flag;
             if (sizeof(T) % frame_size != 0) {
                 PANIC("SPI data size (%d) not aligned to frame size (%d)", sizeof(T), frame_size);
