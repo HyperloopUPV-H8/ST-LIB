@@ -353,6 +353,8 @@ template <EqualityComparableSample T> struct NotEqualsRule {
 };
 
 template <FloatingSample T> struct TimeAccumulationRule {
+    TimeAccumulationRule() = default;
+
     explicit TimeAccumulationRule(TimeAccumulationRuleConfig<T> config) : config(config) {
         configured_window_us = static_cast<uint64_t>(
             std::llround(static_cast<double>(config.time_window_s) * 1'000'000.0)
@@ -416,57 +418,75 @@ template <ProtectionSample T> struct TimeAccumulationRuleSelector<T, true> {
 template <ProtectionSample T>
 using TimeAccumulationRuleModel = typename TimeAccumulationRuleSelector<T>::type;
 
-template <ProtectionSample T>
-using RuleModel = variant<
-    BelowRule<T>,
-    AboveRule<T>,
-    RangeRule<T>,
-    EqualsRule<T>,
-    NotEqualsRule<T>,
-    TimeAccumulationRuleModel<T>>;
+template <ProtectionSample T> struct RuleModel {
+    RuleKind kind{RuleKind::BELOW};
+    BelowRule<T> below{};
+    AboveRule<T> above{};
+    RangeRule<T> range{};
+    EqualsRule<T> equals{};
+    NotEqualsRule<T> not_equals{};
+    TimeAccumulationRuleModel<T> time_accumulation{};
+
+    RuleEvaluation evaluate(const T& sample) {
+        switch (kind) {
+        case RuleKind::BELOW:
+            return below.evaluate(sample);
+        case RuleKind::ABOVE:
+            return above.evaluate(sample);
+        case RuleKind::RANGE:
+            return range.evaluate(sample);
+        case RuleKind::EQUALS:
+            return equals.evaluate(sample);
+        case RuleKind::NOT_EQUALS:
+            return not_equals.evaluate(sample);
+        case RuleKind::TIME_ACCUMULATION:
+            if constexpr (FloatingSample<T>) {
+                return time_accumulation.evaluate(sample);
+            } else {
+                std::unreachable();
+            }
+        }
+        std::unreachable();
+    }
+};
 
 template <ProtectionSample T>
 inline RuleModel<T> make_rule_model(const RuleDefinition<T>& definition) {
-    return visit(
-        []<typename RuleConfig>(const RuleConfig& config) -> RuleModel<T> {
-            using ConfigType = std::remove_cvref_t<RuleConfig>;
-            if constexpr (std::same_as<ConfigType, BelowRuleConfig<T>>) {
-                return BelowRule<T>{.config = config};
-            } else if constexpr (std::same_as<ConfigType, AboveRuleConfig<T>>) {
-                return AboveRule<T>{.config = config};
-            } else if constexpr (std::same_as<ConfigType, RangeRuleConfig<T>>) {
-                return RangeRule<T>{.config = config};
-            } else if constexpr (std::same_as<ConfigType, EqualsRuleConfig<T>>) {
-                return EqualsRule<T>{.config = config};
-            } else if constexpr (std::same_as<ConfigType, NotEqualsRuleConfig<T>>) {
-                return NotEqualsRule<T>{.config = config};
-            } else if constexpr (std::same_as<ConfigType, TimeAccumulationRuleConfig<T>>) {
-                if constexpr (FloatingSample<T>) {
-                    return TimeAccumulationRule<T>{config};
-                } else {
-                    std::unreachable();
-                }
-            } else {
-                std::unreachable();
-            }
-        },
-        definition
-    );
-}
-
-template <ProtectionSample T>
-inline RuleEvaluation evaluate_rule(RuleModel<T>& rule, const T& sample) {
-    return visit(
-        [&sample](auto& concrete_rule) -> RuleEvaluation {
-            using RuleType = std::remove_cvref_t<decltype(concrete_rule)>;
-            if constexpr (std::same_as<RuleType, std::monostate>) {
-                std::unreachable();
-            } else {
-                return concrete_rule.evaluate(sample);
-            }
-        },
-        rule
-    );
+    RuleModel<T> model{};
+    switch (definition.index()) {
+    case 0:
+        model.kind = RuleKind::BELOW;
+        model.below.config = std::get<BelowRuleConfig<T>>(definition);
+        return model;
+    case 1:
+        model.kind = RuleKind::ABOVE;
+        model.above.config = std::get<AboveRuleConfig<T>>(definition);
+        return model;
+    case 2:
+        model.kind = RuleKind::RANGE;
+        model.range.config = std::get<RangeRuleConfig<T>>(definition);
+        return model;
+    case 3:
+        model.kind = RuleKind::EQUALS;
+        model.equals.config = std::get<EqualsRuleConfig<T>>(definition);
+        return model;
+    case 4:
+        model.kind = RuleKind::NOT_EQUALS;
+        model.not_equals.config = std::get<NotEqualsRuleConfig<T>>(definition);
+        return model;
+    case 5:
+        if constexpr (FloatingSample<T>) {
+            model.kind = RuleKind::TIME_ACCUMULATION;
+            model.time_accumulation = TimeAccumulationRule<T>{
+                std::get<TimeAccumulationRuleConfig<T>>(definition)
+            };
+            return model;
+        } else {
+            std::unreachable();
+        }
+    default:
+        std::unreachable();
+    }
 }
 
 template <ProtectionSample T, std::size_t RuleCount> class Protection {
@@ -487,7 +507,7 @@ public:
         const T sample = source.read();
 
         for (std::size_t index = 0; index < RuleCount; ++index) {
-            const RuleEvaluation rule_evaluation = evaluate_rule(rules[index], sample);
+            const RuleEvaluation rule_evaluation = rules[index].evaluate(sample);
             if (rule_evaluation.edge != RuleEdge::NONE &&
                 evaluation.event_count < evaluation.events.size()) {
                 evaluation.events[evaluation.event_count++] = {

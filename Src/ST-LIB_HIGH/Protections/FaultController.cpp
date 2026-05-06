@@ -11,18 +11,6 @@ static_assert(
 static_assert(FaultConfig::function_capacity == Diagnostics::Config::function_capacity);
 static_assert(FaultConfig::file_capacity == Diagnostics::Config::file_capacity);
 
-size_t bounded_strnlen(const char* src, size_t max_length) {
-    if (src == nullptr) {
-        return 0;
-    }
-
-    size_t length = 0;
-    while (length < max_length && src[length] != '\0') {
-        length++;
-    }
-    return length;
-}
-
 template <size_t Capacity>
 void copy_c_string(char (&dst)[Capacity], const char* src, bool* truncated = nullptr) {
     if (Capacity == 0) {
@@ -37,7 +25,7 @@ void copy_c_string(char (&dst)[Capacity], const char* src, bool* truncated = nul
         return;
     }
 
-    const size_t length = bounded_strnlen(src, Capacity - 1);
+    const size_t length = strnlen(src, Capacity - 1);
     memcpy(dst, src, length);
     dst[length] = '\0';
     if (truncated != nullptr) {
