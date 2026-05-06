@@ -23,6 +23,8 @@ class MDMA {
 public:
     /**
      * @brief A helper struct to create and manage MDMA linked list nodes.
+     * @note If you don't use volatile values, the compiler may optimize away reads/writes of source
+     * and dest addresses. It is planned to make the class add a targetted memory barrier for this
      */
     struct LinkedListNode {
         template <typename T> LinkedListNode(T* source_ptr, void* dest_ptr) {
@@ -32,11 +34,10 @@ public:
         template <typename T> LinkedListNode(T* source_ptr, void* dest_ptr, size_t size) {
             init_node(source_ptr, dest_ptr, size);
         }
-
-        void set_next(MDMA_LinkNodeTypeDef* next_node) {
+        void set_next(volatile MDMA_LinkNodeTypeDef* next_node) volatile {
             node.CLAR = reinterpret_cast<uint32_t>(next_node);
         }
-        void set_destination(void* destination) {
+        void set_destination(void* destination) volatile {
             uint32_t destination_address = reinterpret_cast<uint32_t>(destination);
             node.CDAR = destination_address;
 
@@ -49,7 +50,7 @@ public:
             }
             reconfigure_ctcr();
         }
-        void set_source(void* source) {
+        void set_source(void* source) volatile {
             uint32_t source_address = reinterpret_cast<uint32_t>(source);
             node.CSAR = source_address;
 
@@ -62,19 +63,19 @@ public:
             }
             reconfigure_ctcr();
         }
-        auto get_node() -> MDMA_LinkNodeTypeDef* { return &node; }
-        auto get_size() -> uint32_t { return node.CBNDTR; }
-        auto get_destination() -> uint32_t { return node.CDAR; }
-        auto get_source() -> uint32_t { return node.CSAR; }
-        auto get_next() -> MDMA_LinkNodeTypeDef* {
-            return reinterpret_cast<MDMA_LinkNodeTypeDef*>(node.CLAR);
+        auto get_node() volatile -> volatile MDMA_LinkNodeTypeDef* { return &node; }
+        auto get_size() const volatile -> uint32_t { return node.CBNDTR; }
+        auto get_destination() const volatile -> uint32_t { return node.CDAR; }
+        auto get_source() const volatile -> uint32_t { return node.CSAR; }
+        auto get_next() const volatile -> volatile MDMA_LinkNodeTypeDef* {
+            return reinterpret_cast<volatile MDMA_LinkNodeTypeDef*>(node.CLAR);
         }
 
     private:
         alignas(8) MDMA_LinkNodeTypeDef node;
         size_t transfer_size{0};
 
-        void reconfigure_ctcr() {
+        void reconfigure_ctcr() volatile {
             const uintptr_t src = node.CSAR;
             const uintptr_t dst = node.CDAR;
             const size_t size = transfer_size;
@@ -240,7 +241,7 @@ private:
         MDMA_HandleTypeDef handle;
         uint8_t id;
         volatile bool* done;
-        MDMA_LinkNodeTypeDef* transfer_node;
+        volatile MDMA_LinkNodeTypeDef* transfer_node;
 
         Instance() : handle{}, id(0U), done(nullptr), transfer_node(nullptr) {}
 
@@ -248,19 +249,20 @@ private:
             MDMA_HandleTypeDef handle_,
             uint8_t id_,
             volatile bool* done_,
-            MDMA_LinkNodeTypeDef* transfer_node_
+            volatile MDMA_LinkNodeTypeDef* transfer_node_
         )
             : handle(handle_), id(id_), done(done_), transfer_node(transfer_node_) {}
     };
-    static void prepare_transfer(Instance& instance, MDMA::LinkedListNode* first_node);
-    static void prepare_transfer(Instance& instance, MDMA_LinkNodeTypeDef* first_node);
+    static void prepare_transfer(Instance& instance, volatile MDMA::LinkedListNode* first_node);
+    static void prepare_transfer(Instance& instance, volatile MDMA_LinkNodeTypeDef* first_node);
     static Instance& get_instance(uint8_t id);
     static MDMA_Channel_TypeDef* get_channel(uint8_t id);
     static uint8_t get_instance_id(MDMA_Channel_TypeDef* channel);
 
     inline static std::array<Instance, 8> instances{};
     static std::bitset<8> instance_free_map;
-    inline static Stack<std::pair<MDMA::LinkedListNode*, volatile bool*>, 50> transfer_queue{};
+    inline static Stack<std::pair<volatile MDMA::LinkedListNode*, volatile bool*>, 50>
+        transfer_queue{};
 
     static void TransferCompleteCallback(MDMA_HandleTypeDef* hmdma);
     static void TransferErrorCallback(MDMA_HandleTypeDef* hmdma);
@@ -303,5 +305,6 @@ public:
      * @param check A reference boolean that will be set to true if the transfer was successfully
      * done, false otherwise.
      */
-    static void transfer_list(MDMA::LinkedListNode* first_node, volatile bool* check = nullptr);
+    static void
+    transfer_list(volatile MDMA::LinkedListNode* first_node, volatile bool* check = nullptr);
 };

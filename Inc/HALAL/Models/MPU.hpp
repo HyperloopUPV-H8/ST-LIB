@@ -44,15 +44,29 @@
 // Defines for attributes
 // Note1: Variables declared with these attributes will likely not be initialized by the startup
 // Note2: These attributes can only be used for static/global variables
-#define D1_NC __attribute__((section(".mpu_ram_d1_nc.user")))
-#define D2_NC __attribute__((section(".mpu_ram_d2_nc.user")))
-#define D3_NC __attribute__((section(".mpu_ram_d3_nc.user")))
-#define D1_C __attribute__((section(".ram_d1.user")))
-#define D2_C __attribute__((section(".ram_d2.user")))
-#define D3_C __attribute__((section(".ram_d3.user")))
-
-// Define for RAM code
+#ifdef SIM_ON
+#define D1_NC
+#define D2_NC
+#define D3_NC
+#define D1_C
+#define D2_C
+#define D3_C
+#define RAM_CODE
+#else
+/*
+ * Use C++ attribute syntax when compiled as C++, otherwise fall back to GCC-style
+ * `__attribute__` so the header is safe to include from both C and C++ translation
+ * units (some build units may be plain C and would reject the [[...]] syntax).
+ */
 #define RAM_CODE __attribute__((section(".ram_code")))
+
+#define D1_NC __attribute__((section(".mpu_ram_d1_nc.user"), used)) volatile
+#define D2_NC __attribute__((section(".mpu_ram_d2_nc.user"), used)) volatile
+#define D3_NC __attribute__((section(".mpu_ram_d3_nc.user"), used)) volatile
+#define D1_C __attribute__((section(".ram_d1.user"), used))
+#define D2_C __attribute__((section(".ram_d2.user"), used))
+#define D3_C __attribute__((section(".ram_d3.user"), used))
+#endif
 
 // Memory Bank Symbols from Linker
 extern "C" const char __itcm_base;
@@ -260,14 +274,27 @@ struct MPUDomain {
         void* ptr;
         std::size_t size;
 
-        template <mpu_buffer_request auto& Target, typename... Args>
-        auto& construct(Args&&... args) {
-            using T = typename std::remove_cvref_t<decltype(Target)>::buffer_type;
+        template <auto& Target, typename... Args> auto& construct(Args&&... args) {
+            using Request = std::remove_cvref_t<decltype(Target)>;
+            static_assert(mpu_buffer_request<Request>, "Target must be a valid MPUDomain buffer");
+            constexpr bool is_nc = Request::e.memory_type == MemoryType::NonCached;
+            static_assert(
+                is_nc && std::is_volatile_v<typename Request::buffer_type>,
+                "Non cached buffers must be volatile to work as intended"
+            );
+            using T = typename Request::buffer_type;
             return *new (ptr) T(std::forward<Args>(args)...);
         }
 
-        template <mpu_buffer_request auto& Target> auto* as() {
-            using T = typename std::remove_cvref_t<decltype(Target)>::buffer_type;
+        template <auto& Target> auto* as() {
+            using Request = std::remove_cvref_t<decltype(Target)>;
+            static_assert(mpu_buffer_request<Request>, "Target must be a valid MPUDomain buffer");
+            constexpr bool is_nc = Request::e.memory_type == MemoryType::NonCached;
+            static_assert(
+                is_nc && std::is_volatile_v<typename Request::buffer_type>,
+                "Non cached buffers must be volatile to work as intended"
+            );
+            using T = typename Request::buffer_type;
             return static_cast<T*>(ptr);
         }
     };
@@ -289,18 +316,18 @@ struct MPUDomain {
         static constexpr auto Sizes = calculate_total_sizes(cfgs);
 
         // Sections defined in Linker Script (aligned to 32 bytes just in case)
-        __attribute__((section(".mpu_ram_d1_nc.buffer"))) alignas(32
-        ) static inline uint8_t d1_nc_buffer[Sizes.d1_nc_total > 0 ? Sizes.d1_nc_total : 1];
+        __attribute__((section(".mpu_ram_d1_nc.buffer"))) alignas(32) static inline volatile uint8_t
+            d1_nc_buffer[Sizes.d1_nc_total > 0 ? Sizes.d1_nc_total : 1];
         __attribute__((section(".ram_d1.buffer"))) alignas(32
         ) static inline uint8_t d1_c_buffer[Sizes.d1_c_total > 0 ? Sizes.d1_c_total : 1];
 
-        __attribute__((section(".mpu_ram_d2_nc.buffer"))) alignas(32
-        ) static inline uint8_t d2_nc_buffer[Sizes.d2_nc_total > 0 ? Sizes.d2_nc_total : 1];
+        __attribute__((section(".mpu_ram_d2_nc.buffer"))) alignas(32) static inline volatile uint8_t
+            d2_nc_buffer[Sizes.d2_nc_total > 0 ? Sizes.d2_nc_total : 1];
         __attribute__((section(".ram_d2.buffer"))) alignas(32
         ) static inline uint8_t d2_c_buffer[Sizes.d2_c_total > 0 ? Sizes.d2_c_total : 1];
 
-        __attribute__((section(".mpu_ram_d3_nc.buffer"))) alignas(32
-        ) static inline uint8_t d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
+        __attribute__((section(".mpu_ram_d3_nc.buffer"))) alignas(32) static inline volatile uint8_t
+            d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
         __attribute__((section(".ram_d3.buffer"))) alignas(32
         ) static inline uint8_t d3_c_buffer[Sizes.d3_c_total > 0 ? Sizes.d3_c_total : 1];
 
@@ -326,7 +353,7 @@ struct MPUDomain {
             );
 
             // Assign pointers
-            uint8_t* bases_nc[3] = {&d1_nc_buffer[0], &d2_nc_buffer[0], &d3_nc_buffer[0]};
+            volatile uint8_t* bases_nc[3] = {&d1_nc_buffer[0], &d2_nc_buffer[0], &d3_nc_buffer[0]};
             uint8_t* bases_c[3] = {&d1_c_buffer[0], &d2_c_buffer[0], &d3_c_buffer[0]};
 
             for (std::size_t i = 0; i < N; i++) {
@@ -338,7 +365,7 @@ struct MPUDomain {
                     size_t d_idx = static_cast<size_t>(cfg.domain) - 1;
 
                     if (cfg.type == MemoryType::NonCached) {
-                        inst.ptr = bases_nc[d_idx] + cfg.offset;
+                        inst.ptr = const_cast<uint8_t*>(bases_nc[d_idx] + cfg.offset);
                     } else {
                         inst.ptr = bases_c[d_idx] + cfg.offset;
                     }

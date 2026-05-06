@@ -559,6 +559,8 @@ struct SPIDomain {
 
     /**
      * @brief SPI Wrapper for Master mode operations.
+     * @warning DMA operations may be optimized away by the compiler, you should either use volatile
+     * buffers or add some kind of memory barrier after DMA operations to ensure data integrity.
      */
     template <auto& device_request> struct SPIWrapper<device_request, true> {
         static constexpr uint32_t data_bits =
@@ -596,9 +598,10 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using element_type = std::remove_volatile_t<E>;
             auto error_code = HAL_SPI_Transmit(
                 &spi_instance.hspi,
-                (uint8_t*)data.data(),
+                reinterpret_cast<const uint8_t*>(const_cast<const element_type*>(data.data())),
                 data.size_bytes() / frame_size,
                 10
             );
@@ -610,20 +613,21 @@ struct SPIDomain {
          */
         template <typename T>
         bool send(const T& data)
-            requires std::is_trivially_copyable_v<T>
+            requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
-            if (sizeof(T) % frame_size != 0) {
+            using element_type = std::remove_volatile_t<T>;
+            if (sizeof(element_type) % frame_size != 0) {
                 ErrorHandler(
                     "SPI data type size (%d) not aligned to frame size (%d)",
-                    sizeof(T),
+                    sizeof(element_type),
                     frame_size
                 );
                 return false;
             }
             auto error_code = HAL_SPI_Transmit(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&data),
-                sizeof(T) / frame_size,
+                reinterpret_cast<const uint8_t*>(const_cast<const element_type*>(&data)),
+                sizeof(element_type) / frame_size,
                 10
             );
             return check_error_code(error_code);
@@ -641,9 +645,10 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using element_type = std::remove_volatile_t<E>;
             auto error_code = HAL_SPI_Receive(
                 &spi_instance.hspi,
-                (uint8_t*)data.data(),
+                reinterpret_cast<uint8_t*>(const_cast<element_type*>(data.data())),
                 data.size_bytes() / frame_size,
                 10
             );
@@ -655,20 +660,21 @@ struct SPIDomain {
          */
         template <typename T>
         bool receive(T& data)
-            requires std::is_trivially_copyable_v<T>
+            requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
-            if (sizeof(T) % frame_size != 0) {
+            using element_type = std::remove_volatile_t<T>;
+            if (sizeof(element_type) % frame_size != 0) {
                 ErrorHandler(
                     "SPI data type size (%d) not aligned to frame size (%d)",
-                    sizeof(T),
+                    sizeof(element_type),
                     frame_size
                 );
                 return false;
             }
             auto error_code = HAL_SPI_Receive(
                 &spi_instance.hspi,
-                reinterpret_cast<uint8_t*>(&data),
-                sizeof(T) / frame_size,
+                reinterpret_cast<const uint8_t*>(const_cast<const element_type*>(&data)),
+                sizeof(element_type) / frame_size,
                 10
             );
             return check_error_code(error_code);
@@ -688,10 +694,12 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using tx_element_type = std::remove_volatile_t<E1>;
+            using rx_element_type = std::remove_volatile_t<E2>;
             auto error_code = HAL_SPI_TransmitReceive(
                 &spi_instance.hspi,
-                (uint8_t*)tx_data.data(),
-                (uint8_t*)rx_data.data(),
+                reinterpret_cast<const uint8_t*>(const_cast<tx_element_type*>(tx_data.data())),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(rx_data.data())),
                 size / frame_size,
                 10
             );
@@ -737,10 +745,13 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using tx_element_type = std::remove_volatile_t<E>;
+            using rx_element_type = std::remove_volatile_t<T>;
             auto error_code = HAL_SPI_TransmitReceive(
                 &spi_instance.hspi,
-                (uint8_t*)tx_data.data(),
-                reinterpret_cast<uint8_t*>(&rx_data),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(&rx_data)),
                 size / frame_size,
                 10
             );
@@ -763,10 +774,12 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using tx_element_type = std::remove_volatile_t<T>;
+            using rx_element_type = std::remove_volatile_t<E>;
             auto error_code = HAL_SPI_TransmitReceive(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&tx_data),
-                (uint8_t*)rx_data.data(),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(&tx_data)),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(rx_data.data())),
                 size / frame_size,
                 10
             );
@@ -778,9 +791,11 @@ struct SPIDomain {
          */
         template <typename T1, typename T2>
         bool transceive(const T1& tx_data, T2& rx_data)
-            requires(std::is_trivially_copyable_v<T1> && std::is_trivially_copyable_v<T2>)
+            requires(std::is_trivially_copyable_v<std::remove_volatile_t<T1>> && std::is_trivially_copyable_v<std::remove_volatile_t<T2>>)
         {
-            size_t size = std::min(sizeof(T1), sizeof(T2));
+            using tx_element_type = std::remove_volatile_t<T1>;
+            using rx_element_type = std::remove_volatile_t<T2>;
+            size_t size = std::min(sizeof(tx_element_type), sizeof(rx_element_type));
             if (size % frame_size != 0) {
                 ErrorHandler(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
@@ -791,8 +806,8 @@ struct SPIDomain {
             }
             auto error_code = HAL_SPI_TransmitReceive(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&tx_data),
-                reinterpret_cast<uint8_t*>(&rx_data),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(&tx_data)),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(&rx_data)),
                 size / frame_size,
                 10
             );
@@ -814,9 +829,10 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using element_type = std::remove_volatile_t<E>;
             auto error_code = HAL_SPI_Transmit_DMA(
                 &spi_instance.hspi,
-                (uint8_t*)data.data(),
+                reinterpret_cast<uint8_t*>(const_cast<element_type*>(data.data())),
                 data.size_bytes() / frame_size
             );
             return check_error_code(error_code);
@@ -828,21 +844,22 @@ struct SPIDomain {
          */
         template <typename T>
         bool send_DMA(const T& data, volatile bool* operation_flag = nullptr)
-            requires std::is_trivially_copyable_v<T>
+            requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
             spi_instance.operation_flag = operation_flag;
-            if (sizeof(T) % frame_size != 0) {
+            using element_type = std::remove_volatile_t<T>;
+            if (sizeof(element_type) % frame_size != 0) {
                 ErrorHandler(
                     "SPI data size (%d) not aligned to frame size (%d)",
-                    sizeof(T),
+                    sizeof(element_type),
                     frame_size
                 );
                 return false;
             }
             auto error_code = HAL_SPI_Transmit_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&data),
-                sizeof(T) / frame_size
+                reinterpret_cast<const uint8_t*>(const_cast<const element_type*>(&data)),
+                sizeof(element_type) / frame_size
             );
             return check_error_code(error_code);
         }
@@ -862,9 +879,10 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using element_type = std::remove_volatile_t<E>;
             auto error_code = HAL_SPI_Receive_DMA(
                 &spi_instance.hspi,
-                (uint8_t*)data.data(),
+                reinterpret_cast<uint8_t*>(const_cast<element_type*>(data.data())),
                 data.size_bytes() / frame_size
             );
             return check_error_code(error_code);
@@ -876,21 +894,22 @@ struct SPIDomain {
          */
         template <typename T>
         bool receive_DMA(T& data, volatile bool* operation_flag = nullptr)
-            requires std::is_trivially_copyable_v<T>
+            requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
             spi_instance.operation_flag = operation_flag;
-            if (sizeof(T) % frame_size != 0) {
+            using element_type = std::remove_volatile_t<T>;
+            if (sizeof(element_type) % frame_size != 0) {
                 ErrorHandler(
                     "SPI data size (%d) not aligned to frame size (%d)",
-                    sizeof(T),
+                    sizeof(element_type),
                     frame_size
                 );
                 return false;
             }
             auto error_code = HAL_SPI_Receive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<uint8_t*>(&data),
-                sizeof(T) / frame_size
+                reinterpret_cast<uint8_t*>(const_cast<element_type*>(&data)),
+                sizeof(element_type) / frame_size
             );
             return check_error_code(error_code);
         }
@@ -915,10 +934,13 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using tx_element_type = std::remove_volatile_t<E1>;
+            using rx_element_type = std::remove_volatile_t<E2>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                (uint8_t*)tx_data.data(),
-                (uint8_t*)rx_data.data(),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(rx_data.data())),
                 size / frame_size
             );
             return check_error_code(error_code);
@@ -942,10 +964,13 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using tx_element_type = std::remove_volatile_t<E>;
+            using rx_element_type = std::remove_volatile_t<T>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                (uint8_t*)tx_data.data(),
-                reinterpret_cast<uint8_t*>(&rx_data),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(&rx_data)),
                 size / frame_size
             );
             return check_error_code(error_code);
@@ -973,10 +998,12 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using tx_element_type = std::remove_volatile_t<T>;
+            using rx_element_type = std::remove_volatile_t<E>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&tx_data),
-                (uint8_t*)rx_data.data(),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(&tx_data)),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(rx_data.data())),
                 size / frame_size
             );
             return check_error_code(error_code);
@@ -988,10 +1015,12 @@ struct SPIDomain {
          */
         template <typename T1, typename T2>
         bool transceive_DMA(const T1& tx_data, T2& rx_data, volatile bool* operation_flag = nullptr)
-            requires(std::is_trivially_copyable_v<T1> && std::is_trivially_copyable_v<T2>)
+            requires(std::is_trivially_copyable_v<std::remove_volatile_t<T1>> && std::is_trivially_copyable_v<std::remove_volatile_t<T2>>)
         {
+            using tx_element_type = std::remove_volatile_t<T1>;
+            using rx_element_type = std::remove_volatile_t<T2>;
             spi_instance.operation_flag = operation_flag;
-            auto size = std::min(sizeof(T1), sizeof(T2));
+            auto size = std::min(sizeof(tx_element_type), sizeof(rx_element_type));
             if (size % frame_size != 0) {
                 ErrorHandler(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
@@ -1002,8 +1031,8 @@ struct SPIDomain {
             }
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&tx_data),
-                reinterpret_cast<uint8_t*>(&rx_data),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(&tx_data)),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(&rx_data)),
                 size / frame_size
             );
             return check_error_code(error_code);
@@ -1025,6 +1054,8 @@ struct SPIDomain {
 
     /**
      * @brief SPI Wrapper for Slave mode operations. Doesn't allow for blocking operations.
+     * @warning DMA operations may be optimized away by the compiler, you should either use volatile
+     * buffers or add some kind of memory barrier after DMA operations to ensure data integrity.
      */
     template <auto& device_request> struct SPIWrapper<device_request, false> {
         static constexpr uint32_t data_bits =
@@ -1078,9 +1109,10 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using element_type = std::remove_volatile_t<E>;
             auto error_code = HAL_SPI_Receive_DMA(
                 &spi_instance.hspi,
-                (uint8_t*)data.data(),
+                reinterpret_cast<uint8_t*>(const_cast<element_type*>(data.data())),
                 data.size_bytes() / frame_size
             );
             return check_error_code(error_code);
@@ -1092,21 +1124,22 @@ struct SPIDomain {
          */
         template <typename T>
         bool listen(T& data, volatile bool* operation_flag = nullptr)
-            requires std::is_trivially_copyable_v<T>
+            requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
             spi_instance.operation_flag = operation_flag;
-            if (sizeof(T) % frame_size != 0) {
+            using element_type = std::remove_volatile_t<T>;
+            if (sizeof(element_type) % frame_size != 0) {
                 ErrorHandler(
                     "SPI data size (%d) not aligned to frame size (%d)",
-                    sizeof(T),
+                    sizeof(element_type),
                     frame_size
                 );
                 return false;
             }
             auto error_code = HAL_SPI_Receive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<uint8_t*>(&data),
-                sizeof(T) / frame_size
+                reinterpret_cast<uint8_t*>(const_cast<element_type*>(&data)),
+                sizeof(element_type) / frame_size
             );
             return check_error_code(error_code);
         }
@@ -1126,9 +1159,10 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using element_type = std::remove_volatile_t<E>;
             auto error_code = HAL_SPI_Transmit_DMA(
                 &spi_instance.hspi,
-                (uint8_t*)tx_data.data(),
+                reinterpret_cast<const uint8_t*>(const_cast<const element_type*>(tx_data.data())),
                 tx_data.size_bytes() / frame_size
             );
             return check_error_code(error_code);
@@ -1140,21 +1174,22 @@ struct SPIDomain {
          */
         template <typename T>
         bool arm(const T& data, volatile bool* operation_flag = nullptr)
-            requires std::is_trivially_copyable_v<T>
+            requires std::is_trivially_copyable_v<std::remove_volatile_t<T>>
         {
             spi_instance.operation_flag = operation_flag;
-            if (sizeof(T) % frame_size != 0) {
+            using element_type = std::remove_volatile_t<T>;
+            if (sizeof(element_type) % frame_size != 0) {
                 ErrorHandler(
                     "SPI data size (%d) not aligned to frame size (%d)",
-                    sizeof(T),
+                    sizeof(element_type),
                     frame_size
                 );
                 return false;
             }
             auto error_code = HAL_SPI_Transmit_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&data),
-                sizeof(T) / frame_size
+                reinterpret_cast<const uint8_t*>(const_cast<const element_type*>(&data)),
+                sizeof(element_type) / frame_size
             );
             return check_error_code(error_code);
         }
@@ -1179,10 +1214,13 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using tx_element_type = std::remove_volatile_t<E1>;
+            using rx_element_type = std::remove_volatile_t<E2>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                (uint8_t*)tx_data.data(),
-                (uint8_t*)rx_data.data(),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(rx_data.data())),
                 size / frame_size
             );
             return check_error_code(error_code);
@@ -1206,10 +1244,13 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using tx_element_type = std::remove_volatile_t<E>;
+            using rx_element_type = std::remove_volatile_t<T>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                (uint8_t*)tx_data.data(),
-                reinterpret_cast<uint8_t*>(&rx_data),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(tx_data.data())
+                ),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(&rx_data)),
                 size / frame_size
             );
             return check_error_code(error_code);
@@ -1234,10 +1275,12 @@ struct SPIDomain {
                 );
                 return false;
             }
+            using rx_element_type = std::remove_volatile_t<E>;
+            using tx_element_type = std::remove_volatile_t<T>;
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&tx_data),
-                (uint8_t*)rx_data.data(),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(&tx_data)),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(rx_data.data())),
                 size / frame_size
             );
             return check_error_code(error_code);
@@ -1249,10 +1292,12 @@ struct SPIDomain {
          */
         template <typename T1, typename T2>
         bool transceive(const T1& tx_data, T2& rx_data, volatile bool* operation_flag = nullptr)
-            requires(std::is_trivially_copyable_v<T1> && std::is_trivially_copyable_v<T2>)
+            requires(std::is_trivially_copyable_v<std::remove_volatile_t<T1>> && std::is_trivially_copyable_v<std::remove_volatile_t<T2>>)
         {
+            using tx_element_type = std::remove_volatile_t<T1>;
+            using rx_element_type = std::remove_volatile_t<T2>;
             spi_instance.operation_flag = operation_flag;
-            auto size = std::min(sizeof(T1), sizeof(T2));
+            auto size = std::min(sizeof(tx_element_type), sizeof(rx_element_type));
             if (size % frame_size != 0) {
                 ErrorHandler(
                     "SPI transaction size (%d) not aligned to frame size (%d)",
@@ -1263,8 +1308,8 @@ struct SPIDomain {
             }
             auto error_code = HAL_SPI_TransmitReceive_DMA(
                 &spi_instance.hspi,
-                reinterpret_cast<const uint8_t*>(&tx_data),
-                reinterpret_cast<uint8_t*>(&rx_data),
+                reinterpret_cast<const uint8_t*>(const_cast<const tx_element_type*>(&tx_data)),
+                reinterpret_cast<uint8_t*>(const_cast<rx_element_type*>(&rx_data)),
                 size / frame_size
             );
             return check_error_code(error_code);

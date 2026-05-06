@@ -18,7 +18,7 @@ uint8_t MDMA::get_instance_id(MDMA_Channel_TypeDef* channel) {
     return static_cast<uint8_t>((address - (MDMA_BASE + 0x40UL)) / 0x40UL);
 }
 
-void MDMA::prepare_transfer(Instance& instance, MDMA_LinkNodeTypeDef* first_node) {
+void MDMA::prepare_transfer(Instance& instance, volatile MDMA_LinkNodeTypeDef* first_node) {
     if (instance.handle.State == HAL_MDMA_STATE_BUSY) {
         ErrorHandler("MDMA transfer already in progress");
         return;
@@ -27,7 +27,7 @@ void MDMA::prepare_transfer(Instance& instance, MDMA_LinkNodeTypeDef* first_node
 
     instance.handle.State = HAL_MDMA_STATE_BUSY;
     instance.handle.ErrorCode = HAL_MDMA_ERROR_NONE;
-    instance.handle.FirstLinkedListNodeAddress = first_node;
+    instance.handle.FirstLinkedListNodeAddress = const_cast<MDMA_LinkNodeTypeDef*>(first_node);
 
     MDMA_Channel_TypeDef* channel = instance.handle.Instance;
 
@@ -56,7 +56,7 @@ void MDMA::prepare_transfer(Instance& instance, MDMA_LinkNodeTypeDef* first_node
     }
 }
 
-void MDMA::prepare_transfer(Instance& instance, LinkedListNode* first_node) {
+void MDMA::prepare_transfer(Instance& instance, volatile LinkedListNode* first_node) {
     MDMA::prepare_transfer(instance, first_node->get_node());
 }
 
@@ -91,7 +91,7 @@ void MDMA::inscribe(Instance& instance, uint8_t id) {
     mdma_handle.Init.DestBlockAddressOffset = 0;
 
     MDMA_LinkNodeConfTypeDef nodeConfig{};
-    MDMA_LinkNodeTypeDef* transfer_node = &internal_nodes[id];
+    auto transfer_node = &internal_nodes[id];
 
     nodeConfig.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
     nodeConfig.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
@@ -112,7 +112,10 @@ void MDMA::inscribe(Instance& instance, uint8_t id) {
     nodeConfig.SrcAddress = reinterpret_cast<uint32_t>(nullptr);
     nodeConfig.DstAddress = reinterpret_cast<uint32_t>(nullptr);
 
-    const HAL_StatusTypeDef status = HAL_MDMA_LinkedList_CreateNode(transfer_node, &nodeConfig);
+    const HAL_StatusTypeDef status = HAL_MDMA_LinkedList_CreateNode(
+        const_cast<MDMA_LinkNodeTypeDef*>(transfer_node),
+        &nodeConfig
+    );
     if (status != HAL_OK) {
         ErrorHandler("Error creating linked list in MDMA");
     }
@@ -182,7 +185,7 @@ void MDMA::irq_handler() {
     }
 }
 
-void MDMA::transfer_list(MDMA::LinkedListNode* first_node, volatile bool* done) {
+void MDMA::transfer_list(volatile MDMA::LinkedListNode* first_node, volatile bool* done) {
     if (transfer_queue.size() >= TRANSFER_QUEUE_MAX_SIZE) {
         ErrorHandler("MDMA transfer queue full");
         return;
