@@ -99,7 +99,8 @@ void format_numeric_value(
     case Protections::SampleEncoding::BOOL:
         {
             const char* text = value.bool_value ? "true" : "false";
-            const size_t length = strnlen(text, buffer_size - 1);
+            const size_t text_length = value.bool_value ? 4U : 5U;
+            const size_t length = std::min(text_length, buffer_size - 1);
             memcpy(buffer, text, length);
             buffer[length] = '\0';
         }
