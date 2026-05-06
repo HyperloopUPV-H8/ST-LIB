@@ -147,7 +147,7 @@ public:
 
         void init_node(void* src, void* dst, size_t size) {
             if (size == 0) {
-                ErrorHandler("MDMA: zero-length transfer is invalid");
+                PANIC("MDMA: zero-length transfer is invalid");
                 return;
             }
 
@@ -221,7 +221,7 @@ public:
             nodeConfig.Init.BufferTransferLength = buf_len;
 
             if (HAL_MDMA_LinkedList_CreateNode(&node, &nodeConfig) != HAL_OK) {
-                ErrorHandler("Error creating linked list in MDMA");
+                PANIC("Error creating linked list in MDMA");
             }
 
             // HAL_MDMA_LinkedList_CreateNode only sets the request field in CTBR;

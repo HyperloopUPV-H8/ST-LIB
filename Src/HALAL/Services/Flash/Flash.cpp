@@ -9,7 +9,7 @@
 
 void Flash::read(uint32_t source_addr, uint32_t* result, uint32_t number_of_words) {
     if (source_addr < FLASH_START_ADDRESS || source_addr > FLASH_END_ADDRESS) {
-        ErrorHandler("Address out of memory when trying to read flash memory.");
+        PANIC("Address out of memory when trying to read flash memory.");
         return;
     }
 
@@ -26,7 +26,7 @@ void Flash::read(uint32_t source_addr, uint32_t* result, uint32_t number_of_word
 // TODO: Estaria muy bien optimizar el uso de ram en la escritura de múltiples sectores
 bool Flash::write(uint32_t* source, uint32_t dest_addr, uint32_t number_of_words) {
     if (dest_addr < FLASH_SECTOR0_START_ADDRESS || dest_addr > FLASH_END_ADDRESS) {
-        ErrorHandler("Address out of memory when trying to write flash memory.");
+        PANIC("Address out of memory when trying to write flash memory.");
         return false;
     }
 

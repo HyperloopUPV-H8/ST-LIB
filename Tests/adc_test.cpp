@@ -8,11 +8,11 @@
 #include "MockedDrivers/mocked_hal_adc.hpp"
 #include "MockedDrivers/mocked_hal_dma.hpp"
 
-namespace ST_LIB::TestErrorHandler {
+namespace ST_LIB::TestPanicReporter {
 void reset();
 void set_fail_on_error(bool enabled);
 extern int call_count;
-} // namespace ST_LIB::TestErrorHandler
+} // namespace ST_LIB::TestPanicReporter
 
 namespace {
 
@@ -322,7 +322,7 @@ protected:
     void reset_runtime_state() {
         ST_LIB::MockedHAL::adc_reset();
         ST_LIB::MockedHAL::dma_reset();
-        ST_LIB::TestErrorHandler::reset();
+        ST_LIB::TestPanicReporter::reset();
         clear_nvic_enables();
         clear_dma_irq_table();
     }
@@ -545,7 +545,7 @@ TEST_F(ADCTest, Resolution10BitDMAClampsRawBufferToResolutionRange) {
 }
 
 TEST_F(ADCTest, InitWithoutDMAInstancesFailsInsteadOfConfiguringDMAAtRuntime) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
 
     float output = -1.0f;
     const std::array<ST_LIB::ADCDomain::Config, 1> cfgs{{
@@ -562,14 +562,14 @@ TEST_F(ADCTest, InitWithoutDMAInstancesFailsInsteadOfConfiguringDMAAtRuntime) {
 
     SingleADCInit::init(cfgs);
 
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 1);
     EXPECT_EQ(hadc1.DMA_Handle, nullptr);
     EXPECT_FALSE(ST_LIB::MockedHAL::adc_is_dma_running(ADC1));
     EXPECT_EQ(ST_LIB::MockedHAL::adc_get_call_count(ST_LIB::MockedHAL::ADCOperation::StartDMA), 0U);
 }
 
 TEST_F(ADCTest, DMAStartFailureTriggersErrorPathAndLeavesInstanceUnreadable) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
     ST_LIB::MockedHAL::dma_set_start_status(HAL_ERROR);
 
     float output = -1.0f;
@@ -587,14 +587,14 @@ TEST_F(ADCTest, DMAStartFailureTriggersErrorPathAndLeavesInstanceUnreadable) {
 
     init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
 
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 1);
     EXPECT_FALSE(ST_LIB::MockedHAL::adc_is_dma_running(ADC1));
     EXPECT_EQ(SingleADCInit::instances[0].handle, nullptr);
     EXPECT_FLOAT_EQ(SingleADCInit::instances[0].get_raw(), 0.0f);
 }
 
 TEST_F(ADCTest, UnresolvedConfigDoesNotAliasAResolvedPeripheralInstance) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
 
     float unresolved = -1.0f;
     float resolved = -1.0f;
@@ -621,7 +621,7 @@ TEST_F(ADCTest, UnresolvedConfigDoesNotAliasAResolvedPeripheralInstance) {
 
     init_adc_with_dma<2, shared_adc1_init_cfgs>(cfgs);
 
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 1);
     EXPECT_EQ(SharedADCInit::instances[0].handle, nullptr);
     EXPECT_EQ(SharedADCInit::instances[0].dma_slot, nullptr);
     EXPECT_EQ(SharedADCInit::instances[1].handle, &hadc1);

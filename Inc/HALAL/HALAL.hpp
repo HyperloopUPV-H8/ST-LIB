@@ -68,13 +68,3 @@
 #include "HALAL/Services/Communication/Ethernet/LWIP/UDP/DatagramSocket.hpp"
 #include "HALAL/Services/Communication/SNTP/SNTP.hpp"
 #endif
-
-namespace HALAL {
-
-#ifdef STLIB_ETH
-void start(MAC mac, IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral);
-#else
-void start(UART::Peripheral& printf_peripheral);
-#endif
-
-} // namespace HALAL

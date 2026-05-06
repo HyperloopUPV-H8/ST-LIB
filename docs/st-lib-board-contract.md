@@ -7,13 +7,30 @@ If you change a domain, add a new domain, or add a cross-domain composition rule
 
 ## 1. Mental Model
 
-`Board<...>` is a compile-time build pipeline plus a runtime init pipeline.
+`Board<Policy, ...>` is a compile-time build pipeline plus a runtime init pipeline.
 
 - Compile time decides what exists and how it must be configured.
 - Runtime only materializes already-built configurations and links HAL handles.
 
 `Board` is intentionally declarative. Request objects describe intent; domains convert that intent
-into concrete configs.
+into concrete configs. The first template argument is not a request object: it is the global fault
+runtime policy type used by `FaultController`.
+
+Protection declarations are also request objects. They do not inscribe hardware into `BuildCtx`;
+instead, `Board` filters them into a board-specific `ProtectionEngine` type.
+
+## 1.1 Board Policy Contract
+
+The first template argument of `Board` must be a fault policy type.
+
+That type must expose:
+
+- `static constexpr bool has_operational_machine`
+- `static constexpr Callback on_fault_enter`
+- `static constexpr auto& operational_machine` when `has_operational_machine == true`
+
+`FaultPolicy<...>`, `FaultPolicyNoMachine<...>`, and `DefaultFaultPolicy` are the intended public
+helpers for this contract.
 
 ## 2. Domain Contract
 
@@ -35,10 +52,10 @@ signature.
 
 ## 3. Request Object Contract
 
-A request object that can be used inside `Board<...>` must provide:
+A request object that can be used after the first `Policy` argument inside `Board<Policy, ...>` must
+provide:
 
-- `using domain = <DomainType>;`
-- `template <class Ctx> consteval std::size_t inscribe(Ctx&) const`
+- `template <class Ctx> consteval ... inscribe(Ctx&) const`
 
 or any compatible return type if it naturally inscribes multiple dependent entries.
 
@@ -48,6 +65,10 @@ or any compatible return type if it naturally inscribes multiple dependent entri
 - append the domain entries needed by the request
 - return indices only for later compile-time wiring
 - never depend on runtime state
+
+Hardware requests also expose `using domain = <DomainType>;` for `Board::instance_of<request>()`.
+Protection requests intentionally do not expose a hardware domain and are accessed through
+`Board::ProtectionEngine`.
 
 ## 4. BuildCtx Contract
 
@@ -68,6 +89,7 @@ This is a deliberate design choice. `BuildCtx` is a storage and ownership map, n
 
 - creates a `DomainsCtx`
 - evaluates every request object's `inscribe(ctx)` in declaration order
+- does not inspect or route the `Policy` through `BuildCtx`
 
 `Board::build()`:
 
@@ -76,6 +98,9 @@ This is a deliberate design choice. `BuildCtx` is a storage and ownership map, n
 - assembles a `ConfigBundle`
 
 `Board::cfg` is the compile-time result of that process.
+
+`Board::ProtectionEngine` is the compile-time protection engine assembled from the protection
+request objects in the same `Board<Policy, ...>` declaration.
 
 No runtime-only configuration logic belongs here.
 
@@ -94,6 +119,8 @@ Permitted runtime work:
 - clock enable
 - IRQ enable
 - handle linking
+- initializing the board-specific protection engine
+- starting the global fault runtime
 - buffer allocation if the buffer is inherently runtime memory
 - starting peripherals using already-built configs
 
@@ -190,5 +217,7 @@ When reviewing a change to `Board`, a domain, or a DMA-using peripheral, verify:
 - Does the request object inscribe only compile-time information?
 - Can duplicate physical resources be produced? If yes, where are they prevented?
 - Does runtime init consume only `cfg`?
+- Are protection requests passed through the board and evaluated through `Board::ProtectionEngine`
+  or `Board::evaluate_protections()`?
 - Is any stream/request/allocation decision being made too late?
 - If the domain uses shared DMA, is it contributing only missing entries and preserving the rest?

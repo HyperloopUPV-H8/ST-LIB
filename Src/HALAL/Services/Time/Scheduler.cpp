@@ -58,11 +58,13 @@ void Scheduler_start(void) {
     ST_LIB::TimerDomain::callbacks[ST_LIB::timer_idxmap[static_cast<uint8_t>(SCHEDULER_TIMER_DOMAIN
     )]] = Scheduler_global_timer_callback;
 
-    uint16_t prescaler =
-        (uint16_t)(ST_LIB::TimerDomain::get_timer_frequency(Scheduler_global_timer) /
-                   Scheduler::FREQUENCY) -
-        1;
-    Scheduler_global_timer->PSC = prescaler;
+    uint32_t prescaler_divisor =
+        ST_LIB::TimerDomain::get_timer_frequency(Scheduler_global_timer) / Scheduler::FREQUENCY;
+    if (prescaler_divisor == 0 || prescaler_divisor > (uint32_t)UINT16_MAX + 1u) {
+        PANIC("Invalid prescaler value: %u", prescaler_divisor);
+        return;
+    }
+    Scheduler_global_timer->PSC = static_cast<uint16_t>(prescaler_divisor - 1u);
     Scheduler_global_timer->ARR = 0;
     Scheduler_global_timer->DIER |= LL_TIM_DIER_UIE;
     Scheduler_global_timer->CR1 =
@@ -100,9 +102,16 @@ void Scheduler::update() {
 
 uint64_t Scheduler::get_global_tick() {
     SchedLock();
-    uint64_t val = global_tick_us_ + Scheduler_global_timer->CNT;
+    uint64_t tick = global_tick_us_;
+#ifdef SIM_ON
+    if (Scheduler_global_timer != nullptr) {
+        tick += Scheduler_global_timer->CNT;
+    }
+#else
+    tick += Scheduler_global_timer->CNT;
+#endif
     SchedUnlock();
-    return val;
+    return tick;
 }
 
 inline uint8_t Scheduler::allocate_slot() {

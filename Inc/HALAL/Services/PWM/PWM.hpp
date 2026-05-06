@@ -37,7 +37,8 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         if (is_initialized)
             return;
         if (timer == nullptr || timer->instance == nullptr || timer->instance->hal_tim == nullptr) {
-            ErrorHandler("Timer instance is not set for PWM");
+            PANIC("Timer instance is not set for PWM");
+            return;
         }
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
@@ -67,7 +68,7 @@ public:
             &timer->instance->hal_tim
                  ->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
-            ErrorHandler("Channel not ready");
+            PANIC("Channel not ready");
         }
 
         *state = HAL_TIM_CHANNEL_STATE_BUSY;

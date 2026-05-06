@@ -832,11 +832,11 @@ struct ADCDomain {
             const auto buffer_size = buffer_size_for(peripheral);
             const auto buffer_offset = buffer_offset_for(peripheral);
             if (buffer_size == 0U) {
-                ErrorHandler("ADC DMA buffer not available");
+                PANIC("ADC DMA buffer not available");
                 return nullptr;
             }
             if ((buffer_offset + buffer_size) > total_dma_slots) {
-                ErrorHandler("ADC DMA pool overflow");
+                PANIC("ADC DMA pool overflow");
                 return nullptr;
             }
 
@@ -908,7 +908,7 @@ struct ADCDomain {
             for (std::size_t i = 0; i < N; ++i) {
                 const auto& cfg = runtime_cfgs[i];
                 if (!is_resolved_config(cfg)) {
-                    ErrorHandler("ADC config unresolved (AUTO)");
+                    PANIC("ADC config unresolved (AUTO)");
                     continue;
                 }
                 instance_cfg_valid[i] = true;
@@ -942,7 +942,7 @@ struct ADCDomain {
                 DMADomain::Instance* dma_instance =
                     find_dma_instance(first_cfg->dma_request, dma_peripherals);
                 if (dma_instance == nullptr) {
-                    ErrorHandler("ADC DMA instance unavailable");
+                    PANIC("ADC DMA instance unavailable");
                     continue;
                 }
                 volatile uint16_t* buffer = get_dma_buffer(peripheral);
@@ -955,7 +955,7 @@ struct ADCDomain {
                 configure_peripheral(*first_cfg, channel_count);
 
                 if (HAL_ADC_Init(hadc) != HAL_OK) {
-                    ErrorHandler("ADC Init failed");
+                    PANIC("ADC Init failed");
                     continue;
                 }
 
@@ -978,7 +978,7 @@ struct ADCDomain {
 #endif
 
                     if (HAL_ADC_ConfigChannel(hadc, &sConfig) != HAL_OK) {
-                        ErrorHandler("ADC channel configuration failed");
+                        PANIC("ADC channel configuration failed");
                         config_error = true;
                         break;
                     }
@@ -989,12 +989,9 @@ struct ADCDomain {
                     continue;
                 }
 
-                if (HAL_ADC_Start_DMA(
-                        hadc,
-                        reinterpret_cast<uint32_t*>(const_cast<uint16_t*>(buffer)),
-                        channel_count
-                    ) != HAL_OK) {
-                    ErrorHandler("ADC DMA start failed");
+                auto* dma_buffer = reinterpret_cast<uint32_t*>(const_cast<uint16_t*>(buffer));
+                if (HAL_ADC_Start_DMA(hadc, dma_buffer, channel_count) != HAL_OK) {
+                    PANIC("ADC DMA start failed");
                     continue;
                 }
 

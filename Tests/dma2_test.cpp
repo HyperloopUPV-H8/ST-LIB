@@ -7,11 +7,11 @@
 #include "MockedDrivers/NVIC.hpp"
 #include "MockedDrivers/mocked_hal_dma.hpp"
 
-namespace ST_LIB::TestErrorHandler {
+namespace ST_LIB::TestPanicReporter {
 void reset();
 void set_fail_on_error(bool enabled);
 extern int call_count;
-} // namespace ST_LIB::TestErrorHandler
+} // namespace ST_LIB::TestPanicReporter
 
 extern "C" {
 void DMA1_Stream0_IRQHandler(void);
@@ -234,7 +234,7 @@ class DMA2Test : public ::testing::Test {
 protected:
     void SetUp() override {
         ST_LIB::MockedHAL::dma_reset();
-        ST_LIB::TestErrorHandler::reset();
+        ST_LIB::TestPanicReporter::reset();
         clear_nvic_enables();
         clear_dma_irq_table();
     }
@@ -305,13 +305,13 @@ TEST_F(DMA2Test, ScheduledTransferTimingSerializesSharedBusUsage) {
 }
 
 TEST_F(DMA2Test, InitFailureTriggersErrorAndSkipsRegistration) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
     ST_LIB::MockedHAL::dma_set_init_status(HAL_ERROR);
 
     ST_LIB::DMADomain::Init<2>::init(spi_dma_cfg);
 
     EXPECT_EQ(ST_LIB::MockedHAL::dma_get_call_count(ST_LIB::MockedHAL::DMAOperation::Init), 2U);
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 2);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 2);
     EXPECT_EQ(dma_irq_table[0], nullptr);
     EXPECT_EQ(dma_irq_table[1], nullptr);
 }
@@ -353,7 +353,7 @@ TEST_F(DMA2Test, InitUsesPrecomputedDMAInitDataWithoutRuntimeReconfiguration) {
 }
 
 TEST_F(DMA2Test, InitRejectsCorruptedConfigWithNoAssignedStream) {
-    ST_LIB::TestErrorHandler::set_fail_on_error(false);
+    ST_LIB::TestPanicReporter::set_fail_on_error(false);
 
     auto corrupted_cfg = spi_dma_cfg;
     std::get<2>(corrupted_cfg[0].init_data) = ST_LIB::DMADomain::Stream::none;
@@ -361,7 +361,7 @@ TEST_F(DMA2Test, InitRejectsCorruptedConfigWithNoAssignedStream) {
 
     ST_LIB::DMADomain::Init<2>::init(corrupted_cfg);
 
-    EXPECT_EQ(ST_LIB::TestErrorHandler::call_count, 1);
+    EXPECT_EQ(ST_LIB::TestPanicReporter::call_count, 1);
     EXPECT_EQ(ST_LIB::MockedHAL::dma_get_call_count(ST_LIB::MockedHAL::DMAOperation::Init), 1U);
     EXPECT_EQ(dma_irq_table[0], nullptr);
     EXPECT_EQ(dma_irq_table[1], &ST_LIB::DMADomain::Init<2>::instances[1].dma);

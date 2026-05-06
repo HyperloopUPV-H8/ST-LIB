@@ -1,12 +1,13 @@
 #include <gtest/gtest.h>
+
+#include <source_location>
+
+#include "HALAL/Services/Diagnostics/Diagnostics.hpp"
+#include "ST-LIB_HIGH/Protections/FaultController.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Services/InfoWarning/InfoWarning.hpp"
 
-std::string ErrorHandlerModel::line;
-std::string ErrorHandlerModel::func;
-std::string ErrorHandlerModel::file;
-
-namespace ST_LIB::TestErrorHandler {
+namespace ST_LIB::TestPanicReporter {
 bool fail_on_error = true;
 int call_count = 0;
 
@@ -16,50 +17,44 @@ void reset() {
 }
 
 void set_fail_on_error(bool enabled) { fail_on_error = enabled; }
-} // namespace ST_LIB::TestErrorHandler
+} // namespace ST_LIB::TestPanicReporter
 
-void ErrorHandlerModel::SetMetaData(int line, const char* func, const char* file) {
-    ErrorHandlerModel::line = to_string(line);
-    ErrorHandlerModel::func = string(func);
-    ErrorHandlerModel::file = string(file);
-}
+void PanicReporter::Trigger(const std::source_location& location, const char* format, ...) {
+    char buffer[Diagnostics::Config::runtime_message_capacity + 1]{};
+    va_list arguments;
+    va_start(arguments, format);
+    const int32_t written = vsnprintf(buffer, sizeof(buffer), format, arguments);
+    va_end(arguments);
 
-void ErrorHandlerModel::ErrorHandlerTrigger(string format, ...) {
-    (void)format;
-    ST_LIB::TestErrorHandler::call_count++;
-    if (ST_LIB::TestErrorHandler::fail_on_error) {
+    ST_LIB::TestPanicReporter::call_count++;
+    FaultController::request_fault(FaultCause::panic(
+        buffer,
+        written < 0 || static_cast<size_t>(written) >= sizeof(buffer),
+        static_cast<int>(location.line()),
+        location.function_name(),
+        location.file_name()
+    ));
+    if (ST_LIB::TestPanicReporter::fail_on_error) {
         EXPECT_EQ(1, 0);
     }
 }
 
-void ErrorHandlerModel::ErrorHandlerUpdate() {}
+void PanicReporter::Flush() {}
 
-std::string InfoWarning::line;
-std::string InfoWarning::func;
-std::string InfoWarning::file;
+void FaultReporter::Trigger(const std::source_location& location, const char* format, ...) {
+    char buffer[Diagnostics::Config::runtime_message_capacity + 1]{};
+    va_list arguments;
+    va_start(arguments, format);
+    const int32_t written = vsnprintf(buffer, sizeof(buffer), format, arguments);
+    va_end(arguments);
 
-namespace ST_LIB::TestInfoWarning {
-bool fail_on_error = false;
-int call_count = 0;
-
-void reset() {
-    fail_on_error = false;
-    call_count = 0;
+    FaultController::request_fault(FaultCause::runtime_fault(
+        buffer,
+        written < 0 || static_cast<size_t>(written) >= sizeof(buffer),
+        static_cast<int>(location.line()),
+        location.function_name(),
+        location.file_name()
+    ));
 }
 
-void set_fail_on_error(bool enabled) { fail_on_error = enabled; }
-}; // namespace ST_LIB::TestInfoWarning
-
-void InfoWarning::SetMetaData(int line, const char* func, const char* file) {
-    InfoWarning::line = to_string(line);
-    InfoWarning::func = string(func);
-    InfoWarning::file = string(file);
-}
-
-void InfoWarning::InfoWarningTrigger(string format, ...) {
-    (void)format;
-    ST_LIB::TestInfoWarning::call_count++;
-    if (ST_LIB::TestInfoWarning::fail_on_error) {
-        EXPECT_EQ(1, 0);
-    }
-}
+void FaultReporter::Flush() {}

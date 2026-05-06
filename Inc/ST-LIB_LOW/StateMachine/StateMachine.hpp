@@ -71,7 +71,7 @@ public:
         requires are_transitions<StateEnum, T...>
     consteval State(StateEnum state, T... transitions) : state(state) {
         if (((transitions.target == state) || ...)) {
-            ErrorHandler("Current state cannot be the target of a transition");
+            PANIC("Current state cannot be the target of a transition");
         }
         (this->transitions.push_back(transitions), ...);
     }
@@ -155,7 +155,7 @@ public:
                 break;
 
             default:
-                ErrorHandler("Invalid Alarm Precision");
+                PANIC("Invalid Alarm Precision");
                 return;
                 break;
             }
@@ -171,7 +171,7 @@ public:
                     Scheduler::unregister_task(prev_action.id);
                     prev_action.is_on = false;
                 }
-                ErrorHandler("Failed to register timed action");
+                PANIC("Failed to register timed action");
                 return;
             }
             timed_action.is_on = true;
@@ -219,7 +219,7 @@ public:
         }
 
         else {
-            ErrorHandler("Invalid Time Unit");
+            PANIC("Invalid Time Unit");
         }
 
         timed_action.action = action;
@@ -307,7 +307,7 @@ static consteval auto add_nested_machines(Bindings... bindings) {
         for (std::size_t i = 0; i < count; ++i) {
             for (std::size_t j = i + 1; j < count; ++j) {
                 if (states[i] == states[j]) {
-                    ErrorHandler("Duplicate state found in add_nested_machines");
+                    PANIC("Duplicate state found in add_nested_machines");
                 }
             }
         }
@@ -422,7 +422,7 @@ public:
         for (size_t i = 0; i < sorted_states.size() - 1; i++) {
             for (size_t j = i + 1; j < sorted_states.size(); j++) {
                 if (sorted_states[i].get_state() == sorted_states[j].get_state()) {
-                    ErrorHandler("Duplicate state found in StateMachine constructor");
+                    PANIC("Duplicate state found in StateMachine constructor");
                 }
             }
         }
@@ -430,7 +430,7 @@ public:
         // Check that states are contiguous and start from 0
         for (size_t i = 0; i < sorted_states.size(); i++) {
             if (static_cast<size_t>(sorted_states[i].get_state()) != i) {
-                ErrorHandler("States Enum must be contiguous and start from 0");
+                PANIC("States Enum must be contiguous and start from 0");
             }
         }
 
@@ -448,7 +448,7 @@ public:
 
     void check_transitions() override {
         if (!called_start) [[unlikely]] {
-            ErrorHandler("Error: check_transitions called before StateMachine.start()");
+            PANIC("Error: check_transitions called before StateMachine.start()");
             return;
         }
         auto& [i, n] = transitions_assoc[static_cast<size_t>(current_state)];
@@ -512,7 +512,7 @@ public:
                 return states[i].add_cyclic_action(action, period);
             }
         }
-        ErrorHandler("Error: The state is not added to the state machine");
+        PANIC("Error: The state is not added to the state machine");
         return nullptr;
     }
 
@@ -524,7 +524,7 @@ public:
                 return;
             }
         }
-        ErrorHandler("Error: The state is not added to the state machine");
+        PANIC("Error: The state is not added to the state machine");
     }
 
     template <size_t N, size_t O>
@@ -535,7 +535,7 @@ public:
                 return;
             }
         }
-        ErrorHandler("Error: The state is not added to the state machine");
+        PANIC("Error: The state is not added to the state machine");
     }
 
     template <size_t N, size_t O>
@@ -546,7 +546,7 @@ public:
                 return;
             }
         }
-        ErrorHandler("Error: The state is not added to the state machine");
+        PANIC("Error: The state is not added to the state machine");
     }
 
     StateEnum get_current_state() const { return current_state; }

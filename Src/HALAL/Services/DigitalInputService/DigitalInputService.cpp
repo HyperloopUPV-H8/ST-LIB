@@ -18,7 +18,7 @@ uint8_t DigitalInput::inscribe(Pin& pin) {
 
 PinState DigitalInput::read_pin_state(uint8_t id) {
     if (not DigitalInput::service_ids.contains(id)) {
-        ErrorHandler("ID %d is not registered as a DigitalInput", id);
+        PANIC("ID %d is not registered as a DigitalInput", id);
         return PinState::OFF;
     }
 
