@@ -89,6 +89,7 @@ public:
         day = record.timestamp.day;
         month = record.timestamp.month;
         year = record.timestamp.year;
+        size = encoded_size();
     }
 
     void set_callback(void (*callback)(void)) override { this->callback = callback; }
@@ -135,6 +136,14 @@ public:
     }
 
 private:
+    size_t encoded_size() const {
+        return sizeof(id) + sizeof(DIAGNOSTIC_CHAR_TYPE) + sizeof(kind) +
+               bounded_strnlen(origin, sizeof(origin)) + 1 +
+               bounded_strnlen(message, sizeof(message)) + 1 + sizeof(counter) +
+               sizeof(second) + sizeof(minute) + sizeof(hour) + sizeof(day) + sizeof(month) +
+               sizeof(year);
+    }
+
     static uint16_t id_for(Severity severity) {
         switch (severity) {
         case Severity::FAULT:
