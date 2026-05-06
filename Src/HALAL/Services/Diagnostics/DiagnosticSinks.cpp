@@ -139,9 +139,8 @@ private:
     size_t encoded_size() const {
         return sizeof(id) + sizeof(DIAGNOSTIC_CHAR_TYPE) + sizeof(kind) +
                bounded_strnlen(origin, sizeof(origin)) + 1 +
-               bounded_strnlen(message, sizeof(message)) + 1 + sizeof(counter) +
-               sizeof(second) + sizeof(minute) + sizeof(hour) + sizeof(day) + sizeof(month) +
-               sizeof(year);
+               bounded_strnlen(message, sizeof(message)) + 1 + sizeof(counter) + sizeof(second) +
+               sizeof(minute) + sizeof(hour) + sizeof(day) + sizeof(month) + sizeof(year);
     }
 
     static uint16_t id_for(Severity severity) {
