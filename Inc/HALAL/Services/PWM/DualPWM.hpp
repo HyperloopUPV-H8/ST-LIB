@@ -22,10 +22,13 @@ class DualPWM {
     friend TimerWrapper<dev>;
 
     TimerWrapper<dev>* timer;
-    uint32_t* frequency;
     float* duty_cycle = nullptr;
+    uint32_t* frequency;
+    uint32_t polarity;
+    uint32_t negated_polarity;
     bool is_on_positive = false;
     bool is_on_negative = false;
+    bool is_initialized = false;
 
     /* This constructor is private for a reason. Use TimerWrapper<dev>::get_dual_pwm */
     DualPWM(
@@ -35,10 +38,16 @@ class DualPWM {
         float* duty_ptr,
         uint32_t* frequency_ptr
     )
-        : timer(tim) {
-        duty_cycle = duty_ptr;
-        frequency = frequency_ptr;
+        : timer(tim), duty_cycle(duty_ptr), frequency(frequency_ptr), polarity(polarity),
+          negated_polarity(negated_polarity) {}
 
+    inline void initialize() {
+        if (is_initialized)
+            return;
+
+        if (timer == nullptr || timer->instance == nullptr || timer->instance->hal_tim == nullptr) {
+            ErrorHandler("Timer instance is not set for DualPWM");
+        }
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
             .Pulse = 0,
@@ -53,10 +62,12 @@ class DualPWM {
 
         timer->template config_output_compare_channel<pin.channel>(&sConfigOC);
         timer->template set_output_compare_preload_enable<pin.channel>();
+        is_initialized = true;
     }
 
 public:
     inline void turn_on() {
+        initialize();
         turn_on_positive();
         turn_on_negative();
     }
@@ -65,7 +76,6 @@ public:
         turn_off_positive();
         turn_off_negative();
     }
-
     void turn_on_positive() {
         if (this->is_on_positive)
             return;

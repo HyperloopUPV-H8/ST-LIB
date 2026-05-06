@@ -27,15 +27,15 @@ template <const TimerDomain::Timer& dev> class Encoder {
 
     inline static TimerWrapper<dev>* timer;
     inline static bool is_on = false;
+    inline static bool is_initialized = false;
 
-    Encoder(TimerWrapper<dev>* tim) {
-        if (timer == nullptr) {
-            init(tim);
-        }
-    }
+    Encoder(TimerWrapper<dev>* tim) { timer = tim; }
 
 public:
     static void init(TimerWrapper<dev>* tim) {
+        if (tim == nullptr || tim->instance == nullptr) {
+            ErrorHandler("Timer instance is not set for encoder");
+        }
         TIM_Encoder_InitTypeDef sConfig = {0};
         TIM_MasterConfigTypeDef sMasterConfig = {0};
 
@@ -70,11 +70,13 @@ public:
         }
         timer = tim;
     }
-
     static void turn_on() {
+        if (!is_initialized) {
+            init(timer);
+            is_initialized = true;
+        }
         if (is_on)
             return;
-
         if (HAL_TIM_Encoder_GetState(timer->instance->hal_tim) == HAL_TIM_STATE_RESET) {
             ErrorHandler("Unable to get state from encoder");
             return;
