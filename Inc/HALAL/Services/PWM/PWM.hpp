@@ -24,7 +24,7 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
     uint32_t* frequency;
     bool is_on = false;
     bool is_initialized = false;
- 
+
     /* This constructor is private for a reason. Use TimerWrapper<dev>::get_pwm */
     PWM(TimerWrapper<dev>* tim,
         uint32_t polarity,
