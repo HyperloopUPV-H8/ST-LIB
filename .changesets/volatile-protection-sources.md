@@ -1,4 +1,4 @@
-release: minor
+release: patch
 summary: Allow protections to read volatile sample sources
 
 Protection sources now preserve the storage cv-qualification through a reference source wrapper,
