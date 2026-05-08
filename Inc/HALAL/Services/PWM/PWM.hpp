@@ -18,13 +18,13 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
     friend TimerWrapper<dev>;
 
     TimerWrapper<dev>* timer;
-    uint32_t* frequency;
-    float* duty_cycle = nullptr;
-    bool is_on = false;
-    bool is_initialized = false;
     uint32_t polarity;
     uint32_t negated_polarity;
-
+    float* duty_cycle = nullptr;
+    uint32_t* frequency;
+    bool is_on = false;
+    bool is_initialized = false;
+ 
     /* This constructor is private for a reason. Use TimerWrapper<dev>::get_pwm */
     PWM(TimerWrapper<dev>* tim,
         uint32_t polarity,
