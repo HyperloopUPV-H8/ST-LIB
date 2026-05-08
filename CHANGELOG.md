@@ -12,18 +12,18 @@ Historical releases that predate this file remain available in Git tags such as
 
 - Redesign fault handling, protections, and Board bootstrap around explicit fault policies
   This PR changes the public integration contract for applications built on ST-LIB.
-  
+
   Breaking changes:
-  
+
   - `Board` now takes the fault policy type as its first template parameter.
   - The global `FAULT` runtime is owned exclusively by `FaultController`.
   - User state machines are now nested under the global `OPERATIONAL` state through `FaultPolicy` or `FaultPolicyNoMachine`.
   - Protections are now compile-time `Board` request objects evaluated through `Board::ProtectionEngine`; the previous `ProtectionManager` and boundary split is no longer the active model.
   - Runtime reporting is unified under `PANIC(...)`, `FAULT(...)`, `WARNING(...)`, and `INFO(...)`.
   - The real bootstrap path is `Board::init()`. Legacy `STLIB::start()`, `STLIB::update()`, `STLIB_LOW::start()`, and `STLIB_HIGH::start()` must not be used as the integration path.
-  
+
   Migration notes:
-  
+
   - Declare the board as `Board<YourFaultPolicy, ...>`.
   - Use `FaultPolicy<app_machine, on_fault_enter>` when you want an operational state machine nested under the global runtime.
   - Use `FaultPolicyNoMachine<on_fault_enter>` when you only need a fault-entry callback.
@@ -39,7 +39,7 @@ Historical releases that predate this file remain available in Git tags such as
   timerwrapper:
    - Add `set_callback(void (*callback)(void*), void* callback_data)` to set the callback and its data instead of needing to call `configurexxbit()` and set the period.
    - `set_limit_value(uint32_t arr)` to set the arr, this will likely be changed to use a `uint32_t` type only when using a 32 bit timer, for now it is just an alias to `instance->tim->ARR = arr;`. Was not added in this pr but also wasn't mentioned before.
-  
+
   spi:
    - Add `transceive` with ptr + data explicitly instead of using a span since it's sometimes a pain in the ass to use.
 
