@@ -3,16 +3,20 @@
 #include "C++Utilities/CppUtils.hpp"
 #include "ST-LIB_HIGH/Protections/ProtectionConcepts.hpp"
 
-template <Protections::ProtectionSample T> class SampleSource {
+template <typename Storage>
+    requires Protections::ProtectionSample<std::remove_cvref_t<Storage>>
+class ReferenceSampleSource {
 public:
-    using value_type = T;
+    using value_type = std::remove_cvref_t<Storage>;
 
-    explicit constexpr SampleSource(T& value) : value_ptr(&value) {}
-    explicit constexpr SampleSource(T* value_ptr) : value_ptr(value_ptr) {}
+    explicit constexpr ReferenceSampleSource(Storage& value) : value_ptr(&value) {}
+    explicit constexpr ReferenceSampleSource(Storage* value_ptr) : value_ptr(value_ptr) {}
 
-    constexpr const T& read() const { return *value_ptr; }
-    constexpr T* raw() const { return value_ptr; }
+    constexpr value_type read() const { return *value_ptr; }
+    constexpr Storage* raw() const { return value_ptr; }
 
 private:
-    T* value_ptr{nullptr};
+    Storage* value_ptr{nullptr};
 };
+
+template <typename Storage> using SampleSource = ReferenceSampleSource<Storage>;
