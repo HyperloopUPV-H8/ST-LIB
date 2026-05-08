@@ -1,0 +1,2 @@
+release: minor
+summary: It is just a one word change, makes it possible to use `Board::instanceof()` to get a `constexpr auto& obj`. It works perfectly as long as you don't try using the reference before `Board::init()`.
