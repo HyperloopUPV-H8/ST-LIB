@@ -106,18 +106,20 @@ bool format_numeric_value(
         return length == text_length;
     }
     case Protections::SampleEncoding::SIGNED:
-        bytes_written = snprintf(buffer, buffer_size, "%lld", static_cast<long long>(value.signed_value));
+        bytes_written = 
+            snprintf(buffer, buffer_size, "%lld", static_cast<long long>(value.signed_value));
         break;
     case Protections::SampleEncoding::UNSIGNED:
         bytes_written = snprintf(
-                buffer,
-                buffer_size,
-                "%llu",
-                static_cast<unsigned long long>(value.unsigned_value)
-            );
+            buffer,
+            buffer_size,
+            "%llu",
+            static_cast<unsigned long long>(value.unsigned_value)
+        );
         break;
     case Protections::SampleEncoding::FLOAT32:
-        bytes_written = snprintf(buffer, buffer_size, "%.6f", static_cast<double>(value.float32_value));
+        bytes_written = 
+            snprintf(buffer, buffer_size, "%.6f", static_cast<double>(value.float32_value));
         break;
     case Protections::SampleEncoding::FLOAT64:
         bytes_written = snprintf(buffer, buffer_size, "%.6f", value.float64_value);
