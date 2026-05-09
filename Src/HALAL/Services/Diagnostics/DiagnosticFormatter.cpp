@@ -84,16 +84,18 @@ const char* rule_edge_label(Protections::RuleEdge edge) {
     std::unreachable();
 }
 
-void format_numeric_value(
+/* returns if there was enough size to write the value */
+bool format_numeric_value(
     Protections::SampleEncoding encoding,
     Protections::NumericValue value,
     char* buffer,
     size_t buffer_size
 ) {
     if (buffer_size == 0) {
-        return;
+        return false;
     }
 
+    size_t bytes_written = 0;
     switch (encoding) {
     case Protections::SampleEncoding::BOOL: {
         const char* text = value.bool_value ? "true" : "false";
@@ -101,36 +103,30 @@ void format_numeric_value(
         const size_t length = std::min(text_length, buffer_size - 1);
         memcpy(buffer, text, length);
         buffer[length] = '\0';
+        return length == text_length;
     }
-        return;
     case Protections::SampleEncoding::SIGNED:
-        if (snprintf(buffer, buffer_size, "%lld", static_cast<long long>(value.signed_value)) < 0) {
-            buffer[0] = '\0';
-        }
-        return;
+        bytes_written = snprintf(buffer, buffer_size, "%lld", static_cast<long long>(value.signed_value));
+        break;
     case Protections::SampleEncoding::UNSIGNED:
-        if (snprintf(
+        bytes_written = snprintf(
                 buffer,
                 buffer_size,
                 "%llu",
                 static_cast<unsigned long long>(value.unsigned_value)
-            ) < 0) {
-            buffer[0] = '\0';
-        }
-        return;
+            );
+        break;
     case Protections::SampleEncoding::FLOAT32:
-        if (snprintf(buffer, buffer_size, "%.6f", static_cast<double>(value.float32_value)) < 0) {
-            buffer[0] = '\0';
-        }
-        return;
+        bytes_written = snprintf(buffer, buffer_size, "%.6f", static_cast<double>(value.float32_value));
+        break;
     case Protections::SampleEncoding::FLOAT64:
-        if (snprintf(buffer, buffer_size, "%.6f", value.float64_value) < 0) {
-            buffer[0] = '\0';
-        }
-        return;
+        bytes_written = snprintf(buffer, buffer_size, "%.6f", value.float64_value);
+        break;
+    default:
+        std::unreachable();
     }
 
-    std::unreachable();
+    return bytes_written < buffer_size;
 }
 
 void append_timestamp_suffix(const Timestamp& timestamp, DiagnosticStringBuilder& builder) {
