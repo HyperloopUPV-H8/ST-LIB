@@ -6,6 +6,15 @@ The revived semantic-versioning baseline starts at `v5.0.0`.
 Historical releases that predate this file remain available in Git tags such as
 `v1.0.0`, `v3.0.0`, `v4.0.0-beta`, and `h10`.
 
+## v6.1.1 - 2026-05-11
+
+### Fixes
+
+- Allow protections to read volatile sample sources
+  Protection sources now preserve the storage cv-qualification through a reference source wrapper,
+  so protections can be declared directly over volatile variables while rule evaluation still uses
+  plain sample values.
+
 ## v6.1.0 - 2026-05-11
 
 ### Features
