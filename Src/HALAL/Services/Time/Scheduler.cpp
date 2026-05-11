@@ -103,13 +103,7 @@ void Scheduler::update() {
 uint64_t Scheduler::get_global_tick() {
     SchedLock();
     uint64_t tick = global_tick_us_;
-#ifdef SIM_ON
-    if (Scheduler_global_timer != nullptr) {
-        tick += Scheduler_global_timer->CNT;
-    }
-#else
     tick += Scheduler_global_timer->CNT;
-#endif
     SchedUnlock();
     return tick;
 }
