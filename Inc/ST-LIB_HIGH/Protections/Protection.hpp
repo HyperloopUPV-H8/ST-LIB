@@ -488,11 +488,17 @@ inline RuleModel<T> make_rule_model(const RuleDefinition<T>& definition) {
     }
 }
 
-template <ProtectionSample T, std::size_t RuleCount> class Protection {
+template <ProtectionSample T, std::size_t RuleCount, ReadableSampleSource Source = SampleSource<T>>
+class Protection {
 public:
+    static_assert(
+        std::same_as<std::remove_cvref_t<typename Source::value_type>, T>,
+        "Protection source value_type must match the protection sample type"
+    );
+
     Protection(
         const char* name,
-        SampleSource<T> source,
+        Source source,
         const std::array<RuleDefinition<T>, RuleCount>& definitions
     )
         : name(name), source(source), definitions(definitions),
@@ -550,7 +556,7 @@ private:
     }
 
     const char* name{nullptr};
-    SampleSource<T> source;
+    Source source;
     std::array<RuleDefinition<T>, RuleCount> definitions{};
     std::array<RuleModel<T>, RuleCount> rules{};
     uint64_t last_fault_publish_tick{0};

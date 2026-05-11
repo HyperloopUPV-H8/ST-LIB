@@ -22,6 +22,8 @@ namespace TestAccess = ST_LIB::TestAccess;
 namespace TestPanicReporter = ST_LIB::TestPanicReporter;
 
 static_assert(Protections::ReadableSampleSource<SampleSource<float>>);
+static_assert(Protections::ReadableSampleSource<SampleSource<volatile float>>);
+static_assert(std::same_as<SampleSource<volatile float>::value_type, float>);
 static_assert(!Protections::ReadableSampleSource<int>);
 static_assert(Protections::FloatingSample<float>);
 static_assert(!Protections::FloatingSample<int>);
@@ -83,6 +85,14 @@ inline constexpr auto monitored_protection =
     );
 using MonitoredProtectionEngine = Protections::ProtectionEngine<monitored_protection>;
 
+inline volatile float volatile_monitored_value = 2.0f;
+inline constexpr auto volatile_monitored_protection =
+    Protections::protection<"volatile_monitored_value", volatile_monitored_value>(
+        Protections::Rules::below(1.0f, 1.5f)
+    );
+using VolatileMonitoredProtectionEngine =
+    Protections::ProtectionEngine<volatile_monitored_protection>;
+
 inline float time_value = 0.0f;
 inline constexpr auto time_protection = Protections::protection<"time_value", time_value>(
     Protections::Rules::time_accumulation(10.0f, 0.001f)
@@ -124,6 +134,7 @@ protected:
     void SetUp() override {
         TestAccess::DiagnosticsHub::clear();
         MonitoredProtectionEngine::reset();
+        VolatileMonitoredProtectionEngine::reset();
         TimeProtectionEngine::reset();
         TimeResetProtectionEngine::reset();
         TestAccess::FaultController::clear();
@@ -288,6 +299,7 @@ TEST_F(DiagnosticsHubTest, FaultControllerStopsDelegatingAfterFault) {
 TEST(DiagnosticsBootstrapTest, PanicBeforeRuntimeInstallationSurvivesBootstrapAndIsDelivered) {
     TestAccess::DiagnosticsHub::clear();
     MonitoredProtectionEngine::reset();
+    VolatileMonitoredProtectionEngine::reset();
     TimeProtectionEngine::reset();
     TimeResetProtectionEngine::reset();
     TestAccess::FaultController::clear();
@@ -338,6 +350,23 @@ TEST_F(DiagnosticsHubTest, ProtectionEngineEvaluatesRulesAndPublishesSnapshots) 
     EXPECT_EQ(sink->records.front().priority, Diagnostics::DiagnosticPriority::URGENT);
     EXPECT_EQ(sink->records.front().payload.protection.state, Protections::RuleState::FAULT);
     EXPECT_EQ(sink->records.front().payload.protection.rule_kind, Protections::RuleKind::BELOW);
+}
+
+TEST_F(DiagnosticsHubTest, ProtectionEngineReadsVolatileSource) {
+    auto sink_result = Diagnostics::Hub::emplace_sink<RecordingSink>();
+    ASSERT_TRUE(sink_result.has_value());
+    auto* sink = *sink_result;
+
+    VolatileMonitoredProtectionEngine::initialize();
+    volatile_monitored_value = 0.5f;
+    VolatileMonitoredProtectionEngine::evaluate();
+    Diagnostics::Hub::flush();
+
+    ASSERT_FALSE(sink->records.empty());
+    EXPECT_TRUE(FaultController::is_faulted());
+    EXPECT_EQ(sink->records.front().category, Diagnostics::Category::PROTECTION_EVENT);
+    EXPECT_EQ(sink->records.front().payload.protection.rule_kind, Protections::RuleKind::BELOW);
+    EXPECT_FLOAT_EQ(sink->records.front().payload.protection.observed_value.float32_value, 0.5f);
 }
 
 TEST_F(DiagnosticsHubTest, TimeAccumulationUsesSchedulerTickForContinuousDuration) {

@@ -12,17 +12,14 @@ namespace Protections {
 namespace detail {
 
 template <typename Source>
-concept SampleSourceLike = requires(const std::remove_cvref_t<Source>& source) {
-    typename std::remove_cvref_t<Source>::value_type;
-    source.read();
-};
+concept SampleSourceLike = ReadableSampleSource<Source>;
 
 template <typename Source> consteval auto sample_type_tag() {
     using source_type = std::remove_cvref_t<Source>;
     if constexpr (requires { typename source_type::value_type; }) {
-        return std::type_identity<typename source_type::value_type>{};
+        return std::type_identity<std::remove_cvref_t<typename source_type::value_type>>{};
     } else {
-        return std::type_identity<source_type>{};
+        return std::type_identity<std::remove_cvref_t<Source>>{};
     }
 }
 
@@ -33,8 +30,8 @@ template <typename Source> constexpr auto to_sample_source(Source& source) {
     if constexpr (SampleSourceLike<Source>) {
         return source;
     } else {
-        using SampleType = sample_type_from_source_t<Source>;
-        return SampleSource<SampleType>{source};
+        using StorageType = std::remove_reference_t<Source>;
+        return ReferenceSampleSource<StorageType>{source};
     }
 }
 
@@ -93,8 +90,9 @@ template <std::size_t N> struct FixedString {
 template <std::size_t N> FixedString(const char (&)[N]) -> FixedString<N>;
 
 template <FixedString Name, auto& Source, std::size_t RuleCount> struct ProtectionSpec {
-    using source_type = std::remove_cvref_t<decltype(Source)>;
+    using source_type = std::remove_reference_t<decltype(Source)>;
     using sample_type = detail::sample_type_from_source_t<source_type>;
+    using source_model_type = decltype(detail::to_sample_source(Source));
 
     static constexpr auto name = Name;
     static constexpr auto& source = Source;
@@ -132,7 +130,10 @@ public:
 
     template <auto& Spec> struct StorageForSpec {
         using spec_type = std::remove_cvref_t<decltype(Spec)>;
-        using type = Protection<typename spec_type::sample_type, spec_type::rule_count>;
+        using type = Protection<
+            typename spec_type::sample_type,
+            spec_type::rule_count,
+            typename spec_type::source_model_type>;
     };
 
     template <auto& Spec> using storage_for_spec_t = typename StorageForSpec<Spec>::type;
@@ -163,8 +164,9 @@ private:
     template <auto& ProtectionSpec> static constexpr auto make_protection() {
         using SpecType = std::remove_cvref_t<decltype(ProtectionSpec)>;
         using SampleType = typename SpecType::sample_type;
+        using SourceType = typename SpecType::source_model_type;
 
-        return Protection<SampleType, SpecType::rule_count>{
+        return Protection<SampleType, SpecType::rule_count, SourceType>{
             SpecType::name.c_str(),
             detail::to_sample_source(SpecType::source),
             ProtectionSpec.rules.definitions
