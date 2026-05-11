@@ -364,7 +364,7 @@ public:
         }
     }
 
-    template <auto& Target> static auto& instance_of() {
+    template <auto& Target> constexpr static auto& instance_of() {
         using DevT = std::remove_cvref_t<decltype(Target)>;
         using Domain = typename DevT::domain;
 

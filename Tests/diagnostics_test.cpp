@@ -142,7 +142,7 @@ protected:
         TestPanicReporter::reset();
         fault_enter_calls = 0;
         Scheduler::global_tick_us_ = 0;
-        Scheduler_global_timer = nullptr;
+        Scheduler_global_timer = TIM2_BASE;
 
         FaultController::install_runtime<NoMachinePolicy>();
         FaultController::start();

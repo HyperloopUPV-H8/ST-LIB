@@ -53,19 +53,13 @@
 #define D3_C
 #define RAM_CODE
 #else
-/*
- * Use C++ attribute syntax when compiled as C++, otherwise fall back to GCC-style
- * `__attribute__` so the header is safe to include from both C and C++ translation
- * units (some build units may be plain C and would reject the [[...]] syntax).
- */
-#define D1_NC __attribute__((section(".mpu_ram_d1_nc.user")))
-#define D2_NC __attribute__((section(".mpu_ram_d2_nc.user")))
-#define D3_NC __attribute__((section(".mpu_ram_d3_nc.user")))
-#define D1_C __attribute__((section(".ram_d1.user")))
-#define D2_C __attribute__((section(".ram_d2.user")))
-#define D3_C __attribute__((section(".ram_d3.user")))
 
-// Define for RAM code
+#define D1_NC __attribute__((section(".mpu_ram_d1_nc.user"), used)) volatile
+#define D2_NC __attribute__((section(".mpu_ram_d2_nc.user"), used)) volatile
+#define D3_NC __attribute__((section(".mpu_ram_d3_nc.user"), used)) volatile
+#define D1_C __attribute__((section(".ram_d1.user"), used))
+#define D2_C __attribute__((section(".ram_d2.user"), used))
+#define D3_C __attribute__((section(".ram_d3.user"), used))
 #define RAM_CODE __attribute__((section(".ram_code")))
 #endif
 
