@@ -6,6 +6,18 @@ The revived semantic-versioning baseline starts at `v5.0.0`.
 Historical releases that predate this file remain available in Git tags such as
 `v1.0.0`, `v3.0.0`, `v4.0.0-beta`, and `h10`.
 
+## v6.1.0 - 2026-05-11
+
+### Features
+
+- It is just a one word change, makes it possible to use `Board::instanceof()` to get a `constexpr auto& obj`. It works perfectly as long as you don't try using the reference before `Board::init()`.
+
+### Fixes
+
+- Fix reorder issue in PWM constructor
+- Unify get_global_tick behaviour and make format_numeric_value return if value was written in DiagnosticFormatter
+- The macros changes in fix/volatiles where reverted in a merge in the last release, this pr applies the changes once more to fix the undefined behaviour.
+
 ## v6.0.0 - 2026-05-06
 
 ### Breaking Changes
