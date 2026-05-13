@@ -36,7 +36,7 @@
 #endif
 
 #if !defined(SCHEDULER_GET_LAST_N_TASKS_COUNT)
-#define SCHEDULER_GET_LAST_N_TASKS_COUNT 16
+#define SCHEDULER_GET_LAST_N_TASKS_COUNT 64
 #endif
 
 extern TIM_TypeDef* Scheduler_global_timer;
