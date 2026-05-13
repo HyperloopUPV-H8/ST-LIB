@@ -160,6 +160,16 @@ public:
      */
     static bool transmit_polling(uint8_t id, span<uint8_t> data);
 
+    /**@brief	Transmits size bytes by polling.
+     *
+     * @param id Id of the UART
+     * @param data Pointer to data to be sent.
+     * @param length Length of data to be sent.
+     * @return bool Returns true if the packet has been send successfully.
+     * 			    Returns false if the UART is busy or a problem has occurred.
+     */
+    static bool transmit_polling(uint8_t id, uint8_t *data, size_t length);
+
     /**
      * @brief This method request the receive of size bytes
      *        by DMA and interrupts. Thus the data should not be used until

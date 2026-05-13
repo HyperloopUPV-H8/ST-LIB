@@ -27,15 +27,15 @@
 #include "stm32h7xx_hal_tim.h"
 #endif
 
-//#define SLOW_CHECK_USE_READY_BITMAP
-#define SLOW_CHECK_USE_LAST_N_TASKS
-
-#define SLOW_CHECK_USE_LAST_N_TASKS_COUNT 512
-
-#if defined(SLOW_CHECK_USE_LAST_N_TASKS)
-// Must be a 32 bit timer and not be the same as the scheduler timer
-extern TIM_TypeDef* perf_timer;
+#ifndef SIM_ON
+#define SCHEDULER_GET_LAST_N_TASKS
 #endif
+
+#if !defined(SCHEDULER_GET_LAST_N_TASKS) && !defined(SLOW_CHECK_USE_READY_BITMAP)
+#define SLOW_CHECK_USE_READY_BITMAP
+#endif
+
+#define SCHEDULER_GET_LAST_N_TASKS_COUNT 512
 
 extern TIM_TypeDef* Scheduler_global_timer;
 void Scheduler_global_timer_callback(void* raw);
@@ -48,8 +48,12 @@ struct Scheduler {
     // if it isn't it could theoretically be used as an id in set_timeout
     static constexpr uint32_t INVALID_ID = 2 * kMaxTasks;
 
-    // temporary, will be removed
-    [[deprecated]] static inline void start() {}
+    /* gets and checks the performance gathering requirements
+     * @param tim32bit: A timer or null if not gathering perf info (preferrably 32 bit)
+     * @return If the given arguments are correct
+     */
+    static bool init_perf(TIM_TypeDef* tim32bit);
+
     static void update();
     static uint64_t get_global_tick();
 

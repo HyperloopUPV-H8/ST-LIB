@@ -64,6 +64,10 @@ bool UART::transmit_polling(uint8_t id, uint8_t data) {
 }
 
 bool UART::transmit_polling(uint8_t id, span<uint8_t> data) {
+    return UART::transmit_polling(id, data.data(), data.size());
+}
+
+bool UART::transmit_polling(uint8_t id, uint8_t *data, size_t length) {
     if (not UART::registered_uart.contains(id))
         return false; // TODO: Error handler
 
@@ -72,7 +76,7 @@ bool UART::transmit_polling(uint8_t id, span<uint8_t> data) {
     if ((handle->ErrorCode & TXBUSYMASK) == 1)
         return false;
 
-    if (HAL_UART_Transmit(handle, data.data(), data.size(), 10) != HAL_OK) {
+    if (HAL_UART_Transmit(handle, data, length, 10) != HAL_OK) {
         return false; // TODO: Warning, Error during transmision
     }
 

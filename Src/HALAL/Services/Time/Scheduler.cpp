@@ -31,22 +31,22 @@ uint64_t Scheduler::global_tick_us_{0};
 uint32_t Scheduler::current_interval_us_{0};
 uint16_t Scheduler::timeout_idx_{1};
 
-#if (SLOW_CHECK_USE_LAST_N_TASKS_COUNT & (SLOW_CHECK_USE_LAST_N_TASKS_COUNT - 1)) != 0
+#if (SCHEDULER_GET_LAST_N_TASKS_COUNT & (SCHEDULER_GET_LAST_N_TASKS_COUNT - 1)) != 0
 // NOTE: Performance: this is to use an and instead of a mod when storing the data
-#error SLOW_CHECK_USE_LAST_N_TASKS_COUNT must be a power of 2
+#error SCHEDULER_GET_LAST_N_TASKS_COUNT must be a power of 2
 #endif
 
 #if defined(SLOW_CHECK_USE_READY_BITMAP)
 uint16_t failing_id = Scheduler::INVALID_ID;
 
-#elif defined(SLOW_CHECK_USE_LAST_N_TASKS)
+#elif defined(SCHEDULER_GET_LAST_N_TASKS)
 struct TaskTimeInfo {
     uint16_t id;
     uint32_t start_time;
     uint32_t end_time;
 };
-TaskTimeInfo time_info[SLOW_CHECK_USE_LAST_N_TASKS_COUNT]{};
-#if SLOW_CHECK_USE_LAST_N_TASKS_COUNT > 65536
+TaskTimeInfo time_info[SCHEDULER_GET_LAST_N_TASKS_COUNT]{};
+#if SCHEDULER_GET_LAST_N_TASKS_COUNT > 65536
 #error Use a uint32_t instead and remove these lines
 #endif
 uint16_t current_time_info{0};
@@ -99,6 +99,22 @@ void Scheduler_start(void) {
     Scheduler::schedule_next_interval();
 }
 
+bool Scheduler::init_perf(TIM_TypeDef* tim32bit)
+{
+#ifdef SCHEDULER_GET_LAST_N_TASKS
+    if (!tim32bit) {
+        return false;
+    }
+
+    perf_timer = tim32bit;
+
+    return true;
+#else
+    (void)tim32bit;
+    return true;
+#endif
+}
+
 void Scheduler::update() {
 #ifdef SLOW_CHECK_USE_READY_BITMAP
     // NOTE: Only _one_ id will be shown per call to update()
@@ -113,17 +129,17 @@ void Scheduler::update() {
 
         Task& task = tasks_[bit_index];
 
-#if defined(SLOW_CHECK_USE_LAST_N_TASKS)
-        TaskTimeInfo *info = time_info + current_time_info;
+#if defined(SCHEDULER_GET_LAST_N_TASKS)
+        TaskTimeInfo* info = time_info + current_time_info;
         info->id = bit_index;
         info->start_time = perf_timer->CNT;
 #endif
 
         task.callback();
 
-#if defined(SLOW_CHECK_USE_LAST_N_TASKS)
+#if defined(SCHEDULER_GET_LAST_N_TASKS)
         info->end_time = perf_timer->CNT;
-        current_time_info = (current_time_info + 1) & SLOW_CHECK_USE_LAST_N_TASKS_COUNT;
+        current_time_info = (current_time_info + 1) & SCHEDULER_GET_LAST_N_TASKS_COUNT;
 #endif
 
         SchedLock();
