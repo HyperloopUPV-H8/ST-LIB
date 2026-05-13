@@ -168,7 +168,7 @@ public:
      * @return bool Returns true if the packet has been send successfully.
      * 			    Returns false if the UART is busy or a problem has occurred.
      */
-    static bool transmit_polling(uint8_t id, uint8_t *data, size_t length);
+    static bool transmit_polling(uint8_t id, uint8_t* data, size_t length);
 
     /**
      * @brief This method request the receive of size bytes

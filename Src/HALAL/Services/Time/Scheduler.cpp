@@ -52,7 +52,7 @@ TaskTimeInfo time_info[SCHEDULER_GET_LAST_N_TASKS_COUNT]{};
 uint16_t current_time_info{0};
 
 // Must be a 32 bit timer and not be the same as the scheduler timer
-TIM_TypeDef *perf_timer{nullptr};
+TIM_TypeDef* perf_timer{nullptr};
 uint8_t uart_id{0};
 #endif
 
@@ -100,8 +100,7 @@ void Scheduler_start(void) {
     Scheduler::schedule_next_interval();
 }
 
-bool Scheduler::init_perf(TIM_TypeDef* tim32bit, UART::Peripheral* uart)
-{
+bool Scheduler::init_perf(TIM_TypeDef* tim32bit, UART::Peripheral* uart) {
 #ifdef SCHEDULER_GET_LAST_N_TASKS
     if (!tim32bit) {
         return false;
@@ -157,7 +156,11 @@ void Scheduler::update() {
     }
 
 #if defined(SCHEDULER_GET_LAST_N_TASKS)
-    if (UART::transmit_polling(uart_id, (uint8_t*)&time_info, sizeof(TaskTimeInfo)*current_time_info)) {
+    if (UART::transmit_polling(
+            uart_id,
+            (uint8_t*)&time_info,
+            sizeof(TaskTimeInfo) * current_time_info
+        )) {
         WARNING("UART Error while trying to transmit timing info");
     }
 #endif
