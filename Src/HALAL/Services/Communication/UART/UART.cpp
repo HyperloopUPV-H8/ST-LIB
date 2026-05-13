@@ -14,7 +14,7 @@ uint16_t UART::id_counter = 0;
 
 uint8_t UART::inscribe(UART::Peripheral& uart) {
     if (!UART::available_uarts.contains(uart)) {
-        ErrorHandler(" The UART peripheral %d is already used or does not exists.", (uint16_t)uart);
+        PANIC(" The UART peripheral %d is already used or does not exists.", (uint16_t)uart);
 
         return 0;
     }

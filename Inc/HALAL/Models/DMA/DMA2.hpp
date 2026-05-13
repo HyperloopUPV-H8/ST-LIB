@@ -475,6 +475,11 @@ struct DMADomain {
     struct Instance {
         DMA_HandleTypeDef dma;
 
+        /**
+         * @warning Ensure SrcAddress and DstAddress are in DMA-accessible memory
+         * @note Compiler may optimize away the reads and writes from Src and Dst, either use
+         * voalatile buffers or ensure some kind of memory barrier to preven this
+         */
         void start(uint32_t SrcAddress, uint32_t DstAddress, uint32_t DataLength) {
             HAL_DMA_Start_IT(&dma, SrcAddress, DstAddress, DataLength);
         }
@@ -498,7 +503,7 @@ struct DMADomain {
 
                 instances[i].dma = {};
                 if (stream == Stream::none) {
-                    ErrorHandler("DMA stream must be selected before init");
+                    PANIC("DMA stream must be selected before init");
                     continue;
                 }
 
@@ -507,7 +512,7 @@ struct DMADomain {
 
                 if (HAL_DMA_Init(&instances[i].dma) != HAL_OK) {
                     instances[i].dma = {};
-                    ErrorHandler("DMA Init failed");
+                    PANIC("DMA Init failed");
                     continue;
                 }
 

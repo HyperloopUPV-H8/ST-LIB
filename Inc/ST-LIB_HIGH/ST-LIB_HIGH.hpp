@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include "Protections/ProtectionEngine.hpp"
+#include "Protections/Rules.hpp"
+#include "Protections/SampleSource.hpp"
 #include "Protections/Protection.hpp"
-#include "Protections/ProtectionManager.hpp"
 #include "Control/ControlBlock.hpp"
 #include "Control/FeedbackControlBlock.hpp"
 #include "Control/SplitterBlock.hpp"
@@ -26,6 +28,3 @@
 #else
 #include "FlashStorer/FlashStorer.hpp"
 #endif
-namespace STLIB_HIGH {
-void start();
-}

@@ -5,8 +5,6 @@
 
 #define RTC_MAX_COUNTER 32767
 
-#ifdef HAL_RTC_MODULE_ENABLED
-
 struct RTCData {
     uint16_t counter;
     uint8_t second;
@@ -21,6 +19,7 @@ class Global_RTC {
 public:
     static RTCData global_RTC;
     static void start_rtc();
+    static bool is_started();
     static bool ensure_started();
     static bool has_valid_time();
     static void update_rtc_data();
@@ -35,5 +34,3 @@ public:
         uint16_t year
     );
 };
-
-#endif

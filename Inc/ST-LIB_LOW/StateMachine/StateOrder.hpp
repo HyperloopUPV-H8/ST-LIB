@@ -18,7 +18,7 @@ public:
 
     static void add_state_orders(std::span<uint16_t> new_ids) {
         if (informer_socket == nullptr) {
-            ErrorHandler("Informer Socket has not been set");
+            PANIC("Informer Socket has not been set");
             return;
         };
         state_orders_ids = new_ids;
@@ -28,7 +28,7 @@ public:
 
     static void remove_state_orders(std::span<uint16_t> old_ids) {
         if (informer_socket == nullptr) {
-            ErrorHandler("Informer Socket has not been set");
+            PANIC("Informer Socket has not been set");
             return;
         }
         state_orders_ids = old_ids;

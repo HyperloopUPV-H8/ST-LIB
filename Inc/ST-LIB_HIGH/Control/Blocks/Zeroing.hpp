@@ -19,7 +19,7 @@ public:
             mean_calculator.execute();
         }
         if (has_max_value && abs(mean_calculator.output_value) > max_value_offset) {
-            ErrorHandler("Zeroing offset is calculated to be above specified maximum");
+            PANIC("Zeroing offset is calculated to be above specified maximum");
         } else
             sensor.set_offset(sensor.get_offset() - mean_calculator.output_value);
         mean_calculator.reset();

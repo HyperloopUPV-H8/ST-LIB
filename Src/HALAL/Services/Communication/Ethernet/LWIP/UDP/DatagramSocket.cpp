@@ -28,12 +28,12 @@ DatagramSocket::DatagramSocket(
 )
     : local_ip(local_ip), local_port(local_port), remote_ip(remote_ip), remote_port(remote_port) {
     if (not Ethernet::is_running) {
-        ErrorHandler("Cannot declare UDP socket before Ethernet::start()");
+        PANIC("Cannot declare UDP socket before Ethernet::start()");
         return;
     }
     udp_control_block = udp_new();
     if (udp_control_block == nullptr) {
-        ErrorHandler("Cannot allocate UDP control block");
+        PANIC("Cannot allocate UDP control block");
         return;
     }
     err_t error = udp_bind(udp_control_block, &local_ip.address, local_port);
@@ -47,7 +47,7 @@ DatagramSocket::DatagramSocket(
         udp_remove(udp_control_block);
         udp_control_block = nullptr;
         is_disconnected = true;
-        ErrorHandler("Error binding UDP socket");
+        PANIC("Error binding UDP socket");
     }
 }
 
@@ -106,7 +106,7 @@ void DatagramSocket::reconnect() {
         udp_remove(udp_control_block);
         udp_control_block = nullptr;
         is_disconnected = true;
-        ErrorHandler("Error binding UDP socket");
+        PANIC("Error binding UDP socket");
     }
 }
 

@@ -13,7 +13,7 @@ public:
         mean += input_value / N;
         index++;
         if (index > N)
-            ErrorHandler("MeanCalculator is receiving just 0");
+            PANIC("MeanCalculator is receiving just 0");
         if (index == N)
             output_value = mean;
         else

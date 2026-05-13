@@ -16,7 +16,7 @@ public:
     )
         : HeapOrder(id, callback, values...), state_machine(state_machine), state(state) {
         if (not state_machine.get_states().contains(state)) {
-            ErrorHandler("State Machine does not contain state, cannot add StateOrder");
+            PANIC("State Machine does not contain state, cannot add StateOrder");
             return;
         } else
             state_machine.get_states()[static_cast<size_t>(state)].add_state_order(id);

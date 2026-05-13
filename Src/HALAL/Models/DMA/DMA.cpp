@@ -29,7 +29,7 @@ vector<DMA::Stream> DMA::inscribed_streams = {};
 
 void DMA::inscribe_stream() {
     if (available_streams.empty()) {
-        ErrorHandler("There are not any DMA Streams availables");
+        PANIC("There are not any DMA Streams availables");
         return;
     }
     inscribed_streams.push_back(available_streams.back());
@@ -39,7 +39,7 @@ void DMA::inscribe_stream() {
 void DMA::inscribe_stream(Stream dma_stream) {
     if (std::find(available_streams.begin(), available_streams.end(), dma_stream) ==
         available_streams.end()) {
-        ErrorHandler("The DMA stream %d is not available", dma_stream);
+        PANIC("The DMA stream %d is not available", dma_stream);
         return;
     }
     inscribed_streams.push_back(dma_stream);

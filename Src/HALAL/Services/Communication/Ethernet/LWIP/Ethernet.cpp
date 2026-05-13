@@ -48,11 +48,11 @@ void Ethernet::start(MAC local_mac, IPV4 local_ip, IPV4 subnet_mask, IPV4 gatewa
         MX_LWIP_Init();
         is_running = true;
     } else {
-        ErrorHandler("Unable to start Ethernet!");
+        PANIC("Unable to start Ethernet!");
     }
 
     if (not is_ready) {
-        ErrorHandler("Ethernet is not ready");
+        PANIC("Ethernet is not ready");
         return;
     }
 }
@@ -71,13 +71,13 @@ void Ethernet::inscribe() {
         Pin::inscribe(PG13, ALTERNATIVE);
         is_ready = true;
     } else {
-        ErrorHandler("Unable to inscribe Ethernet because is already ready!");
+        PANIC("Unable to inscribe Ethernet because is already ready!");
     }
 }
 
 void Ethernet::update() {
     if (not is_running) {
-        ErrorHandler("Ethernet is not running, check if its been inscribed");
+        PANIC("Ethernet is not running, check if its been inscribed");
         return;
     }
 

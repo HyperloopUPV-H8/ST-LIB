@@ -28,8 +28,3 @@
 #include "StateMachine/HeapStateOrder.hpp"
 #include "StateMachine/StackStateOrder.hpp"
 #endif
-
-class STLIB_LOW {
-public:
-    static void start();
-};

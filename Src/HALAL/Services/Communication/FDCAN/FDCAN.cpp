@@ -45,12 +45,12 @@ void FDCAN::start() {
         instance->tx_data = vector<uint8_t>();
 
         if (HAL_FDCAN_Start(instance->hfdcan) != HAL_OK) {
-            ErrorHandler("Error during FDCAN %d initialization.", instance->fdcan_number);
+            PANIC("Error during FDCAN %d initialization.", instance->fdcan_number);
         }
 
         if (HAL_FDCAN_ActivateNotification(instance->hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) !=
             HAL_OK) {
-            ErrorHandler("Error activating FDCAN %d notifications.", instance->fdcan_number);
+            PANIC("Error activating FDCAN %d notifications.", instance->fdcan_number);
         }
 
         instance->start = true;
@@ -62,14 +62,14 @@ void FDCAN::start() {
 
 bool FDCAN::transmit(uint8_t id, uint32_t message_id, const char* data, FDCAN::DLC dlc) {
     if (not FDCAN::registered_fdcan.contains(id)) {
-        ErrorHandler("There is no registered FDCAN with id: %d.", id);
+        PANIC("There is no registered FDCAN with id: %d.", id);
         return false;
     }
 
     FDCAN::Instance* instance = registered_fdcan[id];
 
     if (not instance->start) {
-        ErrorHandler("The FDCAN %d is not initialized.", instance->fdcan_number);
+        PANIC("The FDCAN %d is not initialized.", instance->fdcan_number);
         return false;
     }
 
@@ -83,7 +83,7 @@ bool FDCAN::transmit(uint8_t id, uint32_t message_id, const char* data, FDCAN::D
         HAL_FDCAN_AddMessageToTxFifoQ(instance->hfdcan, &instance->tx_header, (uint8_t*)data);
 
     if (error != HAL_OK) {
-        ErrorHandler(
+        PANIC(
             "Error sending message with id: 0x%x by FDCAN %d",
             message_id,
             instance->fdcan_number
@@ -98,7 +98,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef* hfdcan, uint32_t RxFifo0ITs)
 
 bool FDCAN::read(uint8_t id, FDCAN::Packet* data) {
     if (not FDCAN::registered_fdcan.contains(id)) {
-        ErrorHandler("There is no FDCAN registered with id: %d.", id);
+        PANIC("There is no FDCAN registered with id: %d.", id);
         return false;
     }
 
@@ -113,7 +113,7 @@ bool FDCAN::read(uint8_t id, FDCAN::Packet* data) {
         data->rx_data.data()
     );
     if (data->identifier == FDCAN::ID::FAULT_ID) {
-        ErrorHandler("FAULT PROPAGATED via CAN");
+        PANIC("FAULT PROPAGATED via CAN");
     }
     data->identifier = header_buffer.Identifier;
     data->data_length = static_cast<FDCAN::DLC>(header_buffer.DataLength);
@@ -123,7 +123,7 @@ bool FDCAN::read(uint8_t id, FDCAN::Packet* data) {
 
 bool FDCAN::received_test(uint8_t id) {
     if (not FDCAN::registered_fdcan.contains(id)) {
-        ErrorHandler("FDCAN with id %u not registered", id);
+        PANIC("FDCAN with id %u not registered", id);
         return false;
     }
 
@@ -135,7 +135,7 @@ void FDCAN::init(FDCAN::Instance* fdcan) {
     handle_to_id[handle] = instance_to_id[fdcan];
 
     if (HAL_FDCAN_Init(handle) != HAL_OK) {
-        ErrorHandler("Error during FDCAN %d init.", fdcan->fdcan_number);
+        PANIC("Error during FDCAN %d init.", fdcan->fdcan_number);
     }
 }
 #endif

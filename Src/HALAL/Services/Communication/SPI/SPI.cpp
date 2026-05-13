@@ -23,7 +23,7 @@ uint16_t SPI::id_counter = 0;
 
 uint8_t SPI::inscribe(SPI::Peripheral& spi) {
     if (!SPI::available_spi.contains(spi)) {
-        ErrorHandler(" The SPI peripheral %d is already used or does not exists.", (uint16_t)spi);
+        PANIC(" The SPI peripheral %d is already used or does not exists.", (uint16_t)spi);
 
         return 0;
     }
@@ -64,7 +64,7 @@ uint8_t SPI::inscribe(SPI::Peripheral& spi) {
 
 void SPI::assign_RS(uint8_t id, Pin& RSPin) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return;
     }
 
@@ -100,7 +100,7 @@ bool SPI::transmit(uint8_t id, uint8_t data) {
 
 bool SPI::transmit(uint8_t id, span<uint8_t> data) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return false;
     }
 
@@ -116,7 +116,7 @@ bool SPI::transmit(uint8_t id, span<uint8_t> data) {
         return false;
         break;
     default:
-        ErrorHandler(
+        PANIC(
             "Error while transmiting and receiving with spi DMA. Errorcode "
             "%u",
             (uint8_t)errorcode
@@ -128,7 +128,7 @@ bool SPI::transmit(uint8_t id, span<uint8_t> data) {
 
 bool SPI::transmit_DMA(uint8_t id, span<uint8_t> data) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return false;
     }
 
@@ -144,7 +144,7 @@ bool SPI::transmit_DMA(uint8_t id, span<uint8_t> data) {
         return false;
         break;
     default:
-        ErrorHandler(
+        PANIC(
             "Error while transmiting and receiving with spi DMA. Errorcode "
             "%u",
             (uint8_t)errorcode
@@ -156,7 +156,7 @@ bool SPI::transmit_DMA(uint8_t id, span<uint8_t> data) {
 
 bool SPI::receive(uint8_t id, span<uint8_t> data) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return false;
     }
 
@@ -172,7 +172,7 @@ bool SPI::receive(uint8_t id, span<uint8_t> data) {
         return false;
         break;
     default:
-        ErrorHandler(
+        PANIC(
             "Error while transmiting and receiving with spi DMA. Errorcode "
             "%u",
             (uint8_t)errorcode
@@ -183,7 +183,7 @@ bool SPI::receive(uint8_t id, span<uint8_t> data) {
 }
 bool SPI::receive_DMA(uint8_t id, span<uint8_t> data) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return false;
     }
 
@@ -198,7 +198,7 @@ bool SPI::receive_DMA(uint8_t id, span<uint8_t> data) {
         return false;
         break;
     default:
-        ErrorHandler(
+        PANIC(
             "Error while transmiting and receiving with spi DMA. Errorcode "
             "%u",
             (uint8_t)errorcode
@@ -210,7 +210,7 @@ bool SPI::receive_DMA(uint8_t id, span<uint8_t> data) {
 
 bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint8_t> receive_data) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return false;
     }
 
@@ -223,7 +223,7 @@ bool SPI::transmit_and_receive(uint8_t id, span<uint8_t> command_data, span<uint
     }
     if (HAL_SPI_Receive(spi->hspi, receive_data.data(), receive_data.size(), 10) != HAL_OK) {
         turn_on_chip_select(spi);
-        ErrorHandler("Error during receive in %s", spi->name.c_str());
+        PANIC("Error during receive in %s", spi->name.c_str());
         return false;
     }
     turn_on_chip_select(spi);
@@ -235,7 +235,7 @@ bool SPI::transmit_and_receive_DMA(
     span<uint8_t> receive_data
 ) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return false;
     }
 
@@ -255,7 +255,7 @@ bool SPI::transmit_and_receive_DMA(
         return false;
         break;
     default:
-        ErrorHandler(
+        PANIC(
             "Error while transmiting and receiving with spi DMA. Errorcode "
             "%u",
             (uint8_t)errorcode
@@ -271,7 +271,7 @@ bool SPI::transmit_and_receive_DMA(
 
 bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder& Order) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return false;
     }
 
@@ -289,7 +289,7 @@ bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder& Order) {
 
 bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder* Order) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return false;
     }
 
@@ -307,7 +307,7 @@ bool SPI::master_transmit_Order(uint8_t id, SPIBaseOrder* Order) {
 
 void SPI::slave_listen_Orders(uint8_t id) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return;
     }
 
@@ -372,7 +372,7 @@ void SPI::slave_check_packet_ID(SPI::Instance* spi) {
 
 void SPI::chip_select_on(uint8_t id) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return;
     }
 
@@ -382,7 +382,7 @@ void SPI::chip_select_on(uint8_t id) {
 
 void SPI::chip_select_off(uint8_t id) {
     if (!SPI::registered_spi.contains(id)) {
-        ErrorHandler("No SPI registered with id %u", id);
+        PANIC("No SPI registered with id %u", id);
         return;
     }
 
@@ -425,7 +425,7 @@ void SPI::init(SPI::Instance* spi) {
     spi->hspi->Init.IOSwap = SPI_IO_SWAP_DISABLE;
 
     if (HAL_SPI_Init(spi->hspi) != HAL_OK) {
-        ErrorHandler("Unable to init %s", spi->name);
+        PANIC("Unable to init %s", spi->name);
         return;
     }
 
@@ -434,7 +434,7 @@ void SPI::init(SPI::Instance* spi) {
 
 // void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef* hspi) {
 //     if (!SPI::registered_spi_by_handler.contains(hspi)) {
-//         ErrorHandler("Used SPI protocol without the HALAL SPI interface");
+//         PANIC("Used SPI protocol without the HALAL SPI interface");
 //         return;
 //     }
 
@@ -472,7 +472,7 @@ void SPI::init(SPI::Instance* spi) {
 //                     }
 //                 }
 //             } else {
-//                 ErrorHandler("Used master transmit Order on a slave spi");
+//                 PANIC("Used master transmit Order on a slave spi");
 //             }
 //             break;
 //         }
@@ -490,7 +490,7 @@ void SPI::init(SPI::Instance* spi) {
 //                 SPI::mark_slave_ready(spi);
 //                 spi->state = SPI::PROCESSING_ORDER;
 //             } else {
-//                 ErrorHandler("Used slave process Orders on a master spi");
+//                 PANIC("Used slave process Orders on a master spi");
 //             }
 //             break;
 //         }
@@ -540,7 +540,7 @@ void SPI::init(SPI::Instance* spi) {
 //             break;
 //         }
 //         default:
-//             ErrorHandler("Unknown spi state: %d", spi->state);
+//             PANIC("Unknown spi state: %d", spi->state);
 //             break;
 //     }
 // }
@@ -553,7 +553,7 @@ void SPI::init(SPI::Instance* spi) {
 // //     if ((hspi->ErrorCode & HAL_SPI_ERROR_UDR) != 0) {
 // //         SPI::spi_recover(SPI::registered_spi_by_handler[hspi], hspi);
 // //     } else {
-// //         ErrorHandler("SPI error number %u", hspi->ErrorCode);
+// //         PANIC("SPI error number %u", hspi->ErrorCode);
 // //     }
 // // }
 

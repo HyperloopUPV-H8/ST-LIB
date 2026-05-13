@@ -277,6 +277,7 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/LowPowerTimer/LowPowerTimer.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MDMA/MDMA.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MPUManager/MPUManager.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/Packets/Packet.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/Packets/SPIOrder.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/SPI/SPI2.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/DMA/DMA2.cpp
@@ -289,6 +290,10 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/UART/UART.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalInputService/DigitalInputService.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalOutputService/DigitalOutputService.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Diagnostics/DiagnosticFormatter.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Diagnostics/DiagnosticSinks.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Diagnostics/DiagnosticTimestampProvider.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Diagnostics/DiagnosticsHub.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/EXTI/EXTI.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/FMAC/FMAC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Flash/Flash.cpp
@@ -306,7 +311,6 @@ set(HALAL_C_ETH_CORE)
 set(HALAL_CPP_ETH_CORE
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/IPV4/IPV4.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MAC/MAC.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/Packets/Packet.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/SNTP/SNTP.cpp
 )
 
@@ -368,7 +372,6 @@ set(STLIB_LOW_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/DigitalOutput/DigitalOutput.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ErrorHandler/ErrorHandler.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Math/Math.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/ST-LIB_LOW.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sd/Sd.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/DigitalSensor/DigitalSensor.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_LOW/Sensors/SensorInterrupt/SensorInterrupt.cpp
@@ -380,17 +383,14 @@ set(STLIB_LOW_CPP_NO_ETH
 
 set(STLIB_HIGH_C_ETH)
 
-set(STLIB_HIGH_CPP_ETH
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/Boundary.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/ProtectionManager.cpp
-)
+set(STLIB_HIGH_CPP_ETH)
 
 set(STLIB_HIGH_C_NO_ETH)
 
 set(STLIB_HIGH_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/FlashStorer/FlashStorer.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/FlashStorer/FlashVariable.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/ST-LIB_HIGH.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB_HIGH/Protections/FaultController.cpp
 )
 
 # ============================
@@ -426,9 +426,6 @@ add_library(${STLIB_LIBRARY} OBJECT
   $<$<BOOL:${CMAKE_CROSSCOMPILING}>:${STLIB_HIGH_CPP_NO_ETH}>
   $<$<AND:$<BOOL:${CMAKE_CROSSCOMPILING}>,$<BOOL:${USE_ETHERNET}>>:${STLIB_HIGH_C_ETH}>
   $<$<AND:$<BOOL:${CMAKE_CROSSCOMPILING}>,$<BOOL:${USE_ETHERNET}>>:${STLIB_HIGH_CPP_ETH}>
-
-  $<$<BOOL:${CMAKE_CROSSCOMPILING}>:${CMAKE_CURRENT_LIST_DIR}/Src/ST-LIB.cpp>
-
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Time/Scheduler.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp>
   $<$<NOT:$<BOOL:${CMAKE_CROSSCOMPILING}>>:${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MPUManager/MPUManager.cpp>
@@ -565,6 +562,17 @@ else()
       ${CMAKE_SOURCE_DIR}/Core/Inc
     )
   endif()
+endif()
+
+if(CMAKE_CROSSCOMPILING)
+  add_library(stlib_compile_check_board_protections OBJECT
+    ${CMAKE_CURRENT_LIST_DIR}/Tests/compile_checks/board_protection_contract.cpp
+  )
+  target_link_libraries(stlib_compile_check_board_protections PRIVATE ${STLIB_LIBRARY})
+  set_target_properties(stlib_compile_check_board_protections PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED YES
+  )
 endif()
 
 if(PROJECT_IS_TOP_LEVEL)

@@ -42,3 +42,10 @@
 #include <ranges>
 #include <cstdarg>
 #include <stdarg.h>
+#include <bit>
+#include <concepts>
+#include <expected>
+#include <new>
+#include <optional>
+#include <type_traits>
+#include <variant>

@@ -14,7 +14,7 @@ uint16_t I2C::id_counter = 0;
 
 uint8_t I2C::inscribe(I2C::Peripheral& i2c, uint8_t address) {
     if (!I2C::available_i2cs.contains(i2c)) {
-        ErrorHandler("The I2C %d is not available on the runes files", (uint16_t)i2c);
+        PANIC("The I2C %d is not available on the runes files", (uint16_t)i2c);
         return 0;
     }
 
@@ -44,14 +44,14 @@ void I2C::start() {
 
 bool I2C::transmit_next_packet(uint8_t id, I2CPacket& packet) {
     if (!I2C::active_i2c.contains(id)) {
-        ErrorHandler("I2C id not found on transmit packet \n\r");
+        PANIC("I2C id not found on transmit packet \n\r");
         return false;
     }
 
     I2C::Instance* i2c = I2C::active_i2c[id];
 
     if (i2c->hi2c->State == HAL_I2C_STATE_BUSY_TX) {
-        ErrorHandler("I2C Transmit buffer busy!\n\r");
+        PANIC("I2C Transmit buffer busy!\n\r");
         return false;
     }
 
@@ -64,7 +64,7 @@ bool I2C::transmit_next_packet(uint8_t id, I2CPacket& packet) {
             packet.get_data(),
             packet.get_size()
         ) != HAL_OK) {
-        ErrorHandler("I2C Error during memory read DMA!\n\r");
+        PANIC("I2C Error during memory read DMA!\n\r");
         return false;
     }
     return true;
@@ -72,14 +72,14 @@ bool I2C::transmit_next_packet(uint8_t id, I2CPacket& packet) {
 
 bool I2C::transmit_next_packet_polling(uint8_t id, I2CPacket& packet) {
     if (!I2C::active_i2c.contains(id)) {
-        ErrorHandler("I2C id not found on transmit packet \n\r");
+        PANIC("I2C id not found on transmit packet \n\r");
         return false;
     }
 
     I2C::Instance* i2c = I2C::active_i2c[id];
 
     if (i2c->hi2c->State == HAL_I2C_STATE_BUSY_TX) {
-        ErrorHandler("I2C Transmit buffer busy!\n\r");
+        PANIC("I2C Transmit buffer busy!\n\r");
         return false;
     }
 
@@ -90,7 +90,7 @@ bool I2C::transmit_next_packet_polling(uint8_t id, I2CPacket& packet) {
             packet.get_size(),
             50
         ) != HAL_OK) {
-        // ErrorHandler("Error during I2C transmission \n\r");
+        // PANIC("Error during I2C transmission \n\r");
         return false;
     }
     return true;
@@ -98,14 +98,14 @@ bool I2C::transmit_next_packet_polling(uint8_t id, I2CPacket& packet) {
 
 bool I2C::receive_next_packet(uint8_t id, I2CPacket& packet) {
     if (!I2C::active_i2c.contains(id)) {
-        ErrorHandler("I2C id not found on receive packet \n\r");
+        PANIC("I2C id not found on receive packet \n\r");
         return false;
     }
 
     I2C::Instance* i2c = I2C::active_i2c[id];
 
     if (i2c->hi2c->State == HAL_I2C_STATE_BUSY_RX) {
-        ErrorHandler("I2C Receive buffer busy!\n\r");
+        PANIC("I2C Receive buffer busy!\n\r");
         return false;
     }
 
@@ -117,7 +117,7 @@ bool I2C::receive_next_packet(uint8_t id, I2CPacket& packet) {
             packet.get_data(),
             packet.get_size()
         ) != HAL_OK) {
-        ErrorHandler("I2C Error during memory write DMA!\n\r");
+        PANIC("I2C Error during memory write DMA!\n\r");
         return false;
     }
 
@@ -127,14 +127,14 @@ bool I2C::receive_next_packet(uint8_t id, I2CPacket& packet) {
 
 bool I2C::receive_next_packet_polling(uint8_t id, I2CPacket& packet) {
     if (!I2C::active_i2c.contains(id)) {
-        ErrorHandler("I2C id not found on receive packet \n\r");
+        PANIC("I2C id not found on receive packet \n\r");
         return false;
     }
 
     I2C::Instance* i2c = I2C::active_i2c[id];
 
     if (i2c->hi2c->State == HAL_I2C_STATE_BUSY_RX) {
-        ErrorHandler("I2C Receive buffer busy!\n\r");
+        PANIC("I2C Receive buffer busy!\n\r");
         return false;
     }
 
@@ -147,7 +147,7 @@ bool I2C::receive_next_packet_polling(uint8_t id, I2CPacket& packet) {
             packet.get_size(),
             50
         ) != HAL_OK) {
-        // ErrorHandler("I2C Error during receive!\n\r");
+        // PANIC("I2C Error during receive!\n\r");
         return false;
     }
 
@@ -169,7 +169,7 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef* hi2c) {
 
 bool I2C::read_from(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t mem_size) {
     if (!I2C::active_i2c.contains(id)) {
-        ErrorHandler("I2C id not found on read \n\r");
+        PANIC("I2C id not found on read \n\r");
         return false;
     }
 
@@ -178,7 +178,7 @@ bool I2C::read_from(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t m
     *packet.get_data() = 0;
 
     if (i2c->hi2c->State == HAL_I2C_STATE_BUSY_TX) {
-        ErrorHandler("I2C Transmit buffer busy!\n\r");
+        PANIC("I2C Transmit buffer busy!\n\r");
         return false;
     }
 
@@ -190,7 +190,7 @@ bool I2C::read_from(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t m
             packet.get_data(),
             packet.get_size()
         )) {
-        ErrorHandler("I2C Error during memory read DMA!\n\r");
+        PANIC("I2C Error during memory read DMA!\n\r");
         return false;
     }
 
@@ -200,14 +200,14 @@ bool I2C::read_from(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t m
 
 bool I2C::write_to(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t mem_size) {
     if (!I2C::active_i2c.contains(id)) {
-        ErrorHandler("I2C id not found on write \n\r");
+        PANIC("I2C id not found on write \n\r");
         return false;
     }
 
     I2C::Instance* i2c = I2C::active_i2c[id];
 
     if (i2c->hi2c->State == HAL_I2C_STATE_BUSY_RX) {
-        ErrorHandler("I2C Receive buffer busy!\n\r");
+        PANIC("I2C Receive buffer busy!\n\r");
         return false;
     }
 
@@ -219,7 +219,7 @@ bool I2C::write_to(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t me
             packet.get_data(),
             packet.get_size()
         )) {
-        ErrorHandler("I2C Error during memory write DMA!\n\r");
+        PANIC("I2C Error during memory write DMA!\n\r");
         return false;
     }
 
@@ -228,7 +228,7 @@ bool I2C::write_to(uint8_t id, I2CPacket& packet, uint16_t mem_addr, uint16_t me
 
 bool I2C::has_next_packet(uint8_t id) {
     if (!I2C::active_i2c.contains(id)) {
-        ErrorHandler("I2C id not found on next packet check \n\r");
+        PANIC("I2C id not found on next packet check \n\r");
         return false;
     }
 
@@ -239,7 +239,7 @@ bool I2C::has_next_packet(uint8_t id) {
 
 bool I2C::is_busy(uint8_t id) {
     if (!I2C::active_i2c.contains(id)) {
-        ErrorHandler("I2C id not found on is busy check \n\r");
+        PANIC("I2C id not found on is busy check \n\r");
         return false;
     }
     I2C::Instance* i2c = I2C::active_i2c[id];
@@ -267,7 +267,7 @@ void I2C::init(I2C::Instance* i2c) {
         return;
     }
     if (!available_speed_frequencies.contains(i2c->speed_frequency_kHz)) {
-        ErrorHandler("Error initializing, the frequency of the I2C is not available");
+        PANIC("Error initializing, the frequency of the I2C is not available");
         return;
     }
     i2c->hi2c->Instance = i2c->instance;
@@ -281,15 +281,15 @@ void I2C::init(I2C::Instance* i2c) {
     i2c->hi2c->Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
     if (HAL_I2C_Init(i2c->hi2c) != HAL_OK) {
-        ErrorHandler("Error configurating I2C");
+        PANIC("Error configurating I2C");
     }
 
     if (HAL_I2CEx_ConfigAnalogFilter(i2c->hi2c, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
-        ErrorHandler("Error configurating Analog Filter of the I2C");
+        PANIC("Error configurating Analog Filter of the I2C");
     }
 
     if (HAL_I2CEx_ConfigDigitalFilter(i2c->hi2c, 0) != HAL_OK) {
-        ErrorHandler("Error configurating Digital Filter of the I2C");
+        PANIC("Error configurating Digital Filter of the I2C");
     }
     i2c->is_initialized = true;
 }
