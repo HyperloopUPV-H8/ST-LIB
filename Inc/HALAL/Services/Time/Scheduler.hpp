@@ -31,10 +31,10 @@
 #define SCHEDULER_GET_LAST_N_TASKS
 #else
 struct UART {
-  struct Peripheral {
-    uint8_t ignore0;
-  };
-  uint8_t ignore1;
+    struct Peripheral {
+        uint8_t ignore0;
+    };
+    uint8_t ignore1;
 };
 #endif
 
