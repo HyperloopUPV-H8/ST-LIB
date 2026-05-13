@@ -52,7 +52,8 @@ TaskTimeInfo time_info[SCHEDULER_GET_LAST_N_TASKS_COUNT]{};
 uint16_t current_time_info{0};
 
 // Must be a 32 bit timer and not be the same as the scheduler timer
-TIM_TypeDef *perf_timer;
+TIM_TypeDef *perf_timer{nullptr};
+uint8_t uart_id{0};
 #endif
 
 // ----------------------------
@@ -99,7 +100,7 @@ void Scheduler_start(void) {
     Scheduler::schedule_next_interval();
 }
 
-bool Scheduler::init_perf(TIM_TypeDef* tim32bit)
+bool Scheduler::init_perf(TIM_TypeDef* tim32bit, UART::Peripheral* uart)
 {
 #ifdef SCHEDULER_GET_LAST_N_TASKS
     if (!tim32bit) {
@@ -108,9 +109,12 @@ bool Scheduler::init_perf(TIM_TypeDef* tim32bit)
 
     perf_timer = tim32bit;
 
+    uart_id = UART::inscribe(*uart);
+
     return true;
 #else
     (void)tim32bit;
+    (void)uart;
     return true;
 #endif
 }
@@ -122,6 +126,8 @@ void Scheduler::update() {
         WARNING("Too slow, could not execute task %u in time", failing_id);
         failing_id = Scheduler::INVALID_ID;
     }
+#elif defined(SCHEDULER_GET_LAST_N_TASKS)
+    current_time_info = 0;
 #endif
 
     while (ready_bitmap_ != 0u) {
@@ -139,7 +145,7 @@ void Scheduler::update() {
 
 #if defined(SCHEDULER_GET_LAST_N_TASKS)
         info->end_time = perf_timer->CNT;
-        current_time_info = (current_time_info + 1) & SCHEDULER_GET_LAST_N_TASKS_COUNT;
+        current_time_info = current_time_info + 1;
 #endif
 
         SchedLock();
@@ -149,6 +155,12 @@ void Scheduler::update() {
         }
         SchedUnlock();
     }
+
+#if defined(SCHEDULER_GET_LAST_N_TASKS)
+    if (UART::transmit_polling(uart_id, (uint8_t*)&time_info, sizeof(TaskTimeInfo)*current_time_info)) {
+        WARNING("UART Error while trying to transmit timing info");
+    }
+#endif
 }
 
 uint64_t Scheduler::get_global_tick() {

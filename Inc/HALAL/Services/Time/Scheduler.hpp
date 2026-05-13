@@ -17,7 +17,7 @@
 #endif
 
 #include "stm32h7xx_ll_tim_wrapper.h"
-#include "HALAL/Models/Packets/Packet.hpp"
+#include "HALAL/Services/Communication/UART/UART.hpp"
 
 #include <array>
 #include <cstdint>
@@ -35,7 +35,9 @@
 #define SLOW_CHECK_USE_READY_BITMAP
 #endif
 
-#define SCHEDULER_GET_LAST_N_TASKS_COUNT 512
+#if !defined(SCHEDULER_GET_LAST_N_TASKS_COUNT)
+#define SCHEDULER_GET_LAST_N_TASKS_COUNT 16
+#endif
 
 extern TIM_TypeDef* Scheduler_global_timer;
 void Scheduler_global_timer_callback(void* raw);
@@ -52,7 +54,7 @@ struct Scheduler {
      * @param tim32bit: A timer or null if not gathering perf info (preferrably 32 bit)
      * @return If the given arguments are correct
      */
-    static bool init_perf(TIM_TypeDef* tim32bit);
+    static bool init_perf(TIM_TypeDef* tim32bit, UART::Peripheral* uart);
 
     static void update();
     static uint64_t get_global_tick();
