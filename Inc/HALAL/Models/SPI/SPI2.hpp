@@ -1363,7 +1363,7 @@ struct SPIDomain {
                     spi_number = 2;
                 } else if (peripheral == SPIPeripheral::spi3) {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI3;
-                PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL;
+                    PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
                         PANIC("Unable to configure SPI3 clock");
                     }
