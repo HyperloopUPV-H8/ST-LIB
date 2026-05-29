@@ -1363,7 +1363,7 @@ struct SPIDomain {
                     spi_number = 2;
                 } else if (peripheral == SPIPeripheral::spi3) {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI3;
-                    PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL;
+                PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
                         PANIC("Unable to configure SPI3 clock");
                     }
@@ -1371,7 +1371,7 @@ struct SPIDomain {
                     spi_number = 3;
                 } else if (peripheral == SPIPeripheral::spi4) {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI4;
-                    PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_PLL2;
+                    PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_PCLK2;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
                         PANIC("Unable to configure SPI4 clock");
                     }
@@ -1379,7 +1379,7 @@ struct SPIDomain {
                     spi_number = 4;
                 } else if (peripheral == SPIPeripheral::spi5) {
                     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI5;
-                    PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_PLL2;
+                    PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_PCLK2;
                     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
                         PANIC("Unable to configure SPI5 clock");
                     }
