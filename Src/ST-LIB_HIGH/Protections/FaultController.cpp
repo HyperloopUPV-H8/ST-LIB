@@ -149,8 +149,10 @@ void FaultController::start() {
         return;
     }
 
-    runtime_storage.start(global_machine);
+    // Set runtime_started before calling start so that faults caused by start don't trigger a
+    // rebuild of the state machine
     runtime_started = true;
+    runtime_storage.start(global_machine);
 
     if (faulted) {
         Diagnostics::Hub::flush_urgent();
