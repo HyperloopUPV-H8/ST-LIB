@@ -6,6 +6,13 @@ The revived semantic-versioning baseline starts at `v5.0.0`.
 Historical releases that predate this file remain available in Git tags such as
 `v1.0.0`, `v3.0.0`, `v4.0.0-beta`, and `h10`.
 
+## v6.1.2 - 2026-05-29
+
+### Fixes
+
+- Fix faults caused in state machine start causing non-initialized state machine
+- Fix some clock problems in spi 4 and 5
+
 ## v6.1.1 - 2026-05-11
 
 ### Fixes
