@@ -13,7 +13,7 @@
 
 #include "HALAL/Models/Pin.hpp"
 #ifdef SIM_ON
-#define STLIB_ADC_DMA_BUFFER_ATTR(x)
+#define STLIB_ADC_DMA_BUFFER_ATTR(x) inline
 #else
 #include "HALAL/Models/MPU.hpp"
 #define STLIB_ADC_DMA_BUFFER_ATTR(x) D2_NC_BSS_INLINE(x)
