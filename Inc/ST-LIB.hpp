@@ -391,6 +391,6 @@ public:
  *          before the global constructors and main() are called.
  *          It is responsible for initializing the hardware and peripherals
  */
-extern "C" weak void BoardInit(void) {
+extern "C" __attribute__((weak)) void BoardInit(void) {
     // Do nothing by default
 }
