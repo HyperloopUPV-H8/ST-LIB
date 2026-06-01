@@ -182,7 +182,7 @@ BOOT_ATTR void SystemCoreClockUpdate(void) {
     SystemCoreClock = common_system_clock;
 }
 
-BOOT_ATTR void ConfigurationChecker() {
+__attribute__((weak)) BOOT_ATTR void ConfigurationChecker() {
     // Nothing for now
 }
 
