@@ -46,7 +46,6 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
             .OCPolarity = polarity,
             .OCNPolarity = negated_polarity,
 
-            .OCFastMode = TIM_OCFAST_DISABLE,
             .OCIdleState = TIM_OCIDLESTATE_RESET,
             .OCNIdleState = TIM_OCNIDLESTATE_RESET,
         };
