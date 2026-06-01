@@ -156,7 +156,7 @@ void Scheduler::update() {
     }
 
 #if defined(SCHEDULER_GET_LAST_N_TASKS)
-    if (UART::transmit_polling(
+    if (!UART::transmit_polling(
             uart_id,
             (uint8_t*)&time_info,
             sizeof(TaskTimeInfo) * current_time_info

@@ -28,7 +28,7 @@
 #endif
 
 #ifndef SIM_ON
-#define SCHEDULER_GET_LAST_N_TASKS
+//#define SCHEDULER_GET_LAST_N_TASKS
 #else
 struct UART {
     struct Peripheral {

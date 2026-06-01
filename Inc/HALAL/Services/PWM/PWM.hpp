@@ -40,9 +40,8 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
             PANIC("Timer instance is not set for PWM");
             return;
         }
-        TIM_OC_InitTypeDef sConfigOC = {
+        ST_LIB::TimerOutputChannelConfig sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
-            .Pulse = 0,
 
             .OCPolarity = polarity,
             .OCNPolarity = negated_polarity,
@@ -153,6 +152,39 @@ public:
 
     inline uint32_t get_frequency() const { return *(this->frequency); }
     inline float get_duty_cycle() const { return *(this->duty_cycle); }
+
+    /* NOTE: fast mode is only supported in pwms */
+    inline void enable_fast_mode() {
+      if constexpr (pin.channel == TimerChannel::CHANNEL_1 || pin.channel == TimerChannel::CHANNEL_1_NEGATED) {
+        SET_BIT(this->timer->instance->tim->CCMR1, TIM_CCMR1_OC1FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_2 || pin.channel == TimerChannel::CHANNEL_2_NEGATED) {
+        SET_BIT(this->timer->instance->tim->CCMR1, TIM_CCMR1_OC2FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_3 || pin.channel == TimerChannel::CHANNEL_3_NEGATED) {
+        SET_BIT(this->timer->instance->tim->CCMR2, TIM_CCMR2_OC3FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_4 || pin.channel == TimerChannel::CHANNEL_4_NEGATED) {
+        SET_BIT(this->timer->instance->tim->CCMR2, TIM_CCMR2_OC4FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_5) {
+        SET_BIT(this->timer->instance->tim->CCMR3, TIM_CCMR3_OC5FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_6) {
+        SET_BIT(this->timer->instance->tim->CCMR3, TIM_CCMR3_OC6FE);
+      }
+    }
+
+    inline void disable_fast_mode() {
+      if constexpr (pin.channel == TimerChannel::CHANNEL_1 || pin.channel == TimerChannel::CHANNEL_1_NEGATED) {
+        CLEAR_BIT(this->timer->instance->tim->CCMR1, TIM_CCMR1_OC1FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_2 || pin.channel == TimerChannel::CHANNEL_2_NEGATED) {
+        CLEAR_BIT(this->timer->instance->tim->CCMR1, TIM_CCMR1_OC2FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_3 || pin.channel == TimerChannel::CHANNEL_3_NEGATED) {
+        CLEAR_BIT(this->timer->instance->tim->CCMR2, TIM_CCMR2_OC3FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_4 || pin.channel == TimerChannel::CHANNEL_4_NEGATED) {
+        CLEAR_BIT(this->timer->instance->tim->CCMR2, TIM_CCMR2_OC4FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_5) {
+        CLEAR_BIT(this->timer->instance->tim->CCMR3, TIM_CCMR3_OC5FE);
+      } else if constexpr (pin.channel == TimerChannel::CHANNEL_6) {
+        CLEAR_BIT(this->timer->instance->tim->CCMR3, TIM_CCMR3_OC6FE);
+      }
+    }
 };
 } // namespace ST_LIB
 

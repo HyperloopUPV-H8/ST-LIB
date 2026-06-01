@@ -564,7 +564,7 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
     /* NOTE(vic): Both config_output_compare_channel and config_input_compare_channel
      *            Could probably be done better if not using TIM_[OC/IC]_InitTypeDef structures */
     template <ST_LIB::TimerChannel ch>
-    inline void config_output_compare_channel(const TIM_OC_InitTypeDef* OC_Config) {
+    inline void config_output_compare_channel(const ST_LIB::TimerOutputChannelConfig* OC_Config) {
         if constexpr (!((ch == TimerChannel::CHANNEL_1) || (ch == TimerChannel::CHANNEL_2) ||
                         (ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_4) ||
                         (ch == TimerChannel::CHANNEL_5) || (ch == TimerChannel::CHANNEL_6))) {
@@ -699,19 +699,6 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
         } else if constexpr (ch == TimerChannel::CHANNEL_5 || ch == TimerChannel::CHANNEL_6) {
             instance->tim->CCMR3 = tmpccmrx;
         }
-
-        if constexpr (ch == TimerChannel::CHANNEL_1)
-            instance->tim->CCR1 = OC_Config->Pulse;
-        else if constexpr (ch == TimerChannel::CHANNEL_2)
-            instance->tim->CCR2 = OC_Config->Pulse;
-        else if constexpr (ch == TimerChannel::CHANNEL_3)
-            instance->tim->CCR3 = OC_Config->Pulse;
-        else if constexpr (ch == TimerChannel::CHANNEL_4)
-            instance->tim->CCR4 = OC_Config->Pulse;
-        else if constexpr (ch == TimerChannel::CHANNEL_5)
-            instance->tim->CCR5 = OC_Config->Pulse;
-        else if constexpr (ch == TimerChannel::CHANNEL_6)
-            instance->tim->CCR6 = OC_Config->Pulse;
 
         instance->tim->CCER = tmpccer;
     }
