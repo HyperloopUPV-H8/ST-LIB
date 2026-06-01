@@ -18,9 +18,12 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
     friend TimerWrapper<dev>;
 
     TimerWrapper<dev>* timer;
-    uint32_t* frequency;
+    uint32_t polarity;
+    uint32_t negated_polarity;
     float* duty_cycle = nullptr;
+    uint32_t* frequency;
     bool is_on = false;
+    bool is_initialized = false;
 
     /* This constructor is private for a reason. Use TimerWrapper<dev>::get_pwm */
     PWM(TimerWrapper<dev>* tim,
@@ -28,10 +31,15 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         uint32_t negated_polarity,
         float* duty_ptr,
         uint32_t* frequency_ptr)
-        : timer(tim) {
-        duty_cycle = duty_ptr;
-        frequency = frequency_ptr;
-
+        : timer(tim), polarity(polarity), negated_polarity(negated_polarity), duty_cycle(duty_ptr),
+          frequency(frequency_ptr) {}
+    void init() {
+        if (is_initialized)
+            return;
+        if (timer == nullptr || timer->instance == nullptr || timer->instance->hal_tim == nullptr) {
+            PANIC("Timer instance is not set for PWM");
+            return;
+        }
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
             .Pulse = 0,
@@ -45,10 +53,14 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         };
         timer->template config_output_compare_channel<pin.channel>(&sConfigOC);
         timer->template set_output_compare_preload_enable<pin.channel>();
+        is_initialized = true;
     }
 
 public:
     void turn_on() {
+        if (this->is_initialized == false) {
+            init();
+        }
         if (this->is_on)
             return;
 
@@ -56,7 +68,7 @@ public:
             &timer->instance->hal_tim
                  ->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
-            ErrorHandler("Channel not ready");
+            PANIC("Channel not ready");
         }
 
         *state = HAL_TIM_CHANNEL_STATE_BUSY;

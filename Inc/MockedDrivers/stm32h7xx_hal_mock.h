@@ -595,6 +595,7 @@ typedef struct {
 
 #define RCC_SPI123CLKSOURCE_PLL 0x00000001U
 #define RCC_SPI45CLKSOURCE_PLL2 0x00000002U
+#define RCC_SPI45CLKSOURCE_PCLK2 0x00000003U
 #define RCC_SPI6CLKSOURCE_PLL2 0x00000002U
 
 typedef struct TIM_TypeDef TIM_TypeDef;
@@ -896,21 +897,22 @@ HAL_StatusTypeDef HAL_SPI_Init(SPI_HandleTypeDef* hspi);
 HAL_StatusTypeDef HAL_SPI_DeInit(SPI_HandleTypeDef* hspi);
 HAL_StatusTypeDef HAL_SPI_Abort(SPI_HandleTypeDef* hspi);
 HAL_StatusTypeDef
-HAL_SPI_Transmit(SPI_HandleTypeDef* hspi, uint8_t* pData, uint16_t Size, uint32_t Timeout);
+HAL_SPI_Transmit(SPI_HandleTypeDef* hspi, const uint8_t* pData, uint16_t Size, uint32_t Timeout);
 HAL_StatusTypeDef
 HAL_SPI_Receive(SPI_HandleTypeDef* hspi, uint8_t* pData, uint16_t Size, uint32_t Timeout);
 HAL_StatusTypeDef HAL_SPI_TransmitReceive(
     SPI_HandleTypeDef* hspi,
-    uint8_t* pTxData,
+    const uint8_t* pTxData,
     uint8_t* pRxData,
     uint16_t Size,
     uint32_t Timeout
 );
-HAL_StatusTypeDef HAL_SPI_Transmit_DMA(SPI_HandleTypeDef* hspi, uint8_t* pData, uint16_t Size);
+HAL_StatusTypeDef
+HAL_SPI_Transmit_DMA(SPI_HandleTypeDef* hspi, const uint8_t* pData, uint16_t Size);
 HAL_StatusTypeDef HAL_SPI_Receive_DMA(SPI_HandleTypeDef* hspi, uint8_t* pData, uint16_t Size);
 HAL_StatusTypeDef HAL_SPI_TransmitReceive_DMA(
     SPI_HandleTypeDef* hspi,
-    uint8_t* pTxData,
+    const uint8_t* pTxData,
     uint8_t* pRxData,
     uint16_t Size
 );

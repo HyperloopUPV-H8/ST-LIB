@@ -1,33 +1,36 @@
 #pragma once
 
-#include <string>
-
+#include "HALAL/Services/Diagnostics/Diagnostics.hpp"
 #include "HALAL/HALAL.hpp"
 #include "ST-LIB_HIGH.hpp"
 #include "ST-LIB_LOW.hpp"
 
-class STLIB {
-public:
-#ifdef STLIB_ETH
-    static void
-    start(MAC mac, IPV4 ip, IPV4 subnet_mask, IPV4 gateway, UART::Peripheral& printf_peripheral);
-
-    static void start(
-        const std::string& mac = "00:80:e1:00:00:00",
-        const std::string& ip = "192.168.1.4",
-        const std::string& subnet_mask = "255.255.0.0",
-        const std::string& gateway = "192.168.1.1",
-        UART::Peripheral& printf_peripheral = UART::uart2
-    );
-#else
-    static void start(UART::Peripheral& printf_peripheral = UART::uart2);
-#endif
-
-    static void update();
-};
-
 namespace ST_LIB {
 extern void compile_error(const char* msg);
+
+template <auto& OperationalMachine, Callback OnFaultEnter = nullptr> struct FaultPolicy {
+    static_assert(
+        IsStateMachineClass<std::remove_cvref_t<decltype(OperationalMachine)>>,
+        "FaultPolicy operational machine must be a StateMachine"
+    );
+
+    static constexpr bool has_operational_machine = true;
+    static constexpr auto& operational_machine = OperationalMachine;
+    static constexpr Callback on_fault_enter = OnFaultEnter;
+};
+
+template <Callback OnFaultEnter = nullptr> struct FaultPolicyNoMachine {
+    static constexpr bool has_operational_machine = false;
+    static constexpr Callback on_fault_enter = OnFaultEnter;
+};
+
+using DefaultFaultPolicy = FaultPolicyNoMachine<>;
+
+template <typename Policy>
+concept BoardFaultPolicy = requires {
+    { Policy::has_operational_machine } -> std::convertible_to<const bool>;
+    { Policy::on_fault_enter } -> std::convertible_to<Callback>;
+} && (!Policy::has_operational_machine || requires { Policy::operational_machine; });
 
 // The contract of BuildCtx/Board is documented in docs/st-lib-board-contract.md.
 template <typename... Domains> struct BuildCtx {
@@ -138,9 +141,38 @@ consteval std::array<DMADomain::Config, TotalN> build_dma_configs(
     });
 }
 
+template <auto& Request> struct ProtectionRequestRef {
+    static constexpr auto& value = Request;
+};
+
+template <auto& Request> consteval auto protection_spec_tuple() {
+    using RequestT = std::remove_cvref_t<decltype(Request)>;
+
+    if constexpr (Protections::ProtectionSpecLike<RequestT>) {
+        return std::tuple<ProtectionRequestRef<Request>>{};
+    } else {
+        return std::tuple<>{};
+    }
+}
+
+template <typename Tuple> struct ProtectionEngineFromTuple;
+
+template <typename... ProtectionRefs>
+struct ProtectionEngineFromTuple<std::tuple<ProtectionRefs...>> {
+    using type = Protections::ProtectionEngine<ProtectionRefs::value...>;
+};
+
+template <auto&... Requests>
+using ProtectionEngineForRequests =
+    typename ProtectionEngineFromTuple<decltype(std::tuple_cat(protection_spec_tuple<Requests>()...)
+    )>::type;
+
 } // namespace BuildUtils
 
-template <auto&... devs> struct Board {
+template <BoardFaultPolicy FaultPolicyT, auto&... devs> struct Board {
+public:
+    using ProtectionEngine = BuildUtils::ProtectionEngineForRequests<devs...>;
+
     static consteval auto build_ctx() {
         DomainsCtx ctx{};
         (devs.inscribe(ctx), ...);
@@ -262,6 +294,9 @@ template <auto&... devs> struct Board {
         Watchdog::check_reset_flag();
         Hard_fault_check();
 #endif
+        Diagnostics::Runtime::install_default_sinks();
+        FaultController::template install_runtime<FaultPolicyT>();
+
         HAL_Init();
         HALconfig::system_clock();
         HALconfig::peripheral_clock();
@@ -306,7 +341,15 @@ template <auto&... devs> struct Board {
             cfg.dfsdm_clk_cfgs,
             GPIODomain::Init<gpioN>::instances
         );
-        // ...
+
+        ProtectionEngine::initialize();
+        FaultController::start();
+    }
+
+    static void evaluate_protections() { ProtectionEngine::evaluate(); }
+
+    template <auto& ProtectionSpec> static auto& protection() {
+        return ProtectionEngine::template protection<ProtectionSpec>();
     }
 
     template <typename Domain, auto& Target, std::size_t I = 0>
@@ -321,7 +364,7 @@ template <auto&... devs> struct Board {
         }
     }
 
-    template <auto& Target> static constexpr auto& instance_of() {
+    template <auto& Target> constexpr static auto& instance_of() {
         using DevT = std::remove_cvref_t<decltype(Target)>;
         using Domain = typename DevT::domain;
 
@@ -343,17 +386,11 @@ template <auto&... devs> struct Board {
 
 } // namespace ST_LIB
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @brief   This is a function that gets called early in the startup process,
  *          before the global constructors and main() are called.
  *          It is responsible for initializing the hardware and peripherals
  */
-void BoardInit(void);
-
-#ifdef __cplusplus
+extern "C" weak void BoardInit(void) {
+    // Do nothing by default
 }
-#endif

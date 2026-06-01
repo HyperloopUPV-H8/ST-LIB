@@ -22,10 +22,13 @@ class DualPWM {
     friend TimerWrapper<dev>;
 
     TimerWrapper<dev>* timer;
-    uint32_t* frequency;
     float* duty_cycle = nullptr;
+    uint32_t* frequency;
+    uint32_t polarity;
+    uint32_t negated_polarity;
     bool is_on_positive = false;
     bool is_on_negative = false;
+    bool is_initialized = false;
 
     /* This constructor is private for a reason. Use TimerWrapper<dev>::get_dual_pwm */
     DualPWM(
@@ -35,10 +38,17 @@ class DualPWM {
         float* duty_ptr,
         uint32_t* frequency_ptr
     )
-        : timer(tim) {
-        duty_cycle = duty_ptr;
-        frequency = frequency_ptr;
+        : timer(tim), duty_cycle(duty_ptr), frequency(frequency_ptr), polarity(polarity),
+          negated_polarity(negated_polarity) {}
 
+    inline void initialize() {
+        if (is_initialized)
+            return;
+
+        if (timer == nullptr || timer->instance == nullptr || timer->instance->hal_tim == nullptr) {
+            PANIC("Timer instance is not set for DualPWM");
+            return;
+        }
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
             .Pulse = 0,
@@ -53,10 +63,12 @@ class DualPWM {
 
         timer->template config_output_compare_channel<pin.channel>(&sConfigOC);
         timer->template set_output_compare_preload_enable<pin.channel>();
+        is_initialized = true;
     }
 
 public:
     inline void turn_on() {
+        initialize();
         turn_on_positive();
         turn_on_negative();
     }
@@ -65,7 +77,6 @@ public:
         turn_off_positive();
         turn_off_negative();
     }
-
     void turn_on_positive() {
         if (this->is_on_positive)
             return;
@@ -74,7 +85,7 @@ public:
             &timer->instance->hal_tim
                  ->ChannelState[TimerDomain::get_channel_state_idx(pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
-            ErrorHandler("Channel not ready");
+            PANIC("Channel not ready");
         }
 
         *state = HAL_TIM_CHANNEL_STATE_BUSY;
@@ -108,7 +119,7 @@ public:
             &timer->instance->hal_tim
                  ->ChannelNState[TimerDomain::get_channel_state_idx(negated_pin.channel)];
         if (*state != HAL_TIM_CHANNEL_STATE_READY) {
-            ErrorHandler("Channel not ready");
+            PANIC("Channel not ready");
         }
 
         *state = HAL_TIM_CHANNEL_STATE_BUSY;
@@ -251,7 +262,7 @@ public:
             sBreakDeadTimeConfig.DeadTime =
                 0b1110'0000 | (uint32_t)((float)time / (16 * clock_period_ns) - 32);
         } else {
-            ErrorHandler("Invalid dead time configuration");
+            PANIC("Invalid dead time configuration");
         }
 
         // sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;

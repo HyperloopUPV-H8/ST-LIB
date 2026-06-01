@@ -247,8 +247,6 @@ struct EthernetDomain {
         void update() {
             ethernetif_input(&gnetif);
             sys_check_timeouts();
-            ErrorHandlerModel::ErrorHandlerUpdate();
-            InfoWarning::InfoWarningUpdate();
 
             if (HAL_GetTick() - EthernetLinkTimer >= 100) {
                 EthernetLinkTimer = HAL_GetTick();

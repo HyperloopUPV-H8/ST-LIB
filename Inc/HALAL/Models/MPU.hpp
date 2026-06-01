@@ -41,26 +41,49 @@
 #include "stm32h7xx_hal.h"
 #include "HALAL/Models/MPUManager/MPUManager.hpp"
 
-// Defines for attributes
+#ifdef SIM_ON
+
+#define D1_NC_DATA
+#define D1_NC_BSS
+#define D1_NC_RODATA
+#define D2_NC_DATA
+#define D2_NC_BSS
+#define D2_NC_RODATA
+#define D3_NC_DATA
+#define D3_NC_BSS
+#define D3_NC_RODATA
+#define D1_C_DATA
+#define D1_C_BSS
+#define D1_C_RODATA
+#define D2_C_DATA
+#define D2_C_BSS
+#define D2_C_RODATA
+#define D3_C_DATA
+#define D3_C_BSS
+#define D3_C_RODATA
+#define RAM_CODE
+#define DTCM_RODATA
+
+#else
 
 // Initialized data in non-cached D1 RAM
-#define D1_NC_DATA __attribute__((section(".ram_d1_nc.user.data")))
+#define D1_NC_DATA __attribute__((section(".ram_d1_nc.user.data"))) volatile
 // Uninitialized data in non-cached D1 RAM
-#define D1_NC_BSS __attribute__((section(".ram_d1_nc.user.bss")))
+#define D1_NC_BSS __attribute__((section(".ram_d1_nc.user.bss"))) volatile
 // Read-only data in non-cached D1 RAM (mainly for rx buffers) @note Not protected by MPU
-#define D1_NC_RODATA __attribute__((section(".ram_d1_nc.user.rodata"))) const
+#define D1_NC_RODATA __attribute__((section(".ram_d1_nc.user.rodata"))) const volatile
 // Initialized data in non-cached D2 RAM
-#define D2_NC_DATA __attribute__((section(".ram_d2_nc.user.data")))
+#define D2_NC_DATA __attribute__((section(".ram_d2_nc.user.data"))) volatile
 // Uninitialized data in non-cached D2 RAM
-#define D2_NC_BSS __attribute__((section(".ram_d2_nc.user.bss")))
+#define D2_NC_BSS __attribute__((section(".ram_d2_nc.user.bss"))) volatile
 // Read-only data in non-cached D2 RAM (mainly for rx buffers) @note Not protected by MPU
-#define D2_NC_RODATA __attribute__((section(".ram_d2_nc.user.rodata"))) const
+#define D2_NC_RODATA __attribute__((section(".ram_d2_nc.user.rodata"))) const volatile
 // Initialized data in non-cached D3 RAM
-#define D3_NC_DATA __attribute__((section(".ram_d3_nc.user.data")))
+#define D3_NC_DATA __attribute__((section(".ram_d3_nc.user.data"))) volatile
 // Uninitialized data in non-cached D3 RAM
-#define D3_NC_BSS __attribute__((section(".ram_d3_nc.user.bss")))
+#define D3_NC_BSS __attribute__((section(".ram_d3_nc.user.bss"))) volatile
 // Read-only data in non-cached D3 RAM (mainly for rx buffers) @note Not protected by MPU
-#define D3_NC_RODATA __attribute__((section(".ram_d3_nc.user.rodata"))) const
+#define D3_NC_RODATA __attribute__((section(".ram_d3_nc.user.rodata"))) const volatile
 // Initialized data in cached D1 RAM
 #define D1_C_DATA __attribute__((section(".ram_d1.user.data")))
 // Uninitialized data in cached D1 RAM
@@ -80,11 +103,12 @@
 // Read-only data in cached D3 RAM (mainly for rx buffers) @note Not protected by MPU
 #define D3_C_RODATA __attribute__((section(".ram_d3.user.rodata"))) const
 
-// Functions living in ITCM for maximum performance (default is FLASH)
 #define RAM_CODE __attribute__((section(".ram_code")))
 
 // Constants in DTCM (default is FLASH because DTCM is small) @note Not protected by MPU
 #define DTCM_RODATA __attribute__((section(".dtcm.rodata"))) const
+
+#endif
 
 // Retrocompatibility macros
 #define D1_NC D1_NC_BSS
@@ -117,6 +141,17 @@ extern "C" const char _ram_d2_nc_start;
 extern "C" const char _ram_d2_nc_end;
 extern "C" const char _ram_d3_nc_start;
 extern "C" const char _ram_d3_nc_end;
+
+inline constexpr std::array<std::size_t, 6> mpu_supported_alignments = {32, 16, 8, 4, 2, 1};
+
+consteval bool is_supported_mpu_alignment(std::size_t alignment) {
+    for (std::size_t candidate : mpu_supported_alignments) {
+        if (candidate == alignment) {
+            return true;
+        }
+    }
+    return false;
+}
 
 template <typename T>
 concept mpu_buffer_request = requires(typename T::domain d) {
@@ -173,7 +208,7 @@ struct MPUDomain {
                 "Requested type has alignment greater than cache line size (32 bytes)."
             );
             static_assert(
-                std::ranges::find(alignments, alignof(T)) != std::ranges::end(alignments),
+                is_supported_mpu_alignment(alignof(T)),
                 "Requested type has alignment not supported by MPU buffer system."
             );
         }
@@ -183,14 +218,12 @@ struct MPUDomain {
          * @param entry The Entry with all buffer requirements specified.
          */
         consteval Buffer(Entry entry) : e(entry) {
-            static_assert(
-                entry.alignment <= 32,
-                "Requested alignment greater than cache line size (32 bytes)."
-            );
-            static_assert(
-                std::ranges::find(alignments, entry.alignment) != std::ranges::end(alignments),
-                "Requested alignment not supported by MPU buffer system."
-            );
+            if (entry.alignment > 32) {
+                compile_error("Requested alignment greater than cache line size (32 bytes).");
+            }
+            if (!is_supported_mpu_alignment(entry.alignment)) {
+                compile_error("Requested alignment not supported by MPU buffer system.");
+            }
             // Verify size matches sizeof(T)
             if (entry.size_in_bytes != sizeof(T)) {
                 compile_error("Entry size_in_bytes must match sizeof(T)");
@@ -267,7 +300,7 @@ struct MPUDomain {
             uint32_t offsets_c[3] = {};  // D1, D2, D3
             uint32_t assigned_offsets[N];
 
-            for (size_t align : alignments) {
+            for (size_t align : mpu_supported_alignments) {
                 for (size_t i = 0; i < N; i++) {
                     if (entries[i].alignment == align) {
                         size_t d_idx = static_cast<size_t>(entries[i].memory_domain) - 1;
@@ -300,26 +333,43 @@ struct MPUDomain {
         void* ptr;
         std::size_t size;
 
-        template <mpu_buffer_request auto& Target, typename... Args>
-        auto& construct(Args&&... args) {
-            using T = typename std::remove_cvref_t<decltype(Target)>::buffer_type;
+        template <auto& Target, typename... Args> auto& construct(Args&&... args) {
+            using Request = std::remove_cvref_t<decltype(Target)>;
+            static_assert(mpu_buffer_request<Request>, "Target must be a valid MPUDomain buffer");
+            constexpr bool is_nc = Request::e.memory_type == MemoryType::NonCached;
+            static_assert(
+                is_nc && std::is_volatile_v<typename Request::buffer_type>,
+                "Non cached buffers must be volatile to work as intended"
+            );
+            using T = typename Request::buffer_type;
             return *new (ptr) T(std::forward<Args>(args)...);
         }
 
-        template <mpu_buffer_request auto& Target> auto* as() {
-            using T = typename std::remove_cvref_t<decltype(Target)>::buffer_type;
+        template <auto& Target> auto* as() {
+            using Request = std::remove_cvref_t<decltype(Target)>;
+            static_assert(mpu_buffer_request<Request>, "Target must be a valid MPUDomain buffer");
+            constexpr bool is_nc = Request::e.memory_type == MemoryType::NonCached;
+            static_assert(
+                is_nc && std::is_volatile_v<typename Request::buffer_type>,
+                "Non cached buffers must be volatile to work as intended"
+            );
+            using T = typename Request::buffer_type;
             return static_cast<T*>(ptr);
         }
     };
 
-    template <typename Board, mpu_buffer_request auto& Target, typename... Args>
+    template <typename Board, auto& Target, typename... Args>
     static auto& construct(Args&&... args) {
+        using Request = std::remove_cvref_t<decltype(Target)>;
+        static_assert(mpu_buffer_request<Request>, "Target must be a valid MPUDomain buffer");
         return Board::template instance_of<Target>().template construct<Target>(
             std::forward<Args>(args)...
         );
     }
 
-    template <typename Board, mpu_buffer_request auto& Target> static auto* as() {
+    template <typename Board, auto& Target> static auto* as() {
+        using Request = std::remove_cvref_t<decltype(Target)>;
+        static_assert(mpu_buffer_request<Request>, "Target must be a valid MPUDomain buffer");
         return Board::template instance_of<Target>().template as<Target>();
     }
 
@@ -328,21 +378,36 @@ struct MPUDomain {
 
         static constexpr auto Sizes = calculate_total_sizes(cfgs);
 
-        // Sections defined in Linker Script (aligned to 32 bytes just in case)
+#ifdef SIM_ON
+
+        alignas(32
+        ) static inline volatile uint8_t d1_nc_buffer[Sizes.d1_nc_total > 0 ? Sizes.d1_nc_total : 1];
+        alignas(32) static inline uint8_t d1_c_buffer[Sizes.d1_c_total > 0 ? Sizes.d1_c_total : 1];
+        alignas(32
+        ) static inline volatile uint8_t d2_nc_buffer[Sizes.d2_nc_total > 0 ? Sizes.d2_nc_total : 1];
+        alignas(32) static inline uint8_t d2_c_buffer[Sizes.d2_c_total > 0 ? Sizes.d2_c_total : 1];
+        alignas(32
+        ) static inline volatile uint8_t d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
+        alignas(32) static inline uint8_t d3_c_buffer[Sizes.d3_c_total > 0 ? Sizes.d3_c_total : 1];
+
+#else
+
         __attribute__((section(".ram_d1_nc.buffer"))) alignas(32)
-        static inline uint8_t d1_nc_buffer[Sizes.d1_nc_total > 0 ? Sizes.d1_nc_total : 1];
+        static inline volatile uint8_t d1_nc_buffer[Sizes.d1_nc_total > 0 ? Sizes.d1_nc_total : 1];
         __attribute__((section(".ram_d1.buffer"))) alignas(32)
         static inline uint8_t d1_c_buffer[Sizes.d1_c_total > 0 ? Sizes.d1_c_total : 1];
 
         __attribute__((section(".ram_d2_nc.buffer"))) alignas(32)
-        static inline uint8_t d2_nc_buffer[Sizes.d2_nc_total > 0 ? Sizes.d2_nc_total : 1];
+        static inline volatile uint8_t d2_nc_buffer[Sizes.d2_nc_total > 0 ? Sizes.d2_nc_total : 1];
         __attribute__((section(".ram_d2.buffer"))) alignas(32)
         static inline uint8_t d2_c_buffer[Sizes.d2_c_total > 0 ? Sizes.d2_c_total : 1];
 
         __attribute__((section(".ram_d3_nc.buffer"))) alignas(32)
-        static inline uint8_t d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
+        static inline volatile uint8_t d3_nc_buffer[Sizes.d3_nc_total > 0 ? Sizes.d3_nc_total : 1];
         __attribute__((section(".ram_d3.buffer"))) alignas(32)
         static inline uint8_t d3_c_buffer[Sizes.d3_c_total > 0 ? Sizes.d3_c_total : 1];
+
+#endif
 
         static void init() {
             HAL_MPU_Disable();
@@ -366,7 +431,7 @@ struct MPUDomain {
             );
 
             // Assign pointers
-            uint8_t* bases_nc[3] = {&d1_nc_buffer[0], &d2_nc_buffer[0], &d3_nc_buffer[0]};
+            volatile uint8_t* bases_nc[3] = {&d1_nc_buffer[0], &d2_nc_buffer[0], &d3_nc_buffer[0]};
             uint8_t* bases_c[3] = {&d1_c_buffer[0], &d2_c_buffer[0], &d3_c_buffer[0]};
 
             for (std::size_t i = 0; i < N; i++) {
@@ -378,7 +443,7 @@ struct MPUDomain {
                     size_t d_idx = static_cast<size_t>(cfg.domain) - 1;
 
                     if (cfg.type == MemoryType::NonCached) {
-                        inst.ptr = bases_nc[d_idx] + cfg.offset;
+                        inst.ptr = const_cast<uint8_t*>(bases_nc[d_idx] + cfg.offset);
                     } else {
                         inst.ptr = bases_c[d_idx] + cfg.offset;
                     }
@@ -393,8 +458,6 @@ struct MPUDomain {
     };
 
 private:
-    static constexpr std::size_t alignments[6] = {32, 16, 8, 4, 2, 1};
-
     static void configure_dynamic_region(uintptr_t start, uintptr_t end, uint8_t region_num) {
         if (end <= start)
             return;

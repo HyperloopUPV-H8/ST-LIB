@@ -18,7 +18,7 @@ public:
 
     constexpr void push_back(const T& value) {
         if (size_ >= Capacity) {
-            ErrorHandler("StaticVector capacity exceeded");
+            PANIC("StaticVector capacity exceeded");
             return;
         }
         data[size_] = value;

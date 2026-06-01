@@ -62,10 +62,7 @@ const string Pin::to_string() const {
 
 void Pin::inscribe(Pin& pin, OperationMode mode) {
     if (pin.mode != OperationMode::NOT_USED) {
-        ErrorHandler(
-            "Pin %s is already registered, cannot register twice",
-            pin.to_string().c_str()
-        );
+        PANIC("Pin %s is already registered, cannot register twice", pin.to_string().c_str());
         return;
     }
     pin.mode = mode;
