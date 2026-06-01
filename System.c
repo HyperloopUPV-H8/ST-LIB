@@ -185,3 +185,7 @@ BOOT_ATTR void SystemCoreClockUpdate(void) {
 BOOT_ATTR void ConfigurationChecker() {
     // Nothing for now
 }
+
+__attribute__((weak)) void BoardInit(void) {
+    // do nothing by default
+}
