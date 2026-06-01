@@ -55,6 +55,13 @@ SECTIONS
   PROVIDE(_peripheral_base = ABSOLUTE(ORIGIN(PERIPHERAL)));
   PROVIDE(_peripheral_size = ABSOLUTE(LENGTH(PERIPHERAL)));
 
+  /* Null-pointer guard: MPU blocks first 32 bytes. VTOR requires 128-byte alignment. */
+  .null_guard (NOLOAD) :
+  {
+    . += 32;
+    . = ALIGN(1024); // 156 vectors * 4 bytes each = 624 bytes, next power of 2 is 1024
+  } >ITCMRAM
+
   /* The interrupt vector table goes into ITCM RAM */
   .isr_vector :
   {
@@ -113,7 +120,7 @@ SECTIONS
     *(.glue_7t)       /* glue thumb to arm code */
     *(.eh_frame)      /* Exception handling frames, mainly for the debugger */
 #endif
-    
+
     . = ALIGN(4);
     __eram_code = ABSOLUTE(.);
   } >ITCMRAM AT> FLASH
@@ -184,7 +191,7 @@ SECTIONS
   } >FLASH_ST
 
   /* Stack memory to avoid memfault inside hardfault handler, at the start of DTCM */
-  .hardfault_stack (NOLOAD) : 
+  .hardfault_stack (NOLOAD) :
   {
     . = ALIGN(8);
     __hf_stack_start = .;
@@ -209,6 +216,19 @@ SECTIONS
   } >DTCMRAM AT> FLASH
   __si_data = LOADADDR(.data);
 
+  .dtcm_rodata :
+  {
+    . = ALIGN(4);
+    __sdtcm_rodata = .;
+    *(.dtcm.rodata)   /* .dtcm_rodata sections, for constants marked to be placed in DTCM RAM */
+    *(.dtcm.rodata*)  /* .dtcm_rodata* sections, for constants marked to be placed in DTCM RAM */
+    BYTE(0);
+
+    . = ALIGN(4);
+    __edtcm_rodata = .;
+  } >DTCMRAM AT> FLASH
+  __si_dtcm_rodata = LOADADDR(.dtcm_rodata);
+
   /* Uninitialized data section */
   .bss (NOLOAD) :
   {
@@ -224,18 +244,6 @@ SECTIONS
     __bss_end__ = __ebss;
   } >DTCMRAM
 
-  .dtcm_rodata :
-  {
-    . = ALIGN(4);
-    __sdtcm_rodata = .;
-    *(.dtcm_rodata)   /* .dtcm_rodata sections, for constants marked to be placed in DTCM RAM */
-    *(.dtcm_rodata*)  /* .dtcm_rodata* sections, for constants marked to be placed in DTCM RAM */
-
-    . = ALIGN(4);
-    __edtcm_rodata = .;
-  } >DTCMRAM AT> FLASH
-  __si_dtcm_rodata = LOADADDR(.dtcm_rodata);
-
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack (NOLOAD) :
   {
@@ -244,7 +252,7 @@ SECTIONS
     PROVIDE ( _end = . );
     . = . + __Min_Heap_Size;
     . = . + __Min_Stack_Size;
-    
+
     . = ALIGN(8);
   } >DTCMRAM
 
@@ -279,7 +287,8 @@ SECTIONS
     *(.ram_d1_nc.user.data*)
     *(.ram_d1_nc.user.rodata)
     *(.ram_d1_nc.user.rodata*)
-    
+    BYTE(0);
+
     __eram_d1_nc_data = ABSOLUTE(.);
   } >RAM_D1 AT> FLASH
   __si_d1_nc_data = LOADADDR(.ram_d1_nc_data_rodata);
@@ -321,7 +330,8 @@ SECTIONS
     *(.ram_d1.user.data*)
     *(.ram_d1.user.rodata)
     *(.ram_d1.user.rodata*)
-    
+    BYTE(0);
+
     __eram_d1_data = ABSOLUTE(.);
     __d1_end = ABSOLUTE(.);
   } >RAM_D1 AT> FLASH
@@ -356,7 +366,8 @@ SECTIONS
     *(.ram_d2_nc.user.data*)
     *(.ram_d2_nc.user.rodata)
     *(.ram_d2_nc.user.rodata*)
-    
+    BYTE(0);
+
     __eram_d2_nc_data = ABSOLUTE(.);
   } >RAM_D2 AT> FLASH
   __si_d2_nc_data = LOADADDR(.ram_d2_nc_data_rodata);
@@ -396,7 +407,8 @@ SECTIONS
     *(.ram_d2.user.data*)
     *(.ram_d2.user.rodata)
     *(.ram_d2.user.rodata*)
-    
+    BYTE(0);
+
     __eram_d2_data = ABSOLUTE(.);
     __d2_end = ABSOLUTE(.);
   } >RAM_D2 AT> FLASH
@@ -417,6 +429,7 @@ SECTIONS
 
     /* User manual allocations via D3_NC macro */
     *(.ram_d3_nc.user.bss)
+    *(.ram_d3_nc.user.bss*)
     __eram_d3_nc_bss = ABSOLUTE(.);
   } >RAM_D3
   .ram_d3_nc_data_rodata :
@@ -428,7 +441,8 @@ SECTIONS
     *(.ram_d3_nc.user.data*)
     *(.ram_d3_nc.user.rodata)
     *(.ram_d3_nc.user.rodata*)
-    
+    BYTE(0);
+
     __eram_d3_nc_data = ABSOLUTE(.);
   } >RAM_D3 AT> FLASH
   __si_d3_nc_data = LOADADDR(.ram_d3_nc_data_rodata);
@@ -468,7 +482,8 @@ SECTIONS
     *(.ram_d3.user.data*)
     *(.ram_d3.user.rodata)
     *(.ram_d3.user.rodata*)
-    
+    BYTE(0);
+
     __eram_d3_data = ABSOLUTE(.);
     __d3_end = ABSOLUTE(.);
   } >RAM_D3 AT> FLASH
@@ -479,7 +494,7 @@ SECTIONS
   {
     . = ALIGN(4);
     __copy_table_start = .;
-    
+
     /* [Source LMA,         Dest VMA Start,       Dest VMA End] */
     LONG(__si_isr_vector);  LONG(__sisr_vector);  LONG(__eisr_vector);
     LONG(__si_ram_code);    LONG(__sram_code);    LONG(__eram_code);
@@ -500,7 +515,7 @@ SECTIONS
   {
     . = ALIGN(4);
     __zero_table_start = .;
-    
+
     /* [Dest VMA Start,     Dest VMA End] */
     LONG(__sbss);           LONG(__ebss);
     LONG(__sram_d1_nc_bss); LONG(__eram_d1_nc_bss);
@@ -509,7 +524,7 @@ SECTIONS
     LONG(__sram_d2_bss);    LONG(__eram_d2_bss);
     LONG(__sram_d3_nc_bss); LONG(__eram_d3_nc_bss);
     LONG(__sram_d3_bss);    LONG(__eram_d3_bss);
-    
+
     __zero_table_end = .;
   } > FLASH
 
