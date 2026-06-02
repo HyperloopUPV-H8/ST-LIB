@@ -62,6 +62,7 @@ typedef struct {
 } RCC_TypeDef;
 extern RCC_TypeDef* RCC;
 extern uint32_t SystemCoreClock;
+#define HSI_VALUE 64000000U
 
 #define RCC_D1CFGR_HPRE_Msk (0xFU << 0U)
 #define RCC_D2CFGR_D2PPRE1_Pos 4U
@@ -596,6 +597,7 @@ typedef struct {
 #define RCC_SPI123CLKSOURCE_PLL 0x00000001U
 #define RCC_SPI45CLKSOURCE_PLL2 0x00000002U
 #define RCC_SPI45CLKSOURCE_PCLK2 0x00000003U
+#define RCC_SPI45CLKSOURCE_HSI 0x00000004U
 #define RCC_SPI6CLKSOURCE_PLL2 0x00000002U
 
 typedef struct TIM_TypeDef TIM_TypeDef;
@@ -946,7 +948,9 @@ static inline HAL_StatusTypeDef HAL_RCCEx_PeriphCLKConfig(RCC_PeriphCLKInitTypeD
     return HAL_OK;
 }
 static inline uint32_t HAL_RCCEx_GetPeriphCLKFreq(uint32_t PeriphClk) {
-    (void)PeriphClk;
+    if (PeriphClk == RCC_PERIPHCLK_SPI45) {
+        return HSI_VALUE;
+    }
     return SystemCoreClock;
 }
 static inline HAL_StatusTypeDef HAL_DMA_Init(DMA_HandleTypeDef* hdma) {
