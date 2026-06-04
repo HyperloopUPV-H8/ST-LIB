@@ -6,6 +6,14 @@ The revived semantic-versioning baseline starts at `v5.0.0`.
 Historical releases that predate this file remain available in Git tags such as
 `v1.0.0`, `v3.0.0`, `v4.0.0-beta`, and `h10`.
 
+## v6.1.3 - 2026-06-02
+
+### Fixes
+
+- Drive SPI4 and SPI5 from HSI for stable 2 MHz BMS transfers
+  SPI4 and SPI5 now use the 64 MHz HSI peripheral clock source instead of PCLK2,
+  allowing a 2 MHz request to select the /32 SPI prescaler deterministically.
+
 ## v6.1.2 - 2026-05-29
 
 ### Fixes
