@@ -108,6 +108,11 @@ uint64_t Scheduler::get_global_tick() {
     return tick;
 }
 
+void Scheduler::yield() {
+    // TODO
+    
+}
+
 inline uint8_t Scheduler::allocate_slot() {
     uint32_t idx = __builtin_ffs(Scheduler::free_bitmap_) - 1;
     if (idx >= Scheduler::kMaxTasks) [[unlikely]]

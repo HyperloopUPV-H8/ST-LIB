@@ -38,8 +38,6 @@ struct Scheduler {
     // if it isn't it could theoretically be used as an id in set_timeout
     static constexpr uint32_t INVALID_ID = 2 * kMaxTasks;
 
-    // temporary, will be removed
-    [[deprecated]] static inline void start() {}
     static void update();
     static uint64_t get_global_tick();
 
@@ -48,6 +46,7 @@ struct Scheduler {
 
     static uint16_t set_timeout(uint32_t microseconds, callback_t func);
     static bool cancel_timeout(uint16_t id);
+    static void yield();
 
     // internal
     static inline void on_timer_update();
