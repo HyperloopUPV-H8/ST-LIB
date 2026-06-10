@@ -5,6 +5,7 @@
 
 .global  g_pfnVectors
 .global  Default_Handler
+.global  Reset_Handler
 
 /**
  * @brief  This is the code that gets called when the processor first

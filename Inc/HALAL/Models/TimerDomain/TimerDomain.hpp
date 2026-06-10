@@ -281,6 +281,7 @@ struct TimerDomain {
     /* 2x as big as necessary but this makes indexing easier & faster */
     static InputCaptureInfo* input_capture_info[max_instances][input_capture_channels];
     static InputCaptureInfo input_capture_info_backing[max_instances][input_capture_channels];
+    static InputCaptureInfo input_capture_info_dummy;
 
     struct Entry {
         std::array<char, 8> name; /* max length = 7 */
@@ -745,6 +746,12 @@ struct TimerDomain {
         static void init(std::span<const Config, N> cfgs) {
             Scheduler_global_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
             rcc_enable_timer(Scheduler_global_timer);
+
+            for (std::size_t i = 0; i < max_instances; i++) {
+                for (std::size_t ch = 0; ch < input_capture_channels; ch++) {
+                    input_capture_info[i][ch] = &TimerDomain::input_capture_info_dummy;
+                }
+            }
 
             TimerDomain::callbacks[0] = TIM_Default_Callback;
             TimerDomain::callbacks[1] = TIM_Default_Callback;

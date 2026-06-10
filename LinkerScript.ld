@@ -300,8 +300,11 @@ SECTIONS
   __d1_sub = __d1_p2 / 8;
   /* Align effective size to the subregion granularity */
   __d1_pad = (__d1_size + __d1_sub - 1) / __d1_sub * __d1_sub;
-  /* Advance current pointer to reserve this space */
-  . = __d1_nc_start + __d1_pad;
+  /* Reserve MPU-aligned padding between non-cached and cached regions */
+  .ram_d1_nc_pad (NOLOAD) :
+  {
+    . += (__d1_pad - __d1_size);
+  } >RAM_D1
   __d1_nc_end = ABSOLUTE(.);
   PROVIDE(_ram_d1_nc_start = __d1_nc_start);
   PROVIDE(_ram_d1_nc_end = __d1_nc_end);
@@ -377,7 +380,10 @@ SECTIONS
   __d2_p2 = (1 << LOG2CEIL(MAX(32, __d2_size)));
   __d2_sub = __d2_p2 / 8;
   __d2_pad = (__d2_size + __d2_sub - 1) / __d2_sub * __d2_sub;
-  . = __d2_nc_start + __d2_pad;
+  .ram_d2_nc_pad (NOLOAD) :
+  {
+    . += (__d2_pad - __d2_size);
+  } >RAM_D2
   __d2_nc_end = ABSOLUTE(.);
   PROVIDE(_ram_d2_nc_start = __d2_nc_start);
   PROVIDE(_ram_d2_nc_end = __d2_nc_end);
@@ -452,7 +458,10 @@ SECTIONS
   __d3_p2 = (1 << LOG2CEIL(MAX(32, __d3_size)));
   __d3_sub = __d3_p2 / 8;
   __d3_pad = (__d3_size + __d3_sub - 1) / __d3_sub * __d3_sub;
-  . = __d3_nc_start + __d3_pad;
+  .ram_d3_nc_pad (NOLOAD) :
+  {
+    . += (__d3_pad - __d3_size);
+  } >RAM_D3
   __d3_nc_end = ABSOLUTE(.);
   PROVIDE(_ram_d3_nc_start = __d3_nc_start);
   PROVIDE(_ram_d3_nc_end = __d3_nc_end);
