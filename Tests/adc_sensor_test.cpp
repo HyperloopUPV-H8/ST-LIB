@@ -125,7 +125,7 @@ TEST_F(ADCSensorTest, LinearSensorUsesNormalizedADCVoltageForItsTransferFunction
     LinearSensor<float> sensor(SingleADCInit::instances[0], 2.0f, -1.0f, output, 5.0f);
     sensor.read();
 
-    EXPECT_NEAR(output, 2.0f * ((512.0f / 1023.0f) * 5.0f) - 1.0f, 0.001f);
+    EXPECT_NEAR(output, 2.0f * (((512.0f / 1023.0f) * 5.0f) - 1.0f), 0.001f);
 }
 
 TEST_F(ADCSensorTest, FilteredLinearSensorReusesTheSameADCConversionPath) {
@@ -151,7 +151,7 @@ TEST_F(ADCSensorTest, FilteredLinearSensorReusesTheSameADCConversionPath) {
     sensor.read();
     sensor.read();
 
-    EXPECT_NEAR(output, 2.0f * ((2048.0f / 4095.0f) * 3.3f) + 1.0f, 0.001f);
+    EXPECT_NEAR(output, 2.0f * (((2048.0f / 4095.0f) * 3.3f) + 1.0f), 0.001f);
 }
 
 TEST_F(ADCSensorTest, LookupSensorMapsEquivalentNormalizedReadingsAcrossResolutions) {
