@@ -86,7 +86,7 @@ template <class Type>
     requires std::is_integral_v<Type> || std::is_floating_point_v<Type>
 Type LinearSensor<Type>::compute_value_from_voltage(float voltage) const {
     const Type sensor_voltage = static_cast<Type>(voltage);
-    return slope * sensor_voltage + offset;
+    return slope * (sensor_voltage + offset);
 }
 
 template <class Type>
