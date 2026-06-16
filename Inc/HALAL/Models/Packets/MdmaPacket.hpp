@@ -18,6 +18,7 @@
 #define MDMA_PACKET_MAX_INSTANCES 50
 #endif
 
+#ifdef HAL_MDMA_MODULE_ENABLED
 struct MdmaPacketDomain {
     struct Entry {
         size_t packet_mpu_index;
@@ -288,4 +289,15 @@ struct MdmaPacketDomain {
     };
 };
 
+#else // HAL_MDMA_MODULE_ENABLED
+struct MdmaPacketDomain {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        template <typename... Args> static void init(Args&&...) {}
+    };
+};
+#endif // HAL_MDMA_MODULE_ENABLED
 #endif // MDMA_PACKET_HPP

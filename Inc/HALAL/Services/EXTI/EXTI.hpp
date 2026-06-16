@@ -10,9 +10,12 @@
 #include "HALAL/Models/GPIO.hpp"
 #include "HALAL/Models/Pin.hpp"
 
+
 extern "C" void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
 namespace ST_LIB {
+
+#ifdef HAL_EXTI_MODULE_ENABLED
 
 struct EXTIDomain {
 
@@ -46,11 +49,7 @@ struct EXTIDomain {
                   static_cast<ST_LIB::GPIODomain::OperationMode>(trigger),
                   ST_LIB::GPIODomain::Pull::None,
                   ST_LIB::GPIODomain::Speed::Low),
-              action(action) {
-#ifndef HAL_EXTI_MODULE_ENABLED
-            ST_LIB::compile_error("EXTI module not enabled in HAL");
-#endif
-        }
+              action(action) {}
 
         template <class Ctx> consteval std::size_t inscribe(Ctx& ctx) const {
             Entry e;
@@ -146,6 +145,20 @@ struct EXTIDomain {
         }
     };
 };
+
+#else // HAL_EXTI_MODULE_ENABLED
+
+struct EXTIDomain {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        static void init(std::span<const Config, N>, std::span<GPIODomain::Instance>) {}
+    };
+};
+
+#endif // HAL_EXTI_MODULE_ENABLED
 
 } // namespace ST_LIB
 

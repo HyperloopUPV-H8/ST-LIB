@@ -2,9 +2,13 @@
 
 #include "HALAL/Models/GPIO.hpp"
 
+
 using ST_LIB::GPIODomain;
 
 namespace ST_LIB {
+
+#ifdef HAL_GPIO_MODULE_ENABLED
+
 struct DigitalOutputDomain {
     enum class OutputMode : uint8_t {
         PUSH_PULL = static_cast<uint8_t>(GPIODomain::OperationMode::OUTPUT_PUSHPULL),
@@ -70,4 +74,19 @@ struct DigitalOutputDomain {
         }
     };
 };
+
+#else // HAL_GPIO_MODULE_ENABLED
+
+struct DigitalOutputDomain {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        template <typename... Args> static void init(Args&&...) {}
+    };
+};
+
+#endif // HAL_GPIO_MODULE_ENABLED
+
 } // namespace ST_LIB

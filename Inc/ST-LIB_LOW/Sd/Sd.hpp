@@ -15,12 +15,13 @@
 #include <span>
 #include <utility>
 
-#include "stm32h7xx_hal.h"
+#include "hal_wrapper.h"
 
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Models/Pin.hpp"
 #include "HALAL/Models/MPU.hpp"
-#include "ST-LIB_LOW/DigitalInput2.hpp"
+#include "ST-LIB_LOW/DigitalInput.hpp"
+
 
 using ST_LIB::DigitalInputDomain;
 using ST_LIB::GPIODomain;
@@ -31,6 +32,9 @@ extern void* g_sdmmc1_instance_ptr;
 extern void* g_sdmmc2_instance_ptr;
 
 namespace ST_LIB {
+
+#ifdef HAL_SD_MODULE_ENABLED
+
 struct SdDomain {
 
     enum class Peripheral : uint32_t {
@@ -552,6 +556,20 @@ static inline SdDomain::Instance* get_sd_instance(SD_HandleTypeDef* hsd) {
         return static_cast<SdDomain::Instance*>(g_sdmmc2_instance_ptr);
     return nullptr;
 }
+
+#else // HAL_SD_MODULE_ENABLED
+
+struct SdDomain {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        template <typename... Args> static void init(Args&&...) {}
+    };
+};
+
+#endif // HAL_SD_MODULE_ENABLED
 
 } // namespace ST_LIB
 

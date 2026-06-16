@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ST-LIB_LOW/DigitalOutput2.hpp"
-#include "ST-LIB_LOW/DigitalInput2.hpp"
+#include "ST-LIB_LOW/DigitalOutput.hpp"
+#include "ST-LIB_LOW/DigitalInput.hpp"
 #include "HALAL/Services/DFSDM/DFSDM.hpp"
 // #include "Clocks/Counter.hpp"
 // #include "Clocks/Stopwatch.hpp"

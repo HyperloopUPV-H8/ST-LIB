@@ -9,13 +9,14 @@
 
 #include "hal_wrapper.h"
 
+
+#include <span>
+#include <array>
+
 #ifdef HAL_TIM_MODULE_ENABLED
 
 #include "HALAL/Models/GPIO.hpp"
 #include "HALAL/Models/Pin.hpp"
-
-#include <span>
-#include <array>
 
 #include "ErrorHandler/ErrorHandler.hpp"
 
@@ -1212,6 +1213,20 @@ TimerDomain::Timer::get_gpio_af(ST_LIB::TimerRequest req, ST_LIB::TimerPin pin) 
 
     return GPIODomain::AlternateFunction::NO_AF;
 }
+
+} // namespace ST_LIB
+
+#else // HAL_TIM_MODULE_ENABLED
+
+struct TimerDomain {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        static void init(std::span<const Config, N>) {}
+    };
+};
 
 } // namespace ST_LIB
 

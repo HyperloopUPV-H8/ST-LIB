@@ -16,6 +16,7 @@
 #include "HALAL/Models/DMA/DMA2.hpp"
 #include "HALAL/Models/SPI/SPIConfig.hpp"
 
+
 using ST_LIB::DMADomain;
 using ST_LIB::GPIODomain;
 using ST_LIB::SPIConfigTypes;
@@ -38,6 +39,7 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef* hspi);
 namespace ST_LIB {
 extern void compile_error(const char* msg);
 
+#ifdef HAL_SPI_MODULE_ENABLED
 struct SPIDomain {
 
     /**
@@ -1520,6 +1522,17 @@ struct SPIDomain {
     };
 };
 
+#else // HAL_SPI_MODULE_ENABLED
+struct SPIDomain {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        template <typename... Args> static void init(Args&&...) {}
+    };
+};
+#endif // HAL_SPI_MODULE_ENABLED
 } // namespace ST_LIB
 
 #endif // SPI2_HPP

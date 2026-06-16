@@ -1,7 +1,6 @@
 #pragma once
 #include "C++Utilities/CppUtils.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-#include "HALAL/Models/PinModel/Pin.hpp"
 
 extern IWDG_HandleTypeDef watchdog_handle;
 extern bool reset_by_iwdg;

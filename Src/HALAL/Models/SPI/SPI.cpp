@@ -1,4 +1,7 @@
-#include "HALAL/Models/SPI/SPI2.hpp"
+#include "HALAL/Models/SPI/SPI.hpp"
+
+#ifdef HAL_SPI_MODULE_ENABLED
+
 uint32_t ST_LIB::SPIDomain::calculate_prescaler(uint32_t src_freq, uint32_t max_baud) {
     uint32_t prescaler = 2; // Smallest prescaler available
 
@@ -154,3 +157,5 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef* hspi) {
     (void)inst_idx;
 }
 }
+
+#endif // HAL_SPI_MODULE_ENABLED

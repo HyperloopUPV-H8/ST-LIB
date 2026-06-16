@@ -2,8 +2,7 @@
 #pragma once
 #include "C++Utilities/CppUtils.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-#include "HALAL/Models/PinModel/Pin.hpp"
-#include "core_cm7.h"
+#include "hal_wrapper.h"
 
 #if !defined DWT_LSR_Present_Msk
 #define DWT_LSR_Present_Msk ITM_LSR_Present_Msk

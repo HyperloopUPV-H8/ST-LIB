@@ -24,7 +24,7 @@ add_executable(${STLIB_TEST_EXECUTABLE}
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/Diagnostics/DiagnosticsHub.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/InfoWarning/InfoWarning.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/Time/RTC.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Models/SPI/SPI2.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Models/SPI/SPI.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Models/DMA/DMA2.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/HALAL/Services/DFSDM/DFSDM.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../Src/ST-LIB_HIGH/Protections/FaultController.cpp

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hal_wrapper.h"
+
 #include <array>
 #include <span>
 #include <tuple>
@@ -13,6 +14,7 @@ using std::tuple;
 namespace ST_LIB {
 extern void compile_error(const char* msg);
 
+#ifdef HAL_GPIO_MODULE_ENABLED
 struct GPIODomain {
     enum class OperationMode : uint8_t {
         INPUT,               // GPIO_MODE_INPUT
@@ -275,4 +277,15 @@ struct GPIODomain {
         }
     };
 };
+#else // HAL_GPIO_MODULE_ENABLED
+struct GPIODomain {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        template <typename... Args> static void init(Args&&...) {}
+    };
+};
+#endif // HAL_GPIO_MODULE_ENABLED
 } // namespace ST_LIB

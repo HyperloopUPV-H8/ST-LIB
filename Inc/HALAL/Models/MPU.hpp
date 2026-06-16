@@ -38,7 +38,7 @@
 #include "C++Utilities/CppUtils.hpp"
 #include "C++Utilities/CppImports.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-#include "stm32h7xx_hal.h"
+#include "hal_wrapper.h"
 #include "HALAL/Models/MPUManager/MPUManager.hpp"
 
 // Defines for attributes

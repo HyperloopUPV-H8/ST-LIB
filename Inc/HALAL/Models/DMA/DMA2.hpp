@@ -1,8 +1,9 @@
 #pragma once
 #include "C++Utilities/CppUtils.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
-#include "stm32h7xx_hal.h"
+#include "hal_wrapper.h"
 #include "main.h"
+
 #include <array>
 
 using std::array;
@@ -18,6 +19,7 @@ inline DMA_HandleTypeDef* dma_irq_table[16] = {nullptr};
 
 namespace ST_LIB {
 extern void compile_error(const char* msg);
+#ifdef HAL_DMA_MODULE_ENABLED
 struct DMADomain {
 
     enum class Peripheral : uint8_t {
@@ -529,4 +531,15 @@ struct DMADomain {
     };
 };
 using DMA_Domain = DMADomain;
+#else // HAL_DMA_MODULE_ENABLED
+struct DMADomain {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        template <typename... Args> static void init(Args&&...) {}
+    };
+};
+#endif // HAL_DMA_MODULE_ENABLED
 } // namespace ST_LIB

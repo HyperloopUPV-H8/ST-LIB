@@ -6,9 +6,6 @@
 #include "HALAL/Models/DMA/DMA2.hpp"
 #include "HALAL/Models/HALconfig/HALconfig.hpp"
 
-#include "HALAL/Services/DigitalInputService/DigitalInputService.hpp"
-#include "HALAL/Services/DigitalOutputService/DigitalOutputService.hpp"
-
 #include "HALAL/Services/Flash/Flash.hpp"
 #include "HALAL/Services/Flash/FlashTests/Flash_Test.hpp"
 
@@ -17,6 +14,7 @@
 // To be implemented
 // #include "HALAL/Services/PWM/DualPhasedPWM/DualPhasedPWM.hpp"
 // #include "HALAL/Services/PWM/PhasedPWM/PhasedPWM.hpp"
+// #include "HALAL/Services/InputCapture/InputCapture.hpp"
 
 #include "HALAL/Services/PWM/DualPWM.hpp"
 #include "HALAL/Services/PWM/PWM.hpp"
@@ -25,15 +23,12 @@
 #include "HALAL/Services/Time/Scheduler.hpp"
 #include "HALAL/Services/Time/TimerWrapper.hpp"
 
-// #include "HALAL/Services/Encoder/Encoder.hpp"
 #include "HALAL/Services/EXTI/EXTI.hpp"
 #include "HALAL/Services/Encoder/Encoder.hpp"
-// #include "HALAL/Services/InputCapture/InputCapture.hpp" // To be implemented
 
 #include "HALAL/Services/Communication/FDCAN/FDCAN.hpp"
 #include "HALAL/Services/Communication/I2C/I2C.hpp"
-#include "HALAL/Models/SPI/SPI2.hpp"
-#include "HALAL/Services/Communication/SPI/SPI.hpp"
+#include "HALAL/Models/SPI/SPI.hpp"
 #include "HALAL/Services/Communication/UART/UART.hpp"
 
 #include "HALAL/Services/CORDIC/CORDIC.hpp"
@@ -53,7 +48,7 @@
 
 #include "HALAL/Services/DFSDM/DFSDM.hpp"
 #include "HALAL/HardFault/HardfaultTrace.h"
-#include "HALAL/Services/Communication/Ethernet/NewEthernet.hpp"
+#include "HALAL/Services/Communication/Ethernet/EthernetDomain.hpp"
 #ifdef STLIB_ETH
 #include "HALAL/Models/Packets/ForwardOrder.hpp"
 #include "HALAL/Models/Packets/Order.hpp"

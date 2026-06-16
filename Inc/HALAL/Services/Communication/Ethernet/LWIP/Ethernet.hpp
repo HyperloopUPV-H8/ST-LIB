@@ -9,7 +9,6 @@
 
 #include "C++Utilities/CppUtils.hpp"
 #include "HALAL/Models/MAC/MAC.hpp"
-#include "HALAL/Models/PinModel/Pin.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/EthernetHelper.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/EthernetNode.hpp"
 #include "ethernetif.h"

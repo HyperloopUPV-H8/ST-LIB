@@ -6,6 +6,7 @@
 #include "HALAL/Models/DMA/DMA2.hpp"
 #include "HALAL/Models/MPU.hpp"
 
+
 #define STLIB_DFSDM_DMA_BUFFER_ATTR D1_NC
 
 #define Oversampling_MAX 1024
@@ -20,6 +21,8 @@ using ST_LIB::GPIODomain;
 namespace ST_LIB {
 using Callback = void (*)(void);
 extern void compile_error(const char* msg);
+
+#ifdef HAL_DFSDM_MODULE_ENABLED
 
 struct DFSDM_CHANNEL_DOMAIN {
     /* Constant Values of Register*/
@@ -1370,4 +1373,39 @@ struct DFSDM_CLK_DOMAIN {
     };
 };
 
-}; // namespace ST_LIB
+#else // HAL_DFSDM_MODULE_ENABLED
+
+struct DFSDM_CHANNEL_DOMAIN {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    static consteval size_t
+    dma_contribution_count(span<const Config>, span<const DMADomain::Entry>) {
+        return 0;
+    }
+    template <size_t N>
+    static consteval array<DMADomain::Entry, N> build_dma_contributions(
+        span<const DMADomain::Entry>, span<const Config>
+    ) {
+        return {};
+    }
+    template <std::size_t N, std::array<Config, N>> struct Init {
+        static void init(std::span<GPIODomain::Instance>, std::span<DMADomain::Instance>) {}
+    };
+};
+
+struct DFSDM_CLK_DOMAIN {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        static void
+        init(std::span<const Config, N>, std::span<GPIODomain::Instance>) {}
+    };
+};
+
+#endif // HAL_DFSDM_MODULE_ENABLED
+
+} // namespace ST_LIB

@@ -279,14 +279,13 @@ set(HALAL_CPP_NO_ETH
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/MPUManager/MPUManager.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/Packets/Packet.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/Packets/SPIOrder.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/SPI/SPI2.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/SPI/SPI.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/DMA/DMA2.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/PinModel/Pin.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Models/TimerDomain/TimerDomain.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/CORDIC/CORDIC.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/FDCAN/FDCAN.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/I2C/I2C.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/SPI/SPI.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/Communication/UART/UART.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalInputService/DigitalInputService.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/HALAL/Services/DigitalOutputService/DigitalOutputService.cpp

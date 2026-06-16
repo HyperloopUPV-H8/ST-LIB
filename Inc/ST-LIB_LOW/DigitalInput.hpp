@@ -2,9 +2,13 @@
 
 #include "HALAL/Models/GPIO.hpp"
 
+
 using ST_LIB::GPIODomain;
 
 namespace ST_LIB {
+
+#ifdef HAL_GPIO_MODULE_ENABLED
+
 struct DigitalInputDomain {
     struct Entry {
         size_t gpio_idx;
@@ -61,4 +65,19 @@ struct DigitalInputDomain {
         }
     };
 };
+
+#else // HAL_GPIO_MODULE_ENABLED
+
+struct DigitalInputDomain {
+    static constexpr std::size_t max_instances{0};
+    struct Entry {};
+    struct Config {};
+    template <size_t N> static consteval array<Config, N> build(span<const Entry>) { return {}; }
+    template <std::size_t N> struct Init {
+        template <typename... Args> static void init(Args&&...) {}
+    };
+};
+
+#endif // HAL_GPIO_MODULE_ENABLED
+
 } // namespace ST_LIB

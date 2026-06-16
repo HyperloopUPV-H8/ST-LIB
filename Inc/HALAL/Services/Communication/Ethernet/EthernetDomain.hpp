@@ -1,10 +1,11 @@
 #pragma once
 
 #include "C++Utilities/CppUtils.hpp"
-#include "DigitalOutput2.hpp"
-#include "stm32h7xx_hal.h"
+#include "DigitalOutput.hpp"
+#include "hal_wrapper.h"
 
-#ifdef STLIB_ETH
+
+#if defined(HAL_ETH_MODULE_ENABLED) && defined(STLIB_ETH)
 #include "ErrorHandler/ErrorHandler.hpp"
 #include "HALAL/Models/MAC/MAC.hpp"
 #include "HALAL/Services/Communication/Ethernet/LWIP/Ethernet.hpp"
@@ -352,9 +353,8 @@ struct EthernetDomain {
 };
 } // namespace ST_LIB
 
-#else
+#else // ETH
 namespace ST_LIB {
-// Dummy EthernetDomain when STLIB_ETH is not defined
 struct EthernetDomain {
     static constexpr std::size_t max_instances{0};
     struct Entry {};
@@ -371,4 +371,4 @@ struct EthernetDomain {
     };
 };
 } // namespace ST_LIB
-#endif // STLIB_ETH
+#endif // ETH

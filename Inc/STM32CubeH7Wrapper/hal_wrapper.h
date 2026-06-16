@@ -18,6 +18,12 @@
 #ifndef HAL_DMA_MODULE_ENABLED
 #define HAL_DMA_MODULE_ENABLED
 #endif
+#ifndef HAL_SPI_MODULE_ENABLED
+#define HAL_SPI_MODULE_ENABLED
+#endif
+#ifndef HAL_DFSDM_MODULE_ENABLED
+#define HAL_DFSDM_MODULE_ENABLED
+#endif
 
 #include "MockedDrivers/common.hpp"
 #include "MockedDrivers/stm32h7xx_hal_mock.h"

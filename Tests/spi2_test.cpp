@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "HALAL/Models/DMA/DMA2.hpp"
-#include "HALAL/Models/SPI/SPI2.hpp"
+#include "HALAL/Models/SPI/SPI.hpp"
 #include "MockedDrivers/NVIC.hpp"
 #include "MockedDrivers/mocked_hal_dma.hpp"
 #include "MockedDrivers/mocked_hal_spi.hpp"
