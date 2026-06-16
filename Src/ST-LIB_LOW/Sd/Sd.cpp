@@ -1,5 +1,7 @@
 #include "ST-LIB_LOW/Sd/Sd.hpp"
 
+#ifdef HAL_SD_MODULE_ENABLED
+
 SD_HandleTypeDef* g_sdmmc1_handle = nullptr;
 SD_HandleTypeDef* g_sdmmc2_handle = nullptr;
 void* g_sdmmc1_instance_ptr = nullptr;
@@ -313,3 +315,5 @@ void HAL_SD_ErrorCallback(SD_HandleTypeDef* hsd) {
 }
 
 } // extern "C"
+
+#endif // HAL_SD_MODULE_ENABLED

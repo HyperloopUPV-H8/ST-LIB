@@ -23,17 +23,18 @@
 #include "ST-LIB_LOW/DigitalInput.hpp"
 
 
-using ST_LIB::DigitalInputDomain;
-using ST_LIB::GPIODomain;
-
-extern SD_HandleTypeDef* g_sdmmc1_handle;
-extern SD_HandleTypeDef* g_sdmmc2_handle;
-extern void* g_sdmmc1_instance_ptr;
-extern void* g_sdmmc2_instance_ptr;
 
 namespace ST_LIB {
-
+    
 #ifdef HAL_SD_MODULE_ENABLED
+    
+    using ST_LIB::DigitalInputDomain;
+    using ST_LIB::GPIODomain;
+    
+    extern SD_HandleTypeDef* g_sdmmc1_handle;
+    extern SD_HandleTypeDef* g_sdmmc2_handle;
+    extern void* g_sdmmc1_instance_ptr;
+    extern void* g_sdmmc2_instance_ptr;
 
 struct SdDomain {
 
