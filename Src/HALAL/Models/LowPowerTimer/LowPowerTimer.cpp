@@ -8,6 +8,8 @@
 #include "HALAL/Models/LowPowerTimer/LowPowerTimer.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
+#ifdef HAL_LPTIM_MODULE_ENABLED
+
 void LowPowerTimer::init() {
     handle.Instance = &instance;
     handle.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
@@ -23,3 +25,5 @@ void LowPowerTimer::init() {
         PANIC("The LPTIM %s could not be registered", name);
     }
 }
+
+#endif // HAL_LPTIM_MODULE_ENABLED

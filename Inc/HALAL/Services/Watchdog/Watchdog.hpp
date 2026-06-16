@@ -2,6 +2,8 @@
 #include "C++Utilities/CppUtils.hpp"
 #include "ErrorHandler/ErrorHandler.hpp"
 
+#ifdef HAL_IWDG_MODULE_ENABLED
+
 extern IWDG_HandleTypeDef watchdog_handle;
 extern bool reset_by_iwdg;
 
@@ -50,3 +52,5 @@ public:
         watchdog_time = std::chrono::duration_cast<std::chrono::microseconds>(period);
     }
 };
+
+#endif // HAL_IWDG_MODULE_ENABLED

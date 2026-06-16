@@ -10,7 +10,7 @@
 #include <cstring>
 #include <string>
 
-#include "stm32h7xx_hal.h"
+#include "hal_wrapper.h"
 
 #ifdef HAL_LPTIM_MODULE_ENABLED
 
