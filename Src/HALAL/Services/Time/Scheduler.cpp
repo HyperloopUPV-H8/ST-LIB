@@ -108,9 +108,36 @@ uint64_t Scheduler::get_global_tick() {
     return tick;
 }
 
+struct Coroutineontext {
+  size_t start_address;
+  uint32_t coroutine_stack_pointer;
+};
+
 void Scheduler::yield() {
     // TODO
-    
+#define SCHEDULER_EXPERIMENTAL_YIELD
+#ifndef SCHEDULER_EXPERIMENTAL_YIELD
+    Scheduler::update();
+#else
+    if(Scheduler::ready_bitmap_ != 0) {
+        uint32_t bit_index = static_cast<uint32_t>(__builtin_ctz(Scheduler::ready_bitmap_));
+
+        Task& task = tasks_[bit_index];
+
+        // task.callback();
+
+        __asm__ __volatile(
+            "push {R4-R11, LR}\n"
+            "\n"
+            "pop {R4-R11, PC}\n"
+        );
+
+        CLEAR_BIT(ready_bitmap_, 1u << bit_index);
+        if (!task.repeating) [[unlikely]] {
+            release_slot(static_cast<uint8_t>(bit_index));
+        }
+    }
+#endif
 }
 
 inline uint8_t Scheduler::allocate_slot() {
