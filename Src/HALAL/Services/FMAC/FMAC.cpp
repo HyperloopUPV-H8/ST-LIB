@@ -7,6 +7,8 @@
 
 #include "HALAL/Services/FMAC/FMAC.hpp"
 
+#ifdef HAL_FMAC_MODULE_ENABLED
+
 MultiplierAccelerator::FMACMemoryLayout MultiplierAccelerator::MemoryLayout;
 MultiplierAccelerator::FMACProcessInstance MultiplierAccelerator::Process;
 
@@ -192,3 +194,5 @@ void HAL_FMAC_OutputDataReadyCallback(FMAC_HandleTypeDef* hfmac) {
 }
 
 void HAL_FMAC_ErrorCallback(FMAC_HandleTypeDef* hfmac) { PANIC("Error while running FMAC"); }
+
+#endif // HAL_FMAC_MODULE_ENABLED

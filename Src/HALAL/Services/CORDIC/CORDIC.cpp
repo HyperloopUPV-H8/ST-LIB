@@ -7,6 +7,8 @@
 
 #include "HALAL/Services/CORDIC/CORDIC.hpp"
 
+#ifdef HAL_CORDIC_MODULE_ENABLED
+
 Operation_Computation RotationComputer::mode = NONE;
 
 void RotationComputer::start() { __HAL_RCC_CORDIC_CLK_ENABLE(); }
@@ -98,3 +100,5 @@ float RotationComputer::q31_to_radian_f32(uint32_t in) { return M_PI * ldexp((in
 int32_t RotationComputer::radian_f32_to_q31(double in) {
     return (int)roundf(scalbnf(fmaxf(fminf(in / M_PI, 0.9995), -0.9995), 31));
 }
+
+#endif // HAL_CORDIC_MODULE_ENABLED
