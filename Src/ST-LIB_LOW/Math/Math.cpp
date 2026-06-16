@@ -3,6 +3,7 @@
 #include "HALAL/Services/CORDIC/CORDIC.hpp"
 
 #ifndef SIM_ON
+#ifdef HAL_CORDIC_MODULE_ENABLED
 std::array<int32_t, 4> Math::pointers = {0};
 
 int32_t Math::sin(int32_t angle) {
@@ -79,6 +80,8 @@ int32_t Math::unitary_to_sq(int32_t in) { return in >> (32 - SQ_DECIMAL_BITS); }
 int32_t Math::tg_to_unitary(int32_t tg_in) { return tg_in << (32 - TG_DECIMAL_BITS); }
 
 int32_t Math::unitary_to_tg(int32_t in) { return in >> (32 - TG_DECIMAL_BITS); }
+
+#endif // HAL_CORDIC_MODULE_ENABLED
 
 #else
 #include <cmath>
