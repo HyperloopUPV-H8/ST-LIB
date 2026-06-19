@@ -9,8 +9,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern uint32_t _metadata;
-extern uint32_t _hf_log;
+extern uint8_t _metadata[];
+extern uint8_t _hf_log[];
 #ifdef __cplusplus
 }
 #endif
