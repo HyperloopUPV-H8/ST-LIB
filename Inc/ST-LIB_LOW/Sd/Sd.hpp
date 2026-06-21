@@ -76,7 +76,11 @@ struct SdDomain {
         std::size_t d3_pin_idx;
     };
 
-    template <std::size_t buffer_blocks, uint32_t MaxFreq = 50'000'000, uint32_t MinFreq = 1'000'000> struct SdCard {
+    template <
+        std::size_t buffer_blocks,
+        uint32_t MaxFreq = 50'000'000,
+        uint32_t MinFreq = 1'000'000>
+    struct SdCard {
         using domain = SdDomain;
         using Model = SDClockModel<MaxFreq, MinFreq>;
         Entry e;

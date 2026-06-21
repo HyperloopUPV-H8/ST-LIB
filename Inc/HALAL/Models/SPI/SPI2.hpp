@@ -252,7 +252,13 @@ struct SPIDomain {
      *              Request Object
      * =========================================
      */
-    template <DMADomain::Stream dma_rx_stream, DMADomain::Stream dma_tx_stream, SPIPeripheral Periph, uint32_t MaxBaud, uint32_t MinBaud = 0> struct Device {
+    template <
+        DMADomain::Stream dma_rx_stream,
+        DMADomain::Stream dma_tx_stream,
+        SPIPeripheral Periph,
+        uint32_t MaxBaud,
+        uint32_t MinBaud = 0>
+    struct Device {
         using domain = SPIDomain;
 
         static constexpr auto peripheral = Periph;
@@ -277,12 +283,12 @@ struct SPIDomain {
             SPIConfig config = SPIConfig{}
         )
             : mode{mode}, config{config}, sck_gpio(
-                                                              sck_pin,
-                                                              GPIODomain::OperationMode::ALT_PP,
-                                                              GPIODomain::Pull::None,
-                                                              GPIODomain::Speed::VeryHigh,
-                                                              get_af(sck_pin, peripheral)
-                                                          ),
+                                              sck_pin,
+                                              GPIODomain::OperationMode::ALT_PP,
+                                              GPIODomain::Pull::None,
+                                              GPIODomain::Speed::VeryHigh,
+                                              get_af(sck_pin, peripheral)
+                                          ),
               miso_gpio(
                   miso_pin,
                   GPIODomain::OperationMode::ALT_PP,
@@ -330,12 +336,12 @@ struct SPIDomain {
             SPIConfig config
         )
             : mode{mode}, config{config}, sck_gpio(
-                                                              sck_pin,
-                                                              GPIODomain::OperationMode::ALT_PP,
-                                                              GPIODomain::Pull::None,
-                                                              GPIODomain::Speed::VeryHigh,
-                                                              get_af(sck_pin, peripheral)
-                                                          ),
+                                              sck_pin,
+                                              GPIODomain::OperationMode::ALT_PP,
+                                              GPIODomain::Pull::None,
+                                              GPIODomain::Speed::VeryHigh,
+                                              get_af(sck_pin, peripheral)
+                                          ),
               miso_gpio(
                   miso_pin,
                   GPIODomain::OperationMode::ALT_PP,

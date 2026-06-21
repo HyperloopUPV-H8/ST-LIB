@@ -163,8 +163,7 @@ struct ADCDomain {
         }
     }
 
-    template <Resolution Res = Resolution::BITS_12>
-    struct ADC {
+    template <Resolution Res = Resolution::BITS_12> struct ADC {
         GPIODomain::GPIO gpio;
         using domain = ADCDomain;
         using Model = ADCClockModel<adc_max_clk(Res)>;
