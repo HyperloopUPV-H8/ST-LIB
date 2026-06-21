@@ -294,7 +294,6 @@ struct TimerDomain {
 
     struct Config {
         uint8_t timer_idx;
-        TimerRequest request;
         SelectionTrigger1 trgo1;
         SelectionTrigger2 trgo2;
     };
@@ -641,7 +640,6 @@ struct TimerDomain {
 
                 Config cfg = {
                     .timer_idx = timer_idxmap[reqint],
-                    .request = requests[i].request,
                     .trgo1 = requests[i].trgo1,
                     .trgo2 = requests[i].trgo2
                 };
@@ -676,7 +674,6 @@ struct TimerDomain {
                 uint8_t reqint = remaining_32bit_timers[count_32bit_requests];
                 Config cfg = {
                     .timer_idx = timer_idxmap[reqint],
-                    .request = e.request,
                     .trgo1 = e.trgo1,
                     .trgo2 = e.trgo2
                 };
@@ -728,7 +725,6 @@ struct TimerDomain {
             uint8_t reqint = remaining_timers[i];
             Config cfg = {
                 .timer_idx = timer_idxmap[reqint],
-                .request = e.request,
                 .trgo1 = e.trgo1,
                 .trgo2 = e.trgo2
             };
@@ -744,27 +740,7 @@ struct TimerDomain {
         TIM_HandleTypeDef* hal_tim;
         TIM_MasterConfigTypeDef master{};
         uint8_t timer_idx;
-        uint32_t clock_frequency = 0; // from ClockTree
     };
-
-    static constexpr bool is_timer_on_apb1(TimerRequest r) {
-        switch (r) {
-        case TimerRequest::GeneralPurpose32bit_2:
-        case TimerRequest::GeneralPurpose_3:
-        case TimerRequest::GeneralPurpose_4:
-        case TimerRequest::GeneralPurpose32bit_5:
-        case TimerRequest::Basic_6:
-        case TimerRequest::Basic_7:
-        case TimerRequest::SlaveTimer_12:
-        case TimerRequest::SlaveTimer_13:
-        case TimerRequest::SlaveTimer_14:
-        case TimerRequest::GeneralPurpose32bit_23:
-        case TimerRequest::GeneralPurpose32bit_24:
-            return true;
-        default:
-            return false;
-        }
-    }
 
     static void (*callbacks[TimerDomain::max_instances])(void*);
     static void* callback_data[TimerDomain::max_instances];
@@ -834,8 +810,6 @@ struct TimerDomain {
                 inst->tim = tim;
                 inst->hal_tim = handle;
                 inst->timer_idx = e.timer_idx;
-                inst->clock_frequency = is_timer_on_apb1(e.request) ? ClockDomain::timer_apb1()
-                                                                    : ClockDomain::timer_apb2();
                 TIM_MasterConfigTypeDef sMasterConfig = {};
                 sMasterConfig.MasterOutputTrigger = static_cast<uint32_t>(e.trgo1);
                 sMasterConfig.MasterOutputTrigger2 = static_cast<uint32_t>(e.trgo2);
@@ -901,19 +875,12 @@ struct TimerDomain {
         uint32_t result = 0;
         if ((tim == TIM2) || (tim == TIM3) || (tim == TIM4) || (tim == TIM5) || (tim == TIM6) ||
             (tim == TIM7) || (tim == TIM12) || (tim == TIM13) || (tim == TIM14)) {
-            result = HAL_RCC_GetPCLK1Freq();
-            if ((RCC->D2CFGR & RCC_D2CFGR_D2PPRE1) != RCC_HCLK_DIV1) {
-                result *= 2;
-            }
+            result = ClockDomain::timer_apb1();
         } else if ((tim == TIM1) || (tim == TIM8) || (tim == TIM15) || (tim == TIM16) || (tim == TIM17) || (tim == TIM23) || (tim == TIM24)) {
-            result = HAL_RCC_GetPCLK2Freq();
-            if ((RCC->D2CFGR & RCC_D2CFGR_D2PPRE2) != RCC_HCLK_DIV1) {
-                result *= 2;
-            }
+            result = ClockDomain::timer_apb2();
         } else {
             PANIC("Invalid timer ptr");
         }
-
         return result;
     }
 };

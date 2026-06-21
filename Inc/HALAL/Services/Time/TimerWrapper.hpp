@@ -135,10 +135,13 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
     }
 
     inline uint32_t get_clock_frequency() {
-        if (instance->clock_frequency == 0) {
-            PANIC("Timer clock not configured by ClockDomain");
+        uint32_t result;
+        if constexpr (this->is_on_APB1) {
+            result = ClockDomain::timer_apb1();
+        } else {
+            result = ClockDomain::timer_apb2();
         }
-        return instance->clock_frequency;
+        return result;
     }
 
     template <TimerPin pin>
