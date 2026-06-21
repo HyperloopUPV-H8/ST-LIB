@@ -23,7 +23,7 @@ static_assert([] {
         t.spi123_src = ClockDomain::ClockTree::Source::HSI;
         return t;
     }();
-    std::array<ClockDomain::Entry, 1> entries{{
+    constexpr std::array<ClockDomain::Entry, 1> entries{{
         {.group = SpiModel::group, .try_solve = &SpiModel::try_solve},
     }};
     ClockDomain::validate(tree, std::span<const ClockDomain::Entry, 1>{entries});
@@ -37,7 +37,7 @@ static_assert([] {
         t.spi45_src = ClockDomain::ClockTree::Source::HSI;
         return t;
     }();
-    std::array<ClockDomain::Entry, 1> entries{{
+    constexpr std::array<ClockDomain::Entry, 1> entries{{
         {.group = SpiModel::group, .try_solve = &SpiModel::try_solve},
     }};
     ClockDomain::validate(tree, std::span<const ClockDomain::Entry, 1>{entries});
@@ -52,7 +52,7 @@ static_assert([] {
         t.spi45_src = ClockDomain::ClockTree::Source::HSI;
         return t;
     }();
-    std::array<ClockDomain::Entry, 2> entries{{
+    constexpr std::array<ClockDomain::Entry, 2> entries{{
         {.group = SpiA::group, .try_solve = &SpiA::try_solve},
         {.group = SpiB::group, .try_solve = &SpiB::try_solve},
     }};
@@ -69,7 +69,7 @@ static_assert([] {
         t.spi45_src = ClockDomain::ClockTree::Source::PCLK2;
         return t;
     }();
-    std::array<ClockDomain::Entry, 2> entries{{
+    constexpr std::array<ClockDomain::Entry, 2> entries{{
         {.group = SpiA::group, .try_solve = &SpiA::try_solve},
         {.group = SpiB::group, .try_solve = &SpiB::try_solve},
     }};
@@ -78,7 +78,7 @@ static_assert([] {
 }());
 
 static_assert([] {
-    std::array<ClockDomain::Entry, 0> entries{};
+    constexpr std::array<ClockDomain::Entry, 0> entries{};
     ClockDomain::validate(tree_8m, std::span<const ClockDomain::Entry, 0>{entries});
     return true;
 }());
@@ -94,7 +94,7 @@ static_assert([] {
         t.spi6_src = ClockDomain::ClockTree::Source::HSI;
         return t;
     }();
-    std::array<ClockDomain::Entry, 3> entries{{
+    constexpr std::array<ClockDomain::Entry, 3> entries{{
         {.group = Spi123::group, .try_solve = &Spi123::try_solve},
         {.group = Spi45::group, .try_solve = &Spi45::try_solve},
         {.group = Spi6::group, .try_solve = &Spi6::try_solve},

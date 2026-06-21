@@ -39,7 +39,7 @@ static_assert([] {
         t.spi45_src = ClockDomain::ClockTree::Source::PCLK2;
         return t;
     }();
-    std::array<ClockDomain::Entry, 2> entries{{
+    constexpr std::array<ClockDomain::Entry, 2> entries{{
         {.group = SpiA::group, .try_solve = &SpiA::try_solve},
         {.group = SpiB::group, .try_solve = &SpiB::try_solve},
     }};
@@ -58,7 +58,7 @@ static_assert([] {
         t.spi6_src = ClockDomain::ClockTree::Source::HSI;
         return t;
     }();
-    std::array<ClockDomain::Entry, 3> entries{{
+    constexpr std::array<ClockDomain::Entry, 3> entries{{
         {.group = Spi1::group, .try_solve = &Spi1::try_solve},
         {.group = Spi4::group, .try_solve = &Spi4::try_solve},
         {.group = Spi6::group, .try_solve = &Spi6::try_solve},
@@ -80,10 +80,13 @@ static_assert([] {
         t.spi123_src = ClockDomain::ClockTree::Source::HSI;
         return t;
     }();
-    std::array<ClockDomain::Entry, 10> entries;
-    for (size_t i = 0; i < 10; i++) {
-        entries[i] = {.group = Spi::group, .try_solve = &Spi::try_solve};
-    }
+    constexpr std::array<ClockDomain::Entry, 10> entries = [&] {
+        std::array<ClockDomain::Entry, 10> e{};
+        for (size_t i = 0; i < 10; i++) {
+            e[i] = {.group = Spi::group, .try_solve = &Spi::try_solve};
+        }
+        return e;
+    }();
     ClockDomain::validate(tree, std::span<const ClockDomain::Entry, 10>{entries});
     return true;
 }());
