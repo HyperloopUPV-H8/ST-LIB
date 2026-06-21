@@ -316,7 +316,7 @@ public:
 
         MPUDomain::Init<mpuN, cfg.mpu_cfgs>::init();
         GPIODomain::Init<gpioN>::init(cfg.gpio_cfgs);
-        TimerDomain::Init<timN>::init(cfg.tim_cfgs);
+        TimerDomain::Init<timN>::init(cfg.tim_cfgs, cfg.clock_tree);
         DMADomain::Init<dmaN>::init(cfg.dma_cfgs);
         SPIDomain::Init<spiN>::init(
             cfg.spi_cfgs,

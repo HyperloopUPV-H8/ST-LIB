@@ -135,19 +135,10 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
     }
 
     inline uint32_t get_clock_frequency() {
-        uint32_t result;
-        if constexpr (this->is_on_APB1) {
-            result = HAL_RCC_GetPCLK1Freq();
-            if ((RCC->D2CFGR & RCC_D2CFGR_D2PPRE1) != RCC_HCLK_DIV1) {
-                result *= 2;
-            }
-        } else {
-            result = HAL_RCC_GetPCLK2Freq();
-            if ((RCC->D2CFGR & RCC_D2CFGR_D2PPRE2) != RCC_HCLK_DIV1) {
-                result *= 2;
-            }
+        if (instance->clock_frequency == 0) {
+            PANIC("Timer clock not configured by ClockDomain");
         }
-        return result;
+        return instance->clock_frequency;
     }
 
     template <TimerPin pin>
