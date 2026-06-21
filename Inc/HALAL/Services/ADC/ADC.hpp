@@ -106,7 +106,7 @@ struct ADCDomain {
         static constexpr uint32_t prescalers[] = {1, 2, 4, 6, 8, 10, 12, 16, 32, 64, 128, 256};
         static constexpr uint32_t ADC_CLK_MIN = 500'000;
 
-        static consteval bool try_solve(uint32_t kernel_clk) {
+        static constexpr bool try_solve(uint32_t kernel_clk) {
             for (uint32_t p : prescalers) {
                 uint32_t adc_clk = kernel_clk / p;
                 if (adc_clk >= ADC_CLK_MIN && adc_clk <= MaxADCCLK)

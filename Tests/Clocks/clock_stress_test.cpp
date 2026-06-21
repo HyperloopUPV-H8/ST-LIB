@@ -34,10 +34,11 @@ static_assert([] {
 static_assert([] {
     using SpiA = SPIClockModel<ClockDomain::ClockGroup::SPI45_G, 5'000'000, 1'000'000>;
     using SpiB = SPIClockModel<ClockDomain::ClockGroup::SPI45_G, 20'000'000, 10'000'000>;
-
-    auto tree = tree_8m;
-    tree.spi45_src = ClockDomain::ClockTree::Source::PCLK2;
-
+    constexpr auto tree = [] {
+        auto t = tree_8m;
+        t.spi45_src = ClockDomain::ClockTree::Source::PCLK2;
+        return t;
+    }();
     std::array<ClockDomain::Entry, 2> entries{{
         {.group = SpiA::group, .try_solve = &SpiA::try_solve},
         {.group = SpiB::group, .try_solve = &SpiB::try_solve},
@@ -50,12 +51,13 @@ static_assert([] {
     using Spi1 = SPIClockModel<ClockDomain::ClockGroup::SPI123_G, 50'000'000, 0>;
     using Spi4 = SPIClockModel<ClockDomain::ClockGroup::SPI45_G, 5'000'000, 0>;
     using Spi6 = SPIClockModel<ClockDomain::ClockGroup::SPI6_G, 20'000'000, 0>;
-
-    auto tree = tree_8m;
-    tree.spi123_src = ClockDomain::ClockTree::Source::HSI;
-    tree.spi45_src = ClockDomain::ClockTree::Source::HSI;
-    tree.spi6_src = ClockDomain::ClockTree::Source::HSI;
-
+    constexpr auto tree = [] {
+        auto t = tree_8m;
+        t.spi123_src = ClockDomain::ClockTree::Source::HSI;
+        t.spi45_src = ClockDomain::ClockTree::Source::HSI;
+        t.spi6_src = ClockDomain::ClockTree::Source::HSI;
+        return t;
+    }();
     std::array<ClockDomain::Entry, 3> entries{{
         {.group = Spi1::group, .try_solve = &Spi1::try_solve},
         {.group = Spi4::group, .try_solve = &Spi4::try_solve},
@@ -73,10 +75,11 @@ static_assert([] {
 
 static_assert([] {
     using Spi = SPIClockModel<ClockDomain::ClockGroup::SPI123_G, 50'000'000, 0>;
-
-    auto tree = tree_8m;
-    tree.spi123_src = ClockDomain::ClockTree::Source::HSI;
-
+    constexpr auto tree = [] {
+        auto t = tree_8m;
+        t.spi123_src = ClockDomain::ClockTree::Source::HSI;
+        return t;
+    }();
     std::array<ClockDomain::Entry, 10> entries;
     for (size_t i = 0; i < 10; i++) {
         entries[i] = {.group = Spi::group, .try_solve = &Spi::try_solve};

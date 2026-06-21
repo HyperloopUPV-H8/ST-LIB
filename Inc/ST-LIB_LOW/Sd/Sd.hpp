@@ -41,7 +41,7 @@ template <uint32_t MaxFreq, uint32_t MinFreq> struct SDClockModel {
     static constexpr uint32_t CLKDIV_MIN = 0;
     static constexpr uint32_t CLKDIV_MAX = 1023;
 
-    static consteval bool try_solve(uint32_t kernel_clk) {
+    static constexpr bool try_solve(uint32_t kernel_clk) {
         for (uint32_t div = CLKDIV_MIN; div <= CLKDIV_MAX; div++) {
             uint32_t sdmmc_clk = div == 0 ? kernel_clk : kernel_clk / (2 * div);
             if (sdmmc_clk >= MinFreq && sdmmc_clk <= MaxFreq)

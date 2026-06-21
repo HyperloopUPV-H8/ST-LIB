@@ -39,7 +39,7 @@ template <ClockDomain::ClockGroup Group, uint32_t MaxBaud, uint32_t MinBaud> str
     static constexpr uint32_t prescalers[] = {2, 4, 8, 16, 32, 64, 128, 256};
     static constexpr uint32_t prescaler_count = sizeof(prescalers) / sizeof(prescalers[0]);
 
-    static consteval bool try_solve(uint32_t kernel_clk) {
+    static constexpr bool try_solve(uint32_t kernel_clk) {
         for (uint32_t i = 0; i < prescaler_count; i++) {
             uint32_t baud = kernel_clk / prescalers[i];
             if (baud <= MaxBaud && baud >= MinBaud) {
