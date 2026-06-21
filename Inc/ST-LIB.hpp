@@ -339,7 +339,8 @@ public:
         ADCDomain::Init<adcN, cfg.adc_cfgs>::init(
             cfg.adc_cfgs,
             GPIODomain::Init<gpioN>::instances,
-            DMADomain::Init<dmaN>::instances
+            DMADomain::Init<dmaN>::instances,
+            cfg.clock_tree
         );
         EXTIDomain::Init<extiN>::init(cfg.exti_cfgs, GPIODomain::Init<gpioN>::instances);
 
