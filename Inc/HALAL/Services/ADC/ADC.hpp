@@ -163,16 +163,22 @@ struct ADCDomain {
         }
     }
 
+    template <Resolution Res = Resolution::BITS_12>
     struct ADC {
         GPIODomain::GPIO gpio;
         using domain = ADCDomain;
+        using Model = ADCClockModel<adc_max_clk(Res)>;
 
+        static constexpr auto resolution = Res;
         Entry e;
+        ClockDomain::Device clock_device = {
+            .group = Model::group,
+            .try_solve = &Model::try_solve,
+        };
 
         consteval ADC(
             const GPIODomain::Pin& pin,
             float& output,
-            Resolution resolution = Resolution::BITS_12,
             SampleTime sample_time = SampleTime::CYCLES_8_5,
             uint32_t sample_rate_hz = 0,
             Peripheral peripheral = Peripheral::AUTO,
@@ -183,14 +189,13 @@ struct ADCDomain {
                 .pin = pin,
                 .peripheral = peripheral,
                 .channel = channel,
-                .resolution = resolution,
+                .resolution = Res,
                 .sample_time = sample_time,
                 .sample_rate_hz = sample_rate_hz,
                 .output = &output} {}
 
         consteval ADC(
             const GPIODomain::Pin& pin,
-            Resolution resolution = Resolution::BITS_12,
             SampleTime sample_time = SampleTime::CYCLES_8_5,
             uint32_t sample_rate_hz = 0,
             Peripheral peripheral = Peripheral::AUTO,
@@ -201,7 +206,7 @@ struct ADCDomain {
                 .pin = pin,
                 .peripheral = peripheral,
                 .channel = channel,
-                .resolution = resolution,
+                .resolution = Res,
                 .sample_time = sample_time,
                 .sample_rate_hz = sample_rate_hz,
                 .output = nullptr} {}
@@ -211,21 +216,19 @@ struct ADCDomain {
             Peripheral peripheral,
             Channel channel,
             float& output,
-            Resolution resolution = Resolution::BITS_12,
             SampleTime sample_time = SampleTime::CYCLES_8_5,
             uint32_t sample_rate_hz = 0
         )
-            : ADC(pin, output, resolution, sample_time, sample_rate_hz, peripheral, channel) {}
+            : ADC(pin, output, sample_time, sample_rate_hz, peripheral, channel) {}
 
         consteval ADC(
             const GPIODomain::Pin& pin,
             Peripheral peripheral,
             Channel channel,
-            Resolution resolution = Resolution::BITS_12,
             SampleTime sample_time = SampleTime::CYCLES_8_5,
             uint32_t sample_rate_hz = 0
         )
-            : ADC(pin, resolution, sample_time, sample_rate_hz, peripheral, channel) {}
+            : ADC(pin, sample_time, sample_rate_hz, peripheral, channel) {}
 
         template <class Ctx> consteval std::size_t inscribe(Ctx& ctx) const {
             const auto gpio_idx = gpio.inscribe(ctx);
@@ -236,11 +239,6 @@ struct ADCDomain {
             entry.channel = resolved.second;
 
             // Register clock requirement with ClockDomain
-            using Model = ADCClockModel<adc_max_clk(e.resolution)>;
-            auto clock_device = ClockDomain::Device{
-                .group = Model::group,
-                .try_solve = &Model::try_solve,
-            };
             clock_device.inscribe(ctx);
 
             return ctx.template add<ADCDomain>(entry, this);

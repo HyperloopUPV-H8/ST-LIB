@@ -252,13 +252,11 @@ struct SPIDomain {
      *              Request Object
      * =========================================
      */
-    template <DMADomain::Stream dma_rx_stream, DMADomain::Stream dma_tx_stream> struct Device {
+    template <DMADomain::Stream dma_rx_stream, DMADomain::Stream dma_tx_stream, SPIPeripheral Periph, uint32_t MaxBaud, uint32_t MinBaud = 0> struct Device {
         using domain = SPIDomain;
 
-        SPIPeripheral peripheral;
+        static constexpr auto peripheral = Periph;
         SPIMode mode;
-        uint32_t max_baudrate;
-        uint32_t min_baudrate;
         SPIConfig config;
 
         GPIODomain::GPIO sck_gpio;
@@ -268,19 +266,17 @@ struct SPIDomain {
 
         DMADomain::DMA<dma_rx_stream, dma_tx_stream> dma_rx_tx;
 
+        ClockDomain::Device clock_device;
+
         consteval Device(
             SPIMode mode,
-            SPIPeripheral peripheral,
-            uint32_t max_baudrate,
-            uint32_t min_baudrate,
             GPIODomain::Pin sck_pin,
             GPIODomain::Pin miso_pin,
             GPIODomain::Pin mosi_pin,
             GPIODomain::Pin nss_pin,
             SPIConfig config = SPIConfig{}
         )
-            : peripheral{peripheral}, mode{mode}, max_baudrate{max_baudrate},
-              min_baudrate{min_baudrate}, config{config}, sck_gpio(
+            : mode{mode}, config{config}, sck_gpio(
                                                               sck_pin,
                                                               GPIODomain::OperationMode::ALT_PP,
                                                               GPIODomain::Pull::None,
@@ -308,7 +304,11 @@ struct SPIDomain {
                   GPIODomain::Speed::VeryHigh,
                   get_af(nss_pin, peripheral)
               )),
-              dma_rx_tx(dma_peripheral(peripheral)) {
+              dma_rx_tx(dma_peripheral(peripheral)),
+              clock_device{
+                  .group = spi_group(peripheral),
+                  .try_solve = &SPIClockModel<spi_group(peripheral), MaxBaud, MinBaud>::try_solve,
+              } {
             config.validate();
 
             if (config.nss_mode == NSSMode::SOFTWARE) {
@@ -324,16 +324,12 @@ struct SPIDomain {
         // Constructor without NSS pin (for software NSS mode)
         consteval Device(
             SPIMode mode,
-            SPIPeripheral peripheral,
-            uint32_t max_baudrate,
-            uint32_t min_baudrate,
             GPIODomain::Pin sck_pin,
             GPIODomain::Pin miso_pin,
             GPIODomain::Pin mosi_pin,
             SPIConfig config
         )
-            : peripheral{peripheral}, mode{mode}, max_baudrate{max_baudrate},
-              min_baudrate{min_baudrate}, config{config}, sck_gpio(
+            : mode{mode}, config{config}, sck_gpio(
                                                               sck_pin,
                                                               GPIODomain::OperationMode::ALT_PP,
                                                               GPIODomain::Pull::None,
@@ -355,7 +351,11 @@ struct SPIDomain {
                   get_af(mosi_pin, peripheral)
               ),
               nss_gpio(std::nullopt), // No NSS GPIO
-              dma_rx_tx(dma_peripheral(peripheral)) {
+              dma_rx_tx(dma_peripheral(peripheral)),
+              clock_device{
+                  .group = spi_group(peripheral),
+                  .try_solve = &SPIClockModel<spi_group(peripheral), MaxBaud, MinBaud>::try_solve,
+              } {
             config.validate();
 
             if (config.nss_mode == NSSMode::HARDWARE) {
@@ -386,17 +386,10 @@ struct SPIDomain {
             e.nss_gpio_idx = nss_idx;
             e.dma_rx_idx = dma_indices[0];
             e.dma_tx_idx = dma_indices[1];
-            e.max_baudrate = max_baudrate;
-            e.min_baudrate = min_baudrate;
+            e.max_baudrate = MaxBaud;
+            e.min_baudrate = MinBaud;
             e.config = config;
 
-            // Register clock requirement with ClockDomain (don't need the index)
-            using Model = SPIClockModel<spi_group(peripheral), max_baudrate, min_baudrate>;
-            auto clock_device = ClockDomain::Device{
-                .group = Model::group,
-                .try_solve = &Model::try_solve,
-                .owner = this,
-            };
             clock_device.inscribe(ctx);
 
             return ctx.template add<SPIDomain>(e, this);

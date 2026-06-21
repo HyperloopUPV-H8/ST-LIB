@@ -76,11 +76,16 @@ struct SdDomain {
         std::size_t d3_pin_idx;
     };
 
-    template <std::size_t buffer_blocks> struct SdCard {
+    template <std::size_t buffer_blocks, uint32_t MaxFreq = 50'000'000, uint32_t MinFreq = 1'000'000> struct SdCard {
         using domain = SdDomain;
+        using Model = SDClockModel<MaxFreq, MinFreq>;
         Entry e;
 
         Peripheral peripheral;
+        ClockDomain::Device clock_device = {
+            .group = Model::group,
+            .try_solve = &Model::try_solve,
+        };
 
         MPUDomain::Buffer<std::array<uint32_t, 512 * buffer_blocks / 4>>
             buffer0; // Alignment of 32-bit for SDMMC DMA
@@ -117,11 +122,9 @@ struct SdDomain {
                 card_detect_config,
             std::optional<std::pair<DigitalInputDomain::DigitalInput, GPIO_PinState>>
                 write_protect_config,
-            uint32_t max_freq = 50'000'000,
-            uint32_t min_freq = 1'000'000,
             GPIODomain::Pin d0_pin_for_sdmmc1 = ST_LIB::PC8
         )
-            : e{.peripheral = sdmmc_peripheral, .max_freq = max_freq, .min_freq = min_freq},
+            : e{.peripheral = sdmmc_peripheral, .max_freq = MaxFreq, .min_freq = MinFreq},
               peripheral(sdmmc_peripheral),
               buffer0(MPUDomain::Buffer<std::array<uint32_t, 512 * buffer_blocks / 4>>(
                   MPUDomain::MemoryType::NonCached,
@@ -253,11 +256,6 @@ struct SdDomain {
             local_e.d3_pin_idx = d3.inscribe(ctx);
 
             // Register clock requirement with ClockDomain
-            using Model = SDClockModel<e.max_freq, e.min_freq>;
-            auto clock_device = ClockDomain::Device{
-                .group = Model::group,
-                .try_solve = &Model::try_solve,
-            };
             clock_device.inscribe(ctx);
 
             return ctx.template add<SdDomain>(local_e, this);
