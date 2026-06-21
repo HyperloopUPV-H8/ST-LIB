@@ -104,26 +104,16 @@ struct ClockDomain {
         uint32_t d2ppre2 = 2;
 
         enum class Source : uint8_t {
-            HSI,
-            HSE,
-            CSI,
-            PCLK1,
-            PCLK2,
-            PLL1Q,
-            PLL1R,
-            PLL2P,
-            PLL2Q,
-            PLL2R,
-            PLL3P,
-            PLL3Q,
-            PLL3R,
+            None,
+            HSI, HSE, CSI, PCLK1, PCLK2, PLL1Q, PLL1R,
+            PLL2P, PLL2Q, PLL2R, PLL3P, PLL3Q, PLL3R,
         };
-        Source spi123_src = Source::HSI;
-        Source spi45_src = Source::HSI;
-        Source spi6_src = Source::HSI;
-        Source adc_src = Source::HSI;
-        Source fdcan_src = Source::HSI;
-        Source sdmmc_src = Source::HSI;
+        Source spi123_src = Source::None;
+        Source spi45_src  = Source::None;
+        Source spi6_src   = Source::None;
+        Source adc_src    = Source::None;
+        Source fdcan_src  = Source::None;
+        Source sdmmc_src = Source::None;
     };
 
     static constexpr uint32_t find_rge(uint32_t pll_input) {
@@ -184,6 +174,8 @@ struct ClockDomain {
 
     static constexpr uint32_t source_frequency(const ClockTree& t, ClockTree::Source src) {
         switch (src) {
+        case ClockTree::Source::None:
+            return 0;
         case ClockTree::Source::HSI:
             return 64'000'000;
         case ClockTree::Source::HSE:
@@ -356,19 +348,19 @@ struct ClockDomain {
         }
 
         // PLL2/3 source consistency
-        if (t.spi123_src != ClockTree::Source::HSI) {
+        if (t.spi123_src != ClockTree::Source::None) {
             if (t.spi123_src == ClockTree::Source::PLL2P && (t.pll2_m == 0 || t.pll2_p == 0))
                 compile_error("SPI123 uses PLL2P but PLL2 not configured");
             if (t.spi123_src == ClockTree::Source::PLL3P && (t.pll3_m == 0 || t.pll3_p == 0))
                 compile_error("SPI123 uses PLL3P but PLL3 not configured");
         }
-        if (t.spi45_src != ClockTree::Source::HSI) {
+        if (t.spi45_src != ClockTree::Source::None) {
             if (t.spi45_src == ClockTree::Source::PLL2Q && (t.pll2_m == 0 || t.pll2_q == 0))
                 compile_error("SPI45 uses PLL2Q but PLL2 not configured");
             if (t.spi45_src == ClockTree::Source::PLL3Q && (t.pll3_m == 0 || t.pll3_q == 0))
                 compile_error("SPI45 uses PLL3Q but PLL3 not configured");
         }
-        if (t.spi6_src != ClockTree::Source::HSI) {
+        if (t.spi6_src != ClockTree::Source::None) {
             if (t.spi6_src == ClockTree::Source::PLL2P && (t.pll2_m == 0 || t.pll2_p == 0))
                 compile_error("SPI6 uses PLL2P but PLL2 not configured");
             if (t.spi6_src == ClockTree::Source::PLL3P && (t.pll3_m == 0 || t.pll3_p == 0))
@@ -596,19 +588,21 @@ struct ClockDomain {
             break;
         }
 
-        pclk.PeriphClockSelection |= RCC_PERIPHCLK_SDMMC;
-        switch (t.sdmmc_src) {
-        case ClockTree::Source::PLL1Q:
-            pclk.SdmmcClockSelection = RCC_SDMMCCLKSOURCE_PLL;
-            break;
-        case ClockTree::Source::PLL2R:
-            pclk.SdmmcClockSelection = RCC_SDMMCCLKSOURCE_PLL2;
-            break;
-        default:
-            PANIC("ClockDomain: SDMMC clock source not supported");
-            break;
+        if (t.sdmmc_src != ClockTree::Source::None) {
+            pclk.PeriphClockSelection |= RCC_PERIPHCLK_SDMMC;
+            switch (t.sdmmc_src) {
+            case ClockTree::Source::PLL1Q:
+                pclk.SdmmcClockSelection = RCC_SDMMCCLKSOURCE_PLL;
+                __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+                break;
+            case ClockTree::Source::PLL2R:
+                pclk.SdmmcClockSelection = RCC_SDMMCCLKSOURCE_PLL2;
+                break;
+            default:
+                PANIC("ClockDomain: SDMMC clock source not supported");
+                break;
+            }
         }
-        __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
 
         // Enable PLL2/PLL3 outputs that peripherals depend on
         if (t.spi123_src == ClockTree::Source::PLL2P || t.spi6_src == ClockTree::Source::PLL2P)
@@ -625,36 +619,40 @@ struct ClockDomain {
         if (t.adc_src == ClockTree::Source::PLL3R)
             __HAL_RCC_PLL3CLKOUT_ENABLE(RCC_PLL3_DIVR);
 
-        pclk.PeriphClockSelection |= RCC_PERIPHCLK_ADC;
-        switch (t.adc_src) {
-        case ClockTree::Source::HSE:
-            pclk.AdcClockSelection = RCC_ADCCLKSOURCE_CLKP;
-            break;
-        case ClockTree::Source::PLL2R:
-            pclk.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
-            break;
-        case ClockTree::Source::PLL3R:
-            pclk.AdcClockSelection = RCC_ADCCLKSOURCE_PLL3;
-            break;
-        default:
-            PANIC("ClockDomain: ADC clock source not supported");
-            break;
+        if (t.adc_src != ClockTree::Source::None) {
+            pclk.PeriphClockSelection |= RCC_PERIPHCLK_ADC;
+            switch (t.adc_src) {
+            case ClockTree::Source::HSE:
+                pclk.AdcClockSelection = RCC_ADCCLKSOURCE_CLKP;
+                break;
+            case ClockTree::Source::PLL2R:
+                pclk.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
+                break;
+            case ClockTree::Source::PLL3R:
+                pclk.AdcClockSelection = RCC_ADCCLKSOURCE_PLL3;
+                break;
+            default:
+                PANIC("ClockDomain: ADC clock source not supported");
+                break;
+            }
         }
 
-        pclk.PeriphClockSelection |= RCC_PERIPHCLK_FDCAN;
-        switch (t.fdcan_src) {
-        case ClockTree::Source::PLL2Q:
-            pclk.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
-            break;
-        case ClockTree::Source::PLL1Q:
-            pclk.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL;
-            break;
-        case ClockTree::Source::HSE:
-            pclk.FdcanClockSelection = RCC_FDCANCLKSOURCE_HSE;
-            break;
-        default:
-            PANIC("ClockDomain: FDCAN clock source not supported");
-            break;
+        if (t.fdcan_src != ClockTree::Source::None) {
+            pclk.PeriphClockSelection |= RCC_PERIPHCLK_FDCAN;
+            switch (t.fdcan_src) {
+            case ClockTree::Source::PLL2Q:
+                pclk.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+                break;
+            case ClockTree::Source::PLL1Q:
+                pclk.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL;
+                break;
+            case ClockTree::Source::HSE:
+                pclk.FdcanClockSelection = RCC_FDCANCLKSOURCE_HSE;
+                break;
+            default:
+                PANIC("ClockDomain: FDCAN clock source not supported");
+                break;
+            }
         }
 
         if (pclk.PeriphClockSelection != 0) {

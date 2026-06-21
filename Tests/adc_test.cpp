@@ -623,6 +623,10 @@ TEST_F(ADCTest, TimedDMAWaitsForSequenceAndTransferCompletionBeforeUpdatingBuffe
          .output = &output},
     }};
 
+    auto adc_test_tree = *ST_LIB::ClockDomain::s_tree;
+    adc_test_tree.adc_src = ST_LIB::ClockDomain::ClockTree::Source::HSI;
+    ST_LIB::ClockDomain::s_tree = &adc_test_tree;
+
     ST_LIB::MockedHAL::adc_enable_timed_dma(ADC1, true);
     ST_LIB::MockedHAL::adc_set_kernel_clock_hz(ADC1, 64'000'000ULL);
     ST_LIB::MockedHAL::dma_set_transfer_timing(50ULL, 25ULL);
@@ -631,6 +635,8 @@ TEST_F(ADCTest, TimedDMAWaitsForSequenceAndTransferCompletionBeforeUpdatingBuffe
     });
 
     init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
+
+    ST_LIB::ClockDomain::s_tree = &ST_LIB::default_clock_tree;
 
     auto& adc = SingleADCInit::instances[0];
     const uint64_t sequence_period_ns = ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);
