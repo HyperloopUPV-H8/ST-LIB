@@ -321,7 +321,8 @@ public:
         SPIDomain::Init<spiN>::init(
             cfg.spi_cfgs,
             GPIODomain::Init<gpioN>::instances,
-            DMADomain::Init<dmaN>::instances
+            DMADomain::Init<dmaN>::instances,
+            cfg.clock_tree
         );
         DigitalOutputDomain::Init<doutN>::init(cfg.dout_cfgs, GPIODomain::Init<gpioN>::instances);
         DigitalInputDomain::Init<dinN>::init(cfg.din_cfgs, GPIODomain::Init<gpioN>::instances);
