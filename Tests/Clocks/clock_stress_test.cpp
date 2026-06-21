@@ -23,14 +23,12 @@ static_assert([] {
 
 static_assert([] {
     using Spi = SPIClockModel<ClockDomain::ClockGroup::SPI45_G, 10'000'000, 5'000'000>;
-    return Spi::try_solve(64'000'000) &&
-           !Spi::try_solve(4'000'000);
+    return Spi::try_solve(64'000'000) && !Spi::try_solve(4'000'000);
 }());
 
 static_assert([] {
     using Spi = SPIClockModel<ClockDomain::ClockGroup::SPI6_G, 1'000'000, 1'000'000>;
-    return Spi::try_solve(64'000'000) &&
-           !Spi::try_solve(30'000'000);
+    return Spi::try_solve(64'000'000) && !Spi::try_solve(30'000'000);
 }());
 
 static_assert([] {
@@ -55,8 +53,8 @@ static_assert([] {
 
     auto tree = tree_8m;
     tree.spi123_src = ClockDomain::ClockTree::Source::HSI;
-    tree.spi45_src  = ClockDomain::ClockTree::Source::HSI;
-    tree.spi6_src   = ClockDomain::ClockTree::Source::HSI;
+    tree.spi45_src = ClockDomain::ClockTree::Source::HSI;
+    tree.spi6_src = ClockDomain::ClockTree::Source::HSI;
 
     std::array<ClockDomain::Entry, 3> entries{{
         {.group = Spi1::group, .try_solve = &Spi1::try_solve},
@@ -69,10 +67,8 @@ static_assert([] {
 
 static_assert([] {
     using Spi = SPIClockModel<ClockDomain::ClockGroup::SPI45_G, 9'600, 0>;
-    return !Spi::try_solve(64'000'000) &&
-           !Spi::try_solve(4'000'000) &&
-           !Spi::try_solve(8'000'000) &&
-           !Spi::try_solve(137'500'000);
+    return !Spi::try_solve(64'000'000) && !Spi::try_solve(4'000'000) &&
+           !Spi::try_solve(8'000'000) && !Spi::try_solve(137'500'000);
 }());
 
 static_assert([] {

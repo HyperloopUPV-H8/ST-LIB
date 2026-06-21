@@ -100,12 +100,10 @@ struct ADCDomain {
         float* output;
     };
 
-    template <uint32_t MaxADCCLK>
-    struct ADCClockModel {
+    template <uint32_t MaxADCCLK> struct ADCClockModel {
         static constexpr auto group = ClockDomain::ClockGroup::ADC_G;
 
-        static constexpr uint32_t prescalers[] =
-            {1, 2, 4, 6, 8, 10, 12, 16, 32, 64, 128, 256};
+        static constexpr uint32_t prescalers[] = {1, 2, 4, 6, 8, 10, 12, 16, 32, 64, 128, 256};
         static constexpr uint32_t ADC_CLK_MIN = 500'000;
 
         static consteval bool try_solve(uint32_t kernel_clk) {
@@ -120,30 +118,48 @@ struct ADCDomain {
 
     static constexpr uint32_t adc_max_clk(Resolution res) {
         switch (res) {
-            case Resolution::BITS_16: return  8'333'333;
-            case Resolution::BITS_14: return 16'666'666;
-            case Resolution::BITS_12: return 36'000'000;
-            case Resolution::BITS_10: return 50'000'000;
-            case Resolution::BITS_8:  return 50'000'000;
+        case Resolution::BITS_16:
+            return 8'333'333;
+        case Resolution::BITS_14:
+            return 16'666'666;
+        case Resolution::BITS_12:
+            return 36'000'000;
+        case Resolution::BITS_10:
+            return 50'000'000;
+        case Resolution::BITS_8:
+            return 50'000'000;
         }
         return 36'000'000;
     }
 
     static constexpr uint32_t prescaler_to_hal(uint32_t p) {
         switch (p) {
-            case 1:   return ADC_CLOCK_ASYNC_DIV1;
-            case 2:   return ADC_CLOCK_ASYNC_DIV2;
-            case 4:   return ADC_CLOCK_ASYNC_DIV4;
-            case 6:   return ADC_CLOCK_ASYNC_DIV6;
-            case 8:   return ADC_CLOCK_ASYNC_DIV8;
-            case 10:  return ADC_CLOCK_ASYNC_DIV10;
-            case 12:  return ADC_CLOCK_ASYNC_DIV12;
-            case 16:  return ADC_CLOCK_ASYNC_DIV16;
-            case 32:  return ADC_CLOCK_ASYNC_DIV32;
-            case 64:  return ADC_CLOCK_ASYNC_DIV64;
-            case 128: return ADC_CLOCK_ASYNC_DIV128;
-            case 256: return ADC_CLOCK_ASYNC_DIV256;
-            default:  return ADC_CLOCK_ASYNC_DIV4;
+        case 1:
+            return ADC_CLOCK_ASYNC_DIV1;
+        case 2:
+            return ADC_CLOCK_ASYNC_DIV2;
+        case 4:
+            return ADC_CLOCK_ASYNC_DIV4;
+        case 6:
+            return ADC_CLOCK_ASYNC_DIV6;
+        case 8:
+            return ADC_CLOCK_ASYNC_DIV8;
+        case 10:
+            return ADC_CLOCK_ASYNC_DIV10;
+        case 12:
+            return ADC_CLOCK_ASYNC_DIV12;
+        case 16:
+            return ADC_CLOCK_ASYNC_DIV16;
+        case 32:
+            return ADC_CLOCK_ASYNC_DIV32;
+        case 64:
+            return ADC_CLOCK_ASYNC_DIV64;
+        case 128:
+            return ADC_CLOCK_ASYNC_DIV128;
+        case 256:
+            return ADC_CLOCK_ASYNC_DIV256;
+        default:
+            return ADC_CLOCK_ASYNC_DIV4;
         }
     }
 
@@ -199,13 +215,7 @@ struct ADCDomain {
             SampleTime sample_time = SampleTime::CYCLES_8_5,
             uint32_t sample_rate_hz = 0
         )
-            : ADC(pin,
-                  output,
-                  resolution,
-                  sample_time,
-                  sample_rate_hz,
-                  peripheral,
-                  channel) {}
+            : ADC(pin, output, resolution, sample_time, sample_rate_hz, peripheral, channel) {}
 
         consteval ADC(
             const GPIODomain::Pin& pin,
@@ -885,7 +895,11 @@ struct ADCDomain {
             return &dma_buffer_pool[buffer_offset + index];
         }
 
-        static void configure_peripheral(const Config& cfg, uint8_t channel_count, const ClockDomain::ClockTree& tree) {
+        static void configure_peripheral(
+            const Config& cfg,
+            uint8_t channel_count,
+            const ClockDomain::ClockTree& tree
+        ) {
             ADC_HandleTypeDef* hadc = handle_for(cfg.peripheral);
 
             if (cfg.peripheral == Peripheral::ADC_1 || cfg.peripheral == Peripheral::ADC_2) {

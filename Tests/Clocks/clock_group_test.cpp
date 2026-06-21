@@ -63,7 +63,7 @@ static_assert([] {
 
     auto tree = tree_8m;
     tree.spi123_src = ClockDomain::ClockTree::Source::HSI;
-    tree.spi45_src  = ClockDomain::ClockTree::Source::PCLK2;
+    tree.spi45_src = ClockDomain::ClockTree::Source::PCLK2;
 
     std::array<ClockDomain::Entry, 2> entries{{
         {.group = SpiA::group, .try_solve = &SpiA::try_solve},
@@ -82,18 +82,18 @@ static_assert([] {
 
 static_assert([] {
     using Spi123 = SPIClockModel<ClockDomain::ClockGroup::SPI123_G, 10'000'000, 0>;
-    using Spi45  = SPIClockModel<ClockDomain::ClockGroup::SPI45_G, 10'000'000, 0>;
-    using Spi6   = SPIClockModel<ClockDomain::ClockGroup::SPI6_G, 10'000'000, 0>;
+    using Spi45 = SPIClockModel<ClockDomain::ClockGroup::SPI45_G, 10'000'000, 0>;
+    using Spi6 = SPIClockModel<ClockDomain::ClockGroup::SPI6_G, 10'000'000, 0>;
 
     auto tree = tree_8m;
     tree.spi123_src = ClockDomain::ClockTree::Source::HSI;
-    tree.spi45_src  = ClockDomain::ClockTree::Source::HSI;
-    tree.spi6_src   = ClockDomain::ClockTree::Source::HSI;
+    tree.spi45_src = ClockDomain::ClockTree::Source::HSI;
+    tree.spi6_src = ClockDomain::ClockTree::Source::HSI;
 
     std::array<ClockDomain::Entry, 3> entries{{
         {.group = Spi123::group, .try_solve = &Spi123::try_solve},
-        {.group = Spi45::group,   .try_solve = &Spi45::try_solve},
-        {.group = Spi6::group,     .try_solve = &Spi6::try_solve},
+        {.group = Spi45::group, .try_solve = &Spi45::try_solve},
+        {.group = Spi6::group, .try_solve = &Spi6::try_solve},
     }};
     ClockDomain::validate(tree, std::span<const ClockDomain::Entry, 3>{entries});
     return true;

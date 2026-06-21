@@ -27,12 +27,10 @@ namespace ST_LIB {
 //  SPI clock model — prescaler search for the solver
 // ─────────────────────────────────────────────
 
-template <ClockDomain::ClockGroup Group, uint32_t MaxBaud, uint32_t MinBaud>
-struct SPIClockModel {
+template <ClockDomain::ClockGroup Group, uint32_t MaxBaud, uint32_t MinBaud> struct SPIClockModel {
     static_assert(
-        Group == ClockDomain::ClockGroup::SPI123_G ||
-        Group == ClockDomain::ClockGroup::SPI45_G ||
-        Group == ClockDomain::ClockGroup::SPI6_G,
+        Group == ClockDomain::ClockGroup::SPI123_G || Group == ClockDomain::ClockGroup::SPI45_G ||
+            Group == ClockDomain::ClockGroup::SPI6_G,
         "SPIClockModel: group must be SPI123, SPI45, or SPI6"
     );
 
@@ -194,9 +192,15 @@ struct SPIDomain {
         using enum SPIPeripheral;
         using enum ClockDomain::ClockGroup;
         switch (p) {
-            case spi1: case spi2: case spi3:   return SPI123_G;
-            case spi4: case spi5:              return SPI45_G;
-            case spi6:                         return SPI6_G;
+        case spi1:
+        case spi2:
+        case spi3:
+            return SPI123_G;
+        case spi4:
+        case spi5:
+            return SPI45_G;
+        case spi6:
+            return SPI6_G;
         }
     }
 
@@ -268,14 +272,14 @@ struct SPIDomain {
             GPIODomain::Pin nss_pin,
             SPIConfig config = SPIConfig{}
         )
-            : peripheral{peripheral}, mode{mode}, max_baudrate{max_baudrate}, min_baudrate{min_baudrate}, config{config},
-              sck_gpio(
-                  sck_pin,
-                  GPIODomain::OperationMode::ALT_PP,
-                  GPIODomain::Pull::None,
-                  GPIODomain::Speed::VeryHigh,
-                  get_af(sck_pin, peripheral)
-              ),
+            : peripheral{peripheral}, mode{mode}, max_baudrate{max_baudrate},
+              min_baudrate{min_baudrate}, config{config}, sck_gpio(
+                                                              sck_pin,
+                                                              GPIODomain::OperationMode::ALT_PP,
+                                                              GPIODomain::Pull::None,
+                                                              GPIODomain::Speed::VeryHigh,
+                                                              get_af(sck_pin, peripheral)
+                                                          ),
               miso_gpio(
                   miso_pin,
                   GPIODomain::OperationMode::ALT_PP,
@@ -321,14 +325,14 @@ struct SPIDomain {
             GPIODomain::Pin mosi_pin,
             SPIConfig config
         )
-            : peripheral{peripheral}, mode{mode}, max_baudrate{max_baudrate}, min_baudrate{min_baudrate}, config{config},
-              sck_gpio(
-                  sck_pin,
-                  GPIODomain::OperationMode::ALT_PP,
-                  GPIODomain::Pull::None,
-                  GPIODomain::Speed::VeryHigh,
-                  get_af(sck_pin, peripheral)
-              ),
+            : peripheral{peripheral}, mode{mode}, max_baudrate{max_baudrate},
+              min_baudrate{min_baudrate}, config{config}, sck_gpio(
+                                                              sck_pin,
+                                                              GPIODomain::OperationMode::ALT_PP,
+                                                              GPIODomain::Pull::None,
+                                                              GPIODomain::Speed::VeryHigh,
+                                                              get_af(sck_pin, peripheral)
+                                                          ),
               miso_gpio(
                   miso_pin,
                   GPIODomain::OperationMode::ALT_PP,

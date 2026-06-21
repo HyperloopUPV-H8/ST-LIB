@@ -35,8 +35,7 @@ namespace ST_LIB {
 
 // SDMMC clock model — validates that a kernel clock can produce a valid
 // SDMMC clock (sdmmc_ker_ck / (2 × CLKDIV)) in [MinFreq, MaxFreq].
-template <uint32_t MaxFreq, uint32_t MinFreq>
-struct SDClockModel {
+template <uint32_t MaxFreq, uint32_t MinFreq> struct SDClockModel {
     static constexpr auto group = ClockDomain::ClockGroup::SDMMC_G;
 
     static constexpr uint32_t CLKDIV_MIN = 0;
@@ -122,9 +121,8 @@ struct SdDomain {
             uint32_t min_freq = 1'000'000,
             GPIODomain::Pin d0_pin_for_sdmmc1 = ST_LIB::PC8
         )
-            : e{.peripheral = sdmmc_peripheral,
-                .max_freq = max_freq,
-                .min_freq = min_freq}, peripheral(sdmmc_peripheral),
+            : e{.peripheral = sdmmc_peripheral, .max_freq = max_freq, .min_freq = min_freq},
+              peripheral(sdmmc_peripheral),
               buffer0(MPUDomain::Buffer<std::array<uint32_t, 512 * buffer_blocks / 4>>(
                   MPUDomain::MemoryType::NonCached,
                   MPUDomain::MemoryDomain::D1

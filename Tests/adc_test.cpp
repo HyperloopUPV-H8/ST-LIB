@@ -757,50 +757,48 @@ TEST_F(ADCTest, TimedDMAFrequencySweepSeparatesStableAndUnstableOperatingRegions
 
     for (const auto resolution : resolutions) {
         for (const auto sample_time : sample_times) {
-                SCOPED_TRACE(static_cast<int>(resolution));
-                SCOPED_TRACE(static_cast<int>(sample_time));
+            SCOPED_TRACE(static_cast<int>(resolution));
+            SCOPED_TRACE(static_cast<int>(sample_time));
 
-                reset_runtime_state();
+            reset_runtime_state();
 
-                float output = -1.0f;
-                const std::array<ST_LIB::ADCDomain::Config, 1> cfgs{{
-                    {.gpio_idx = 0,
-                     .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_1,
-                     .channel = ST_LIB::ADCDomain::Channel::CH16,
-                     .resolution = resolution,
-                     .sample_time = sample_time,
-                     .sample_rate_hz = 0,
-                     .dma_request = DMA_REQUEST_ADC1,
-                     .output = &output},
-                }};
+            float output = -1.0f;
+            const std::array<ST_LIB::ADCDomain::Config, 1> cfgs{{
+                {.gpio_idx = 0,
+                 .peripheral = ST_LIB::ADCDomain::Peripheral::ADC_1,
+                 .channel = ST_LIB::ADCDomain::Channel::CH16,
+                 .resolution = resolution,
+                 .sample_time = sample_time,
+                 .sample_rate_hz = 0,
+                 .dma_request = DMA_REQUEST_ADC1,
+                 .output = &output},
+            }};
 
-                ST_LIB::MockedHAL::adc_enable_timed_dma(ADC1, true);
-                ST_LIB::MockedHAL::adc_set_kernel_clock_hz(ADC1, 64'000'000ULL);
-                ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 777U);
-                init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
+            ST_LIB::MockedHAL::adc_enable_timed_dma(ADC1, true);
+            ST_LIB::MockedHAL::adc_set_kernel_clock_hz(ADC1, 64'000'000ULL);
+            ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 777U);
+            init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
 
-                const uint64_t sequence_period_ns =
-                    ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);
-                ASSERT_GT(sequence_period_ns, 0U);
+            const uint64_t sequence_period_ns = ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);
+            ASSERT_GT(sequence_period_ns, 0U);
 
-                ST_LIB::MockedHAL::dma_set_transfer_timing(0ULL, 0ULL);
-                ST_LIB::MockedHAL::adc_advance_time_ns(sequence_period_ns * 8ULL);
-                EXPECT_EQ(ST_LIB::MockedHAL::adc_get_overrun_count(ADC1), 0U);
-                EXPECT_EQ(ST_LIB::MockedHAL::adc_get_completed_sequence_count(ADC1), 8U);
+            ST_LIB::MockedHAL::dma_set_transfer_timing(0ULL, 0ULL);
+            ST_LIB::MockedHAL::adc_advance_time_ns(sequence_period_ns * 8ULL);
+            EXPECT_EQ(ST_LIB::MockedHAL::adc_get_overrun_count(ADC1), 0U);
+            EXPECT_EQ(ST_LIB::MockedHAL::adc_get_completed_sequence_count(ADC1), 8U);
 
-                reset_runtime_state();
+            reset_runtime_state();
 
-                ST_LIB::MockedHAL::adc_enable_timed_dma(ADC1, true);
-                ST_LIB::MockedHAL::adc_set_kernel_clock_hz(ADC1, 64'000'000ULL);
-                ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 777U);
-                init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
+            ST_LIB::MockedHAL::adc_enable_timed_dma(ADC1, true);
+            ST_LIB::MockedHAL::adc_set_kernel_clock_hz(ADC1, 64'000'000ULL);
+            ST_LIB::MockedHAL::adc_set_channel_raw(ADC1, ADC_CHANNEL_16, 777U);
+            init_adc_with_dma<1, single_adc1_init_cfgs>(cfgs);
 
-                const uint64_t unstable_period_ns =
-                    ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);
-                ST_LIB::MockedHAL::dma_set_transfer_timing(unstable_period_ns * 2ULL, 0ULL);
-                ST_LIB::MockedHAL::adc_advance_time_ns(unstable_period_ns * 8ULL);
-                EXPECT_GT(ST_LIB::MockedHAL::adc_get_overrun_count(ADC1), 0U);
-                EXPECT_LT(ST_LIB::MockedHAL::adc_get_completed_sequence_count(ADC1), 8U);
+            const uint64_t unstable_period_ns = ST_LIB::MockedHAL::adc_get_sequence_period_ns(ADC1);
+            ST_LIB::MockedHAL::dma_set_transfer_timing(unstable_period_ns * 2ULL, 0ULL);
+            ST_LIB::MockedHAL::adc_advance_time_ns(unstable_period_ns * 8ULL);
+            EXPECT_GT(ST_LIB::MockedHAL::adc_get_overrun_count(ADC1), 0U);
+            EXPECT_LT(ST_LIB::MockedHAL::adc_get_completed_sequence_count(ADC1), 8U);
         }
     }
 }

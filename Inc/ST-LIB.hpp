@@ -279,9 +279,7 @@ public:
 
     static constexpr auto cfg = build();
 
-    static constexpr auto& clock_tree() {
-        return cfg.clock_tree;
-    }
+    static constexpr auto& clock_tree() { return cfg.clock_tree; }
 
     static void init() {
         constexpr std::size_t mpuN = domain_size<MPUDomain>();
