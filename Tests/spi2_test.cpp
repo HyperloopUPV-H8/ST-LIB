@@ -126,11 +126,11 @@ protected:
         }};
 
         auto tree = ST_LIB::ClockDomain::ClockTree{};
+        ST_LIB::ClockDomain::s_tree = &tree;
         ST_LIB::SPIDomain::Init<1>::init(
             cfgs,
             std::span<ST_LIB::GPIODomain::Instance>{},
-            std::span<ST_LIB::DMADomain::Instance>(ST_LIB::DMADomain::Init<2>::instances),
-            tree
+            std::span<ST_LIB::DMADomain::Instance>(ST_LIB::DMADomain::Init<2>::instances)
         );
         return ST_LIB::SPIDomain::Init<1>::instances[0];
     }

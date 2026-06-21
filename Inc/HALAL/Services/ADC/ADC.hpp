@@ -895,11 +895,7 @@ struct ADCDomain {
             return &dma_buffer_pool[buffer_offset + index];
         }
 
-        static void configure_peripheral(
-            const Config& cfg,
-            uint8_t channel_count,
-            const ClockDomain::ClockTree& tree
-        ) {
+        static void configure_peripheral(const Config& cfg, uint8_t channel_count) {
             ADC_HandleTypeDef* hadc = handle_for(cfg.peripheral);
 
             if (cfg.peripheral == Peripheral::ADC_1 || cfg.peripheral == Peripheral::ADC_2) {
@@ -912,7 +908,7 @@ struct ADCDomain {
                 HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC3, SYSCFG_SWITCH_PC3_OPEN);
             }
 
-            uint32_t kernel_clk = ClockDomain::source_frequency(tree, tree.adc_src);
+            uint32_t kernel_clk = ClockDomain::get_kernel_clock(ClockDomain::ClockGroup::ADC_G);
             uint32_t max_clk = adc_max_clk(cfg.resolution);
             uint32_t prescaler = 4;
             constexpr uint32_t prescalers[] = {1, 2, 4, 6, 8, 10, 12, 16, 32, 64, 128, 256};
@@ -947,8 +943,7 @@ struct ADCDomain {
         static void init(
             std::span<const Config, N> runtime_cfgs,
             std::span<GPIODomain::Instance> gpio_instances = std::span<GPIODomain::Instance>{},
-            std::span<DMADomain::Instance> dma_peripherals = std::span<DMADomain::Instance>{},
-            const ClockDomain::ClockTree& tree = {}
+            std::span<DMADomain::Instance> dma_peripherals = std::span<DMADomain::Instance>{}
         ) {
             std::array<bool, 3> periph_ready{false, false, false};
             std::array<uint8_t, 3> periph_channel_counts{0, 0, 0};
@@ -1007,7 +1002,7 @@ struct ADCDomain {
 
                 hadc->DMA_Handle = &dma_instance->dma;
                 dma_instance->dma.Parent = hadc;
-                configure_peripheral(*first_cfg, channel_count, tree);
+                configure_peripheral(*first_cfg, channel_count);
 
                 if (HAL_ADC_Init(hadc) != HAL_OK) {
                     PANIC("ADC Init failed");

@@ -262,6 +262,21 @@ struct ClockDomain {
      * =========================================
      */
 
+    static inline const ClockTree* s_tree = nullptr;
+
+    static uint32_t pll1_input() { return pll1_input(*s_tree); }
+    static uint32_t pll1_vco() { return pll1_vco(*s_tree); }
+    static uint32_t sysclk() { return sysclk(*s_tree); }
+    static uint32_t hclk() { return hclk(*s_tree); }
+    static uint32_t pclk1() { return pclk1(*s_tree); }
+    static uint32_t pclk2() { return pclk2(*s_tree); }
+    static uint32_t timer_apb1() { return timer_apb1(*s_tree); }
+    static uint32_t timer_apb2() { return timer_apb2(*s_tree); }
+    static uint32_t source_frequency(ClockTree::Source src) {
+        return source_frequency(*s_tree, src);
+    }
+    static uint32_t get_kernel_clock(ClockGroup group) { return get_kernel_clock(*s_tree, group); }
+
     static constexpr std::size_t max_instances = 32;
 
     struct Entry {

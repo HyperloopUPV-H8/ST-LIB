@@ -317,7 +317,10 @@ protected:
         clear_dma_irq_table();
     }
 
-    void SetUp() override { reset_runtime_state(); }
+    void SetUp() override {
+        reset_runtime_state();
+        ST_LIB::ClockDomain::s_tree = &ST_LIB::default_clock_tree;
+    }
 
     template <std::size_t N, const std::array<ST_LIB::ADCDomain::Config, N>& InitCfgs>
     void init_adc_with_dma(const std::array<ST_LIB::ADCDomain::Config, N>& cfgs) {

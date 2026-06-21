@@ -487,8 +487,7 @@ struct SdDomain {
         static void init(
             std::span<const Config, N> cfgs,
             std::span<MPUDomain::Instance> mpu_buffer_instances,
-            std::span<DigitalInputDomain::Instance> digital_input_instances,
-            const ClockDomain::ClockTree& tree
+            std::span<DigitalInputDomain::Instance> digital_input_instances
         ) {
 
             if (N == 0) {
@@ -529,7 +528,8 @@ struct SdDomain {
 #ifdef SD_DEBUG_ENABLE
                 inst.hsd.Init.BusWide = SDMMC_BUS_WIDE_1B;
 #endif
-                uint32_t sdmmc_clk = ClockDomain::source_frequency(tree, tree.sdmmc_src);
+                uint32_t sdmmc_clk =
+                    ClockDomain::get_kernel_clock(ClockDomain::ClockGroup::SDMMC_G);
                 if (sdmmc_clk == 0) {
                     PANIC("SDMMC clock not configured by ClockDomain");
                 }

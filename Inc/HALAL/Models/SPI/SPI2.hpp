@@ -201,6 +201,13 @@ struct SPIDomain {
             return SPI45_G;
         case spi6:
             return SPI6_G;
+        default:
+            if consteval {
+                compile_error("Invalid SPI peripheral");
+            } else {
+                PANIC("Invalid SPI peripheral");
+                return SPI123_G;
+            }
         }
     }
 
@@ -1395,8 +1402,7 @@ struct SPIDomain {
         static void init(
             std::span<const Config, N> cfgs,
             std::span<GPIODomain::Instance> gpio_instances,
-            std::span<DMADomain::Instance> dma_peripherals,
-            const ClockDomain::ClockTree& tree
+            std::span<DMADomain::Instance> dma_peripherals
         ) {
             for (std::size_t i = 0; i < N; ++i) {
                 const auto& e = cfgs[i];
@@ -1462,15 +1468,7 @@ struct SPIDomain {
                 if (e.mode == SPIMode::MASTER) {
                     init.Mode = SPI_MODE_MASTER;
                     // Baudrate prescaler from solved tree
-                    uint32_t pclk_freq;
-                    if (peripheral == SPIPeripheral::spi1 || peripheral == SPIPeripheral::spi2 ||
-                        peripheral == SPIPeripheral::spi3) {
-                        pclk_freq = ClockDomain::source_frequency(tree, tree.spi123_src);
-                    } else if (peripheral == SPIPeripheral::spi4 || peripheral == SPIPeripheral::spi5) {
-                        pclk_freq = ClockDomain::source_frequency(tree, tree.spi45_src);
-                    } else {
-                        pclk_freq = ClockDomain::source_frequency(tree, tree.spi6_src);
-                    }
+                    uint32_t pclk_freq = ClockDomain::get_kernel_clock(spi_group(peripheral));
                     if (pclk_freq == 0) {
                         PANIC("SPI kernel clock not configured by ClockDomain");
                     }

@@ -85,6 +85,7 @@ void clear_dma_irq_table() {
 class ADCSensorTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        ST_LIB::ClockDomain::s_tree = &ST_LIB::default_clock_tree;
         ST_LIB::MockedHAL::adc_reset();
         ST_LIB::MockedHAL::dma_reset();
         clear_nvic_enables();

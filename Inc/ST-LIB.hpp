@@ -314,13 +314,12 @@ public:
 
         MPUDomain::Init<mpuN, cfg.mpu_cfgs>::init();
         GPIODomain::Init<gpioN>::init(cfg.gpio_cfgs);
-        TimerDomain::Init<timN>::init(cfg.tim_cfgs, cfg.clock_tree);
+        TimerDomain::Init<timN>::init(cfg.tim_cfgs);
         DMADomain::Init<dmaN>::init(cfg.dma_cfgs);
         SPIDomain::Init<spiN>::init(
             cfg.spi_cfgs,
             GPIODomain::Init<gpioN>::instances,
-            DMADomain::Init<dmaN>::instances,
-            cfg.clock_tree
+            DMADomain::Init<dmaN>::instances
         );
         DigitalOutputDomain::Init<doutN>::init(cfg.dout_cfgs, GPIODomain::Init<gpioN>::instances);
         DigitalInputDomain::Init<dinN>::init(cfg.din_cfgs, GPIODomain::Init<gpioN>::instances);
@@ -331,15 +330,13 @@ public:
         SdDomain::Init<sdN>::init(
             cfg.sd_cfgs,
             MPUDomain::Init<mpuN, cfg.mpu_cfgs>::instances,
-            DigitalInputDomain::Init<dinN>::instances,
-            cfg.clock_tree
+            DigitalInputDomain::Init<dinN>::instances
         );
         EthernetDomain::Init<ethN>::init(cfg.eth_cfgs, DigitalOutputDomain::Init<doutN>::instances);
         ADCDomain::Init<adcN, cfg.adc_cfgs>::init(
             cfg.adc_cfgs,
             GPIODomain::Init<gpioN>::instances,
-            DMADomain::Init<dmaN>::instances,
-            cfg.clock_tree
+            DMADomain::Init<dmaN>::instances
         );
         EXTIDomain::Init<extiN>::init(cfg.exti_cfgs, GPIODomain::Init<gpioN>::instances);
 

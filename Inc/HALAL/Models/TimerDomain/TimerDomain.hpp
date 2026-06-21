@@ -774,7 +774,7 @@ struct TimerDomain {
 
         static void TIM_Default_Callback(void* raw) { (void)raw; }
 
-        static void init(std::span<const Config, N> cfgs, const ClockDomain::ClockTree& tree) {
+        static void init(std::span<const Config, N> cfgs) {
             Scheduler_global_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
             rcc_enable_timer(Scheduler_global_timer);
 
@@ -834,8 +834,8 @@ struct TimerDomain {
                 inst->tim = tim;
                 inst->hal_tim = handle;
                 inst->timer_idx = e.timer_idx;
-                inst->clock_frequency = is_timer_on_apb1(e.request) ? ClockDomain::timer_apb1(tree)
-                                                                    : ClockDomain::timer_apb2(tree);
+                inst->clock_frequency = is_timer_on_apb1(e.request) ? ClockDomain::timer_apb1()
+                                                                    : ClockDomain::timer_apb2();
                 TIM_MasterConfigTypeDef sMasterConfig = {};
                 sMasterConfig.MasterOutputTrigger = static_cast<uint32_t>(e.trgo1);
                 sMasterConfig.MasterOutputTrigger2 = static_cast<uint32_t>(e.trgo2);
