@@ -19,6 +19,8 @@ inline constexpr size_t runtime_message_capacity = 160;
 inline constexpr size_t function_capacity = 64;
 inline constexpr size_t file_capacity = 96;
 inline constexpr size_t formatted_message_capacity = 320;
+inline constexpr uint32_t urgent_flush_interval_us = 500; // 500 us
+inline constexpr uint32_t normal_flush_interval_us = 1000; // 1000 us
 } // namespace Config
 
 enum class Severity : uint8_t { INFO = 0, WARNING, FAULT };
@@ -245,6 +247,8 @@ private:
     static size_t history_next_index;
     static array<PendingRecord, Config::pending_capacity> pending_records;
     static size_t pending_count;
+    static uint64_t last_urgent_flush_tick;
+    static uint64_t last_normal_flush_tick;
 };
 
 class Runtime {

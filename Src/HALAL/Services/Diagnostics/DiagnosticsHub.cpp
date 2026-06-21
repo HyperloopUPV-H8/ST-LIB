@@ -1,5 +1,7 @@
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
 
+#include "HALAL/Services/Time/Scheduler.hpp"
+
 namespace Diagnostics {
 
 array<Hub::SinkStorage, Config::max_sinks> Hub::sink_storage = {};
@@ -10,6 +12,8 @@ size_t Hub::history_count = 0;
 size_t Hub::history_next_index = 0;
 array<Hub::PendingRecord, Config::pending_capacity> Hub::pending_records = {};
 size_t Hub::pending_count = 0;
+uint64_t Hub::last_urgent_flush_tick = 0;
+uint64_t Hub::last_normal_flush_tick = 0;
 bool Runtime::defaults_installed = false;
 
 namespace {
@@ -296,6 +300,16 @@ void Hub::publish_protection_event(
 }
 
 void Hub::flush_pending(bool urgent_only) {
+    uint64_t& last_flush_tick = urgent_only ? last_urgent_flush_tick : last_normal_flush_tick;
+    const uint64_t interval_us = urgent_only ? Config::urgent_flush_interval_us
+                                             : Config::normal_flush_interval_us;
+
+    const uint64_t now = Scheduler::get_global_tick();
+    if (now - last_flush_tick < interval_us) {
+        return;
+    }
+    last_flush_tick = now;
+
     const uint8_t target_mask = sink_count == 0 ? 0 : static_cast<uint8_t>((1u << sink_count) - 1u);
 
     for (size_t record_index = 0; record_index < pending_count;) {
