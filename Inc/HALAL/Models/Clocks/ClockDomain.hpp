@@ -105,14 +105,25 @@ struct ClockDomain {
 
         enum class Source : uint8_t {
             None,
-            HSI, HSE, CSI, PCLK1, PCLK2, PLL1Q, PLL1R,
-            PLL2P, PLL2Q, PLL2R, PLL3P, PLL3Q, PLL3R,
+            HSI,
+            HSE,
+            CSI,
+            PCLK1,
+            PCLK2,
+            PLL1Q,
+            PLL1R,
+            PLL2P,
+            PLL2Q,
+            PLL2R,
+            PLL3P,
+            PLL3Q,
+            PLL3R,
         };
         Source spi123_src = Source::None;
-        Source spi45_src  = Source::None;
-        Source spi6_src   = Source::None;
-        Source adc_src    = Source::None;
-        Source fdcan_src  = Source::None;
+        Source spi45_src = Source::None;
+        Source spi6_src = Source::None;
+        Source adc_src = Source::None;
+        Source fdcan_src = Source::None;
         Source sdmmc_src = Source::None;
     };
 
