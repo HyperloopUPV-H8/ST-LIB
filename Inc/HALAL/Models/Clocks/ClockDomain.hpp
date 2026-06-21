@@ -666,6 +666,7 @@ struct ClockDomain {
 
     struct Init {
         static inline void init(const ClockTree& tree) {
+            s_tree = &tree;
 #ifndef SIM_ON
             apply_system_clocks(tree);
             apply_peripheral_clocks(tree);
@@ -690,6 +691,12 @@ inline constexpr ClockDomain::ClockTree default_clock_tree{
     .pll1_q = 4,
     .pll1_r = 2,
     .d1cpre = 2,
+    .spi123_src = ST_LIB::ClockDomain::ClockTree::Source::HSI,
+    .spi45_src = ST_LIB::ClockDomain::ClockTree::Source::HSI,
+    .spi6_src = ST_LIB::ClockDomain::ClockTree::Source::HSI,
+    .adc_src = ST_LIB::ClockDomain::ClockTree::Source::HSI,
+    .fdcan_src = ST_LIB::ClockDomain::ClockTree::Source::HSI,
+    .sdmmc_src = ST_LIB::ClockDomain::ClockTree::Source::HSI,
 };
 #elif HSE_VALUE == 25'000'000
 inline constexpr ClockDomain::ClockTree default_clock_tree{
@@ -700,7 +707,18 @@ inline constexpr ClockDomain::ClockTree default_clock_tree{
     .pll1_p = 1,
     .pll1_q = 4,
     .pll1_r = 2,
+    .pll2_m = 5,
+    .pll2_n = 160,
+    .pll2_p = 2,
+    .pll2_q = 4,
+    .pll2_r = 2,
     .d1cpre = 2,
+    .spi123_src = ST_LIB::ClockDomain::ClockTree::Source::PLL1Q,
+    .spi45_src = ST_LIB::ClockDomain::ClockTree::Source::PLL2Q,
+    .spi6_src = ST_LIB::ClockDomain::ClockTree::Source::PLL2P,
+    .adc_src = ST_LIB::ClockDomain::ClockTree::Source::PLL2R,
+    .fdcan_src = ST_LIB::ClockDomain::ClockTree::Source::HSE,
+    .sdmmc_src = ST_LIB::ClockDomain::ClockTree::Source::PLL1Q,
 };
 #else
 inline constexpr ClockDomain::ClockTree default_clock_tree{};
