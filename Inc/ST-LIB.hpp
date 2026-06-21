@@ -333,7 +333,8 @@ public:
         SdDomain::Init<sdN>::init(
             cfg.sd_cfgs,
             MPUDomain::Init<mpuN, cfg.mpu_cfgs>::instances,
-            DigitalInputDomain::Init<dinN>::instances
+            DigitalInputDomain::Init<dinN>::instances,
+            cfg.clock_tree
         );
         EthernetDomain::Init<ethN>::init(cfg.eth_cfgs, DigitalOutputDomain::Init<doutN>::instances);
         ADCDomain::Init<adcN, cfg.adc_cfgs>::init(
