@@ -1,0 +1,2 @@
+release: patch
+summary: Add throttling to Diagmostics::Hun:flush
