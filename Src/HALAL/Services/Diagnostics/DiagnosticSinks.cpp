@@ -97,7 +97,8 @@ public:
 
     void parse(OrderProtocol* socket, uint8_t* data) override {
         (void)socket;
-        if (data == nullptr) return;
+        if (data == nullptr)
+            return;
 
         memcpy(&id, data, sizeof(id));
 
@@ -114,10 +115,14 @@ public:
         message[len] = '\0';
         off += len + 1;
 
-        memcpy(&counter, data + off, sizeof(counter) + sizeof(second) + sizeof(minute) +
-                                     sizeof(hour) + sizeof(day) + sizeof(month) + sizeof(year));
-        size = off + sizeof(counter) + sizeof(second) + sizeof(minute) +
-               sizeof(hour) + sizeof(day) + sizeof(month) + sizeof(year);
+        memcpy(
+            &counter,
+            data + off,
+            sizeof(counter) + sizeof(second) + sizeof(minute) + sizeof(hour) + sizeof(day) +
+                sizeof(month) + sizeof(year)
+        );
+        size = off + sizeof(counter) + sizeof(second) + sizeof(minute) + sizeof(hour) +
+               sizeof(day) + sizeof(month) + sizeof(year);
     }
 
     void process() override {
@@ -222,8 +227,7 @@ private:
 
 class OrderProtocolDiagnosticSink final : public DiagnosticSink {
 public:
-    explicit OrderProtocolDiagnosticSink(OrderProtocol* target = nullptr)
-        : target_socket(target) {
+    explicit OrderProtocolDiagnosticSink(OrderProtocol* target = nullptr) : target_socket(target) {
         DiagnosticTransportOrder::forward_target = target;
     }
 
