@@ -258,3 +258,10 @@ private:
 };
 
 } // namespace Diagnostics
+
+#ifdef STLIB_ETH
+class OrderProtocol;
+namespace Diagnostics {
+void install_ethernet_sink(OrderProtocol* target);
+}
+#endif

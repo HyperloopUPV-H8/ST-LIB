@@ -16,6 +16,7 @@ public:
     virtual void set_callback(void (*callback)(void)) = 0;
     virtual void process() = 0;
     virtual void parse(OrderProtocol* socket, uint8_t* data) = 0;
+    virtual void reset_for_receive() {}
     void store_ip_order(string& ip) { remote_ip = &ip; }
     void parse(uint8_t* data) override { parse(nullptr, data); }
     static void process_by_id(uint16_t id) {
