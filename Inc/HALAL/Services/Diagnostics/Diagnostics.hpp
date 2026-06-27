@@ -245,6 +245,8 @@ private:
     static size_t history_next_index;
     static array<PendingRecord, Config::pending_capacity> pending_records;
     static size_t pending_count;
+    static uint64_t last_urgent_flush_us;
+    static uint64_t last_normal_flush_us;
 };
 
 class Runtime {
