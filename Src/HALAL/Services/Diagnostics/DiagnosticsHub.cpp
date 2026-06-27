@@ -1,5 +1,7 @@
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
+#ifdef STLIB_ETH
 #include "HALAL/Services/Time/Scheduler.hpp"
+#endif
 
 namespace Diagnostics {
 
@@ -11,8 +13,10 @@ size_t Hub::history_count = 0;
 size_t Hub::history_next_index = 0;
 array<Hub::PendingRecord, Config::pending_capacity> Hub::pending_records = {};
 size_t Hub::pending_count = 0;
+#ifdef STLIB_ETH
 uint64_t Hub::last_urgent_flush_us = 0;
 uint64_t Hub::last_normal_flush_us = 0;
+#endif
 bool Runtime::defaults_installed = false;
 
 namespace {
@@ -300,8 +304,10 @@ void Hub::publish_protection_event(
 
 void Hub::flush_pending(bool urgent_only) {
     const uint8_t target_mask = sink_count == 0 ? 0 : static_cast<uint8_t>((1u << sink_count) - 1u);
+#ifdef STLIB_ETH
     const uint64_t now = Scheduler::get_global_tick();
     uint64_t& last_flush = urgent_only ? last_urgent_flush_us : last_normal_flush_us;
+#endif
 
     for (size_t record_index = 0; record_index < pending_count;) {
         PendingRecord& pending_record = pending_records[record_index];
@@ -310,10 +316,12 @@ void Hub::flush_pending(bool urgent_only) {
             continue;
         }
 
-        if (now - last_flush < 100'000) {
+#ifdef STLIB_ETH
+        if (last_flush != 0 && now - last_flush < 100'000) {
             record_index++;
             continue;
         }
+#endif
 
         for (size_t sink_index = 0; sink_index < sink_count; ++sink_index) {
             const uint8_t sink_mask = static_cast<uint8_t>(1u << sink_index);
@@ -322,7 +330,9 @@ void Hub::flush_pending(bool urgent_only) {
             }
             if (sinks[sink_index] != nullptr && sinks[sink_index]->publish(pending_record.record)) {
                 pending_record.delivered_mask |= sink_mask;
+#ifdef STLIB_ETH
                 last_flush = now;
+#endif
             }
         }
 
