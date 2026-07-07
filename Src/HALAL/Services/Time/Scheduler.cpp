@@ -101,10 +101,15 @@ void Scheduler::update() {
 }
 
 uint64_t Scheduler::get_global_tick() {
+    static uint64_t last_tick{0};
     SchedLock();
     uint64_t tick = global_tick_us_;
     tick += Scheduler_global_timer->CNT;
     SchedUnlock();
+    if (tick < last_tick) [[unlikely]] {
+        tick = last_tick;
+    }
+    last_tick = tick;
     return tick;
 }
 
