@@ -11,6 +11,9 @@ extern "C" {
 #endif
 extern uint8_t _metadata[];
 extern uint8_t _hf_log[];
+extern GPIO_TypeDef* ports_hard_fault[];
+extern uint16_t pins_hard_fault[];
+extern uint8_t hard_fault_leds_count;
 #ifdef __cplusplus
 }
 #endif
