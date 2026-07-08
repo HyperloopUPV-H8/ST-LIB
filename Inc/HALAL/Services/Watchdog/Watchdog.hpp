@@ -41,12 +41,7 @@ public:
     }
 
     static void refresh() { HAL_IWDG_Refresh(&watchdog_handle); }
-    static void check_reset_flag() {
-        if (__HAL_RCC_GET_FLAG(RCC_FLAG_IWDG1RST)) {
-            reset_by_iwdg = true;
-        }
-        __HAL_RCC_CLEAR_RESET_FLAGS();
-    }
+    static void check_reset_flag();
     template <typename TimeUnit> Watchdog(chrono::duration<int64_t, TimeUnit> period) {
         watchdog_time = std::chrono::duration_cast<std::chrono::microseconds>(period);
     }
