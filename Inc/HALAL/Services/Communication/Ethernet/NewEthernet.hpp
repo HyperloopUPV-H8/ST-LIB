@@ -118,7 +118,7 @@ struct EthernetDomain {
             const char* local_ip,
             const char* subnet_mask = "255.255.0.0",
             const char* gateway = "192.168.1.1",
-            const char* sntp_server = SNTP::DEFAULT_SERVER_IP
+            const char* sntp_server = nullptr
         )
             : pins{pins}, e{local_mac, local_ip, subnet_mask, gateway, sntp_server},
               rmii_gpios{
