@@ -230,7 +230,7 @@ struct InputCaptureInfo {
     uint32_t frequency;
 };
 
-extern ST_LIB::InputCaptureInfo input_capture_info_dummy;
+static ST_LIB::InputCaptureInfo input_capture_info_dummy;
 
 constexpr std::array<uint8_t, 25> create_timer_idxmap() {
     std::array<uint8_t, 25> result{};
@@ -748,6 +748,18 @@ struct TimerDomain {
         static void init(std::span<const Config, N> cfgs) {
             Scheduler_global_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
             rcc_enable_timer(Scheduler_global_timer);
+
+            input_capture_info_dummy = ST_LIB::InputCaptureInfo{
+                .channel_rising = 0xFF,   // any value that isn't possible here
+                .channel_falling = 0xFF,  // any value that isn't possible here
+
+                .value_rising = 0,
+                .value_falling = 0,
+                .period = 0,
+
+                .duty_cycle = 0,
+                .frequency = 0,
+            };
 
             for(uint32_t inst = 0; inst < TimerDomain::max_instances; inst++) {
                 for(uint32_t ch = 0; ch < TimerDomain::input_capture_channels; ch++) {
