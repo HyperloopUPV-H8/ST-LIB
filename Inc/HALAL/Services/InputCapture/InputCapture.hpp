@@ -74,7 +74,6 @@ public:
     void turn_on(void) {
         if (is_initialized == false) {
             init();
-            return;
         }
         if (is_on)
             return;
