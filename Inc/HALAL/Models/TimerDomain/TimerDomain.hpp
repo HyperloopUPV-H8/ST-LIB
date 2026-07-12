@@ -218,6 +218,20 @@ enum class PWM_Frequency_Mode {
     SPEED,
 };
 
+struct InputCaptureInfo {
+    uint8_t channel_rising;
+    uint8_t channel_falling;
+
+    uint32_t value_rising;
+    uint32_t value_falling;
+    uint32_t period;
+
+    float duty_cycle;
+    uint32_t frequency;
+};
+
+extern ST_LIB::InputCaptureInfo input_capture_info_dummy;
+
 constexpr std::array<uint8_t, 25> create_timer_idxmap() {
     std::array<uint8_t, 25> result{};
 
@@ -267,17 +281,6 @@ struct TimerDomain {
     static constexpr std::size_t max_instances = 16;
     static constexpr std::size_t input_capture_channels = 4;
 
-    struct InputCaptureInfo {
-        uint8_t channel_rising;
-        uint8_t channel_falling;
-
-        uint32_t value_rising;
-        uint32_t value_falling;
-        uint32_t period;
-
-        float duty_cycle;
-        uint32_t frequency;
-    };
     /* 2x as big as necessary but this makes indexing easier & faster */
     static InputCaptureInfo* input_capture_info[max_instances][input_capture_channels];
     static InputCaptureInfo input_capture_info_backing[max_instances][input_capture_channels];
@@ -747,7 +750,7 @@ struct TimerDomain {
             rcc_enable_timer(Scheduler_global_timer);
 
             for(uint32_t inst = 0; inst < TimerDomain::max_instances; inst++) {
-                for(uint32_t ch = 0; i < TimerDomain::input_capture_channels; ch++) {
+                for(uint32_t ch = 0; ch < TimerDomain::input_capture_channels; ch++) {
                     input_capture_info[inst][ch] = &input_capture_info_dummy;
                 }
             }
