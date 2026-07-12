@@ -59,7 +59,8 @@ class InputCapture {
             .ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING,
             .ICSelection = TIM_ICSELECTION_DIRECTTI,
             .ICPrescaler = TIM_ICPSC_DIV1,
-            .ICFilter = 0,
+            /* filter out with hardware some noise */
+            .ICFilter = 0x03,
         };
         timer->template config_input_compare_channel<pin_rising.channel>(&sConfigIC);
 

@@ -746,6 +746,12 @@ struct TimerDomain {
             Scheduler_global_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
             rcc_enable_timer(Scheduler_global_timer);
 
+            for(uint32_t inst = 0; inst < TimerDomain::max_instances; inst++) {
+                for(uint32_t ch = 0; i < TimerDomain::input_capture_channels; ch++) {
+                    input_capture_info[inst][ch] = &input_capture_info_dummy;
+                }
+            }
+
             TimerDomain::callbacks[0] = TIM_Default_Callback;
             TimerDomain::callbacks[1] = TIM_Default_Callback;
             TimerDomain::callbacks[2] = TIM_Default_Callback;
