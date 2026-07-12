@@ -24,7 +24,7 @@ TIM_HandleTypeDef htim24;
 void (*TimerDomain::callbacks[TimerDomain::max_instances])(void*) = {nullptr};
 void* TimerDomain::callback_data[TimerDomain::max_instances] = {nullptr};
 
-TimerDomain::InputCaptureInfo input_capture_info_dummy = {
+ST_LIB::InputCaptureInfo input_capture_info_dummy = {
     .channel_rising = 0xFF,  // any value that isn't possible here
     .channel_falling = 0xFF, // any value that isn't possible here
 
@@ -36,15 +36,15 @@ TimerDomain::InputCaptureInfo input_capture_info_dummy = {
     .frequency = 0,
 };
 
-TimerDomain::InputCaptureInfo* TimerDomain::input_capture_info[max_instances]
+ST_LIB::InputCaptureInfo* TimerDomain::input_capture_info[max_instances]
                                                               [input_capture_channels];
-TimerDomain::InputCaptureInfo TimerDomain::input_capture_info_backing[max_instances]
+ST_LIB::InputCaptureInfo TimerDomain::input_capture_info_backing[max_instances]
                                                                      [input_capture_channels];
 
 static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel) {
     TIM_HandleTypeDef* htim = TimerDomain::hal_handles[timer_idx];
 
-    TimerDomain::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
+    ST_LIB::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
     uint32_t current = (*(((volatile uint32_t*)&htim->Instance->CCR1) + channel));
     if (info->channel_rising == channel) {
         // NOTE: CCR1 - CCR4 are contiguous
