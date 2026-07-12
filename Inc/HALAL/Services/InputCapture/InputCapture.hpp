@@ -26,7 +26,7 @@ class InputCapture {
     friend struct TimerWrapper<dev>;
 
     TimerWrapper<dev>* timer = nullptr;
-    TimerDomain::InputCaptureInfo* info = nullptr;
+    ST_LIB::InputCaptureInfo* info = nullptr;
     bool is_on = false;
     bool is_initialized = false;
     InputCapture(TimerWrapper<dev>* tim) : timer(tim) {}
