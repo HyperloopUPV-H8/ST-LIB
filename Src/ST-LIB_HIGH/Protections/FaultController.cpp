@@ -202,7 +202,11 @@ void FaultController::propagate_fault() {
         if (target.socket != nullptr && target.fault_order != nullptr) {
             if (!target.socket->send_order(*target.fault_order)) {
                 Diagnostics::Hub::publish_runtime_warning(
-                    "FAULT order propagation failed", false, __LINE__, __func__, __FILE__
+                    "FAULT order propagation failed",
+                    false,
+                    __LINE__,
+                    __func__,
+                    __FILE__
                 );
                 Diagnostics::Hub::flush_urgent();
             }
