@@ -218,6 +218,20 @@ enum class PWM_Frequency_Mode {
     SPEED,
 };
 
+struct InputCaptureInfo {
+    uint8_t channel_rising;
+    uint8_t channel_falling;
+
+    uint32_t value_rising;
+    uint32_t value_falling;
+    uint32_t period;
+
+    float duty_cycle;
+    uint32_t frequency;
+};
+
+static ST_LIB::InputCaptureInfo input_capture_info_dummy;
+
 constexpr std::array<uint8_t, 25> create_timer_idxmap() {
     std::array<uint8_t, 25> result{};
 
@@ -267,17 +281,6 @@ struct TimerDomain {
     static constexpr std::size_t max_instances = 16;
     static constexpr std::size_t input_capture_channels = 4;
 
-    struct InputCaptureInfo {
-        uint8_t channel_rising;
-        uint8_t channel_falling;
-
-        uint32_t value_rising;
-        uint32_t value_falling;
-        uint32_t period;
-
-        float duty_cycle;
-        uint32_t frequency;
-    };
     /* 2x as big as necessary but this makes indexing easier & faster */
     static InputCaptureInfo* input_capture_info[max_instances][input_capture_channels];
     static InputCaptureInfo input_capture_info_backing[max_instances][input_capture_channels];
@@ -745,6 +748,24 @@ struct TimerDomain {
         static void init(std::span<const Config, N> cfgs) {
             Scheduler_global_timer = cmsis_timers[timer_idxmap[SCHEDULER_TIMER_DOMAIN]];
             rcc_enable_timer(Scheduler_global_timer);
+
+            input_capture_info_dummy = ST_LIB::InputCaptureInfo{
+                .channel_rising = 0xFF,  // any value that isn't possible here
+                .channel_falling = 0xFF, // any value that isn't possible here
+
+                .value_rising = 0,
+                .value_falling = 0,
+                .period = 0,
+
+                .duty_cycle = 0,
+                .frequency = 0,
+            };
+
+            for (uint32_t inst = 0; inst < TimerDomain::max_instances; inst++) {
+                for (uint32_t ch = 0; ch < TimerDomain::input_capture_channels; ch++) {
+                    input_capture_info[inst][ch] = &input_capture_info_dummy;
+                }
+            }
 
             TimerDomain::callbacks[0] = TIM_Default_Callback;
             TimerDomain::callbacks[1] = TIM_Default_Callback;
