@@ -171,6 +171,50 @@ void FaultController::publish_fault_diagnostic(const FaultCause& cause) {
     Diagnostics::Hub::flush_urgent();
 }
 
+#ifdef STLIB_ETH
+array<FaultController::FaultPropagationTarget, FaultController::max_propagation_targets>
+    FaultController::propagation_targets{};
+size_t FaultController::propagation_target_count = 0;
+
+void FaultController::register_fault_propagation(OrderProtocol* socket, Order* fault_order) {
+    if (socket == nullptr || fault_order == nullptr)
+        return;
+    if (propagation_target_count >= max_propagation_targets)
+        return;
+    propagation_targets[propagation_target_count] = {socket, fault_order};
+    propagation_target_count++;
+    fault_order->set_callback(&FaultController::on_fault_order_received);
+}
+
+void FaultController::on_fault_order_received() {
+    request_fault(FaultCause::runtime_fault(
+        "FAULT order received from peer",
+        false,
+        __LINE__,
+        __func__,
+        __FILE__
+    ));
+}
+
+void FaultController::propagate_fault() {
+    for (size_t i = 0; i < propagation_target_count; i++) {
+        auto& target = propagation_targets[i];
+        if (target.socket != nullptr && target.fault_order != nullptr) {
+            if (!target.socket->send_order(*target.fault_order)) {
+                Diagnostics::Hub::publish_runtime_warning(
+                    "FAULT order propagation failed",
+                    false,
+                    __LINE__,
+                    __func__,
+                    __FILE__
+                );
+                Diagnostics::Hub::flush_urgent();
+            }
+        }
+    }
+}
+#endif
+
 void FaultController::request_fault(const FaultCause& cause) {
     if (!faulted) {
         latched_cause = cause;
@@ -184,6 +228,10 @@ void FaultController::request_fault(const FaultCause& cause) {
                 runtime_storage.rebuild_as_fault();
             }
         }
+
+#ifdef STLIB_ETH
+        propagate_fault();
+#endif
     }
 
     publish_fault_diagnostic(cause);
