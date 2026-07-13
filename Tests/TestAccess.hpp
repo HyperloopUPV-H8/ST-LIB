@@ -32,6 +32,10 @@ struct FaultController {
         ::FaultController::has_latched_cause = false;
         ::FaultController::faulted = false;
         ::FaultController::runtime_started = false;
+#ifdef STLIB_ETH
+        ::FaultController::propagation_targets = {};
+        ::FaultController::propagation_target_count = 0;
+#endif
     }
 
     static void request_fault(const ::FaultCause& cause) {
