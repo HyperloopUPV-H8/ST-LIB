@@ -750,8 +750,8 @@ struct TimerDomain {
             rcc_enable_timer(Scheduler_global_timer);
 
             input_capture_info_dummy = ST_LIB::InputCaptureInfo{
-                .channel_rising = 0xFF,   // any value that isn't possible here
-                .channel_falling = 0xFF,  // any value that isn't possible here
+                .channel_rising = 0xFF,  // any value that isn't possible here
+                .channel_falling = 0xFF, // any value that isn't possible here
 
                 .value_rising = 0,
                 .value_falling = 0,
@@ -761,8 +761,8 @@ struct TimerDomain {
                 .frequency = 0,
             };
 
-            for(uint32_t inst = 0; inst < TimerDomain::max_instances; inst++) {
-                for(uint32_t ch = 0; ch < TimerDomain::input_capture_channels; ch++) {
+            for (uint32_t inst = 0; inst < TimerDomain::max_instances; inst++) {
+                for (uint32_t ch = 0; ch < TimerDomain::input_capture_channels; ch++) {
                     input_capture_info[inst][ch] = &input_capture_info_dummy;
                 }
             }
