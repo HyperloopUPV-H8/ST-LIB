@@ -200,7 +200,12 @@ void FaultController::propagate_fault() {
     for (size_t i = 0; i < propagation_target_count; i++) {
         auto& target = propagation_targets[i];
         if (target.socket != nullptr && target.fault_order != nullptr) {
-            target.socket->send_order(*target.fault_order);
+            if (!target.socket->send_order(*target.fault_order)) {
+                Diagnostics::Hub::publish_runtime_warning(
+                    "FAULT order propagation failed", false, __LINE__, __func__, __FILE__
+                );
+                Diagnostics::Hub::flush_urgent();
+            }
         }
     }
 }
