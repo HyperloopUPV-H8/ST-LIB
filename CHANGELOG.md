@@ -6,6 +6,19 @@ The revived semantic-versioning baseline starts at `v5.0.0`.
 Historical releases that predate this file remain available in Git tags such as
 `v1.0.0`, `v3.0.0`, `v4.0.0-beta`, and `h10`.
 
+## v6.3.0 - 2026-07-13
+
+### Features
+
+- Add fault propagation to FaultController for sending FAULT order to remote peers with single-shot loop prevention via the `!faulted` guard
+  Star-topology design: the `!faulted` guard in `request_fault()` is the only loop breaker. Each board propagates exactly once on the `!faulted → faulted` transition, so no `fault_received_from_peer` flag is needed. Works for any node faulting first (local fault or CS-commanded fault).
+
+### Fixes
+
+- try to fix input capture by reducing noise in interrupt callback and add hardware filtering when configuring the input capture
+- EXTI does not turn on automatically now. It needs to be done via turn_on()
+  Optional extra context in markdown.
+
 ## v6.2.0 - 2026-07-10
 
 ### Features
