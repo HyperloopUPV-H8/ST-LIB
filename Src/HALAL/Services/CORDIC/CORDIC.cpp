@@ -7,6 +7,8 @@
 
 #include "HALAL/Services/CORDIC/CORDIC.hpp"
 
+#define STLIB_M_PI 3.14159265358979323846
+
 Operation_Computation RotationComputer::mode = NONE;
 
 void RotationComputer::start() { __HAL_RCC_CORDIC_CLK_ENABLE(); }
@@ -93,8 +95,8 @@ void RotationComputer::phase_and_modulus(
     }
 }
 
-float RotationComputer::q31_to_radian_f32(uint32_t in) { return M_PI * ldexp((int32_t)in, -31); }
+float RotationComputer::q31_to_radian_f32(uint32_t in) { return STLIB_M_PI * ldexp((int32_t)in, -31); }
 
 int32_t RotationComputer::radian_f32_to_q31(double in) {
-    return (int)roundf(scalbnf(fmaxf(fminf(in / M_PI, 0.9995), -0.9995), 31));
+    return (int)roundf(scalbnf(fmaxf(fminf(in / STLIB_M_PI, 0.9995), -0.9995), 31));
 }

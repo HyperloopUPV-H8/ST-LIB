@@ -2,6 +2,13 @@
 
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
 
+static size_t hyper_strnlen(const char *s, size_t maxlen)
+{
+    size_t n = 0;
+    for(; *s && n < maxlen; n++) s++;
+    return n;
+}
+
 namespace {
 
 static_assert(FaultConfig::origin_capacity == Diagnostics::Config::origin_capacity);
@@ -25,7 +32,7 @@ void copy_c_string(char (&dst)[Capacity], const char* src, bool* truncated = nul
         return;
     }
 
-    const size_t length = strnlen(src, Capacity - 1);
+    const size_t length = hyper_strnlen(src, Capacity - 1);
     memcpy(dst, src, length);
     dst[length] = '\0';
     if (truncated != nullptr) {
