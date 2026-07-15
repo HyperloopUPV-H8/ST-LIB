@@ -6,6 +6,16 @@ The revived semantic-versioning baseline starts at `v5.0.0`.
 Historical releases that predate this file remain available in Git tags such as
 `v1.0.0`, `v3.0.0`, `v4.0.0-beta`, and `h10`.
 
+## v6.3.1 - 2026-07-15
+
+### Fixes
+
+- Retry pending FAULT order propagation to disconnected peers via check_transitions()
+  When propagate_fault() fails to send the FAULT order (e.g. TCP connection not yet
+  established), the target is marked pending. check_transitions() automatically
+  retries pending targets on each call while the board remains faulted, until the
+  send succeeds.
+
 ## v6.3.0 - 2026-07-13
 
 ### Features
