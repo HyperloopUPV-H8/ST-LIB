@@ -236,7 +236,10 @@ void FaultController::retry_pending_fault_propagation() {
                 target.pending = false;
                 Diagnostics::Hub::publish_runtime_info(
                     "FAULT order propagation succeeded after retry",
-                    false, __LINE__, __func__, __FILE__
+                    false,
+                    __LINE__,
+                    __func__,
+                    __FILE__
                 );
                 Diagnostics::Hub::flush_urgent();
             }
