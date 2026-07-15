@@ -92,6 +92,7 @@ public:
 #ifdef STLIB_ETH
         propagation_targets = {};
         propagation_target_count = 0;
+        last_retry_us = 0;
 #endif
     }
 
@@ -191,15 +192,19 @@ private:
 
 #ifdef STLIB_ETH
     static void propagate_fault();
+    static void retry_pending_fault_propagation();
     static void on_fault_order_received();
 
     struct FaultPropagationTarget {
         OrderProtocol* socket;
         Order* fault_order;
+        bool pending = false;
     };
     static constexpr size_t max_propagation_targets = 8;
+    static constexpr uint64_t propagation_retry_period_us = 100'000;
     static array<FaultPropagationTarget, max_propagation_targets> propagation_targets;
     static size_t propagation_target_count;
+    static uint64_t last_retry_us;
 #endif
 
     static RuntimeStorage runtime_storage;

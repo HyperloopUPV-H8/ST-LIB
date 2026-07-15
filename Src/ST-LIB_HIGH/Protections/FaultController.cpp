@@ -1,6 +1,7 @@
 #include "ST-LIB_HIGH/Protections/FaultController.hpp"
 
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
+#include "HALAL/Services/Time/Scheduler.hpp"
 
 namespace {
 
@@ -164,6 +165,15 @@ void FaultController::check_transitions() {
         return;
     }
     global_machine->check_transitions();
+#ifdef STLIB_ETH
+    if (faulted) {
+        const uint64_t now_us = Scheduler::get_global_tick();
+        if (now_us - last_retry_us >= propagation_retry_period_us) {
+            last_retry_us = now_us;
+            retry_pending_fault_propagation();
+        }
+    }
+#endif
 }
 
 void FaultController::publish_fault_diagnostic(const FaultCause& cause) {
@@ -175,6 +185,7 @@ void FaultController::publish_fault_diagnostic(const FaultCause& cause) {
 array<FaultController::FaultPropagationTarget, FaultController::max_propagation_targets>
     FaultController::propagation_targets{};
 size_t FaultController::propagation_target_count = 0;
+uint64_t FaultController::last_retry_us = 0;
 
 void FaultController::register_fault_propagation(OrderProtocol* socket, Order* fault_order) {
     if (socket == nullptr || fault_order == nullptr)
@@ -200,13 +211,32 @@ void FaultController::propagate_fault() {
     for (size_t i = 0; i < propagation_target_count; i++) {
         auto& target = propagation_targets[i];
         if (target.socket != nullptr && target.fault_order != nullptr) {
-            if (!target.socket->send_order(*target.fault_order)) {
+            target.pending = true;
+            if (target.socket->send_order(*target.fault_order)) {
+                target.pending = false;
+            } else {
                 Diagnostics::Hub::publish_runtime_warning(
-                    "FAULT order propagation failed",
+                    "FAULT order propagation failed, will retry",
                     false,
                     __LINE__,
                     __func__,
                     __FILE__
+                );
+                Diagnostics::Hub::flush_urgent();
+            }
+        }
+    }
+}
+
+void FaultController::retry_pending_fault_propagation() {
+    for (size_t i = 0; i < propagation_target_count; i++) {
+        auto& target = propagation_targets[i];
+        if (target.pending && target.socket != nullptr && target.fault_order != nullptr) {
+            if (target.socket->send_order(*target.fault_order)) {
+                target.pending = false;
+                Diagnostics::Hub::publish_runtime_info(
+                    "FAULT order propagation succeeded after retry",
+                    false, __LINE__, __func__, __FILE__
                 );
                 Diagnostics::Hub::flush_urgent();
             }

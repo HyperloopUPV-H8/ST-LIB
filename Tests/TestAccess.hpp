@@ -35,6 +35,7 @@ struct FaultController {
 #ifdef STLIB_ETH
         ::FaultController::propagation_targets = {};
         ::FaultController::propagation_target_count = 0;
+        ::FaultController::last_retry_us = 0;
 #endif
     }
 
