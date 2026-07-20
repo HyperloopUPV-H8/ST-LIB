@@ -31,7 +31,30 @@ uint64_t Scheduler::global_tick_us_{0};
 uint32_t Scheduler::current_interval_us_{0};
 uint16_t Scheduler::timeout_idx_{1};
 
+#if (SCHEDULER_GET_LAST_N_TASKS_COUNT & (SCHEDULER_GET_LAST_N_TASKS_COUNT - 1)) != 0
+// NOTE: Performance: this is to use an and instead of a mod when storing the data
+#error SCHEDULER_GET_LAST_N_TASKS_COUNT must be a power of 2
+#endif
+
+#if defined(SLOW_CHECK_USE_READY_BITMAP)
 uint16_t failing_id = Scheduler::INVALID_ID;
+
+#elif defined(SCHEDULER_GET_LAST_N_TASKS)
+struct TaskTimeInfo {
+    uint16_t id;
+    uint32_t start_time;
+    uint32_t end_time;
+};
+TaskTimeInfo time_info[SCHEDULER_GET_LAST_N_TASKS_COUNT]{};
+#if SCHEDULER_GET_LAST_N_TASKS_COUNT > 65536
+#error Use a uint32_t instead and remove these lines
+#endif
+uint16_t current_time_info{0};
+
+// Must be a 32 bit timer and not be the same as the scheduler timer
+TIM_TypeDef* perf_timer{nullptr};
+uint8_t uart_id{0};
+#endif
 
 // ----------------------------
 
@@ -77,19 +100,52 @@ void Scheduler_start(void) {
     Scheduler::schedule_next_interval();
 }
 
+bool Scheduler::init_perf(TIM_TypeDef* tim32bit, UART::Peripheral* uart) {
+#ifdef SCHEDULER_GET_LAST_N_TASKS
+    if (!tim32bit) {
+        return false;
+    }
+
+    perf_timer = tim32bit;
+
+    uart_id = UART::inscribe(*uart);
+
+    return true;
+#else
+    (void)tim32bit;
+    (void)uart;
+    return true;
+#endif
+}
+
 void Scheduler::update() {
+#ifdef SLOW_CHECK_USE_READY_BITMAP
     // NOTE: Only _one_ id will be shown per call to update()
     if (failing_id != Scheduler::INVALID_ID) [[unlikely]] {
         WARNING("Too slow, could not execute task %u in time", failing_id);
         failing_id = Scheduler::INVALID_ID;
     }
+#elif defined(SCHEDULER_GET_LAST_N_TASKS)
+    current_time_info = 0;
+#endif
 
     while (ready_bitmap_ != 0u) {
         uint32_t bit_index = static_cast<uint32_t>(__builtin_ctz(ready_bitmap_));
 
         Task& task = tasks_[bit_index];
 
+#if defined(SCHEDULER_GET_LAST_N_TASKS)
+        TaskTimeInfo* info = time_info + current_time_info;
+        info->id = bit_index;
+        info->start_time = perf_timer->CNT;
+#endif
+
         task.callback();
+
+#if defined(SCHEDULER_GET_LAST_N_TASKS)
+        info->end_time = perf_timer->CNT;
+        current_time_info = current_time_info + 1;
+#endif
 
         SchedLock();
         CLEAR_BIT(ready_bitmap_, 1u << bit_index);
@@ -98,6 +154,16 @@ void Scheduler::update() {
         }
         SchedUnlock();
     }
+
+#if defined(SCHEDULER_GET_LAST_N_TASKS)
+    if (!UART::transmit_polling(
+            uart_id,
+            (uint8_t*)&time_info,
+            sizeof(TaskTimeInfo) * current_time_info
+        )) {
+        WARNING("UART Error while trying to transmit timing info");
+    }
+#endif
 }
 
 uint64_t Scheduler::get_global_tick() {
@@ -256,9 +322,11 @@ inline void Scheduler::on_timer_update() {
         SchedLock();
         pop_front();
         // mark task as ready
+#ifdef SLOW_CHECK_USE_READY_BITMAP
         if ((ready_bitmap_ & task_bit) != 0) [[unlikely]] {
             failing_id = candidate_id;
         }
+#endif
         SET_BIT(ready_bitmap_, task_bit);
         if (task.repeating) [[likely]] {
             task.next_fire_us = static_cast<uint32_t>(global_tick_us_ + task.period_us);

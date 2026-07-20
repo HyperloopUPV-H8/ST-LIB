@@ -209,6 +209,26 @@ struct TimerPin {
     ST_LIB::TimerChannel channel;
 };
 
+struct TimerOutputChannelConfig {
+  uint32_t OCMode;        /*!< Specifies the TIM mode.
+                               This parameter can be a value of @ref TIM_Output_Compare_and_PWM_modes */
+
+  uint32_t OCPolarity;    /*!< Specifies the output polarity.
+                               This parameter can be a value of @ref TIM_Output_Compare_Polarity */
+
+  uint32_t OCNPolarity;   /*!< Specifies the complementary output polarity.
+                               This parameter can be a value of @ref TIM_Output_Compare_N_Polarity
+                               @note This parameter is valid only for timer instances supporting break feature. */
+
+  uint32_t OCIdleState;   /*!< Specifies the TIM Output Compare pin state during Idle state.
+                               This parameter can be a value of @ref TIM_Output_Compare_Idle_State
+                               @note This parameter is valid only for timer instances supporting break feature. */
+
+  uint32_t OCNIdleState;  /*!< Specifies the TIM Output Compare pin state during Idle state.
+                               This parameter can be a value of @ref TIM_Output_Compare_N_Idle_State
+                               @note This parameter is valid only for timer instances supporting break feature. */
+};
+
 #ifndef DEFAULT_PWM_FREQUENCY_MODE
 #define DEFAULT_PWM_FREQUENCY_MODE ST_LIB::PWM_Frequency_Mode::PRECISION
 #endif

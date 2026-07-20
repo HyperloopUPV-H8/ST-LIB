@@ -17,7 +17,7 @@
 #endif
 
 #include "stm32h7xx_ll_tim_wrapper.h"
-#include "HALAL/Models/Packets/Packet.hpp"
+#include "HALAL/Services/Communication/UART/UART.hpp"
 
 #include <array>
 #include <cstdint>
@@ -25,6 +25,25 @@
 
 #ifndef SIM_ON
 #include "stm32h7xx_hal_tim.h"
+#endif
+
+#ifndef SIM_ON
+//#define SCHEDULER_GET_LAST_N_TASKS
+#else
+struct UART {
+    struct Peripheral {
+        uint8_t ignore0;
+    };
+    uint8_t ignore1;
+};
+#endif
+
+#if !defined(SCHEDULER_GET_LAST_N_TASKS) && !defined(SLOW_CHECK_USE_READY_BITMAP)
+#define SLOW_CHECK_USE_READY_BITMAP
+#endif
+
+#if !defined(SCHEDULER_GET_LAST_N_TASKS_COUNT)
+#define SCHEDULER_GET_LAST_N_TASKS_COUNT 64
 #endif
 
 extern TIM_TypeDef* Scheduler_global_timer;
@@ -38,8 +57,12 @@ struct Scheduler {
     // if it isn't it could theoretically be used as an id in set_timeout
     static constexpr uint32_t INVALID_ID = 2 * kMaxTasks;
 
-    // temporary, will be removed
-    [[deprecated]] static inline void start() {}
+    /* gets and checks the performance gathering requirements
+     * @param tim32bit: A timer or null if not gathering perf info (preferrably 32 bit)
+     * @return If the given arguments are correct
+     */
+    static bool init_perf(TIM_TypeDef* tim32bit, UART::Peripheral* uart);
+
     static void update();
     static uint64_t get_global_tick();
 
