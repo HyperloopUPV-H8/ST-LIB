@@ -1,5 +1,5 @@
 release: major
-summary: Refactor linker script, startup code, and memory model with unified copy/zero tables, configurable ITCM, and weak BoardInit
+summary: Refactor linker script, startup code, and memory model with unified copy/zero tables, configurable ITCM, and weak BoardInit. Also fixes LTO.
 
 ## Implemented
 
