@@ -1,4 +1,4 @@
-#define BOOT_ATTR __attribute__((section(".boot"))) __used
+#define BOOT_ATTR __attribute__((used, section(".boot_code")))
 
 #include "stm32h7xx.h"
 #include <math.h>
