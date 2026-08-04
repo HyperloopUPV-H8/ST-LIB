@@ -481,6 +481,8 @@ target_compile_options(${STLIB_LIBRARY} PRIVATE
   $<$<BOOL:${CMAKE_CROSSCOMPILING}>:-fdata-sections>
   $<$<BOOL:${CMAKE_CROSSCOMPILING}>:-fno-exceptions>
 
+  $<$<AND:$<BOOL:${ENABLE_LTO}>,$<NOT:$<CONFIG:DEBUG>>>:-flto=auto>
+
   -Wno-psabi
 
   $<$<COMPILE_LANGUAGE:C>:-w>
@@ -531,10 +533,6 @@ target_include_directories(${STLIB_LIBRARY} PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/Inc/ST-LIB_HIGH
 )
 
-if(ENABLE_LTO)
-  set_property(TARGET ${STLIB_LIBRARY} PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
-  set_property(TARGET ${STLIB_LIBRARY} PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
-endif()
 
 if(STLIB_USE_PCH)
   if(COMMAND target_precompile_headers)
