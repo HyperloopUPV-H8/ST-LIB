@@ -51,6 +51,10 @@
 #define ETH_RX_BUFFER_SIZE 1536
  /*----- Value in opt.h for LWIP_TCP_KEEPALIVE: 0 -----*/
  #define LWIP_TCP_KEEPALIVE 1
+#define MEMP_NUM_SYS_TIMEOUT (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 10) // + 10 just in case
+#define TCP_TMR_INTERVAL 10
+#define TCP_FAST_INTERVAL 10
+#define TCP_SLOW_INTERVAL 20
 
  #define MEMP_NUM_NETCONN 4
 /*----- Value in opt.h for NO_SYS: 0 -----*/

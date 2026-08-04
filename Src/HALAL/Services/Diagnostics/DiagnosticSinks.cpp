@@ -68,6 +68,7 @@ public:
 #ifdef STLIB_ETH
 class DiagnosticTransportOrder final : public Order {
 public:
+    static inline OrderProtocol* forward_target = nullptr;
     DiagnosticTransportOrder() {
         Packet::packets[DIAGNOSTIC_FAULT_ORDER_ID] = this;
         Packet::packets[DIAGNOSTIC_WARNING_ORDER_ID] = this;
@@ -94,15 +95,48 @@ public:
 
     void set_callback(void (*callback)(void)) override { this->callback = callback; }
 
-    void process() override {
-        if (callback != nullptr) {
-            callback();
-        }
-    }
-
     void parse(OrderProtocol* socket, uint8_t* data) override {
         (void)socket;
-        (void)data;
+        if (data == nullptr)
+            return;
+
+        memcpy(&id, data, sizeof(id));
+
+        size_t off = sizeof(id) + sizeof(uint8_t);
+        kind = data[off++];
+
+        size_t len = bounded_strnlen(reinterpret_cast<char*>(data + off), sizeof(origin) - 1);
+        memcpy(origin, data + off, len);
+        origin[len] = '\0';
+        off += len + 1;
+
+        len = bounded_strnlen(reinterpret_cast<char*>(data + off), sizeof(message) - 1);
+        memcpy(message, data + off, len);
+        message[len] = '\0';
+        off += len + 1;
+
+        memcpy(
+            &counter,
+            data + off,
+            sizeof(counter) + sizeof(second) + sizeof(minute) + sizeof(hour) + sizeof(day) +
+                sizeof(month) + sizeof(year)
+        );
+        size = off + sizeof(counter) + sizeof(second) + sizeof(minute) + sizeof(hour) +
+               sizeof(day) + sizeof(month) + sizeof(year);
+    }
+
+    void process() override {
+        switch (id) {
+        case DIAGNOSTIC_FAULT_ORDER_ID:
+            Hub::publish_runtime_fault(message, false, 0, origin, "");
+            break;
+        case DIAGNOSTIC_WARNING_ORDER_ID:
+            Hub::publish_runtime_warning(message, false, 0, origin, "");
+            break;
+        case DIAGNOSTIC_OK_ORDER_ID:
+            Hub::publish_runtime_info(message, false, 0, origin, "");
+            break;
+        }
     }
 
     uint8_t* build() override {
@@ -127,6 +161,8 @@ public:
     }
 
     size_t get_size() override { return size; }
+
+    void reset_for_receive() { size = 0; }
 
     uint16_t get_id() override { return id; }
 
@@ -191,22 +227,25 @@ private:
 
 class OrderProtocolDiagnosticSink final : public DiagnosticSink {
 public:
+    explicit OrderProtocolDiagnosticSink(OrderProtocol* target = nullptr) : target_socket(target) {
+        DiagnosticTransportOrder::forward_target = target;
+    }
+
     bool publish(const DiagnosticRecord& record) override {
+        if (target_socket == nullptr) {
+            return false;
+        }
         char description[Config::formatted_message_capacity + 1]{};
         DiagnosticFormatter::describe(record, description, sizeof(description));
         transport_order.set_record(record, description);
-
-        bool delivered = false;
-        for (OrderProtocol* socket : OrderProtocol::sockets) {
-            if (socket == nullptr) {
-                continue;
-            }
-            delivered = socket->send_order(transport_order) || delivered;
-        }
+        transport_order.build();
+        bool delivered = target_socket->send_order(transport_order);
+        transport_order.reset_for_receive();
         return delivered;
     }
 
 private:
+    OrderProtocol* target_socket;
     DiagnosticTransportOrder transport_order{};
 };
 #endif
@@ -222,11 +261,13 @@ void Runtime::install_default_sinks() {
     (void)Hub::emplace_sink<UartDiagnosticSink>();
 #endif
 
-#ifdef STLIB_ETH
-    (void)Hub::emplace_sink<OrderProtocolDiagnosticSink>();
-#endif
-
     defaults_installed = true;
 }
+
+#ifdef STLIB_ETH
+void install_ethernet_sink(OrderProtocol* target) {
+    (void)Hub::emplace_sink<OrderProtocolDiagnosticSink>(target);
+}
+#endif
 
 } // namespace Diagnostics

@@ -140,8 +140,6 @@ struct EXTIDomain {
 
                 HAL_NVIC_SetPriority(irq_n, 0, 0);
                 HAL_NVIC_EnableIRQ(irq_n);
-
-                inst.turn_on();
             }
         }
     };

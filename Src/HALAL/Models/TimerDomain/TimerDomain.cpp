@@ -24,25 +24,26 @@ TIM_HandleTypeDef htim24;
 void (*TimerDomain::callbacks[TimerDomain::max_instances])(void*) = {nullptr};
 void* TimerDomain::callback_data[TimerDomain::max_instances] = {nullptr};
 
-TimerDomain::InputCaptureInfo TimerDomain::input_capture_info_dummy = {
-    .channel_rising = 0xFF,  // any value that isn't possible here
-    .channel_falling = 0xFF, // any value that isn't possible here
-};
-
-TimerDomain::InputCaptureInfo* TimerDomain::input_capture_info[max_instances]
-                                                              [input_capture_channels];
-TimerDomain::InputCaptureInfo TimerDomain::input_capture_info_backing[max_instances]
-                                                                     [input_capture_channels];
+ST_LIB::InputCaptureInfo* TimerDomain::input_capture_info[max_instances][input_capture_channels];
+ST_LIB::InputCaptureInfo TimerDomain::input_capture_info_backing[max_instances]
+                                                                [input_capture_channels];
 
 static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel) {
     TIM_HandleTypeDef* htim = TimerDomain::hal_handles[timer_idx];
 
-    TimerDomain::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
+    ST_LIB::InputCaptureInfo* info = TimerDomain::input_capture_info[timer_idx][channel];
+    uint32_t current = (*(((volatile uint32_t*)&htim->Instance->CCR1) + channel));
     if (info->channel_rising == channel) {
         // NOTE: CCR1 - CCR4 are contiguous
         // NOTE: CCxIF flag is cleared by software by reading the captured data in CCRx
-        uint32_t current = (*(((volatile uint32_t*)&htim->Instance->CCR1) + channel));
-        uint32_t period = current - info->value_rising;
+        uint32_t period;
+        if (current >= info->value_rising) {
+            period = current - info->value_rising;
+        } else {
+            // counter wrap around
+            uint32_t max_count = htim->Instance->ARR - 1;
+            period = (current + max_count) - info->value_rising;
+        }
 
         if ((period != 0) && (info->value_falling < period)) {
             uint32_t ref_clock =
@@ -53,8 +54,14 @@ static void TIM_IC_CaptureCallback(const uint32_t timer_idx, uint32_t channel) {
         }
         info->value_rising = current;
     } else if (info->channel_falling == channel) {
-        uint32_t falling_value =
-            *(((volatile uint32_t*)&htim->Instance->CCR1) + channel) - info->value_rising;
+        uint32_t falling_value;
+        if (current >= info->value_rising) {
+            falling_value = current - info->value_rising;
+        } else {
+            uint32_t max_count = htim->Instance->ARR - 1;
+            falling_value = (current + max_count) - info->value_rising;
+        }
+
         if (falling_value < info->period)
             info->value_falling = falling_value;
     } else [[unlikely]] {

@@ -4,6 +4,11 @@
 #include "ST-LIB_HIGH/Protections/ProtectionTypes.hpp"
 #include "StateMachine/StateMachine.hpp"
 
+#ifdef STLIB_ETH
+#include "HALAL/Models/Packets/Order.hpp"
+#include "HALAL/Models/Packets/OrderProtocol.hpp"
+#endif
+
 namespace ST_LIB::TestAccess {
 struct FaultController;
 }
@@ -84,12 +89,21 @@ public:
         reconstruct_runtime_machine<Policy>(
             preserve_preinstalled_fault ? RuntimeState::FAULT : RuntimeState::OPERATIONAL
         );
+#ifdef STLIB_ETH
+        propagation_targets = {};
+        propagation_target_count = 0;
+        last_retry_us = 0;
+#endif
     }
 
     static void start();
     static void check_transitions();
     static bool is_faulted();
     static const FaultCause* latched_fault_cause();
+
+#ifdef STLIB_ETH
+    static void register_fault_propagation(OrderProtocol* socket, Order* fault_order);
+#endif
 
 private:
     friend class PanicReporter;
@@ -175,6 +189,23 @@ private:
     static void publish_fault_diagnostic(const FaultCause& cause);
     static void request_fault(const FaultCause& cause);
     static void on_fault_state_enter();
+
+#ifdef STLIB_ETH
+    static void propagate_fault();
+    static void retry_pending_fault_propagation();
+    static void on_fault_order_received();
+
+    struct FaultPropagationTarget {
+        OrderProtocol* socket;
+        Order* fault_order;
+        bool pending = false;
+    };
+    static constexpr size_t max_propagation_targets = 8;
+    static constexpr uint64_t propagation_retry_period_us = 100'000;
+    static array<FaultPropagationTarget, max_propagation_targets> propagation_targets;
+    static size_t propagation_target_count;
+    static uint64_t last_retry_us;
+#endif
 
     static RuntimeStorage runtime_storage;
     static IStateMachine* global_machine;

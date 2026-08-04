@@ -156,10 +156,7 @@ Socket::Socket(
         tcp_connect(connection_control_block, &remote_ip.address, remote_port, connect_callback);
     if (connect_error != ERR_OK && connect_error != ERR_ISCONN) {
         connecting_sockets.erase(remote_node);
-        tcp_abort(connection_control_block);
-        connection_control_block = nullptr;
-        PANIC("Cannot connect TCP socket. Error code: %d", connect_error);
-        return;
+        pending_connection_reset = true;
     }
 
     if (std::find(OrderProtocol::sockets.begin(), OrderProtocol::sockets.end(), this) ==

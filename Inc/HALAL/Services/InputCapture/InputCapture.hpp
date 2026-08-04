@@ -26,7 +26,7 @@ class InputCapture {
     friend struct TimerWrapper<dev>;
 
     TimerWrapper<dev>* timer = nullptr;
-    TimerDomain::InputCaptureInfo* info = nullptr;
+    ST_LIB::InputCaptureInfo* info = nullptr;
     bool is_on = false;
     bool is_initialized = false;
     InputCapture(TimerWrapper<dev>* tim) : timer(tim) {}
@@ -59,7 +59,8 @@ class InputCapture {
             .ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING,
             .ICSelection = TIM_ICSELECTION_DIRECTTI,
             .ICPrescaler = TIM_ICPSC_DIV1,
-            .ICFilter = 0,
+            /* filter out with hardware some noise */
+            .ICFilter = 0x03,
         };
         timer->template config_input_compare_channel<pin_rising.channel>(&sConfigIC);
 
@@ -73,7 +74,6 @@ public:
     void turn_on(void) {
         if (is_initialized == false) {
             init();
-            return;
         }
         if (is_on)
             return;
