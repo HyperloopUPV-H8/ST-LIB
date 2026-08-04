@@ -316,12 +316,15 @@ SECTIONS
     __d1_start = ABSOLUTE(.);
     __sram_d1_bss = ABSOLUTE(.);
 
+    /* MPU system buffers */
+    *(.ram_d1.buffer)
+    *(.ram_d1.buffer*)
+
     /* User manual allocations via D1_C macro */
+    . = ALIGN(32);
     *(.ram_d1.user.bss)
     *(.ram_d1.user.bss*)
 
-    /* MPU system buffers */
-    *(.ram_d1.buffer)
     __eram_d1_bss = ABSOLUTE(.);
   } >RAM_D1
   .ram_d1_data_rodata :
@@ -356,6 +359,7 @@ SECTIONS
     *(.ram_d2_nc.buffer*)
 
     /* User manual allocations via D2_NC macro */
+    . = ALIGN(32);
     *(.ram_d2_nc.user.bss)
     *(.ram_d2_nc.user.bss*)
     __eram_d2_nc_bss = ABSOLUTE(.);
@@ -395,13 +399,15 @@ SECTIONS
     __d2_start = ABSOLUTE(.);
     __sram_d2_bss = ABSOLUTE(.);
 
-    /* User manual allocations via D2_C macro */
-    *(.ram_d2.user.bss)
-    *(.ram_d2.user.bss*)
-
     /* MPU system buffers */
     *(.ram_d2.buffer)
     *(.ram_d2.buffer*)
+
+    /* User manual allocations via D2_C macro */
+    . = ALIGN(32);
+    *(.ram_d2.user.bss)
+    *(.ram_d2.user.bss*)
+
     __eram_d2_bss = ABSOLUTE(.);
   } >RAM_D2
   .ram_d2_data_rodata :
@@ -427,13 +433,16 @@ SECTIONS
     __d3_nc_start = ABSOLUTE(.);
     __sram_d3_nc_bss = ABSOLUTE(.);
 
-    /* New MPU system buffers */
+    /* MPU system buffers */
     *(.ram_d3_nc.buffer)
+    *(.ram_d3_nc.buffer*)
 
     /* Legacy MPUManager allocations */
+    . = ALIGN(32);
     *(.ram_d3_nc.legacy)
 
     /* User manual allocations via D3_NC macro */
+    . = ALIGN(32);
     *(.ram_d3_nc.user.bss)
     *(.ram_d3_nc.user.bss*)
     __eram_d3_nc_bss = ABSOLUTE(.);
@@ -473,13 +482,15 @@ SECTIONS
     __d3_start = ABSOLUTE(.);
     __sram_d3_bss = ABSOLUTE(.);
 
+    /* MPU system buffers */
+    *(.ram_d3.buffer)
+    *(.ram_d3.buffer*)
+
     /* User manual allocations via D3_C macro */
+    . = ALIGN(32);
     *(.ram_d3.user.bss)
     *(.ram_d3.user.bss*)
 
-    /* New MPU system buffers */
-    *(.ram_d3.buffer)
-    *(.ram_d3.user.bss)
     __eram_d3_bss = ABSOLUTE(.);
   } >RAM_D3
   .ram_d3_data_rodata :
