@@ -230,8 +230,6 @@ struct InputCaptureInfo {
     uint32_t frequency;
 };
 
-static ST_LIB::InputCaptureInfo input_capture_info_dummy;
-
 constexpr std::array<uint8_t, 25> create_timer_idxmap() {
     std::array<uint8_t, 25> result{};
 
