@@ -715,6 +715,24 @@ template <const TimerDomain::Timer& dev> struct TimerWrapper {
 
         instance->tim->CCER = tmpccer;
     }
+    template <ST_LIB::TimerChannel ch> inline uint32_t get_ccrx() {
+        if constexpr ((ch == TimerChannel::CHANNEL_1) || (ch == TimerChannel::CHANNEL_1_NEGATED))
+            return instance->tim->CCR1;
+        else if constexpr ((ch == TimerChannel::CHANNEL_2) || (ch == TimerChannel::CHANNEL_2_NEGATED))
+            return instance->tim->CCR2;
+        else if constexpr ((ch == TimerChannel::CHANNEL_3) || (ch == TimerChannel::CHANNEL_3_NEGATED))
+            return instance->tim->CCR3;
+        else if constexpr (ch == TimerChannel::CHANNEL_4)
+            return instance->tim->CCR4;
+        else if constexpr (ch == TimerChannel::CHANNEL_5)
+            return instance->tim->CCR5;
+        else if constexpr (ch == TimerChannel::CHANNEL_6)
+            return instance->tim->CCR6;
+        else {
+            ST_LIB::compile_error("Unknown timer channel, there are only 6 channels [1..6]");
+            return 0;
+        }
+    }
 
     /* NOTE(vic): Both config_output_compare_channel and config_input_compare_channel
      *            Could probably be done better if not using TIM_[OC/IC]_InitTypeDef structures */
