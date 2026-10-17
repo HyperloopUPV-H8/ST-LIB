@@ -56,7 +56,6 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         is_initialized = true;
     }
 
-
 public:
     void turn_on() {
         if (this->is_initialized == false) {
@@ -156,9 +155,11 @@ public:
     inline float get_duty_cycle() const { return *(this->duty_cycle); }
     inline uint32_t get_ticks_duty_cycle() {
         if constexpr (timer->is_32bit_instance) {
-            return (uint32_t)((float)(timer->instance->tim->ARR + 1) * (*(this->duty_cycle) / 100.0f));
+            return (uint32_t)((float)(timer->instance->tim->ARR + 1) *
+                              (*(this->duty_cycle) / 100.0f));
         } else {
-            return (uint16_t)((float)(timer->instance->tim->ARR + 1) * (*(this->duty_cycle) / 100.0f));
+            return (uint16_t)((float)(timer->instance->tim->ARR + 1) *
+                              (*(this->duty_cycle) / 100.0f));
         }
     }
 };
