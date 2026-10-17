@@ -42,7 +42,7 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         }
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
-            .Pulse = timer->template get_ccrx<pin.channel>(),
+            .Pulse = timer->template get_capture_compare<pin.channel>(),
             .OCPolarity = polarity,
             .OCNPolarity = negated_polarity,
             .OCFastMode = TIM_OCFAST_DISABLE,
