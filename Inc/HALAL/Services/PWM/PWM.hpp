@@ -42,7 +42,7 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         }
         TIM_OC_InitTypeDef sConfigOC = {
             .OCMode = TIM_OCMODE_PWM1,
-            .Pulse = (uint32_t) this->get_duty_cycle(),
+            .Pulse = this->get_ticks_duty_cycle(),
 
             .OCPolarity = polarity,
             .OCNPolarity = negated_polarity,
@@ -55,6 +55,7 @@ template <const TimerDomain::Timer& dev, const ST_LIB::TimerPin pin> class PWM {
         timer->template set_output_compare_preload_enable<pin.channel>();
         is_initialized = true;
     }
+
 
 public:
     void turn_on() {
@@ -153,6 +154,13 @@ public:
 
     inline uint32_t get_frequency() const { return *(this->frequency); }
     inline float get_duty_cycle() const { return *(this->duty_cycle); }
+    inline uint32_t get_ticks_duty_cycle() {
+        if constexpr (timer->is_32bit_instance) {
+            return (uint32_t)((float)(timer->instance->tim->ARR + 1) * (*(this->duty_cycle) / 100.0f));
+        } else {
+            return (uint16_t)((float)(timer->instance->tim->ARR + 1) * (*(this->duty_cycle) / 100.0f));
+        }
+    }
 };
 } // namespace ST_LIB
 
