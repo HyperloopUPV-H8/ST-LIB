@@ -19,11 +19,11 @@ struct ProtectionMessagePacket {
     struct Package_Data {
       
         uint16_t id;
-
         uint8_t hours;
         uint8_t minutes;
         uint8_t seconds;
-        uint8_t reserved;  
+        uint8_t subseconds;
+        uint16_t reserved;  // Just to not forget about it exists
     };
 
 
@@ -33,7 +33,6 @@ struct ProtectionMessagePacket {
         // Maximum is 8 bytes, not all will be sent always
         uint8_t value[8];
     };
-    // According to AI and Google it makes no difference use Macros to calculate Size or Template in this case 
     template <typename T>
     static Package make(uint16_t measurement_id, Protections::RuleKind prot, T* value)
     {
@@ -47,7 +46,7 @@ struct ProtectionMessagePacket {
             .data = {}
 
         };
-        pack.data.id = (measurement_id & 0x1FFF) | static_cast<uint16_t> (static_cast<uint8_t>(prot) << 13);
+        pack.data.id = (measurement_id & 0x1FFF) | static_cast<uint16_t> (prot) << 13; // Bit packing of protection into 3 most significant bits of id (Look adjv3 format)
         if (value != nullptr && valueSize > 0) {
             memcpy(pack.value, value, valueSize);
         }
@@ -56,10 +55,12 @@ struct ProtectionMessagePacket {
             pack.data.hours   = rtc.hour;
             pack.data.minutes = rtc.minute;
             pack.data.seconds = rtc.second;
-        #else
-            pack.data.hours = 0; pack.data.minutes = 0; pack.data.seconds = 0;
+            pack.data.subseconds = static_cast<uint8_t>((rtc.counter * 256) / (RTC_MAX_COUNTER + 1));
+        #else // if HAL_RTC was not enabled initialize all values a 0
+            pack.data.hours = 0; pack.data.minutes = 0; pack.data.seconds = 0; pack.data.subseconds = 0;
+            
         #endif
-        pack.data.reserved = 0;
+        pack.data.reserved = 0; // however it exists
         return pack;
     }
     //TCP STUFF starts here
@@ -84,13 +85,19 @@ struct ProtectionMessagePacket {
             tcp_connect(tpcb, &destIPADDR, 31, tcp_client_connected); //PORT
         }
     }
-    static void tcp_client_send(const Package& pack) //add some timer??
+    static void tcp_client_send(const Package& pack)
     {
         if (tpcb != nullptr && is_connected){
             //pack.pbuf = pbuf_alloc(PBUF_TRANSPORT, pack.packageSize, PBUF_RAM); im suprized we dont need it
-            tcp_write(tpcb, &pack.data, pack.packageSize, TCP_WRITE_FLAG_COPY);
-            
-            tcp_output(tpcb);
+            err_t err = ERR_OK;
+            err = tcp_write(tpcb, &pack.data, pack.packageSize, TCP_WRITE_FLAG_COPY);
+            if (err != ERR_OK) {
+                //ERROR
+            }
+            err = tcp_output(tpcb);
+            if (err != ERR_OK) {
+                //ERROR
+            }
         }
     }
 
