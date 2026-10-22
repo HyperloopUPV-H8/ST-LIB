@@ -7,25 +7,29 @@
  */
 #include "ST-LIB_HIGH/Protections/SampleSource.hpp"
 #include "HALAL/Services/Diagnostics/Diagnostics.hpp"
-#include "HALAL/Services/Time/RTC.hpp"
 #include "ST-LIB_HIGH/Protections/FaultController.hpp"
 #include "ST-LIB_HIGH/Protections/Protection.hpp"
 #include "ST-LIB_HIGH/Protections/ProtectionTypes.hpp"
-#include "lwip/tcp.h"
+#include <cstdint>
+#include <cstddef>
+#include <cstring>
+
+// Forward declaration of LwIP tcp_pcb
+struct tcp_pcb;
 
 namespace ST_LIB {
+
+#pragma pack(push, 1)
 struct ProtectionMessagePacket {
 
     struct Package_Data {
-      
         uint16_t id;
         uint8_t hours;
         uint8_t minutes;
         uint8_t seconds;
         uint8_t subseconds;
-        uint16_t reserved;  // Just to not forget about it exists
+        uint16_t reserved;  // Just to not forget about it exists (align / array index in ADJv3)
     };
-
 
     struct Package {
         size_t packageSize;
@@ -33,73 +37,21 @@ struct ProtectionMessagePacket {
         // Maximum is 8 bytes, not all will be sent always
         uint8_t value[8];
     };
+#pragma pack(pop)
+
     template <typename T>
     static Package make(uint16_t measurement_id, Protections::RuleKind prot, T* value)
     {
         static_assert(sizeof(T) <= 8, "Value size must be <= 8 bytes");
         return make(measurement_id, prot, static_cast<void*>(value), sizeof(T));
     }
-    static Package make(uint16_t measurement_id, Protections::RuleKind prot, void* value, size_t valueSize)
-    {
-        Package pack = {
-            .packageSize = sizeof(Package_Data) + valueSize,
-            .data = {}
 
-        };
-        pack.data.id = (measurement_id & 0x1FFF) | static_cast<uint16_t> (prot) << 13; // Bit packing of protection into 3 most significant bits of id (Look adjv3 format)
-        if (value != nullptr && valueSize > 0) {
-            memcpy(pack.value, value, valueSize);
-        }
-        #if defined(HAL_RTC_MODULE_ENABLED) && !defined(SIM_ON)
-            RTCData rtc = Global_RTC::get_rtc_timestamp();
-            pack.data.hours   = rtc.hour;
-            pack.data.minutes = rtc.minute;
-            pack.data.seconds = rtc.second;
-            pack.data.subseconds = static_cast<uint8_t>((rtc.counter * 256) / (RTC_MAX_COUNTER + 1));
-        #else // if HAL_RTC was not enabled initialize all values a 0
-            pack.data.hours = 0; pack.data.minutes = 0; pack.data.seconds = 0; pack.data.subseconds = 0;
-            
-        #endif
-        pack.data.reserved = 0; // however it exists
-        return pack;
-    }
-    //TCP STUFF starts here
-    static inline struct tcp_pcb* tpcb;
-    static inline bool is_connected = false;
-    //This code probably can be refactored
-    static err_t tcp_client_connected(void* arg,  tcp_pcb* tcpb, err_t err)
-    {
-        LWIP_UNUSED_ARG(tcpb);
-        LWIP_UNUSED_ARG(arg);
-        if (err == ERR_OK) {
-            is_connected = true;
-        }
-        return ERR_OK;
-    }
-    static void tcp_client_init()
-    {
-        tpcb = tcp_new();
-        if (tpcb != NULL) {
-            ip_addr_t destIPADDR;
-            IP_ADDR4(&destIPADDR, 192, 168, 0, 100); //IP
-            tcp_connect(tpcb, &destIPADDR, 31, tcp_client_connected); //PORT
-        }
-    }
-    static void tcp_client_send(const Package& pack)
-    {
-        if (tpcb != nullptr && is_connected){
-            //pack.pbuf = pbuf_alloc(PBUF_TRANSPORT, pack.packageSize, PBUF_RAM); im suprized we dont need it
-            err_t err = ERR_OK;
-            err = tcp_write(tpcb, &pack.data, pack.packageSize, TCP_WRITE_FLAG_COPY);
-            if (err != ERR_OK) {
-                //ERROR
-            }
-            err = tcp_output(tpcb);
-            if (err != ERR_OK) {
-                //ERROR
-            }
-        }
-    }
+    static Package make(uint16_t measurement_id, Protections::RuleKind prot, void* value, size_t valueSize);
+    static void tcp_client_init();
+    static bool tcp_client_send(const Package& pack);
 
-}; // struct ProtectionMessagePacket
-}; // namespace ST_LIB
+    static struct tcp_pcb* tpcb;
+    static bool is_connected;
+};
+
+} // namespace ST_LIB
