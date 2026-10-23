@@ -20,7 +20,7 @@ struct tcp_pcb;
 namespace ST_LIB {
 
 #pragma pack(push, 1)
-struct ProtectionMessagePacket {
+struct ProtectionADJV3Packet {
 
     struct Package_Data {
         uint16_t id;
@@ -28,7 +28,7 @@ struct ProtectionMessagePacket {
         uint8_t minutes;
         uint8_t seconds;
         uint8_t subseconds;
-        uint16_t reserved;  // Just to not forget about it exists (align / array index in ADJv3)
+        uint16_t reserved; // Just to not forget about it exists (align / array index in ADJv3)
     };
 
     struct Package {
@@ -40,15 +40,15 @@ struct ProtectionMessagePacket {
 #pragma pack(pop)
 
     template <typename T>
-    static Package make(uint16_t measurement_id, Protections::RuleKind prot, T* value)
-    {
+    static Package make(uint16_t measurement_id, Protections::RuleKind prot, T* value) {
         static_assert(sizeof(T) <= 8, "Value size must be <= 8 bytes");
         return make(measurement_id, prot, static_cast<void*>(value), sizeof(T));
     }
 
-    static Package make(uint16_t measurement_id, Protections::RuleKind prot, void* value, size_t valueSize);
-    static void tcp_client_init();
-    static bool tcp_client_send(const Package& pack);
+    static Package
+    make(uint16_t measurement_id, Protections::RuleKind prot, void* value, size_t valueSize);
+    static bool tcp_client_init(const char* ip, uint16_t port);
+    static bool tcp_client_send(Package& pack);
 
     static struct tcp_pcb* tpcb;
     static bool is_connected;
