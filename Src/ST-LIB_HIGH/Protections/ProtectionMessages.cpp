@@ -55,12 +55,12 @@ void ProtectionMessagePacket::tcp_client_init()
     tpcb = tcp_new();
     if (tpcb != nullptr) {
         ip_addr_t destIPADDR;
-        IP_ADDR4(&destIPADDR, 192, 168, 0, 100); // IP Control Station
+        IP_ADDR4(&destIPADDR, 192, 168, 0, 9); // IP PC
         tcp_connect(tpcb, &destIPADDR, 31, tcp_client_connected_callback); // PORT
     }
 }
 
-bool ProtectionMessagePacket:: tcp_client_send(const Package& pack)
+bool ProtectionMessagePacket::tcp_client_send(const  ProtectionMessagePacket::Package& pack)
 {
     if (tpcb != nullptr && is_connected) {
         err_t err = tcp_write(tpcb, &pack.data, pack.packageSize, TCP_WRITE_FLAG_COPY);
