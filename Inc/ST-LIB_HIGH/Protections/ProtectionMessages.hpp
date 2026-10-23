@@ -14,12 +14,9 @@
 #include <cstddef>
 #include <cstring>
 
-// Forward declaration of LwIP tcp_pcb
 struct tcp_pcb;
 
 namespace ST_LIB {
-
-#pragma pack(push, 1)
 struct ProtectionADJV3Packet {
 
     struct Package_Data {
@@ -28,7 +25,7 @@ struct ProtectionADJV3Packet {
         uint8_t minutes;
         uint8_t seconds;
         uint8_t subseconds;
-        uint16_t reserved; // Just to not forget about it exists (align / array index in ADJv3)
+        uint16_t reserved; // Just to not forget about it exists
     };
 
     struct Package {
@@ -36,17 +33,23 @@ struct ProtectionADJV3Packet {
         Package_Data data;
         // Maximum is 8 bytes, not all will be sent always
         uint8_t value[8];
+        const void* source;
     };
-#pragma pack(pop)
 
     template <typename T>
-    static Package make(uint16_t measurement_id, Protections::RuleKind prot, T* value) {
+    static inline Package make(uint16_t measurement_id, Protections::RuleKind prot, T* value) {
         static_assert(sizeof(T) <= 8, "Value size must be <= 8 bytes");
         return make(measurement_id, prot, static_cast<void*>(value), sizeof(T));
     }
 
-    static Package
-    make(uint16_t measurement_id, Protections::RuleKind prot, void* value, size_t valueSize);
+private:
+    static Package make(
+        uint16_t measurement_id,
+        Protections::RuleKind prot,
+        void* value,
+        size_t valueSize
+    ); // Foolproof
+public:
     static bool tcp_client_init(const char* ip, uint16_t port);
     static bool tcp_client_send(Package& pack);
 

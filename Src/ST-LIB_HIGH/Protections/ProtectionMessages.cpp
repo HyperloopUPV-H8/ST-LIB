@@ -34,7 +34,7 @@ ProtectionADJV3Packet::Package ProtectionADJV3Packet::make(
     pack.data.id = (measurement_id & 0x1FFF) | (static_cast<uint16_t>(prot) << 13);
 
     if (value != nullptr && valueSize > 0) {
-        memcpy(pack.value, value, valueSize > 8 ? 8 : valueSize);
+        pack.source = value; // could it be a dangling pointer ?
     }
     pack.data.hours = 0;
     pack.data.minutes = 0;
@@ -68,6 +68,9 @@ bool ProtectionADJV3Packet::tcp_client_init(const char* ip, uint16_t port) {
 bool ProtectionADJV3Packet::tcp_client_send(ProtectionADJV3Packet::Package& pack) {
     if (tpcb == nullptr || !is_connected) {
         return false;
+    }
+    if (pack.source != nullptr) {
+        memcpy(pack.value, pack.source, pack.packageSize - sizeof(Package_Data));
     }
 #if defined(HAL_RTC_MODULE_ENABLED) && !defined(SIM_ON)
     RTCData rtc = Global_RTC::get_rtc_timestamp();
