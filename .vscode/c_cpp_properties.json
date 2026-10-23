@@ -1,38 +1,12 @@
 {
     "configurations": [
         {
-            "name": "ST-LIB-Dev",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/Inc",
-                "${workspaceFolder}/Inc/ST-LIB_LOW",
-                "${workspaceFolder}/Inc/ST-LIB_HIGH",
-                "${workspaceFolder}/Inc/HALAL",
-                "${workspaceFolder}/Inc/C++Utilities",
-                "${workspaceFolder}/Inc/MockedDrivers",
-                "${workspaceFolder}/Inc/STM32CubeH7Wrapper",
-                "${workspaceFolder}/STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc",
-                "${workspaceFolder}/STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include",
-                "${workspaceFolder}/STM32CubeH7/Drivers/CMSIS/Include",
-                "${workspaceFolder}/STM32CubeH7/Middlewares/Third_Party/LwIP/src/include",
-                "${workspaceFolder}/STM32CubeH7/Middlewares/Third_Party/LwIP/src/include/lwip",
-                "${workspaceFolder}/STM32CubeH7/Middlewares/Third_Party/LwIP/contrib/ports/win32/include",
-                "${workspaceFolder}/LWIP/App",
-                "${workspaceFolder}/LWIP/Target"
-            ],
-            "defines": [
-                "SIM_ON",
-                "STM32H723xx",
-                "USE_HAL_DRIVER",
-                "CORE_CM7",
-                "HAL_ETH_MODULE_ENABLED",
-                "HAL_RTC_MODULE_ENABLED",
-                "HAL_UART_MODULE_ENABLED"
-            ],
+            "name": "CMake",
             "cStandard": "c17",
-            "cppStandard": "c++23",
-            "intelliSenseMode": "windows-gcc-x64"
-        }
+            "cppStandard": "c++20",
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "compileCommands": "compile_commands.json"
+          }
     ],
     "version": 4
 }
